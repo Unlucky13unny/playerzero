@@ -37,11 +37,58 @@
       margin-bottom: 1.5rem;
     }
 
-    .intro {
-      font-size: 1.1rem;
-      font-weight: 500;
-      max-width: 650px;
-      margin-bottom: 2rem;
+    .intro-glitch {
+      font-family: 'Arial Black', sans-serif;
+      font-size: 1.2rem;
+      max-width: 700px;
+      margin-bottom: 3rem;
+      text-align: center;
+      line-height: 1.6;
+    }
+
+    .bold {
+      font-weight: 900;
+    }
+
+    .big {
+      font-size: 1.35em;
+    }
+
+    .glitch-red {
+      color: #ff0033;
+      position: relative;
+    }
+
+    .glitch-red::before,
+    .glitch-red::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      right: 0;
+      opacity: 0.6;
+      z-index: -1;
+    }
+
+    .glitch-red::before {
+      top: -1px;
+      left: 1px;
+      color: #00ffff;
+    }
+
+    .glitch-red::after {
+      top: 1px;
+      left: -1px;
+      color: #ff00ff;
+    }
+
+    .spaced {
+      margin-top: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .dot {
+      font-weight: 300;
+      color: #999;
     }
 
     h1 {
@@ -91,9 +138,12 @@
     </div>
   </div>
 
-  <p class="intro">
-    A first-of-its-kind challenge built for players who grind. Flex your stats, let the community know you showed out, and put some respect on your name.
-  </p>
+  <div class="intro-glitch">
+    <p><span class="glitch-red bold" data-text="A first-of-its-kind">A first-of-its-kind</span> <span class="glitch-red bold big" data-text="challenge">challenge</span><span class="dot">...</span></p>
+    <p class="spaced"><span class="dot">...</span>built for players who <span class="bold">grind</span>.</p>
+    <p><span class="bold big">Flex</span> your stats, let the community know you show out,</p>
+    <p>and put some <span class="bold big">respect</span> on your name!</p>
+  </div>
 
   <h1>Join the PlayerZero Challenge</h1>
   <p class="tagline">
