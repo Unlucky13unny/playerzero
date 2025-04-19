@@ -1,127 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PlayerZero Challenge</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: 'Inter', sans-serif;
-      background: #ffffff;
+      font-family: sans-serif;
+      background: #fff;
       color: #111;
       margin: 0;
-      padding: 2rem 1rem;
+      padding: 2rem;
       display: flex;
       flex-direction: column;
       align-items: center;
-    }
-
-    .container {
-      max-width: 800px;
-      width: 100%;
       text-align: center;
     }
-
     img.logo {
-      max-width: 280px;
-      margin-bottom: 1rem;
+      max-width: 400px;
+      margin-bottom: 2rem;
     }
-
-    .tagline {
-      font-size: 1.25rem;
+    .intro {
+      margin-bottom: 2rem;
+    }
+    .intro-line1 {
       font-style: italic;
-      font-weight: 500;
-      color: #333;
+      font-size: 1.2rem;
+      display: block;
+    }
+    .intro-line2 {
+      font-style: italic;
+      font-size: 1.2rem;
+      display: block;
+      text-align: left;
+      margin-left: auto;
+      margin-right: auto;
+      max-width: max-content;
+    }
+    p.pitch {
+      font-size: 1rem;
+      margin-top: 1rem;
+      max-width: 600px;
+    }
+    h1 {
+      font-size: 2.25rem;
       margin-bottom: 0.5rem;
     }
-
-    .subtext {
-      font-size: 1rem;
-      color: #666;
-      margin-bottom: 2.5rem;
-      line-height: 1.5;
+    p.tagline {
+      font-size: 1.2rem;
+      font-weight: 500;
+      margin-bottom: 2rem;
+      max-width: 600px;
     }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-
-    .highlight {
-      font-style: italic;
-      font-weight: 400;
-      font-size: 1.1rem;
-      color: #222;
-      margin-bottom: 2.5rem;
-    }
-
     a.button {
-      background: #000;
-      color: #fff;
+      background: black;
+      color: white;
       text-decoration: none;
       padding: 1rem 2rem;
-      border-radius: 8px;
+      border-radius: 5px;
       font-size: 1rem;
-      font-weight: 600;
-      display: inline-block;
       margin-bottom: 3rem;
-      transition: all 0.3s ease;
     }
-
-    a.button:hover {
-      background: #222;
-      transform: scale(1.03);
-    }
-
     .faq {
+      max-width: 700px;
       text-align: left;
-      margin-top: 3rem;
     }
-
     .faq h2 {
       font-size: 1.5rem;
-      margin-bottom: 1rem;
+      margin-top: 2rem;
     }
-
-    .faq h3 {
-      font-size: 1.1rem;
-      margin: 1.5rem 0 0.5rem;
-    }
-
     .faq p {
-      margin: 0 0 1rem;
-      color: #444;
+      margin: 0.5rem 0 1.5rem 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
+  <div class="intro">
+    <span class="intro-line1">It's not about what you've accomplished.</span>
+    <span class="intro-line2">It's about what you're about to...</span>
+    <p class="pitch">
+      A first-of-its-kind challenge built for players who grind. Flex your stats, let the community know you showed out — and put some respect on your name.
+    </p>
+  </div>
+  <h1>Join the PlayerZero Challenge</h1>
+  <p class="tagline">
+    Compete in-game and on social media for a chance to win cash prizes and claim ultimate bragging rights.
+  </p>
+  <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
 
-    <p class="tagline">It's not about what you've accomplished.<br>It's about what you're about to...</p>
-    <p class="subtext">A first-of-its-kind competition blending real-world progress with digital feats. Compete using your favorite mobile game, track your stats, and show the world what you're made of.</p>
+  <div class="faq">
+    <h2>Frequently Asked Questions</h2>
+    <h3>What is the PlayerZero Challenge?</h3>
+    <p>A weekly competition where players earn points based on in-game progress and complete social media challenges.</p>
 
-    <h1>Join the PlayerZero Challenge</h1>
-    <p class="highlight">Compete in-game and on social media for a chance to win cash prizes and claim ultimate bragging rights.</p>
+    <h3>How do I join?</h3>
+    <p>Click the "Enter Now" button above, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
 
-    <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
+    <h3>What do I need to win?</h3>
+    <p>Top scores in XP gain, distance walked, Pokémon caught, PokéStops visited, and participation in bonus challenges.</p>
 
-    <div class="faq">
-      <h2>Frequently Asked Questions</h2>
-      <h3>What is the PlayerZero Challenge?</h3>
-      <p>A weekly competition where players earn points based on in-game progress and complete social media challenges.</p>
+    <h3>What are the prizes?</h3>
+    <p>Cash prizes for top overall scorers and daily social challenge winners. Prize tiers increase with more participants.</p>
 
-      <h3>How do I join?</h3>
-      <p>Click the "Enter Now" button above, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
-
-      <h3>What do I need to win?</h3>
-      <p>Top scores in XP gain, distance walked, Pokémon caught, PokéStops visited, and participation in bonus challenges.</p>
-
-      <h3>What are the prizes?</h3>
-      <p>Cash prizes for top overall scorers and daily social challenge winners. Prize tiers increase with more participants.</p>
-
-      <h3>Is cheating allowed?</h3>
-      <p>Absolutely not. All submissions are verified, and any fake data or altered screenshots will result in disqualification.</p>
-    </div>
+    <h3>Is cheating allowed?</h3>
+    <p>Absolutely not. All submissions are verified, and any fake data or altered screenshots will result in disqualification.</p>
   </div>
 </body>
+</html>
