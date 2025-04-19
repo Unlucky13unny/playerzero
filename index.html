@@ -16,42 +16,45 @@
       align-items: center;
       text-align: center;
     }
+
     img.logo {
       max-width: 400px;
-      margin-bottom: 2rem;
+      margin-bottom: 1rem;
     }
-    .intro {
-      margin-bottom: 2rem;
-    }
-    .intro-line1 {
-      font-style: italic;
-      font-size: 1.2rem;
-      display: block;
-    }
-    .intro-line2 {
-      font-style: italic;
-      font-size: 1.2rem;
-      display: block;
+
+    .stacked-tagline {
       text-align: left;
-      margin-left: auto;
-      margin-right: auto;
-      max-width: max-content;
+      font-style: italic;
+      font-size: 1.25rem;
+      line-height: 1.5;
+      margin-bottom: 1.5rem;
     }
-    p.pitch {
-      font-size: 1rem;
-      margin-top: 1rem;
-      max-width: 600px;
+
+    .stacked-tagline-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
     }
+
+    .intro {
+      font-size: 1.1rem;
+      font-weight: 500;
+      max-width: 650px;
+      margin-bottom: 2rem;
+    }
+
     h1 {
-      font-size: 2.25rem;
+      font-size: 2rem;
+      margin-top: 2rem;
       margin-bottom: 0.5rem;
     }
-    p.tagline {
-      font-size: 1.2rem;
-      font-weight: 500;
+
+    .tagline {
+      font-style: italic;
+      font-size: 1rem;
       margin-bottom: 2rem;
-      max-width: 600px;
     }
+
     a.button {
       background: black;
       color: white;
@@ -61,14 +64,17 @@
       font-size: 1rem;
       margin-bottom: 3rem;
     }
+
     .faq {
       max-width: 700px;
       text-align: left;
     }
+
     .faq h2 {
       font-size: 1.5rem;
       margin-top: 2rem;
     }
+
     .faq p {
       margin: 0.5rem 0 1.5rem 0;
     }
@@ -76,35 +82,40 @@
 </head>
 <body>
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
-  <div class="intro">
-    <span class="intro-line1">It's not about what you've accomplished.</span>
-    <span class="intro-line2">It's about what you're about to...</span>
-    <p class="pitch">
-      A first-of-its-kind challenge built for players who grind. Flex your stats, let the community know you showed out — and put some respect on your name.
-    </p>
+
+  <div class="stacked-tagline-container">
+    <div class="stacked-tagline">
+      It's not about what you've accomplished.<br />
+      &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;It's about what you're about to...
+    </div>
   </div>
+
+  <p class="intro">
+    A first-of-its-kind challenge built for players who grind. Flex your stats, let the community know you showed out, and put some respect on your name.
+  </p>
+
   <h1>Join the PlayerZero Challenge</h1>
   <p class="tagline">
-    Compete in-game and on social media for a chance to win cash prizes and claim ultimate bragging rights.
+    <em>Compete in-game and on social media for a chance to win cash prizes and claim ultimate bragging rights.</em>
   </p>
   <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
 
   <div class="faq">
     <h2>Frequently Asked Questions</h2>
     <h3>What is the PlayerZero Challenge?</h3>
-    <p>A weekly competition where players earn points based on in-game progress and complete social media challenges.</p>
+    <p>A weekly community competition for players who want to show off their grind. It's not affiliated with any game publisher — just a competition for bragging rights and prizes.</p>
 
     <h3>How do I join?</h3>
-    <p>Click the "Enter Now" button above, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
+    <p>Click the "Enter Now" button, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
 
-    <h3>What do I need to win?</h3>
-    <p>Top scores in XP gain, distance walked, Pokémon caught, PokéStops visited, and participation in bonus challenges.</p>
+    <h3>How is it scored?</h3>
+    <p>Top players are ranked by XP gain, distance walked, Pokémon caught, and social challenges — all manually submitted and verified.</p>
 
-    <h3>What are the prizes?</h3>
-    <p>Cash prizes for top overall scorers and daily social challenge winners. Prize tiers increase with more participants.</p>
+    <h3>What do I win?</h3>
+    <p>Cash for the top scorers. Bonus prizes for social media challenges. Prize pool scales with participation.</p>
 
-    <h3>Is cheating allowed?</h3>
-    <p>Absolutely not. All submissions are verified, and any fake data or altered screenshots will result in disqualification.</p>
+    <h3>Can I fake my stats?</h3>
+    <p>Try it, and you're out. We verify screenshots and look for inconsistencies. Don’t be that person.</p>
   </div>
 </body>
 </html>
