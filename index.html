@@ -6,7 +6,7 @@
   <title>PlayerZero Challenge</title>
   <style>
     body {
-      font-family: sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background: #fff;
       color: #111;
       margin: 0;
@@ -37,58 +37,29 @@
       margin-bottom: 1.5rem;
     }
 
-    .intro-glitch {
-      font-family: 'Arial Black', sans-serif;
-      font-size: 1.2rem;
+    .intro {
+      font-size: 1.3rem;
+      font-weight: 500;
       max-width: 700px;
-      margin-bottom: 3rem;
-      text-align: center;
-      line-height: 1.6;
+      margin-bottom: 2.5rem;
+      line-height: 1.8;
     }
 
-    .bold {
-      font-weight: 900;
+    .intro .challenge {
+      color: #e63946;
+      font-weight: 700;
     }
 
-    .big {
-      font-size: 1.35em;
+    .intro .grind {
+      font-weight: bold;
     }
 
-    .glitch-red {
-      color: #ff0033;
-      position: relative;
+    .intro .flex {
+      font-weight: bold;
     }
 
-    .glitch-red::before,
-    .glitch-red::after {
-      content: attr(data-text);
-      position: absolute;
-      left: 0;
-      right: 0;
-      opacity: 0.6;
-      z-index: -1;
-    }
-
-    .glitch-red::before {
-      top: -1px;
-      left: 1px;
-      color: #00ffff;
-    }
-
-    .glitch-red::after {
-      top: 1px;
-      left: -1px;
-      color: #ff00ff;
-    }
-
-    .spaced {
-      margin-top: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .dot {
-      font-weight: 300;
-      color: #999;
+    .intro .respect {
+      font-weight: bold;
     }
 
     h1 {
@@ -138,11 +109,11 @@
     </div>
   </div>
 
-  <div class="intro-glitch">
-    <p><span class="glitch-red bold" data-text="A first-of-its-kind">A first-of-its-kind</span> <span class="glitch-red bold big" data-text="challenge">challenge</span><span class="dot">...</span></p>
-    <p class="spaced"><span class="dot">...</span>built for players who <span class="bold">grind</span>.</p>
-    <p><span class="bold big">Flex</span> your stats, let the community know you show out,</p>
-    <p>and put some <span class="bold big">respect</span> on your name!</p>
+  <div class="intro">
+    A first-of-its-kind <span class="challenge">challenge</span>...<br />
+    ...built for players who <span class="grind">grind</span>.<br />
+    <span class="flex">Flex</span> your stats, let the community know you showed out,<br />
+    and put some <span class="respect">respect</span> on your name!
   </div>
 
   <h1>Join the PlayerZero Challenge</h1>
