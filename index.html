@@ -70,6 +70,7 @@
 
     .faq {
       max-width: 700px;
+      width: 100%;
       text-align: left;
     }
 
@@ -78,20 +79,23 @@
       margin-top: 2rem;
     }
 
-    .faq p {
-      margin: 0.5rem 0 1.5rem 0;
-    }
-
-    details {
+    .accordion {
       margin-bottom: 1rem;
-      background: #f0f0f0;
+      border: none;
+      background: #eee;
       padding: 1rem;
-      border-radius: 5px;
-    }
-
-    summary {
+      font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
+      width: 100%;
+      text-align: left;
+    }
+
+    .panel {
+      display: none;
+      padding: 0 1rem 1rem 1rem;
+      background: #f9f9f9;
+      margin-bottom: 1rem;
     }
   </style>
 </head>
@@ -117,30 +121,71 @@
   <div class="faq">
     <h2>FAQs</h2>
 
-    <details>
-      <summary>What is the PlayerZero Challenge?</summary>
-      <p>A weekly community competition for players who want to show off their grind. It's not affiliated with any game publisher — just a competition for bragging rights and prizes.</p>
-    </details>
+    <button class="accordion">What is the PlayerZero Challenge?</button>
+    <div class="panel">
+      <p>A week-long community competition for Pokémon Go players to flex their grind. It's not affiliated with Niantic or any publisher — just bragging rights, cash prizes, and a leaderboard of legends.</p>
+    </div>
 
-    <details>
-      <summary>How do I join?</summary>
-      <p>Click the "Enter Now" button, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
-    </details>
+    <button class="accordion">How do I join?</button>
+    <div class="panel">
+      <p>Click "Enter Now," pay the entry fee, and submit a screenshot of your Trainer Code. That becomes your ID for the challenge.</p>
+    </div>
 
-    <details>
-      <summary>How is it scored?</summary>
-      <p>Top players are ranked by XP gain, distance walked, Pokémon caught, and social challenges — all manually submitted and verified.</p>
-    </details>
+    <button class="accordion">What stats count?</button>
+    <div class="panel">
+      <p>This challenge is all about measurable grind — XP gain, Pokémon caught, distance walked, and more. Final scoring categories (or weighted combo categories) will be announced before the event begins.</p>
+    </div>
 
-    <details>
-      <summary>What do I win?</summary>
-      <p>Cash for the top scorers. Bonus prizes for social media challenges. Prize pool scales with participation.</p>
-    </details>
+    <button class="accordion">What prevents cheating?</button>
+    <div class="panel">
+      <p>We use AI tools to verify screenshots and detect tampering. Strategic verification layers are also in place. Suspicious or altered submissions = instant disqualification, no refund.</p>
+    </div>
 
-    <details>
-      <summary>What prevents cheating?</summary>
-      <p>Each entry is verified using image-reading tools and a set of internal checks. If anything looks altered or suspicious, it’s disqualified — no exceptions.</p>
-    </details>
+    <button class="accordion">What do I win?</button>
+    <div class="panel">
+      <p>Cash prizes go to top scorers in each category. Bonus prizes are awarded for standout moments and daily social media challenges. Prize pools scale with participation.</p>
+    </div>
+
+    <button class="accordion">When does the challenge start?</button>
+    <div class="panel">
+      <p>After we hit the minimum tier to unlock the prize pool, we’ll set a start date — typically 30+ days out — to give more players time to join. You’ll get advance notice before it begins.</p>
+    </div>
+
+    <button class="accordion">Can I join late?</button>
+    <div class="panel">
+      <p>Yes. The challenge lasts 7 days. You can submit your “Day 1” screenshots anytime during the event — so even if you start late, you’ve still got a shot to finish strong.</p>
+    </div>
+
+    <button class="accordion">How will winners be contacted?</button>
+    <div class="panel">
+      <p>Via the email you provide when registering. You can also follow @pgPlayerZero on Instagram for updates, shoutouts, and leaderboard highlights.</p>
+    </div>
+
+    <button class="accordion">Does level matter?</button>
+    <div class="panel">
+      <p>Nope. Every metric is based on your gains during the challenge — not your all-time stats. New players and seasoned vets compete on equal footing.</p>
+    </div>
+
+    <button class="accordion">What does the entry fee cover?</button>
+    <div class="panel">
+      <p>100% goes into prize pools and challenge infrastructure. The more players, the bigger the prizes — and more winners in each category.</p>
+    </div>
+
+    <button class="accordion">Are refunds available?</button>
+    <div class="panel">
+      <p>No. PlayerZero is built on scaling prizes with participation. Your entry helps fund a better experience — more winners, higher payouts, and real stakes.</p>
+    </div>
   </div>
+
+  <script>
+    const acc = document.getElementsByClassName("accordion");
+    for (let i = 0; i < acc.length; i++) {
+      acc[i].addEventListener("click", function () {
+        this.classList.toggle("active");
+        const panel = this.nextElementSibling;
+        panel.style.display = panel.style.display === "block" ? "none" : "block";
+      });
+    }
+  </script>
 </body>
 </html>
