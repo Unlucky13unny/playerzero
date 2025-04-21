@@ -46,26 +46,15 @@
       line-height: 1.4;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-top: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .tagline {
-      font-style: italic;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    a.button {
+    a.button, .contact-btn {
       background: black;
       color: white;
       text-decoration: none;
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin-bottom: 3rem;
+      margin: 1rem 0;
+      display: inline-block;
     }
 
     .faq {
@@ -78,78 +67,61 @@
       margin-top: 2rem;
     }
 
-    .faq p {
-      margin: 0.5rem 0 1.5rem 0;
+    .faq details {
+      background: #f0f0f0;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 5px;
     }
 
+    .faq summary {
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    /* Modal styles */
     .modal {
       display: none;
       position: fixed;
-      z-index: 1000;
+      z-index: 1;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0, 0, 0, 0.8);
+      background-color: rgba(0,0,0,0.7);
     }
 
     .modal-content {
       background-color: #fff;
-      margin: 5% auto;
+      margin: 10% auto;
       padding: 2rem;
       border: 1px solid #888;
       width: 90%;
       max-width: 500px;
-      border-radius: 10px;
-      text-align: left;
       position: relative;
+      text-align: left;
     }
 
-    .modal-content h2 {
-      font-size: 1.5rem;
-      margin-bottom: 1rem;
+    .modal-content img.logo {
+      max-width: 150px;
+      display: block;
+      margin: 0 auto 1rem;
     }
 
     .close {
-      color: #aaa;
       position: absolute;
       top: 10px;
       right: 20px;
-      font-size: 28px;
-      font-weight: bold;
+      color: #000;
+      font-size: 24px;
       cursor: pointer;
     }
 
-    .contact-logo {
-      max-width: 150px;
-      display: block;
-      margin: 0 auto 1rem auto;
-    }
-
-    label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    input, textarea {
+    .modal-content input, .modal-content textarea {
       width: 100%;
+      margin-bottom: 1rem;
       padding: 0.5rem;
-      margin-top: 0.3rem;
-      box-sizing: border-box;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 1rem;
-    }
-
-    button.send-button {
-      margin-top: 1rem;
-      background-color: black;
-      color: white;
-      padding: 0.5rem 1.5rem;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
       font-size: 1rem;
     }
   </style>
@@ -171,24 +143,36 @@
     and put some <strong>RESPECT</strong> on your name!
   </p>
 
-  <a href="#" onclick="document.getElementById('contactModal').style.display='block'" class="button">Contact</a>
+  <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
+  <button class="contact-btn" onclick="document.getElementById('contactModal').style.display='block'">Contact</button>
 
+  <div class="faq">
+    <h2>FAQs</h2>
+    <details><summary>What is the PlayerZero Challenge?</summary><p>A community-driven grind-off for Pokémon Go players. Compete using in-game stats and social prompts to win prizes and prove your hustle.</p></details>
+    <details><summary>How do I join?</summary><p>Hit the "Enter Now" button, pay the small entry fee, and upload your Trainer Code to lock in your spot.</p></details>
+    <details><summary>When does it start?</summary><p>Once we reach our minimum player count, we’ll set a start date and give you plenty of notice to prep and invite others.</p></details>
+    <details><summary>What stats count?</summary><p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, and more. Final categories will be announced before launch.</p></details>
+    <details><summary>Can I still win if I start late?</summary><p>Yes. The challenge lasts 7 days and you can submit your starting stats any time during that window. Just grind hard and finish strong.</p></details>
+    <details><summary>How are winners announced?</summary><p>We’ll email winners at the address provided during signup. Follow <strong>@pgPlayerZero</strong> on Instagram for shoutouts and updates.</p></details>
+    <details><summary>What prevents cheating?</summary><p>Submissions require screenshots and confirmation. We use image-reading tools, cross-verification, and human review to catch sketchy stuff. Don’t ruin the fun — keep it real.</p></details>
+    <details><summary>Will player level be a category?</summary><p>Nope. All scored metrics are based on effort, not legacy. New players can grind just as hard as veterans.</p></details>
+    <details><summary>What does the entry fee support?</summary><p>Your entry goes directly to covering challenge operations and building the prize pool. More players = more prizes + more winners.</p></details>
+  </div>
+
+  <!-- Contact Modal -->
   <div id="contactModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
-      <img src="playerzero-logo.png" class="contact-logo" alt="Logo" />
+      <img src="playerzero-logo.png" class="logo" alt="Logo">
       <h2>Contact Us</h2>
       <form>
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name" required />
-
+        <input type="text" id="name" name="name">
         <label for="email">Email:</label>
-        <input type="email" id="email" name="email" required />
-
+        <input type="email" id="email" name="email">
         <label for="message">Message:</label>
-        <textarea id="message" name="message" rows="4" required></textarea>
-
-        <button class="send-button" type="submit">Send</button>
+        <textarea id="message" name="message" rows="4"></textarea>
+        <button type="submit">Send</button>
       </form>
     </div>
   </div>
