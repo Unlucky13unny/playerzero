@@ -22,6 +22,12 @@
       margin-bottom: 1rem;
     }
 
+    .top-right {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+
     .stacked-tagline-container {
       display: flex;
       justify-content: center;
@@ -52,65 +58,108 @@
       margin-bottom: 0.5rem;
     }
 
-    a.button {
+    .tagline {
+      font-style: italic;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    a.button, .top-right button {
       background: black;
       color: white;
       text-decoration: none;
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin: 1rem 0;
-      display: inline-block;
+      margin-bottom: 1rem;
+      border: none;
+      cursor: pointer;
     }
 
     .faq {
       max-width: 700px;
+      width: 100%;
       text-align: left;
-      margin-top: 3rem;
     }
 
     .faq h2 {
       font-size: 1.5rem;
-      margin-bottom: 1rem;
+      margin-top: 2rem;
     }
 
-    details {
+    .faq details {
       background: #eee;
-      margin-bottom: 1rem;
       padding: 1rem;
+      margin-bottom: 0.5rem;
       border-radius: 5px;
-      transition: all 0.3s ease;
     }
 
-    summary {
+    .faq summary {
       font-weight: bold;
       cursor: pointer;
     }
 
-    .contact-button {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      background: black;
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 5px;
-      text-decoration: none;
-      z-index: 1000;
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1;
+      padding-top: 100px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
     }
 
-    @media (max-width: 768px) {
-      .contact-button {
-        top: 10px;
-        right: 10px;
-        padding: 0.4rem 0.8rem;
-        font-size: 0.9rem;
-      }
+    .modal-content {
+      background-color: #fff;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 500px;
+      position: relative;
+      border-radius: 8px;
+    }
+
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .modal img {
+      width: 150px;
+      display: block;
+      margin: 0 auto 20px;
+    }
+
+    form label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    form input, form textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      font-size: 1rem;
     }
   </style>
 </head>
 <body>
-  <a href="#" class="contact-button" onclick="document.getElementById('contactModal').style.display='block'">Contact</a>
+  <div class="top-right">
+    <button onclick="document.getElementById('contactModal').style.display='block'">Contact</button>
+  </div>
+
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
 
   <div class="stacked-tagline-container">
@@ -131,45 +180,72 @@
 
   <div class="faq">
     <h2>FAQs</h2>
-    <details>
-      <summary>What is the PlayerZero Challenge?</summary>
-      <p>This is a community competition for Pokémon Go players who want to prove their grind. It’s not affiliated with any game publisher — just a test of effort, hustle, and bragging rights.</p>
+    <details><summary>What is the PlayerZero Challenge?</summary>
+      <p>A week-long community competition for Pokémon Go players to show off their grind. Not affiliated with any game publisher — just a grassroots challenge for bragging rights, real prizes, and community glory.</p>
     </details>
-    <details>
-      <summary>How do I join?</summary>
+
+    <details><summary>How do I join?</summary>
       <p>Submit your Trainer Code, stats, and screenshots through the entry form and pay the entry fee to lock in your spot.</p>
     </details>
-    <details>
-      <summary>When does the challenge start?</summary>
-      <p>The challenge will launch once the minimum participation threshold is hit — but we won’t start immediately. You’ll get advance notice (30+ days) so you can prepare, invite others, and plan your grind.</p>
+
+    <details><summary>When does the challenge start?</summary>
+      <p>The challenge officially begins only after the minimum number of participants is reached. Once that goal is hit, you’ll be notified in advance with the start date — giving everyone time to prep, plan, and promote. Our goal is to hit critical mass, so don’t just join — recruit.</p>
     </details>
-    <details>
-      <summary>What stats count?</summary>
-      <p>This challenge is all about quantifiable grind — XP gain, Pokémon caught, distance walked, PokéStops visited, and more. The exact scoring system may focus on individual stats or a weighted combo. Final rules will be announced before kickoff.</p>
+
+    <details><summary>What stats count?</summary>
+      <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, and more. Final categories and scoring format (single metric or weighted) will be announced before the challenge begins and may vary based on participation size.</p>
     </details>
-    <details>
-      <summary>What do I win?</summary>
-      <p>Cash prizes for top performers, plus bonus awards for things like social challenges. More participants = more prize tiers and more winners per category.</p>
+
+    <details><summary>What do I win?</summary>
+      <p>Cash prizes go to the top scorers. Bonus awards for daily challenges (like best AR shot or top shiny). The prize pool grows with every participant — more players means more winners and higher payouts.</p>
     </details>
-    <details>
-      <summary>How are winners notified?</summary>
-      <p>Winners will be contacted via the email they provided during signup. We’ll also post results and shoutouts on Instagram @pgPlayerZero.</p>
+
+    <details><summary>How are winners notified?</summary>
+      <p>Winners will be contacted via the email provided at signup. You can also follow @pgPlayerZero on Instagram for public callouts and engagement opportunities. Official announcements and verification instructions will be sent out after the challenge ends.</p>
+    </details>
+
+    <details><summary>What prevents cheating?</summary>
+      <p>Every submission is verified through screenshot analysis and other detection layers. If anything seems off, you’ll be flagged. Altered images, inconsistent stats, or trickery = disqualification. No refunds for rule breakers. Play clean, play proud.</p>
+    </details>
+
+    <details><summary>Does player level impact results?</summary>
+      <p>Nope. All tracked categories offer a fair shot whether you're level 10 or 50. It's not about how long you've played — it's about how hard you hustle during the challenge window.</p>
+    </details>
+
+    <details><summary>What does the entry fee go toward?</summary>
+      <p>100% of entry fees go toward prize payouts and essential infrastructure. No shady cuts — every dollar powers the challenge and rewards players directly.</p>
+    </details>
+
+    <details><summary>What if I miss the start?</summary>
+      <p>You can submit your official "start" screenshots at any time during the event. The challenge lasts 7 days, so if you’re a little late to the party, no problem — you’ve still got time to show out.</p>
     </details>
   </div>
 
-  <div id="contactModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.7); z-index:1000;">
-    <div style="background:#fff; padding:2rem; border-radius:10px; max-width:400px; margin:5% auto; position:relative; text-align:left;">
-      <img src="playerzero-logo.png" alt="PlayerZero Logo" style="max-width: 120px; display: block; margin: 0 auto 1rem;">
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
+      <img src="playerzero-logo.png" alt="PlayerZero Logo">
       <h2>Contact Us</h2>
-      <label for="name">Name:</label><br />
-      <input type="text" id="name" name="name" style="width: 100%; margin-bottom: 1rem;" /><br />
-      <label for="email">Email:</label><br />
-      <input type="email" id="email" name="email" style="width: 100%; margin-bottom: 1rem;" /><br />
-      <label for="message">Message:</label><br />
-      <textarea id="message" name="message" rows="4" style="width: 100%; margin-bottom: 1rem;"></textarea><br />
-      <button style="background:black; color:white; padding:0.5rem 1rem; border:none; border-radius:5px;">Send</button>
-      <span onclick="document.getElementById('contactModal').style.display='none'" style="position:absolute; top:10px; right:15px; cursor:pointer; font-size: 1.25rem;">&times;</span>
+      <form>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="4" required></textarea>
+        <button type="submit">Send</button>
+      </form>
     </div>
   </div>
+
+  <script>
+    // Contact modal
+    window.onclick = function(event) {
+      const modal = document.getElementById('contactModal');
+      if (event.target === modal) {
+        modal.style.display = "none";
+      }
+    }
+  </script>
 </body>
 </html>
