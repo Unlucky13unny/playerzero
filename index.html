@@ -82,33 +82,75 @@
       margin: 0.5rem 0 1.5rem 0;
     }
 
-    .contact-modal {
+    .modal {
       display: none;
       position: fixed;
-      z-index: 999;
+      z-index: 1000;
       left: 0;
       top: 0;
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0,0,0,0.6);
+      background-color: rgba(0, 0, 0, 0.8);
     }
 
-    .contact-modal-content {
+    .modal-content {
       background-color: #fff;
-      margin: 10% auto;
+      margin: 5% auto;
       padding: 2rem;
-      border-radius: 8px;
+      border: 1px solid #888;
       width: 90%;
       max-width: 500px;
+      border-radius: 10px;
       text-align: left;
+      position: relative;
+    }
+
+    .modal-content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
     }
 
     .close {
-      float: right;
-      font-size: 1.2rem;
+      color: #aaa;
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      font-size: 28px;
       font-weight: bold;
       cursor: pointer;
+    }
+
+    .contact-logo {
+      max-width: 150px;
+      display: block;
+      margin: 0 auto 1rem auto;
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+
+    button.send-button {
+      margin-top: 1rem;
+      background-color: black;
+      color: white;
+      padding: 0.5rem 1.5rem;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
     }
   </style>
 </head>
@@ -129,62 +171,26 @@
     and put some <strong>RESPECT</strong> on your name!
   </p>
 
-  <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
-  <a href="#" class="button contact-trigger">Contact</a>
+  <a href="#" onclick="document.getElementById('contactModal').style.display='block'" class="button">Contact</a>
 
-  <div class="contact-modal" id="contactModal">
-    <div class="contact-modal-content">
-      <span class="close">&times;</span>
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
+      <img src="playerzero-logo.png" class="contact-logo" alt="Logo" />
       <h2>Contact Us</h2>
-      <form action="mailto:support@unluckybunny.com" method="POST" enctype="text/plain">
-        <label for="name">Name:</label><br />
-        <input type="text" name="name" required /><br /><br />
+      <form>
+        <label for="name">Name:</label>
+        <input type="text" id="name" name="name" required />
 
-        <label for="email">Email:</label><br />
-        <input type="email" name="email" required /><br /><br />
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required />
 
-        <label for="message">Message:</label><br />
-        <textarea name="message" rows="5" required></textarea><br /><br />
+        <label for="message">Message:</label>
+        <textarea id="message" name="message" rows="4" required></textarea>
 
-        <button type="submit">Send</button>
+        <button class="send-button" type="submit">Send</button>
       </form>
     </div>
   </div>
-
-  <div class="faq">
-    <h2>FAQs</h2>
-    <h3>What is the PlayerZero Challenge?</h3>
-    <p>A weekly community competition for players who want to show off their grind. It's not affiliated with any game publisher — just a competition for bragging rights and prizes.</p>
-
-    <h3>How do I join?</h3>
-    <p>Click the "Enter Now" button, pay the entry fee, and upload a screenshot of your Trainer Code screen.</p>
-
-    <h3>How is it scored?</h3>
-    <p>Top players are ranked by XP gain, distance walked, Pokémon caught, and social challenges — all manually submitted and verified.</p>
-
-    <h3>What do I win?</h3>
-    <p>Cash for the top scorers. Bonus prizes for social media challenges. Prize pool scales with participation.</p>
-
-    <h3>What prevents cheating?</h3>
-    <p>Submissions are verified via screenshot comparison and AI tools. Suspicious data triggers manual review — fake entries get disqualified with no refund.</p>
-  </div>
-
-  <script>
-    document.querySelector('.contact-trigger').addEventListener('click', function (e) {
-      e.preventDefault();
-      document.getElementById('contactModal').style.display = 'block';
-    });
-
-    document.querySelector('.close').addEventListener('click', function () {
-      document.getElementById('contactModal').style.display = 'none';
-    });
-
-    window.onclick = function (event) {
-      const modal = document.getElementById('contactModal');
-      if (event.target === modal) {
-        modal.style.display = 'none';
-      }
-    };
-  </script>
 </body>
 </html>
