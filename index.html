@@ -17,26 +17,6 @@
       text-align: center;
     }
 
-    .header {
-      position: relative;
-      width: 100%;
-      display: flex;
-      justify-content: center;
-    }
-
-    .contact-button {
-      position: absolute;
-      top: 0;
-      right: 0;
-      margin: 1rem;
-      padding: 0.5rem 1rem;
-      background: black;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
     img.logo {
       max-width: 400px;
       margin-bottom: 1rem;
@@ -66,6 +46,18 @@
       line-height: 1.4;
     }
 
+    h1 {
+      font-size: 2rem;
+      margin-top: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      font-style: italic;
+      font-size: 1rem;
+      margin-bottom: 2rem;
+    }
+
     a.button {
       background: black;
       color: white;
@@ -73,98 +65,58 @@
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin: 1rem auto;
+      margin-bottom: 2rem;
       display: inline-block;
+    }
+
+    .contact-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: black;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      font-size: 0.9rem;
+      text-decoration: none;
+    }
+
+    @media (max-width: 768px) {
+      .contact-button {
+        top: 10px;
+        right: 10px;
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+      }
     }
 
     .faq {
       max-width: 700px;
       text-align: left;
-      margin-top: 2rem;
     }
 
     .faq h2 {
       font-size: 1.5rem;
-      margin-bottom: 1rem;
+      margin-top: 2rem;
     }
 
-    details {
-      background: #f2f2f2;
-      margin-bottom: 0.5rem;
-      padding: 0.75rem;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    details summary {
-      font-weight: bold;
-    }
-
-    details[open] summary:after {
-      content: "▲";
-      float: right;
-    }
-
-    summary:after {
-      content: "▼";
-      float: right;
-    }
-
-    #contactModal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0, 0, 0, 0.6);
-      z-index: 9999;
-    }
-
-    .modal-content {
-      background: white;
-      max-width: 500px;
-      padding: 2rem;
-      margin: 5% auto;
-      position: relative;
-      border-radius: 10px;
-      text-align: left;
-    }
-
-    .modal-content img {
-      width: 150px;
-      display: block;
-      margin: 0 auto 1rem;
-    }
-
-    .modal-content label {
-      display: block;
-      margin-top: 1rem;
-    }
-
-    .modal-content input,
-    .modal-content textarea {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.25rem;
+    .faq details {
+      background: #eee;
+      margin: 0.5rem 0;
+      padding: 1rem;
       border-radius: 4px;
-      border: 1px solid #ccc;
     }
 
-    .close {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
+    .faq summary {
+      font-weight: bold;
       cursor: pointer;
-      font-size: 1.25rem;
     }
   </style>
 </head>
 <body>
-  <div class="header">
-    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
-    <button class="contact-button" onclick="document.getElementById('contactModal').style.display='block'">Contact</button>
-  </div>
+  <a href="#" class="contact-button" onclick="document.getElementById('contactModal').style.display='block'">Contact</a>
+
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
 
   <div class="stacked-tagline-container">
     <div class="stacked-tagline">
@@ -184,33 +136,33 @@
 
   <div class="faq">
     <h2>FAQs</h2>
-    <details><summary>What is the PlayerZero Challenge?</summary><p>A community competition for players who want to show off their grind. Not affiliated with any game publisher — just bragging rights and prizes.</p></details>
-    <details><summary>How do I join?</summary><p>Click “Enter Now,” pay the entry fee, and upload your Trainer Code screenshot. That code will be your ID for the event.</p></details>
-    <details><summary>When does the challenge start?</summary><p>Once we hit the minimum threshold, we’ll announce a launch date at least 30 days out — giving you plenty of time to prepare, rally others, and plan your grind.</p></details>
-    <details><summary>What stats count?</summary><p>This challenge scores based on quantifiable grind — XP, catches, distance walked, and more. Final categories may vary and will be announced before launch.</p></details>
-    <details><summary>What do I win?</summary><p>Cash prizes for top scorers in individual and combined stat categories. Bonus prizes for social media submissions. The more players, the more prizes.</p></details>
-    <details><summary>What prevents cheating?</summary><p>We verify all submissions with screenshots, AI readers, and additional checks. Fake or altered images result in instant disqualification. No refunds. No shortcuts.</p></details>
-    <details><summary>Will player level be a factor?</summary><p>Nope. Everyone starts equal. Your grind during the challenge is all that matters.</p></details>
-    <details><summary>How do I track updates or get support?</summary><p>We’ll contact winners by email and post updates on Instagram: <strong>@pgPlayerZero</strong>. Questions? Use the contact form above.</p></details>
-    <details><summary>What if I miss the start?</summary><p>The challenge lasts 7 days. You can lock in your start stats anytime during that window — so even if you start late, you can still finish strong.</p></details>
-    <details><summary>Where does my entry fee go?</summary><p>100% supports the prize pool and infrastructure for PlayerZero. The more entries, the more rewards for the community.</p></details>
+    <details>
+      <summary>What is the PlayerZero Challenge?</summary>
+      <p>A community competition for players to show off their grind — not affiliated with any game publisher.</p>
+    </details>
+    <details>
+      <summary>How do I join?</summary>
+      <p>Click "Enter Now", pay the fee, and upload your Trainer Code screenshot to get started.</p>
+    </details>
+    <details>
+      <summary>When does the challenge start?</summary>
+      <p>The challenge begins when enough players register to unlock the prize pool. We’ll notify you in advance so you’re ready to go.</p>
+    </details>
   </div>
 
-  <div id="contactModal">
-    <div class="modal-content">
-      <span class="close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
-      <img src="playerzero-logo.png" alt="PlayerZero Logo">
+  <!-- Contact Modal -->
+  <div id="contactModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:1000;">
+    <div style="background:white; width:90%; max-width:500px; margin:5% auto; padding:2rem; position:relative; border-radius:10px;">
+      <img src="playerzero-logo.png" alt="PlayerZero Logo" style="max-width:100px; display:block; margin:0 auto 1rem auto;" />
       <h2>Contact Us</h2>
-      <label for="name">Name:</label>
-      <input type="text" id="name" name="name">
-
-      <label for="email">Email:</label>
-      <input type="email" id="email" name="email">
-
-      <label for="message">Message:</label>
-      <textarea id="message" name="message" rows="4"></textarea>
-
-      <button style="margin-top: 1rem; padding: 0.5rem 1rem;">Send</button>
+      <form>
+        <label>Name:<br /><input type="text" name="name" style="width:100%; padding:0.5rem; margin-bottom:1rem;" /></label>
+        <label>Email:<br /><input type="email" name="email" style="width:100%; padding:0.5rem; margin-bottom:1rem;" /></label>
+        <label>Message:<br /><textarea name="message" rows="4" style="width:100%; padding:0.5rem;"></textarea></label>
+        <br /><br />
+        <button type="submit" style="background:black; color:white; border:none; padding:0.5rem 1rem; cursor:pointer;">Send</button>
+      </form>
+      <button onclick="document.getElementById('contactModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
     </div>
   </div>
 </body>
