@@ -17,6 +17,20 @@
       text-align: center;
     }
 
+    .contact-button {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: black;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      z-index: 1000;
+    }
+
     img.logo {
       max-width: 400px;
       margin-bottom: 1rem;
@@ -58,20 +72,20 @@
       margin-bottom: 2rem;
     }
 
-    a.button {
+    a.button, button.button {
       background: black;
       color: white;
       text-decoration: none;
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin-bottom: 3rem;
+      margin-bottom: 1.5rem;
+      border: none;
     }
 
     .faq {
       max-width: 700px;
       text-align: left;
-      width: 100%;
     }
 
     .faq h2 {
@@ -81,18 +95,73 @@
 
     details {
       background: #eee;
+      border-radius: 5px;
       padding: 1rem;
       margin-bottom: 1rem;
-      border-radius: 5px;
     }
 
     summary {
       font-weight: bold;
       cursor: pointer;
     }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 999;
+      padding-top: 60px;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.7);
+    }
+
+    .modal-content {
+      background-color: #fefefe;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #888;
+      width: 90%;
+      max-width: 500px;
+      text-align: left;
+      border-radius: 10px;
+    }
+
+    .modal-content img {
+      max-width: 150px;
+      display: block;
+      margin: 0 auto 1rem auto;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: black;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-family: inherit;
+    }
   </style>
 </head>
 <body>
+  <button class="contact-button" onclick="document.getElementById('contactModal').style.display='block'">Contact</button>
+
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
 
   <div class="stacked-tagline-container">
@@ -113,56 +182,43 @@
 
   <div class="faq">
     <h2>FAQs</h2>
-
-    <details>
-      <summary>What is the PlayerZero Challenge?</summary>
-      <p>A community competition for Pokémon Go players to flex their grind — XP, catches, distance walked, and more. Not affiliated with Niantic, just a celebration of hustle and bragging rights.</p>
-    </details>
-
-    <details>
-      <summary>How do I join?</summary>
-      <p>Click “Enter Now,” pay the entry fee, and upload your Trainer Code screenshot. This becomes your Player ID and must stay consistent throughout the challenge.</p>
-    </details>
-
-    <details>
-      <summary>When does the challenge start?</summary>
-      <p>Once the minimum number of players join, we’ll announce an official start date — at least 30 days out. This gives everyone time to prep and spread the word.</p>
-    </details>
-
-    <details>
-      <summary>How long is the challenge?</summary>
-      <p>Each event lasts 7 days. You can submit your starting data anytime before the deadline. Even if you join a day or two late, you can still compete.</p>
-    </details>
-
-    <details>
-      <summary>What stats count?</summary>
-      <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, and more. Scoring categories may shift based on participation, and could include weighted totals or individual standouts. Final rules will be announced prior to launch.</p>
-    </details>
-
-    <details>
-      <summary>What can I win?</summary>
-      <p>Cash prizes for top performers and daily drops for social media standouts. Prize pools grow as more players join — unlocking additional winners and bigger payouts.</p>
-    </details>
-
-    <details>
-      <summary>Will player level be a category?</summary>
-      <p>Nope. Every player starts with a clean slate. It’s not about how far you've come — it’s about what you can do in 7 days.</p>
-    </details>
-
-    <details>
-      <summary>What prevents cheating?</summary>
-      <p>We require screenshots, use AI to read and verify stat changes, and check for inconsistencies. If your images are edited or shady, you’re disqualified with no refund. Don’t be that person.</p>
-    </details>
-
-    <details>
-      <summary>How will I know if I win?</summary>
-      <p>We’ll contact winners using the email provided during entry. You can also follow @pgPlayerZero on Instagram for announcements and rankings.</p>
-    </details>
-
-    <details>
-      <summary>Where does my entry fee go?</summary>
-      <p>100% goes into running the challenge and funding the prize pool. The more entries we receive, the more we give back to players.</p>
-    </details>
+    <details><summary>What is the PlayerZero Challenge?</summary><p>A competitive week-long event where Pokémon GO players flex their grind. It's not affiliated with Niantic or any publisher — just community-fueled fun with real rewards.</p></details>
+    <details><summary>How do I join?</summary><p>Submit your Trainer Code, stats, and screenshots through the entry form and pay the entry fee to lock in your spot.</p></details>
+    <details><summary>When does the challenge start?</summary><p>The event officially begins after the minimum entry threshold is reached — but the exact start date will be announced in advance so players have time to prep and recruit.</p></details>
+    <details><summary>What stats count?</summary><p>This challenge is all about measurable grind — XP gained, Pokémon caught, distance walked, PokéStops visited, and more. Scoring may focus on a single category or combine multiple metrics, depending on participation. Final rules will be announced before launch.</p></details>
+    <details><summary>What do I win?</summary><p>Cash prizes for the top performers, bonus rewards for social challenge winners, and increasing prize tiers as more players join.</p></details>
+    <details><summary>How are winners notified?</summary><p>We’ll email winners using the contact address they submit. For updates and community interaction, follow @pgPlayerZero on Instagram.</p></details>
+    <details><summary>What prevents cheating?</summary><p>Submissions are manually verified using image readers and stat matching. Screenshots must match your stats, and obvious manipulation will result in disqualification without refund.</p></details>
+    <details><summary>Is player level a scoring category?</summary><p>No. All scoring metrics are performance-based — everyone, from new players to veterans, competes on equal footing.</p></details>
+    <details><summary>What if I miss the start?</summary><p>You can still join as long as the challenge is active. Submit your entry and screenshots before the deadline to have your progress counted for the week.</p></details>
+    <details><summary>What does the entry fee go toward?</summary><p>100% goes into supporting infrastructure and building the prize pool. The more participants, the more categories — and the more people get paid.</p></details>
+    <details><summary>Can I get a refund?</summary><p>No refunds are available. The event uses pooled prize tiers that expand with more players, so each entry directly supports the payout scale.</p></details>
   </div>
+
+  <div id="contactModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="document.getElementById('contactModal').style.display='none'">&times;</span>
+      <img src="playerzero-logo.png" alt="PlayerZero Logo" />
+      <h2>Contact Us</h2>
+      <form>
+        <label>Name:</label>
+        <input type="text" required />
+        <label>Email:</label>
+        <input type="email" required />
+        <label>Message:</label>
+        <textarea required></textarea>
+        <button type="submit" class="button">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    window.onclick = function(event) {
+      const modal = document.getElementById('contactModal');
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
 </body>
 </html>
