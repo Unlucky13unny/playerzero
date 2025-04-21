@@ -46,76 +46,59 @@
       line-height: 1.4;
     }
 
-    h1 {
-      font-size: 2rem;
-      margin-top: 2rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .tagline {
-      font-style: italic;
-      font-size: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    a.button {
+    .button {
       background: black;
       color: white;
       text-decoration: none;
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin-bottom: 2rem;
+      margin: 1rem auto;
       display: inline-block;
     }
 
     .contact-button {
       position: absolute;
-      top: 20px;
-      right: 20px;
+      top: 1rem;
+      right: 2rem;
       background: black;
       color: white;
       padding: 0.5rem 1rem;
       border-radius: 4px;
-      font-size: 0.9rem;
-      text-decoration: none;
+      font-size: 0.85rem;
+      z-index: 10;
     }
 
-    @media (max-width: 768px) {
-      .contact-button {
-        top: 10px;
-        right: 10px;
-        font-size: 0.8rem;
-        padding: 0.4rem 0.8rem;
-      }
-    }
-
-    .faq {
+    details {
+      background: #eee;
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 5px;
       max-width: 700px;
       text-align: left;
     }
 
-    .faq h2 {
-      font-size: 1.5rem;
-      margin-top: 2rem;
-    }
-
-    .faq details {
-      background: #eee;
-      margin: 0.5rem 0;
-      padding: 1rem;
-      border-radius: 4px;
-    }
-
-    .faq summary {
+    summary {
       font-weight: bold;
       cursor: pointer;
+    }
+
+    .faq-wrapper {
+      margin-top: 2rem;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    @media (max-width: 600px) {
+      .contact-button {
+        top: 0.5rem;
+        right: 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <a href="#" class="contact-button" onclick="document.getElementById('contactModal').style.display='block'">Contact</a>
-
+  <a class="contact-button" href="#" onclick="alert('Insert contact popup here')">Contact</a>
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
 
   <div class="stacked-tagline-container">
@@ -134,36 +117,58 @@
 
   <a href="https://tally.so/r/wMG2VM" class="button">Enter Now</a>
 
-  <div class="faq">
+  <div class="faq-wrapper">
     <h2>FAQs</h2>
+
     <details>
       <summary>What is the PlayerZero Challenge?</summary>
-      <p>A community competition for players to show off their grind — not affiliated with any game publisher.</p>
+      <p>A weekly community competition for players who want to show off their grind. It's not affiliated with any game publisher — just a competition for bragging rights and prizes.</p>
     </details>
+
     <details>
       <summary>How do I join?</summary>
-      <p>Click "Enter Now", pay the fee, and upload your Trainer Code screenshot to get started.</p>
+      <p>Click the "Enter Now" button, pay the entry fee, and upload a screenshot of your Trainer Code screen. This code will act as your ID throughout the challenge.</p>
     </details>
+
     <details>
       <summary>When does the challenge start?</summary>
-      <p>The challenge begins when enough players register to unlock the prize pool. We’ll notify you in advance so you’re ready to go.</p>
+      <p>The challenge starts once we hit the minimum number of participants to unlock the base prize pool — but we won't launch immediately. You’ll get 30+ days notice to plan, prep, and rally more players before the start date.</p>
     </details>
-  </div>
 
-  <!-- Contact Modal -->
-  <div id="contactModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.6); z-index:1000;">
-    <div style="background:white; width:90%; max-width:500px; margin:5% auto; padding:2rem; position:relative; border-radius:10px;">
-      <img src="playerzero-logo.png" alt="PlayerZero Logo" style="max-width:100px; display:block; margin:0 auto 1rem auto;" />
-      <h2>Contact Us</h2>
-      <form>
-        <label>Name:<br /><input type="text" name="name" style="width:100%; padding:0.5rem; margin-bottom:1rem;" /></label>
-        <label>Email:<br /><input type="email" name="email" style="width:100%; padding:0.5rem; margin-bottom:1rem;" /></label>
-        <label>Message:<br /><textarea name="message" rows="4" style="width:100%; padding:0.5rem;"></textarea></label>
-        <br /><br />
-        <button type="submit" style="background:black; color:white; border:none; padding:0.5rem 1rem; cursor:pointer;">Send</button>
-      </form>
-      <button onclick="document.getElementById('contactModal').style.display='none'" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-    </div>
+    <details>
+      <summary>What stats count?</summary>
+      <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, and more. Final scoring categories may shift depending on total participants. Expect either single-metric contests or blended weighted scores. Official rules will be released before kickoff.</p>
+    </details>
+
+    <details>
+      <summary>Will player level be a scoring category?</summary>
+      <p>Nope. Whether you're new or seasoned, all scoring categories are based on gains made during the challenge. Everyone has the same shot to prove their hustle.</p>
+    </details>
+
+    <details>
+      <summary>What do I win?</summary>
+      <p>Cash prizes go to the top scorers in multiple stat categories. Bonus prizes will drop throughout the challenge for things like social media participation. The more who enter, the more winners and payouts we unlock.</p>
+    </details>
+
+    <details>
+      <summary>What prevents cheating?</summary>
+      <p>Each submission includes before and after screenshots, verified by AI. We also use buddy naming and signature matching to catch fraud. Submissions that look doctored or inconsistent are removed without refund.</p>
+    </details>
+
+    <details>
+      <summary>What does the entry fee go toward?</summary>
+      <p>100% of funds support the prize pool and running the event. Bigger turnout = bigger rewards for the community.</p>
+    </details>
+
+    <details>
+      <summary>What if I miss the start?</summary>
+      <p>The challenge lasts 7 days. You can submit your start screenshots anytime during the event window — but earlier entries = more time to rack up gains.</p>
+    </details>
+
+    <details>
+      <summary>How will I know if I win?</summary>
+      <p>Winners are contacted directly via the email submitted at entry. You can also follow updates and engage with @pgPlayerZero on Instagram for leaderboard teases and surprise drops.</p>
+    </details>
   </div>
 </body>
 </html>
