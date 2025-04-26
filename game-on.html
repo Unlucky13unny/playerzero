@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Challenge Completed</title>
+  <title>Locked & Loaded</title>
   <style>
     body {
       font-family: sans-serif;
@@ -33,35 +33,67 @@
       line-height: 1.6;
     }
 
-    strong {
-      color: red;
+    ul {
+      text-align: left;
+      display: inline-block;
+      margin-top: 1rem;
+      font-size: 1.1rem;
+      line-height: 1.6;
     }
 
-    .button {
+    ul li {
+      margin-bottom: 0.8rem;
+    }
+
+    .social-icons {
       margin-top: 2.5rem;
-      background: black;
-      color: white;
-      text-decoration: none;
-      padding: 1rem 2rem;
-      border-radius: 5px;
-      font-size: 1rem;
-      display: inline-block;
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+    }
+
+    .social-icons a img {
+      width: 36px;
+      height: 36px;
+      filter: brightness(0%);
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+
+    .social-icons a img:hover {
+      filter: brightness(0%) invert(50%);
+      transform: scale(1.1);
     }
   </style>
 </head>
 <body>
   <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-  <h1>Challenge Complete!</h1>
 
-  <p>You’ve officially crossed the finish line of the <strong>PlayerZero</strong> Challenge.</p>
+  <h1>Get Locked & Loaded</h1>
 
-  <p>Our team is reviewing all final submissions to verify your grind, score the stats, and crown the winners.</p>
+  <p>Welcome to the official <strong>start submission</strong> checkpoint for the PlayerZero Challenge!</p>
 
-  <p>Winners will be notified by email — and shouted out on Instagram and TikTok once results are finalized.</p>
+  <p>Before you dive into the grind, we're locking in your baseline stats. Here's what you'll submit:</p>
 
-  <p>Thank you for showing up, showing out, and putting your hustle on display.</p>
+  <ul>
+    <li><strong>XP Total</strong> — Your current overall XP.</li>
+    <li><strong>Pokémon Caught</strong> — The total number of Pokémon you’ve caught so far.</li>
+    <li><strong>Distance Walked</strong> — Your lifetime kilometers walked.</li>
+    <li><strong>PokéStops Visited</strong> — Total PokéStops you've spun to date.</li>
+  </ul>
 
-  <p><em>Stay tuned for the results...</em></p>
+  <p>⚡ Make sure your screenshots clearly show these stats.</p>
+  <p>⚡ Your identity is confirmed by your Trainer Code and Buddy Pokémon — they must match your registration.</p>
+  <p>⚡ Double-check everything before submitting. Mistakes can't be corrected later.</p>
+
+  <p>Ready? Submit your stats and get in the game.</p>
+
+  <div class="social-icons">
+    <a href="https://instagram.com/pgPlayerZero" target="_blank" aria-label="Instagram">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
+    </a>
+    <a href="https://tiktok.com/@pgPlayerZero" target="_blank" aria-label="TikTok">
+      <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+    </a>
+  </div>
 </body>
 </html>
-
