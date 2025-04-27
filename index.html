@@ -264,24 +264,24 @@
 
 
   <!-- Modal Script -->
-  <script>
-    const prizeBtn = document.getElementById('prizeInfoBtn');
-    const prizeModal = document.getElementById('prizeInfoModal');
-    const closeModal = document.getElementById('closeModal');
+  const prizeBtn = document.getElementById('prizeInfoBtn');
+const prizeModal = document.getElementById('prizeInfoModal');
+const closeModal = document.getElementById('closeModal');
 
-    prizeBtn.addEventListener('click', () => {
-      prizeModal.style.display = 'flex';
-    });
+prizeBtn.addEventListener('click', () => {
+  prizeModal.style.display = 'flex';
+});
 
-    closeModal.addEventListener('click', () => {
-      prizeModal.style.display = 'none';
-    });
+closeModal.addEventListener('click', () => {
+  prizeModal.style.display = 'none';
+});
 
-    prizeModal.addEventListener('click', (e) => {
-      if (e.target === prizeModal) {
-        prizeModal.style.display = 'none';
-      }
-    });
+prizeModal.addEventListener('click', (e) => {
+  if (e.target === prizeModal) {
+    prizeModal.style.display = 'none';
+  }
+});
+
   </script>
 
 </body>
