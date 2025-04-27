@@ -77,7 +77,7 @@
       padding: 1rem 2rem;
       border-radius: 5px;
       font-size: 1rem;
-      margin-bottom: 3rem;
+      margin-bottom: 1rem;
       display: inline-block;
     }
 
@@ -155,6 +155,11 @@
 
   <a href="https://challenge.pgplayerzero.com/register" class="button" role="button" aria-label="Enter the PlayerZero Challenge now">Enter Now</a>
 
+  <!-- ADDED: Prize Info Button -->
+  <button id="prizeInfoBtn" style="background: black; color: white; padding: 1rem 2rem; border-radius: 5px; font-size: 1rem; margin-bottom: 3rem; border: none; cursor: pointer;">
+    Prize Info
+  </button>
+
   <div class="faq">
     <h2>FAQs</h2>
 
@@ -225,5 +230,38 @@
       <p>Nope. The PlayerZero Challenge is an independent, community-run competition. It’s not affiliated with, endorsed by, or sponsored by Pokémon, Nintendo, Niantic, or any of their partners. We’re just fans who like to compete and create something fun for other players.</p>
     </details>
   </div>
+
+  <!-- Prize Info Modal -->
+  <div id="prizeInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; display: flex; align-items: center; justify-content: center;">
+    <div style="background: white; color: black; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%; text-align: left; position: relative;">
+      <button id="closeModal" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; font-weight: bold; cursor: pointer;">&times;</button>
+      <h2 style="font-size: 1.5rem; margin-bottom: 1rem; font-weight: bold;">Prizes That Level Up With You</h2>
+      <p style="margin-bottom: 1rem;">As more players join, the prize pool grows. 💥 Win prizes in each stat category like XP, catches, distance, and PokéStops visited.</p>
+      <p style="margin-bottom: 1rem;">Plus, battle for the ultimate glory: <strong>Grand Prizes</strong> for 1st, 2nd, and 3rd place overall!</p>
+      <p style="font-size: 0.9rem; font-style: italic;">More players. More winners. Bigger rewards.</p>
+    </div>
+  </div>
+
+  <!-- Modal Script -->
+  <script>
+    const prizeBtn = document.getElementById('prizeInfoBtn');
+    const prizeModal = document.getElementById('prizeInfoModal');
+    const closeModal = document.getElementById('closeModal');
+
+    prizeBtn.addEventListener('click', () => {
+      prizeModal.style.display = 'flex';
+    });
+
+    closeModal.addEventListener('click', () => {
+      prizeModal.style.display = 'none';
+    });
+
+    prizeModal.addEventListener('click', (e) => {
+      if (e.target === prizeModal) {
+        prizeModal.style.display = 'none';
+      }
+    });
+  </script>
+
 </body>
 </html>
