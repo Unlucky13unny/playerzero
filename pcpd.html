@@ -4,76 +4,98 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grind Stats Calculator | PlayerZero</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <style>
     body {
-      font-family: Arial, sans-serif;
-      background-color: #111;
-      color: #eee;
+      font-family: sans-serif;
+      background: #fff;
+      color: #111;
       padding: 2rem;
-      max-width: 700px;
-      margin: auto;
+      margin: 0;
+      text-align: center;
+    }
+    .logo {
+      max-width: 300px;
+      margin: 0 auto 2rem;
+      display: block;
     }
     h1 {
-      color: #ffcc00;
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 1rem;
     }
     label {
       display: block;
-      margin-top: 1rem;
+      margin: 1rem auto 0.5rem;
+      font-weight: bold;
+      max-width: 400px;
+      text-align: left;
     }
     input {
       padding: 0.5rem;
       width: 100%;
-      margin-top: 0.25rem;
-      border: none;
+      max-width: 400px;
+      border: 1px solid #ccc;
       border-radius: 5px;
+      display: block;
+      margin: 0 auto;
+    }
+    .input-row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin: 1rem 0;
     }
     button {
-      margin-top: 1.5rem;
-      padding: 0.75rem;
-      width: 100%;
-      background-color: #ffcc00;
-      color: #000;
+      background: #111;
+      color: #fff;
+      padding: 0.75rem 2rem;
       border: none;
       border-radius: 5px;
       font-weight: bold;
       cursor: pointer;
+      margin-top: 1.5rem;
     }
     .result {
       margin-top: 2rem;
-      font-size: 1.5rem;
-      color: #00ff88;
+      font-size: 1.25rem;
+    }
+    a {
+      color: red;
+      font-weight: bold;
+      text-decoration: none;
     }
     .links {
       margin-top: 2rem;
       font-size: 0.9rem;
     }
-    .links a {
-      color: #ffcc00;
-      text-decoration: underline;
-    }
   </style>
 </head>
 <body>
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
   <h1>Grind Stats Calculator</h1>
   <p>Upload your profile screenshot — we’ll auto-fill and break down your grind per day.</p>
 
-  <label for="screenshot">Upload Profile Screenshot:</label>
-  <input type="file" id="screenshot" accept="image/*" />
+  <div class="input-row">
+    <input type="file" id="screenshot" accept="image/*" />
+    <button onclick="extractStats()">Import Stats</button>
+  </div>
 
-  <label for="startDate">Start Date (MM/DD/YYYY):</label>
-  <input type="date" id="startDate" required />
+  <label for="startDate">Start Date:</label>
+  <input type="date" id="startDate" />
 
   <label for="distanceWalked">Distance Walked (km):</label>
-  <input type="number" id="distanceWalked" required />
+  <input type="number" id="distanceWalked" />
 
   <label for="totalCaught">Total Pokémon Caught:</label>
-  <input type="number" id="totalCaught" required />
+  <input type="number" id="totalCaught" />
 
   <label for="totalStops">Total PokéStops Visited:</label>
-  <input type="number" id="totalStops" required />
+  <input type="number" id="totalStops" />
 
   <label for="totalXP">Total XP:</label>
-  <input type="number" id="totalXP" required />
+  <input type="number" id="totalXP" />
 
   <button onclick="calculateStats()">Run My Stats</button>
 
@@ -86,8 +108,8 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
-    document.getElementById('screenshot').addEventListener('change', (e) => {
-      const file = e.target.files[0];
+    function extractStats() {
+      const file = document.getElementById('screenshot').files[0];
       if (!file) return;
 
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
@@ -96,31 +118,22 @@
           const distanceMatch = text.match(/Distance Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops Visited[:\s]*([\d,]+)/i);
-          let xpMatch = text.match(/XP[:\s]*([\d,]+)/i);
+          const xpMatch = text.match(/Total XP[:\s]*([\d,]+)/i);
+          const xpFallback = text.match(/([\d,]+)\s*\n\s*Start Date/i);
           const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
-
-          if (!xpMatch && dateMatch) {
-            const lines = text.split("\n");
-            const dateLineIndex = lines.findIndex(line => line.includes(dateMatch[1]));
-            if (dateLineIndex > 0) {
-              const prevLine = lines[dateLineIndex - 1];
-              const numberInLine = prevLine.match(/([\d,]{6,})/);
-              if (numberInLine) {
-                xpMatch = [null, numberInLine[1]];
-              }
-            }
-          }
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
           if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
           if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
           if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
+          else if (xpFallback) document.getElementById('totalXP').value = xpFallback[1].replace(/,/g, '');
+
           if (dateMatch) {
             const [m, d, y] = dateMatch[1].split('/');
             document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
           }
         });
-    });
+    }
 
     function calculateStats() {
       const startDate = new Date(document.getElementById("startDate").value);
