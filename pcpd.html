@@ -99,12 +99,15 @@
           let xpMatch = text.match(/XP[:\s]*([\d,]+)/i);
           const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
 
-          if (!xpMatch) {
-            // fallback: extract all large numbers and assume highest = XP
-            const numberMatches = text.match(/\d{6,}/g);
-            if (numberMatches) {
-              const highest = Math.max(...numberMatches.map(n => parseInt(n.replace(/,/g, ''))));
-              xpMatch = [null, highest.toString()];
+          if (!xpMatch && dateMatch) {
+            const lines = text.split("\n");
+            const dateLineIndex = lines.findIndex(line => line.includes(dateMatch[1]));
+            if (dateLineIndex > 0) {
+              const prevLine = lines[dateLineIndex - 1];
+              const numberInLine = prevLine.match(/([\d,]{6,})/);
+              if (numberInLine) {
+                xpMatch = [null, numberInLine[1]];
+              }
             }
           }
 
