@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PCPD Calculator | PlayerZero</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #111;
+      color: #eee;
+      padding: 2rem;
+      max-width: 600px;
+      margin: auto;
+    }
+    h1 {
+      color: #ffcc00;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input {
+      padding: 0.5rem;
+      width: 100%;
+      margin-top: 0.25rem;
+      border: none;
+      border-radius: 5px;
+    }
+    button {
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      width: 100%;
+      background-color: #ffcc00;
+      color: #000;
+      border: none;
+      border-radius: 5px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .result {
+      margin-top: 2rem;
+      font-size: 1.5rem;
+      color: #00ff88;
+    }
+    .links {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
+    .links a {
+      color: #ffcc00;
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>PCPD Calculator</h1>
+  <p>Find your <strong>Pokémon Caught Per Day</strong> since you started playing.</p>
+
+  <label for="startDate">Start Date (MM/DD/YYYY):</label>
+  <input type="date" id="startDate" required />
+
+  <label for="totalCaught">Total Pokémon Caught:</label>
+  <input type="number" id="totalCaught" required />
+
+  <button onclick="calculatePCPD()">Calculate PCPD</button>
+
+  <div class="result" id="result"></div>
+
+  <div class="links">
+    <p>Compare your grind: <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank">Join the community</a></p>
+    <p>Ready to prove it? <a href="https://pgplayerzero.com" target="_blank">Check out the challenge</a></p>
+  </div>
+
+  <script>
+    function calculatePCPD() {
+      const startDate = new Date(document.getElementById("startDate").value);
+      const totalCaught = parseInt(document.getElementById("totalCaught").value);
+      const today = new Date();
+
+      if (!startDate || isNaN(totalCaught) || totalCaught <= 0) {
+        document.getElementById("result").innerText = "Please enter valid inputs.";
+        return;
+      }
+
+      const daysPlayed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+
+      if (daysPlayed <= 0) {
+        document.getElementById("result").innerText = "Start date must be in the past.";
+        return;
+      }
+
+      const pcpd = (totalCaught / daysPlayed).toFixed(2);
+      document.getElementById("result").innerHTML = `Your PCPD: <strong>${pcpd}</strong><br />
+        You've been grinding for <strong>${daysPlayed}</strong> days.`;
+    }
+  </script>
+</body>
+</html>
