@@ -4,7 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Grind Stats Calculator | PlayerZero</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
   <style>
     body {
       font-family: sans-serif;
@@ -109,13 +108,13 @@
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
     function importStats() {
-      const fileInput = document.getElementById('screenshot');
-      const file = fileInput.files[0];
-      if (!file) return;
+      const file = document.getElementById('screenshot').files[0];
+      if (!file) return alert("Please upload a screenshot first.");
 
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
-          console.log('OCR Text:', text);
+          console.log("OCR Result:\n", text);
+
           const distanceMatch = text.match(/Distance Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops Visited[:\s]*([\d,]+)/i);
@@ -130,6 +129,10 @@
             const [m, d, y] = dateMatch[1].split('/');
             document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
           }
+        })
+        .catch(err => {
+          console.error("Tesseract error:", err);
+          alert("There was a problem reading the image. Try a clearer screenshot.");
         });
     }
 
@@ -154,4 +157,11 @@
       const sppd = (totalStops / daysPlayed).toFixed(2);
 
       document.getElementById("result").innerHTML = `You've been playing for <strong>${daysPlayed}</strong> days.<br />
-        PCPD (Caught
+        PCPD (Caught/Day): <strong>${pcpd}</strong><br />
+        XPPD (XP/Day): <strong>${xppd}</strong><br />
+        KMPD (Distance/Day): <strong>${kmpd}</strong><br />
+        SPPD (Stops/Day): <strong>${sppd}</strong>`;
+    }
+  </script>
+</body>
+</html>
