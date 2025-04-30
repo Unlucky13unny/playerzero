@@ -96,7 +96,7 @@
           const distanceMatch = text.match(/Distance Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops Visited[:\s]*([\d,]+)/i);
-          const xpMatch = text.match(/Total XP[:\s]*([\d,]+)/i);
+          const xpMatch = text.match(/XP[:\s]*([\d,]+)/i);
           const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
