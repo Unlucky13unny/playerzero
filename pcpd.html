@@ -96,8 +96,17 @@
           const distanceMatch = text.match(/Distance Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops Visited[:\s]*([\d,]+)/i);
-          const xpMatch = text.match(/XP[:\s]*([\d,]+)/i);
+          let xpMatch = text.match(/XP[:\s]*([\d,]+)/i);
           const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
+
+          if (!xpMatch) {
+            // fallback: extract all large numbers and assume highest = XP
+            const numberMatches = text.match(/\d{6,}/g);
+            if (numberMatches) {
+              const highest = Math.max(...numberMatches.map(n => parseInt(n.replace(/,/g, ''))));
+              xpMatch = [null, highest.toString()];
+            }
+          }
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
           if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
