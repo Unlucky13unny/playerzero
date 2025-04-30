@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PCPD Calculator | PlayerZero</title>
+  <title>Grind Stats Calculator | PlayerZero</title>
   <style>
     body {
       font-family: Arial, sans-serif;
       background-color: #111;
       color: #eee;
       padding: 2rem;
-      max-width: 600px;
+      max-width: 700px;
       margin: auto;
     }
     h1 {
@@ -54,8 +54,11 @@
   </style>
 </head>
 <body>
-  <h1>PCPD Calculator</h1>
-  <p>Find your <strong>Pokémon Caught Per Day</strong> since you started playing.</p>
+  <h1>Grind Stats Calculator</h1>
+  <p>Find your <strong>PCPD</strong> (Pokémon Caught Per Day) and <strong>XPPD</strong> (XP Per Day).</p>
+
+  <label for="screenshot">Upload Profile Screenshot (optional):</label>
+  <input type="file" id="screenshot" accept="image/*" />
 
   <label for="startDate">Start Date (MM/DD/YYYY):</label>
   <input type="date" id="startDate" required />
@@ -63,7 +66,10 @@
   <label for="totalCaught">Total Pokémon Caught:</label>
   <input type="number" id="totalCaught" required />
 
-  <button onclick="calculatePCPD()">Calculate PCPD</button>
+  <label for="totalXP">Total XP:</label>
+  <input type="number" id="totalXP" required />
+
+  <button onclick="calculateStats()">Run My Stats</button>
 
   <div class="result" id="result"></div>
 
@@ -72,27 +78,47 @@
     <p>Ready to prove it? <a href="https://pgplayerzero.com" target="_blank">Check out the challenge</a></p>
   </div>
 
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
-    function calculatePCPD() {
+    document.getElementById('screenshot').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
+        .then(({ data: { text } }) => {
+          console.log('OCR Text:', text);
+          const xpMatch = text.match(/Total XP[:\s]*([\d,]+)/i);
+          const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
+          const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
+
+          if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
+          if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
+          if (dateMatch) {
+            const [m, d, y] = dateMatch[1].split('/');
+            document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+          }
+        });
+    });
+
+    function calculateStats() {
       const startDate = new Date(document.getElementById("startDate").value);
       const totalCaught = parseInt(document.getElementById("totalCaught").value);
+      const totalXP = parseInt(document.getElementById("totalXP").value);
       const today = new Date();
 
-      if (!startDate || isNaN(totalCaught) || totalCaught <= 0) {
+      if (!startDate || isNaN(totalCaught) || isNaN(totalXP)) {
         document.getElementById("result").innerText = "Please enter valid inputs.";
         return;
       }
 
       const daysPlayed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
 
-      if (daysPlayed <= 0) {
-        document.getElementById("result").innerText = "Start date must be in the past.";
-        return;
-      }
-
       const pcpd = (totalCaught / daysPlayed).toFixed(2);
-      document.getElementById("result").innerHTML = `Your PCPD: <strong>${pcpd}</strong><br />
-        You've been grinding for <strong>${daysPlayed}</strong> days.`;
+      const xppd = (totalXP / daysPlayed).toFixed(2);
+
+      document.getElementById("result").innerHTML = `You've been playing for <strong>${daysPlayed}</strong> days.<br />
+        PCPD (Caught/Day): <strong>${pcpd}</strong><br />
+        XPPD (XP/Day): <strong>${xppd}</strong>`;
     }
   </script>
 </body>
