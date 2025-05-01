@@ -8,7 +8,128 @@
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
-    /* [unchanged styles above] */
+    body {
+      font-family: sans-serif;
+      background: #fff;
+      color: #111;
+      padding: 2rem;
+      margin: 0;
+      text-align: center;
+    }
+    input, button {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 0.5rem auto;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .logo {
+      max-width: 280px;
+      height: auto;
+      margin: 1rem auto;
+    }
+    #card {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      background: url('card-bg-image.png') center/cover no-repeat #fff;
+      border: 4px solid #000;
+      border-radius: 30px;
+      margin: 2rem auto;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+    }
+    .username {
+      font-size: 1.1rem;
+      margin: 0.25rem 0 0.75rem;
+    }
+    #startDateDisplay {
+      font-size: 1rem;
+      margin-top: -0.25rem;
+    }
+    #daysPlayedDisplay {
+      font-weight: bold;
+      font-size: 1.2rem;
+    }
+    .stat-group {
+      display: flex;
+      justify-content: space-between;
+      margin: 1rem 0;
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+    }
+    .stat {
+      width: 48%;
+    }
+    .label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+    .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #e30613;
+    }
+    .unit-label {
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+    .footer {
+      background: #000;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.75rem;
+      margin-top: 1.5rem;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 8px;
+      letter-spacing: 1px;
+      width: 80%;
+      max-width: 280px;
+    }
+    .input-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    #screenshotPreview {
+      display: none;
+      max-width: 300px;
+      margin-top: 1rem;
+    }
+    #feedback {
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: #555;
+      font-style: italic;
+    }
+    .social-icons {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .social-icons a img {
+      width: 36px;
+      height: 36px;
+      filter: brightness(0%);
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+    .social-icons a img:hover {
+      filter: brightness(0%) invert(50%);
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
