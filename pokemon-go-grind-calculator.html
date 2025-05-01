@@ -115,12 +115,21 @@
       margin-top: 2rem;
       font-size: 0.9rem;
     }
-    .links a {
-      display: block;
-      margin: 0.25rem 0;
-      color: #e30613;
-      text-decoration: none;
-      font-weight: bold;
+    .social-icons {
+      margin-top: 1rem;
+    }
+    .social-icons a {
+      margin: 0 0.5rem;
+    }
+    .social-icons img {
+      width: 32px;
+      height: 32px;
+      filter: brightness(0%);
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+    .social-icons img:hover {
+      filter: brightness(0%) invert(50%);
+      transform: scale(1.1);
     }
     @media screen and (max-width: 500px) {
       .stat-group {
@@ -133,15 +142,7 @@
         margin-bottom: 0.5rem;
       }
     }
-  .share-icon {
-  filter: brightness(0%);
-  transition: filter 0.3s ease, transform 0.2s ease;
-}
-.share-icon:hover {
-  filter: brightness(0%) invert(50%);
-  transform: scale(1.1);
-}
-</style>
+  </style>
 </head>
 <body>
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
@@ -222,6 +223,12 @@
     <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
   </div>
 
+  <div class="social-icons">
+    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
+    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
+  </div>
+
   <script>
     function importStats() {
       const file = document.getElementById('screenshot').files[0];
@@ -293,15 +300,13 @@
     }
 
     function downloadCard() {
-  html2canvas(document.getElementById("card")).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "grind_card.png";
-    link.href = canvas.toDataURL();
-    link.click();
-  });
-}
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "grind_card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
   </script>
-</div>
-
 </body>
 </html>
