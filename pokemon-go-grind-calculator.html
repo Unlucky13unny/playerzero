@@ -39,7 +39,10 @@
       display: none;
       width: 100%;
       max-width: 420px;
-      background: white;
+      background-image: url('Untitled design (10).png');
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
       margin: 2rem auto;
       padding: 1.5rem;
       border: 4px solid #000;
@@ -180,6 +183,7 @@
 
     <div class="footer">GRIND CARD</div>
   </div>
+
   <button onclick="downloadCard()">Download My Grind Card</button>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
@@ -198,11 +202,11 @@
 
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
-          const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
-          const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
-          const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
-          const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
-          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
+          const distanceMatch = text.match(/Distance\\s+Walked[:\\s]*([\\d,.]+)/i);
+          const caughtMatch = text.match(/Pok[eé]mon\\s+Caught[:\\s]*([\\d,]+)/i);
+          const stopsMatch = text.match(/Pok[eé]Stops\\s+Visited[:\\s]*([\\d,]+)/i);
+          const xpMatch = text.match(/Total\\s*XP[^0-9]*([\\d,]+)/i) || text.match(/([\\d,]+)\\s*(?:XP|xP)/i);
+          const dateMatch = text.match(/Start\\s+Date[:\\s]*([0-9]{1,2}\\/[0-9]{1,2}\\/[0-9]{4})/i);
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
           if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
@@ -211,21 +215,21 @@
           if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
         })
         .catch(err => {
-          console.error("Tesseract error:", err);
-          alert("⚠️ Error scanning image. Try a clearer screenshot.");
+          console.error(\"Tesseract error:\", err);
+          alert(\"⚠️ Error scanning image. Try a clearer screenshot.\");
         });
     }
 
     function calculateStats() {
-      const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
-      const start = document.getElementById("startDate").value;
-      const km = parseFloat(document.getElementById("distanceWalked").value);
-      const caught = parseInt(document.getElementById("totalCaught").value);
-      const stops = parseInt(document.getElementById("totalStops").value);
-      const xp = parseInt(document.getElementById("totalXP").value);
+      const trainer = document.getElementById(\"trainerNameInput\").value || \"@Trainer\";
+      const start = document.getElementById(\"startDate\").value;
+      const km = parseFloat(document.getElementById(\"distanceWalked\").value);
+      const caught = parseInt(document.getElementById(\"totalCaught\").value);
+      const stops = parseInt(document.getElementById(\"totalStops\").value);
+      const xp = parseInt(document.getElementById(\"totalXP\").value);
 
       if (!start || isNaN(km) || isNaN(caught) || isNaN(stops) || isNaN(xp)) {
-        alert("Please fill in all stats before generating your Grind Card.");
+        alert(\"Please fill in all stats before generating your Grind Card.\");
         return;
       }
 
@@ -236,24 +240,24 @@
       const stopsDay = (stops / daysPlayed).toFixed(2);
       const xpDay = (xp / daysPlayed).toFixed(2);
 
-      document.getElementById("trainerName").innerText = trainer;
-      document.getElementById("startDateDisplay").innerText = `Start Date: ${start}`;
-      document.getElementById("distanceTotal").innerText = km.toLocaleString();
-      document.getElementById("distancePerDay").innerText = kmDay;
-      document.getElementById("catchesTotal").innerText = caught.toLocaleString();
-      document.getElementById("catchesPerDay").innerText = caughtDay;
-      document.getElementById("stopsTotal").innerText = stops.toLocaleString();
-      document.getElementById("stopsPerDay").innerText = stopsDay;
-      document.getElementById("xpTotal").innerText = xp.toLocaleString();
-      document.getElementById("xpPerDay").innerText = xpDay;
+      document.getElementById(\"trainerName\").innerText = trainer;
+      document.getElementById(\"startDateDisplay\").innerText = `Start Date: ${start}`;
+      document.getElementById(\"distanceTotal\").innerText = km.toLocaleString();
+      document.getElementById(\"distancePerDay\").innerText = kmDay;
+      document.getElementById(\"catchesTotal\").innerText = caught.toLocaleString();
+      document.getElementById(\"catchesPerDay\").innerText = caughtDay;
+      document.getElementById(\"stopsTotal\").innerText = stops.toLocaleString();
+      document.getElementById(\"stopsPerDay\").innerText = stopsDay;
+      document.getElementById(\"xpTotal\").innerText = xp.toLocaleString();
+      document.getElementById(\"xpPerDay\").innerText = xpDay;
 
-      document.getElementById("card").style.display = "block";
+      document.getElementById(\"card\").style.display = \"block\";
     }
 
     function downloadCard() {
-      html2canvas(document.getElementById("card")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "grind_card.png";
+      html2canvas(document.getElementById(\"card\")).then(canvas => {
+        const link = document.createElement(\"a\");
+        link.download = \"grind_card.png\";
         link.href = canvas.toDataURL();
         link.click();
       });
