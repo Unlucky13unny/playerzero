@@ -1,277 +1,285 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <link rel="icon" type="image/png" href="favicon.png">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pokémon GO Grind Calculator | Track XP, Catches, Distance & More</title>
-  <meta name="description" content="Use this free Pokémon GO Grind Calculator to track your XP per day, Pokémon caught, distance walked, and PokéStops visited — all from a screenshot.">
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <title>PlayerZero Challenge</title>
+  <meta name="description" content="A first-of-its-kind Pokémon GO challenge for players who grind. Track stats, compete for prizes, and flex your skills in the PlayerZero Challenge.">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <!-- Social Sharing Metadata -->
+  <meta property="og:title" content="PlayerZero Challenge" />
+  <meta property="og:description" content="Track your stats. Flex your grind. Win prizes. The Pokémon GO challenge built for competitors." />
+  <meta property="og:image" content="https://pgplayerzero.com/social-image.jpg" />
+  <meta property="og:url" content="https://pgplayerzero.com" />
+  <meta name="twitter:card" content="summary_large_image" />
+
   <style>
     body {
       font-family: sans-serif;
       background: #fff;
       color: #111;
+      margin: 0;
       padding: 2rem;
-      margin: 0;
-      text-align: center;
-    }
-    input, button {
-      padding: 0.5rem;
-      width: 100%;
-      max-width: 400px;
-      margin: 0.5rem auto;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #111;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .logo {
-      max-width: 300px;
-      height: auto;
-      margin-bottom: 1rem;
-    }
-    #feedback {
-      font-size: 0.9rem;
-      color: #666;
-      margin-top: 0.5rem;
-    }
-    #card {
-      display: none;
-      width: 100%;
-      max-width: 420px;
-      background-image: url('https://pgplayerzero.com/assets/Untitled%20design%20(10).png');
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      margin: 2rem auto;
-      padding: 1.5rem;
-      border: 4px solid #000;
-      border-radius: 30px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    }
-    .username {
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-    }
-    .section {
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      margin: 1.2rem 0;
-    }
-    .stat {
-      width: 48%;
-      margin-bottom: 1rem;
-    }
-    .stat h2 {
-      color: #e00;
-      font-size: 1.4rem;
-      margin: 0;
-    }
-    .stat p {
-      margin: 0.2rem 0 0 0;
-      font-size: 0.9rem;
-    }
-    .footer {
-      background: #000;
-      color: #fff;
-      font-size: 1.2rem;
-      padding: 0.5rem;
-      margin-top: 1rem;
-      border-radius: 0 0 24px 24px;
-    }
-    .input-row {
       display: flex;
       flex-direction: column;
       align-items: center;
+      text-align: center;
+    }
+
+    img.logo {
+      max-width: 400px;
       margin-bottom: 1rem;
     }
-    #screenshotPreview {
-      display: none;
-      max-width: 300px;
-      margin-top: 1rem;
+
+    .stacked-tagline-container {
+      display: flex;
+      justify-content: center;
+      width: 100%;
     }
-    @media screen and (max-width: 500px) {
-      .section {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
+
+    .stacked-tagline {
+      display: inline-block;
+      text-align: left;
+      font-weight: bold;
+      font-style: italic;
+      font-size: 1rem;
+      line-height: 1.2;
+      margin-bottom: 1rem;
+    }
+
+    .intro {
+      font-size: 1rem;
+      font-weight: 500;
+      max-width: 650px;
+      margin-bottom: 1.5rem;
+      line-height: 1.4;
+    }
+
+    a.button {
+      background: black;
+      color: white;
+      text-decoration: none;
+      padding: 1rem 2rem;
+      border-radius: 5px;
+      font-size: 1rem;
+      margin-bottom: 3rem;
+      display: inline-block;
+    }
+
+    .faq {
+      max-width: 700px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .faq h2 {
+      font-size: 1.5rem;
+      margin-top: 2rem;
+    }
+
+    .faq details {
+      background: #eee;
+      margin: 0.5rem 0;
+      padding: 1rem;
+      border-radius: 5px;
+      transition: background 0.3s;
+      width: 100%;
+    }
+
+    .faq summary {
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .top-buttons {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+
+    .top-button-style {
+      background-color: black;
+      color: white;
+      font-weight: bold;
+      font-size: 0.85rem;
+      padding: 8px 14px;
+      border-radius: 5px;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .top-button-style:hover {
+      background-color: #333;
+    }
+
+    @media (max-width: 600px) {
+      .top-buttons {
+        top: 10px;
+        right: 10px;
+        gap: 6px;
       }
-      .stat {
-        width: 45%;
-        margin: 0.5rem;
+
+      .top-button-style {
+        font-size: 0.75rem;
+        padding: 6px 10px;
       }
     }
   </style>
 </head>
+
 <body>
+
+  <div class="top-buttons">
+    <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="top-button-style">Contact</a>
+    <button id="prizeInfoBtn" class="top-button-style">Prize Info</button>
+  </div>
+
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
-  <h1>The Pokémon GO Grind Calculator</h1>
-  <p>Upload your profile screenshot — we’ll auto-fill and break down your grind per day stats.</p>
 
-  <div class="input-row">
-    <input type="file" id="screenshot" accept="image/*" />
-    <button id="importBtn" onclick="importStats()">Import Stats</button>
-    <img id="screenshotPreview" />
-    <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
-    <div id="feedback"></div>
+  <div class="stacked-tagline-container">
+    <div class="stacked-tagline">
+      It's not about what you've accomplished.<br />
+      It's about what you're about to...
+    </div>
   </div>
 
-  <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)" />
-  <input type="text" id="startDate" placeholder="Start Date (MM/DD/YYYY or YYYY-MM-DD)" />
-  <input type="number" id="distanceWalked" placeholder="Distance Walked (km)" />
-  <input type="number" id="totalCaught" placeholder="Total Pokémon Caught" />
-  <input type="number" id="totalStops" placeholder="Total PokéStops Visited" />
-  <input type="number" id="totalXP" placeholder="Total XP" />
-  <button onclick="calculateStats()">Run My Stats</button>
+  <p class="intro">
+    A first-of-its-kind <strong style="color: red;">CHALLENGE</strong>...<br />
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...built for players who <strong>GRIND</strong>.<br />
+    <strong>FLEX</strong> your stats, let the community know you show out,<br />
+    and put some <strong>RESPECT</strong> on your name!
+  </p>
 
-  <div id="card">
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
-    <div class="username" id="trainerName">@Trainer</div>
-    <h2 id="startDateDisplay">Start Date: YYYY-MM-DD</h2>
+  <a href="https://challenge.pgplayerzero.com/register" class="button" role="button" aria-label="Enter the PlayerZero Challenge now">Enter Now</a>
 
-    <div class="section">
-      <div class="stat">
-        <p><strong>Distance Walked</strong></p>
-        <h2 id="distanceTotal">0</h2>
-        <p>kilometers</p>
-      </div>
-      <div class="stat">
-        <p><strong>Per Day</strong></p>
-        <h2 id="distancePerDay">0</h2>
-        <p>km/day</p>
-      </div>
-    </div>
+  <div class="faq">
+    <h2>FAQs</h2>
 
-    <div class="section">
-      <div class="stat">
-        <p><strong>Pokémon Caught</strong></p>
-        <h2 id="catchesTotal">0</h2>
-        <p>Pokémon Caught</p>
-      </div>
-      <div class="stat">
-        <p><strong>Per Day</strong></p>
-        <h2 id="catchesPerDay">0</h2>
-        <p>caught/day</p>
-      </div>
-    </div>
+    <details>
+      <summary>What is the PlayerZero Challenge?</summary>
+      <p>This is a community competition for Pokémon GO players. It’s not affiliated with any game publisher — just a grind-it-out contest for bragging rights, stats, and prizes.</p>
+    </details>
 
-    <div class="section">
-      <div class="stat">
-        <p><strong>PokéStops Visited</strong></p>
-        <h2 id="stopsTotal">0</h2>
-        <p>Total Stops</p>
-      </div>
-      <div class="stat">
-        <p><strong>Per Day</strong></p>
-        <h2 id="stopsPerDay">0</h2>
-        <p>stops/day</p>
-      </div>
-    </div>
+    <details>
+      <summary>Who’s behind the PlayerZero Challenge?</summary>
+      <p>The challenge is backed by <a href="https://unluckybunny.com" target="_blank" style="color: red; font-weight: bold;">Unlucky Bunny</a> — an independent creative brand focused on building unique, community-first experiences. From underground competitions to bizarre street marketing, Unlucky Bunny thrives on blending chaos with competition. PlayerZero is their latest experiment in that mission.</p>
+    </details>
 
-    <div class="section">
-      <div class="stat">
-        <p><strong>Total XP</strong></p>
-        <h2 id="xpTotal">0</h2>
-        <p>Total XP</p>
-      </div>
-      <div class="stat">
-        <p><strong>Per Day</strong></p>
-        <h2 id="xpPerDay">0</h2>
-        <p>XP/day</p>
-      </div>
-    </div>
+    <details>
+      <summary>How do I join?</summary>
+      <p>Submit your Trainer Code, stats, and screenshots through the entry form and pay the entry fee to lock in your spot.</p>
+    </details>
 
-    <div class="footer">GRIND CARD</div>
+    <details>
+      <summary>When does the challenge start?</summary>
+      <p>Once we hit the minimum number of players to fund the base prize pool, we'll set a launch date. You’ll be notified well in advance so you have time to prepare and plan your grind.</p>
+    </details>
+
+    <details>
+      <summary>What stats count?</summary>
+      <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, distance walked, and PokéStops visited. Final categories and scoring methods will be shared before the challenge begins and may shift based on participation.</p>
+    </details>
+
+    <details>
+      <summary>What do I win?</summary>
+      <p>All prizes will be awarded in PokéCoins, including end-of-challenge rewards for top scorers and bonus drops from social media challenges. The more players who enter, the bigger the prize pool — and the more winners we’ll be able to reward in each tier.</p>
+    </details>
+
+    <details>
+      <summary>How many winners will there be?</summary>
+      <p>The number of winners scales with the community. At minimum, we aim to award prizes to the top 3 overall performers, the top 5 in each tracked stat, and 2–5 daily winners through social media challenges. The bigger the event, the bigger the prize pool — and the more players we can reward. Our goal is to recognize both consistency and creativity across the entire challenge.</p>
+    </details>
+
+    <details>
+      <summary>How are winners notified?</summary>
+      <p>We'll contact winners via the email submitted on your entry form.<br>
+      You can also follow us on
+      Instagram <a href="https://instagram.com/pgPlayerZero" target="_blank" style="color: red; text-decoration: underline;"><strong>@pgPlayerZero</strong></a>
+      and
+      TikTok <a href="https://tiktok.com/@pgPlayerZero" target="_blank" style="color: red; text-decoration: underline;"><strong>@pgPlayerZero</strong></a>
+      for winner shoutouts, daily highlights, and bonus prize drops.
+      </p>
+    </details>
+
+    <details>
+      <summary>What if I miss the start?</summary>
+      <p>The challenge runs for a full 7 days. You can join late and still submit both your starting and ending stats. Just make sure you complete both submission forms before the deadline!</p>
+    </details>
+
+    <details>
+      <summary>Will player level be a scoring factor?</summary>
+      <p>No. All scoring metrics are chosen to level the playing field. Whether you’re a new or veteran trainer, the categories are designed to reward hustle — not legacy advantage.</p>
+    </details>
+
+    <details>
+      <summary>What prevents cheating?</summary>
+      <p>We require screenshots before and after the challenge. These are reviewed both manually and with image verification tools.
+
+Additional security measures are in place to help ensure fair play.
+
+Any suspicious, altered, or unverifiable images will result in immediate disqualification — no refunds.</p>
+    </details>
+
+    <details>
+      <summary>Is this an official Pokémon GO event?</summary>
+      <p>Nope. The PlayerZero Challenge is an independent, community-run competition. It’s not affiliated with, endorsed by, or sponsored by Pokémon, Nintendo, Niantic, or any of their partners. We’re just fans who like to compete and create something fun for other players.</p>
+    </details>
+
   </div>
-  <button onclick="downloadCard()">Download My Grind Card</button>
 
+  <!-- Prize Info Modal -->
+  <div id="prizeInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
+    <div style="background: white; color: black; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%; text-align: left; position: relative;">
+      <button id="closeModal" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; font-weight: bold; cursor: pointer;">&times;</button>
+
+      <h2 style="font-size: 1.25rem; margin-bottom: 1rem; font-weight: bold; text-decoration: underline;">Current Prize Pool</h2>
+
+      <p style="margin: 0.5rem 0;"><strong>1<sup>st</sup> – <span style='color: #FF0000;'>15K Pokécoins</span></strong></p>
+      <p style="margin: 0.5rem 0;"><strong>2<sup>nd</sup> – <span style='color: #FF0000;'>10K Pokécoins</span></strong></p>
+      <p style="margin: 0.5rem 0;"><strong>3<sup>rd</sup> – <span style='color: #FF0000;'>7K Pokécoins</span></strong></p>
+
+      <p style="margin: 1rem 0; font-weight: bold;">+ 9 daily and category specific prize opportunities</p>
+
+      <p style="margin-top: 2rem;">The challenge where the prize pool grows with the participants.</p>
+
+      <p style="font-style: italic; margin-top: 1rem;">More players.<br>More winners.<br>Bigger rewards.</p>
+
+      <p style="font-size: 0.8rem; margin-top: 1.5rem;"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
+
+    </div>
+  </div>
+
+  <!-- Modal Script -->
   <script>
-    function importStats() {
-      const file = document.getElementById('screenshot').files[0];
-      if (!file) return alert("Please upload a screenshot first.");
+    const prizeBtn = document.getElementById('prizeInfoBtn');
+    const prizeModal = document.getElementById('prizeInfoModal');
+    const closeModal = document.getElementById('closeModal');
 
-      const preview = document.getElementById("screenshotPreview");
-      const feedback = document.getElementById("feedback");
-      const reader = new FileReader();
-      reader.onload = () => {
-        preview.src = reader.result;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+    prizeBtn.addEventListener('click', () => {
+      prizeModal.style.display = 'flex';
+    });
 
-      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
+    closeModal.addEventListener('click', () => {
+      prizeModal.style.display = 'none';
+    });
 
-      Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
-        .then(({ data: { text } }) => {
-          const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
-          const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
-          const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
-          const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
-          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
-
-          if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
-          if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
-          if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
-          if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
-          if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
-
-          feedback.innerText = "✔️ Scan complete.";
-        })
-        .catch(err => {
-          console.error("Tesseract error:", err);
-          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
-        });
-    }
-
-    function calculateStats() {
-      const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
-      const start = document.getElementById("startDate").value;
-      const km = parseFloat(document.getElementById("distanceWalked").value);
-      const caught = parseInt(document.getElementById("totalCaught").value);
-      const stops = parseInt(document.getElementById("totalStops").value);
-      const xp = parseInt(document.getElementById("totalXP").value);
-
-      if (!start || isNaN(km) || isNaN(caught) || isNaN(stops) || isNaN(xp)) {
-        alert("Please fill in all stats before generating your Grind Card.");
-        return;
+    prizeModal.addEventListener('click', (e) => {
+      if (e.target === prizeModal) {
+        prizeModal.style.display = 'none';
       }
-
-      const daysPlayed = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
-
-      const kmDay = (km / daysPlayed).toFixed(2);
-      const caughtDay = (caught / daysPlayed).toFixed(2);
-      const stopsDay = (stops / daysPlayed).toFixed(2);
-      const xpDay = (xp / daysPlayed).toFixed(2);
-
-      document.getElementById("trainerName").innerText = trainer;
-      document.getElementById("startDateDisplay").innerText = `Start Date: ${start}`;
-      document.getElementById("distanceTotal").innerText = km.toLocaleString();
-      document.getElementById("distancePerDay").innerText = kmDay;
-      document.getElementById("catchesTotal").innerText = caught.toLocaleString();
-      document.getElementById("catchesPerDay").innerText = caughtDay;
-      document.getElementById("stopsTotal").innerText = stops.toLocaleString();
-      document.getElementById("stopsPerDay").innerText = stopsDay;
-      document.getElementById("xpTotal").innerText = xp.toLocaleString();
-      document.getElementById("xpPerDay").innerText = xpDay;
-
-      document.getElementById("card").style.display = "block";
-    }
-
-    function downloadCard() {
-      html2canvas(document.getElementById("card")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "grind_card.png";
-        link.href = canvas.toDataURL();
-        link.click();
-      });
-    }
+    });
   </script>
+
 </body>
 </html>
