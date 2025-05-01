@@ -91,6 +91,18 @@
       color: #888;
       margin-top: 3rem;
     }
+    #screenshotPreview {
+      margin-top: 1rem;
+      max-width: 300px;
+      display: none;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .info-icon {
+      font-weight: normal;
+      font-size: 0.9rem;
+      cursor: help;
+    }
   </style>
 </head>
 <body>
@@ -104,12 +116,16 @@
   <div class="input-row">
     <input type="file" id="screenshot" accept="image/*" />
     <button id="importBtn" onclick="importStats()">Import Stats</button>
+    <img id="screenshotPreview" />
   </div>
 
   <div id="feedback"></div>
 
-  <label for="startDate">Start Date:</label>
-  <input type="date" id="startDate" />
+  <label for="startDate">
+    Start Date:
+    <span class="info-icon" title="Image recognition may vary by phone. If this field doesn't autofill, type it manually.">ℹ️</span>
+  </label>
+  <input type="text" id="startDate" placeholder="MM/DD/YYYY or YYYY-MM-DD" />
 
   <label for="distanceWalked">Distance Walked (km):</label>
   <input type="number" id="distanceWalked" />
@@ -136,79 +152,86 @@
     Not affiliated with Niantic, Nintendo, or The Pokémon Company. Just built by Trainers who wanted to dive into the stats behind the grind.
   </p>
 
- <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-<script>
-  function importStats() {
-    const file = document.getElementById('screenshot').files[0];
-    if (!file) return alert("Please upload a screenshot first.");
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script>
+    function importStats() {
+      const file = document.getElementById('screenshot').files[0];
+      if (!file) return alert("Please upload a screenshot first.");
 
-    const importBtn = document.getElementById("importBtn");
-    const feedback = document.getElementById("feedback");
-    importBtn.disabled = true;
-    feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
+      const importBtn = document.getElementById("importBtn");
+      const feedback = document.getElementById("feedback");
+      const preview = document.getElementById("screenshotPreview");
 
-    Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
-      .then(({ data: { text } }) => {
-        console.log("OCR Result:\n", text);
+      // Show image preview
+      const reader = new FileReader();
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
 
-        const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
-        const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
-        const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
+      importBtn.disabled = true;
+      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
 
-        const xpMatch =
-          text.match(/Total\s*XP[^0-9]*([\d,]+)/i) ||
-          text.match(/Total\s*xp[^0-9]*([\d,]+)/i) ||
-          text.match(/Tota[l1|i]{1,2}.*?x[pP][^0-9]*([\d,]+)/i) ||
-          text.match(/([\d,]+)\s*(?:XP|xP)/i);
+      Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
+        .then(({ data: { text } }) => {
+          console.log("OCR Result:\n", text);
 
-        const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
+          const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
+          const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
+          const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
 
-        if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
-        if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
-        if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
-        if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
-        if (dateMatch) {
-          const [m, d, y] = dateMatch[1].split('/');
-          document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-        }
+          const xpMatch =
+            text.match(/Total\s*XP[^0-9]*([\d,]+)/i) ||
+            text.match(/Total\s*xp[^0-9]*([\d,]+)/i) ||
+            text.match(/Tota[l1|i]{1,2}.*?x[pP][^0-9]*([\d,]+)/i) ||
+            text.match(/([\d,]+)\s*(?:XP|xP)/i);
 
-        feedback.innerText = "✔️ Scan complete.";
-        importBtn.disabled = false;
-      })
-      .catch(err => {
-        console.error("Tesseract error:", err);
-        feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
-        importBtn.disabled = false;
-      });
-  }
+          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
 
-  function calculateStats() {
-    const startDate = new Date(document.getElementById("startDate").value);
-    const distanceWalked = parseFloat(document.getElementById("distanceWalked").value);
-    const totalCaught = parseInt(document.getElementById("totalCaught").value);
-    const totalStops = parseInt(document.getElementById("totalStops").value);
-    const totalXP = parseInt(document.getElementById("totalXP").value);
-    const today = new Date();
+          if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
+          if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
+          if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
+          if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
+          if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
 
-    if (!startDate || isNaN(totalCaught) || isNaN(totalXP) || isNaN(distanceWalked) || isNaN(totalStops)) {
-      document.getElementById("result").innerText = "Please enter valid inputs.";
-      return;
+          feedback.innerText = "✔️ Scan complete.";
+          importBtn.disabled = false;
+        })
+        .catch(err => {
+          console.error("Tesseract error:", err);
+          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
+          importBtn.disabled = false;
+        });
     }
 
-    const daysPlayed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+    function calculateStats() {
+      const startDateRaw = document.getElementById("startDate").value;
+      const startDate = new Date(startDateRaw);
+      const distanceWalked = parseFloat(document.getElementById("distanceWalked").value);
+      const totalCaught = parseInt(document.getElementById("totalCaught").value);
+      const totalStops = parseInt(document.getElementById("totalStops").value);
+      const totalXP = parseInt(document.getElementById("totalXP").value);
+      const today = new Date();
 
-    const pcpd = (totalCaught / daysPlayed).toFixed(2);
-    const xppd = (totalXP / daysPlayed).toFixed(2);
-    const kmpd = (distanceWalked / daysPlayed).toFixed(2);
-    const sppd = (totalStops / daysPlayed).toFixed(2);
+      if (!startDate || isNaN(totalCaught) || isNaN(totalXP) || isNaN(distanceWalked) || isNaN(totalStops)) {
+        document.getElementById("result").innerText = "Please enter valid inputs.";
+        return;
+      }
 
-    document.getElementById("result").innerHTML = `You've been playing for <strong>${daysPlayed}</strong> days.<br />
-      PCPD (Caught/Day): <strong>${pcpd}</strong><br />
-      XPPD (XP/Day): <strong>${xppd}</strong><br />
-      KMPD (Distance/Day): <strong>${kmpd}</strong><br />
-      SPPD (Stops/Day): <strong>${sppd}</strong>`;
-  }
-</script>
+      const daysPlayed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
 
+      const pcpd = (totalCaught / daysPlayed).toFixed(2);
+      const xppd = (totalXP / daysPlayed).toFixed(2);
+      const kmpd = (distanceWalked / daysPlayed).toFixed(2);
+      const sppd = (totalStops / daysPlayed).toFixed(2);
+
+      document.getElementById("result").innerHTML = `You've been playing for <strong>${daysPlayed}</strong> days.<br />
+        PCPD (Caught/Day): <strong>${pcpd}</strong><br />
+        XPPD (XP/Day): <strong>${xppd}</strong><br />
+        KMPD (Distance/Day): <strong>${kmpd}</strong><br />
+        SPPD (Stops/Day): <strong>${sppd}</strong>`;
+    }
+  </script>
 </body>
 </html>
