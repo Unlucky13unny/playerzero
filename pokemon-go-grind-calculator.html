@@ -16,110 +16,93 @@
       margin: 0;
       text-align: center;
     }
-    a.logo-link {
-      display: inline-block;
-      margin-bottom: 2rem;
+    input, button {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 0.5rem auto;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
     }
     .logo {
       max-width: 300px;
       height: auto;
+      margin-bottom: 1rem;
     }
-    label {
-      display: block;
-      margin: 1rem auto 0.5rem;
-      font-weight: bold;
-      max-width: 400px;
-      text-align: left;
-    }
-    input {
-      padding: 0.5rem;
+    #card {
       width: 100%;
-      max-width: 400px;
+      max-width: 420px;
+      background: white;
+      margin: 2rem auto;
+      padding: 1.5rem;
       border: 1px solid #ccc;
-      border-radius: 5px;
-      display: block;
-      margin: 0 auto;
+      border-radius: 10px;
+      position: relative;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    .username {
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+    }
+    .section {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      text-align: left;
+      margin: 1.2rem 0;
+    }
+    .stat {
+      width: 48%;
+      box-sizing: border-box;
+      margin-bottom: 1rem;
+    }
+    .stat h2 {
+      color: #e00;
+      font-size: 1.4rem;
+      margin: 0;
+    }
+    .stat p {
+      margin: 0.2rem 0 0 0;
+      font-size: 0.9rem;
+    }
+    .footer {
+      background: #000;
+      color: #fff;
+      font-size: 1.2rem;
+      padding: 0.5rem;
+      margin-top: 1rem;
     }
     .input-row {
       display: flex;
       flex-direction: column;
       align-items: center;
-      margin: 1.5rem 0;
-    }
-    button {
-      background: #111;
-      color: #fff;
-      padding: 0.75rem 2rem;
-      border: none;
-      border-radius: 5px;
-      font-weight: bold;
-      cursor: pointer;
-      margin-top: 1.5rem;
+      margin-bottom: 1rem;
     }
     #screenshotPreview {
-      margin-top: 1rem;
-      max-width: 300px;
       display: none;
-      border-radius: 8px;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 300px;
+      margin-top: 1rem;
     }
-    .info-icon {
-      font-weight: normal;
-      font-size: 0.9rem;
-      cursor: help;
-    }
-    .card-container {
-      margin-top: 3rem;
-    }
-    #card {
-      width: 1000px;
-      background: white;
-      padding: 40px;
-      margin: 2rem auto;
-      border: 1px solid #ccc;
-      border-radius: 10px;
-      position: relative;
-    }
-    .username {
-      font-size: 1.2rem;
-      margin-bottom: 20px;
-    }
-    h1 {
-      font-size: 1.5rem;
-      margin: 10px 0;
-    }
-    .section {
-      display: flex;
-      justify-content: space-around;
-      margin: 40px 0;
-    }
-    .stat {
-      flex: 1;
-    }
-    .stat h2 {
-      color: #e00;
-      font-size: 2rem;
-      margin: 10px 0 0 0;
-    }
-    .stat p {
-      margin: 4px 0;
-    }
-    .footer {
-      background: #000;
-      color: #fff;
-      font-size: 1.5rem;
-      padding: 10px;
-      position: absolute;
-      bottom: 0;
-      width: calc(100% - 80px);
+    @media screen and (max-width: 500px) {
+      .section {
+        flex-direction: column;
+        align-items: center;
+      }
+      .stat {
+        width: 100%;
+        text-align: center;
+      }
     }
   </style>
 </head>
 <body>
-  <a href="https://pgplayerzero.com" class="logo-link" aria-label="Back to PlayerZero Challenge homepage">
-    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
-  </a>
-
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
   <h1>The Pokémon GO Grind Calculator</h1>
   <p>Upload your profile screenshot — we’ll auto-fill and break down your grind per day stats.</p>
 
@@ -127,74 +110,64 @@
     <input type="file" id="screenshot" accept="image/*" />
     <button id="importBtn" onclick="importStats()">Import Stats</button>
     <img id="screenshotPreview" />
-    <p style="max-width: 400px; font-size: 0.85rem; color: #666; margin-top: 1rem;">
-      ⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.
-    </p>
+    <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
   </div>
 
-  <label for="startDate">Start Date:</label>
-  <input type="text" id="startDate" placeholder="MM/DD/YYYY or YYYY-MM-DD" />
-
-  <label for="distanceWalked">Distance Walked (km):</label>
-  <input type="number" id="distanceWalked" />
-
-  <label for="totalCaught">Total Pokémon Caught:</label>
-  <input type="number" id="totalCaught" />
-
-  <label for="totalStops">Total PokéStops Visited:</label>
-  <input type="number" id="totalStops" />
-
-  <label for="totalXP">Total XP:</label>
-  <input type="number" id="totalXP" />
-
+  <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)" />
+  <input type="text" id="startDate" placeholder="Start Date (MM/DD/YYYY or YYYY-MM-DD)" />
+  <input type="number" id="distanceWalked" placeholder="Distance Walked (km)" />
+  <input type="number" id="totalCaught" placeholder="Total Pokémon Caught" />
+  <input type="number" id="totalStops" placeholder="Total PokéStops Visited" />
+  <input type="number" id="totalXP" placeholder="Total XP" />
   <button onclick="calculateStats()">Run My Stats</button>
 
-  <div class="card-container">
-    <div id="card">
-      <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
-      <div class="username" id="trainerName">@TrainerName</div>
-      <h1>THE POKÉMON GO GRIND CALCULATOR</h1>
-      <p id="startDateDisplay">Start Date: July 10, 2016</p>
-      <div class="section">
-        <div class="stat">
-          <p><strong>DISTANCE WALKED</strong></p>
-          <h2 id="distanceTotal">14,988.9</h2>
-          <p>kilometers</p>
-        </div>
-        <div class="stat">
-          <p><strong>PER DAY</strong></p>
-          <h2 id="distancePerDay">4.66</h2>
-          <p>km/day</p>
-        </div>
+  <div id="card">
+    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
+    <div class="username" id="trainerName">@Trainer</div>
+    <h2 id="startDateDisplay">Start Date: YYYY-MM-DD</h2>
+
+    <div class="section">
+      <div class="stat">
+        <p><strong>Distance Walked</strong></p>
+        <h2 id="distanceTotal">0</h2>
+        <p>kilometers</p>
       </div>
-      <div class="section">
-        <div class="stat">
-          <p><strong>POKÉMON CAUGHT</strong></p>
-          <h2 id="catchesTotal">168,579</h2>
-          <p>Pokémon Caught</p>
-        </div>
-        <div class="stat">
-          <p><strong>PER DAY</strong></p>
-          <h2 id="catchesPerDay">52.41</h2>
-          <p>caught/day</p>
-        </div>
+      <div class="stat">
+        <p><strong>Per Day</strong></p>
+        <h2 id="distancePerDay">0</h2>
+        <p>km/day</p>
       </div>
-      <div class="section">
-        <div class="stat">
-          <p><strong>TOTAL XP</strong></p>
-          <h2 id="xpTotal">210,912,431</h2>
-          <p>Total XP</p>
-        </div>
-        <div class="stat">
-          <p><strong>PER DAY</strong></p>
-          <h2 id="xpPerDay">65,548</h2>
-          <p>XP/day</p>
-        </div>
-      </div>
-      <div class="footer">GRIND CARD</div>
     </div>
-    <button onclick="downloadCard()">Download My Grind Card</button>
+
+    <div class="section">
+      <div class="stat">
+        <p><strong>Pokémon Caught</strong></p>
+        <h2 id="catchesTotal">0</h2>
+        <p>Pokémon Caught</p>
+      </div>
+      <div class="stat">
+        <p><strong>Per Day</strong></p>
+        <h2 id="catchesPerDay">0</h2>
+        <p>caught/day</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="stat">
+        <p><strong>Total XP</strong></p>
+        <h2 id="xpTotal">0</h2>
+        <p>Total XP</p>
+      </div>
+      <div class="stat">
+        <p><strong>Per Day</strong></p>
+        <h2 id="xpPerDay">0</h2>
+        <p>XP/day</p>
+      </div>
+    </div>
+
+    <div class="footer">GRIND CARD</div>
   </div>
+  <button onclick="downloadCard()">Download My Grind Card</button>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
@@ -202,10 +175,7 @@
       const file = document.getElementById('screenshot').files[0];
       if (!file) return alert("Please upload a screenshot first.");
 
-      const importBtn = document.getElementById("importBtn");
-      const feedback = document.getElementById("feedback");
       const preview = document.getElementById("screenshotPreview");
-
       const reader = new FileReader();
       reader.onload = () => {
         preview.src = reader.result;
@@ -213,21 +183,12 @@
       };
       reader.readAsDataURL(file);
 
-      importBtn.disabled = true;
-      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
-
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
-          console.log("OCR Result:\n", text);
-
           const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
-          const xpMatch =
-            text.match(/Total\s*XP[^0-9]*([\d,]+)/i) ||
-            text.match(/Total\s*xp[^0-9]*([\d,]+)/i) ||
-            text.match(/Tota[l1|i]{1,2}.*?x[pP][^0-9]*([\d,]+)/i) ||
-            text.match(/([\d,]+)\s*(?:XP|xP)/i);
+          const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
           const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
@@ -235,51 +196,40 @@
           if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
           if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
           if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
-
-          feedback.innerText = "✔️ Scan complete.";
-          importBtn.disabled = false;
         })
         .catch(err => {
           console.error("Tesseract error:", err);
-          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
-          importBtn.disabled = false;
+          alert("⚠️ Error scanning image. Try a clearer screenshot.");
         });
     }
 
     function calculateStats() {
-      const startDateRaw = document.getElementById("startDate").value;
-      const startDate = new Date(startDateRaw);
-      const distanceWalked = parseFloat(document.getElementById("distanceWalked").value);
-      const totalCaught = parseInt(document.getElementById("totalCaught").value);
-      const totalStops = parseInt(document.getElementById("totalStops").value);
-      const totalXP = parseInt(document.getElementById("totalXP").value);
-      const today = new Date();
+      const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
+      const start = document.getElementById("startDate").value;
+      const km = parseFloat(document.getElementById("distanceWalked").value);
+      const caught = parseInt(document.getElementById("totalCaught").value);
+      const xp = parseInt(document.getElementById("totalXP").value);
 
-      if (!startDate || isNaN(totalCaught) || isNaN(totalXP) || isNaN(distanceWalked) || isNaN(totalStops)) {
-        document.getElementById("result").innerText = "Please enter valid inputs.";
-        return;
-      }
+      const daysPlayed = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
 
-      const daysPlayed = Math.floor((today - startDate) / (1000 * 60 * 60 * 24));
+      const kmDay = (km / daysPlayed).toFixed(2);
+      const caughtDay = (caught / daysPlayed).toFixed(2);
+      const xpDay = (xp / daysPlayed).toFixed(2);
 
-      const pcpd = (totalCaught / daysPlayed).toFixed(2);
-      const xppd = (totalXP / daysPlayed).toFixed(2);
-      const kmpd = (distanceWalked / daysPlayed).toFixed(2);
-
-      document.getElementById("trainerName").innerText = "@TrainerName";
-      document.getElementById("startDateDisplay").innerText = `Start Date: ${startDateRaw}`;
-      document.getElementById("distanceTotal").innerText = distanceWalked.toLocaleString();
-      document.getElementById("distancePerDay").innerText = kmpd;
-      document.getElementById("catchesTotal").innerText = totalCaught.toLocaleString();
-      document.getElementById("catchesPerDay").innerText = pcpd;
-      document.getElementById("xpTotal").innerText = totalXP.toLocaleString();
-      document.getElementById("xpPerDay").innerText = xppd;
+      document.getElementById("trainerName").innerText = trainer;
+      document.getElementById("startDateDisplay").innerText = `Start Date: ${start}`;
+      document.getElementById("distanceTotal").innerText = km.toLocaleString();
+      document.getElementById("distancePerDay").innerText = kmDay;
+      document.getElementById("catchesTotal").innerText = caught.toLocaleString();
+      document.getElementById("catchesPerDay").innerText = caughtDay;
+      document.getElementById("xpTotal").innerText = xp.toLocaleString();
+      document.getElementById("xpPerDay").innerText = xpDay;
     }
 
     function downloadCard() {
       html2canvas(document.getElementById("card")).then(canvas => {
         const link = document.createElement("a");
-        link.download = "playerzero_grind_card.png";
+        link.download = "grind_card.png";
         link.href = canvas.toDataURL();
         link.click();
       });
