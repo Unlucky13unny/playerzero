@@ -136,7 +136,7 @@
     Not affiliated with Niantic, Nintendo, or The Pokémon Company. Just built by Trainers who wanted to dive into the stats behind the grind.
   </p>
 
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+ <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 <script>
   function importStats() {
     const file = document.getElementById('screenshot').files[0];
@@ -154,7 +154,13 @@
         const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
         const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
         const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
-        const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
+
+        const xpMatch =
+          text.match(/Total\s*XP[^0-9]*([\d,]+)/i) ||
+          text.match(/Total\s*xp[^0-9]*([\d,]+)/i) ||
+          text.match(/Tota[l1|i]{1,2}.*?x[pP][^0-9]*([\d,]+)/i) ||
+          text.match(/([\d,]+)\s*(?:XP|xP)/i);
+
         const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
 
         if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
@@ -203,5 +209,6 @@
       SPPD (Stops/Day): <strong>${sppd}</strong>`;
   }
 </script>
+
 </body>
 </html>
