@@ -76,12 +76,6 @@
       font-weight: bold;
       color: #e30613;
     }
-    .unit-label {
-      font-size: 0.85rem;
-      font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: 0.3rem;
-    }
     .footer {
       background: #000;
       color: #fff;
@@ -100,6 +94,11 @@
       display: none;
       max-width: 300px;
       margin-top: 1rem;
+    }
+    #feedback {
+      font-size: 0.9rem;
+      margin: 0.5rem auto;
+      color: #555;
     }
     @media screen and (max-width: 500px) {
       .stat-group {
@@ -123,6 +122,7 @@
     <input type="file" id="screenshot" accept="image/*">
     <button id="importBtn" onclick="importStats()">Import Stats</button>
     <img id="screenshotPreview">
+    <div id="feedback"></div>
     <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
   </div>
 
@@ -145,7 +145,7 @@
         <div class="value" id="distanceTotal">0</div>
       </div>
       <div class="stat">
-        <div class="unit-label">km/day</div>
+        <div class="label">km/day</div>
         <div class="value" id="distancePerDay">0</div>
       </div>
     </div>
@@ -156,7 +156,7 @@
         <div class="value" id="catchesTotal">0</div>
       </div>
       <div class="stat">
-        <div class="unit-label">caught/day</div>
+        <div class="label">caught/day</div>
         <div class="value" id="catchesPerDay">0</div>
       </div>
     </div>
@@ -167,7 +167,7 @@
         <div class="value" id="stopsTotal">0</div>
       </div>
       <div class="stat">
-        <div class="unit-label">stops/day</div>
+        <div class="label">stops/day</div>
         <div class="value" id="stopsPerDay">0</div>
       </div>
     </div>
@@ -178,7 +178,7 @@
         <div class="value" id="xpTotal">0</div>
       </div>
       <div class="stat">
-        <div class="unit-label">XP/day</div>
+        <div class="label">XP/day</div>
         <div class="value" id="xpPerDay">0</div>
       </div>
     </div>
@@ -192,6 +192,9 @@
     function importStats() {
       const file = document.getElementById('screenshot').files[0];
       if (!file) return alert("Please upload a screenshot first.");
+
+      const feedback = document.getElementById("feedback");
+      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
 
       const reader = new FileReader();
       reader.onload = () => {
@@ -213,10 +216,12 @@
           if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
           if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
           if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
+
+          feedback.innerText = "✔️ Scan complete.";
         })
         .catch(err => {
           console.error("Tesseract error:", err);
-          alert("⚠️ Error scanning image. Try a clearer screenshot.");
+          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
         });
     }
 
