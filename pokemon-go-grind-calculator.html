@@ -16,11 +16,21 @@
       margin: 0;
       text-align: center;
     }
+    .logo {
+      max-width: 280px;
+      height: auto;
+      margin: 1rem auto;
+    }
+    .input-section {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
     input, button {
       padding: 0.5rem;
       width: 100%;
       max-width: 400px;
-      margin: 0.5rem auto;
+      margin: 0.5rem 0;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
@@ -29,11 +39,6 @@
       color: #fff;
       font-weight: bold;
       cursor: pointer;
-    }
-    .logo {
-      max-width: 280px;
-      height: auto;
-      margin: 1rem auto;
     }
     #card {
       display: none;
@@ -87,14 +92,9 @@
       color: #fff;
       font-size: 1rem;
       padding: 0.75rem;
-      margin-top: 1.5rem;
+      margin-bottom: 1rem;
       border-radius: 0px;
       letter-spacing: 1px;
-    }
-    .input-row {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
     }
     #screenshotPreview {
       display: none;
@@ -103,20 +103,9 @@
     }
     #feedback {
       font-size: 0.9rem;
-      margin-top: 1rem;
+      margin-top: 0.5rem;
       color: #555;
       font-style: italic;
-    }
-    @media screen and (max-width: 500px) {
-      .stat-group {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .stat {
-        width: 45%;
-        margin-bottom: 0.5rem;
-      }
     }
   </style>
 </head>
@@ -125,27 +114,72 @@
   <h1>The Pokémon GO Grind Calculator</h1>
   <p>Upload your profile screenshot — we’ll auto-fill and break down your grind per day stats.</p>
 
-  <div class="input-row">
+  <div class="input-section">
     <input type="file" id="screenshot" accept="image/*">
-    $1
-    $2
+    <button id="importBtn" onclick="importStats()">Import Stats</button>
+    <div id="feedback"></div>
+    <img id="screenshotPreview">
     <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
+    <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)">
+    <input type="text" id="startDate" placeholder="Start Date (MM/DD/YYYY or YYYY-MM-DD)">
+    <input type="number" id="distanceWalked" placeholder="Distance Walked (km)">
+    <input type="number" id="totalCaught" placeholder="Total Pokémon Caught">
+    <input type="number" id="totalStops" placeholder="Total PokéStops Visited">
+    <input type="number" id="totalXP" placeholder="Total XP">
+    <button onclick="calculateStats()">Run My Stats</button>
+    <button onclick="downloadCard()">Download My Grind Card</button>
   </div>
 
-  <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)">
-  <input type="text" id="startDate" placeholder="Start Date (MM/DD/YYYY or YYYY-MM-DD)">
-  <input type="number" id="distanceWalked" placeholder="Distance Walked (km)">
-  <input type="number" id="totalCaught" placeholder="Total Pokémon Caught">
-  <input type="number" id="totalStops" placeholder="Total PokéStops Visited">
-  <input type="number" id="totalXP" placeholder="Total XP">
-  <button onclick="calculateStats()">Run My Stats</button>
+  <div id="card">
+    <div class="footer">GRIND CARD</div>
+    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+    <div class="username" id="trainerName">@Trainer</div>
+    <div id="startDateDisplay">Start Date: YYYY-MM-DD</div>
 
-  <div id="feedback"></div>
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Distance Walked</div>
+        <div class="value" id="distanceTotal">0</div>
+      </div>
+      <div class="stat">
+        <div class="unit-label">KM/DAY</div>
+        <div class="value" id="distancePerDay">0</div>
+      </div>
+    </div>
 
-  $2$1
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Pokémon Caught</div>
+        <div class="value" id="catchesTotal">0</div>
+      </div>
+      <div class="stat">
+        <div class="unit-label">CAUGHT/DAY</div>
+        <div class="value" id="catchesPerDay">0</div>
+      </div>
+    </div>
+
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">PokéStops Visited</div>
+        <div class="value" id="stopsTotal">0</div>
+      </div>
+      <div class="stat">
+        <div class="unit-label">STOPS/DAY</div>
+        <div class="value" id="stopsPerDay">0</div>
+      </div>
+    </div>
+
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Total XP</div>
+        <div class="value" id="xpTotal">0</div>
+      </div>
+      <div class="stat">
+        <div class="unit-label">XP/DAY</div>
+        <div class="value" id="xpPerDay">0</div>
+      </div>
+    </div>
   </div>
-
-  <button onclick="downloadCard()">Download My Grind Card</button>
 
   <script>
     function importStats() {
@@ -162,7 +196,7 @@
       const importBtn = document.getElementById("importBtn");
       const feedback = document.getElementById("feedback");
       importBtn.disabled = true;
-      feedback.innerText = "🔍 Crunching numbers from your screenshot...";
+      feedback.innerText = "🔍 Reading your screenshot... hold tight...";
 
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
@@ -178,12 +212,12 @@
           if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
           if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
 
-          feedback.innerText = "✅ Stats loaded — check below to verify.";
+          feedback.innerText = "✅ Stats pulled successfully. Double check for accuracy.";
           importBtn.disabled = false;
         })
         .catch(err => {
           console.error("Tesseract error:", err);
-          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
+          feedback.innerText = "⚠️ Couldn't scan the image. Try a clearer screenshot.";
           importBtn.disabled = false;
         });
     }
