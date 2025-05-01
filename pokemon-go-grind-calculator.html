@@ -50,9 +50,13 @@
       font-size: 1.1rem;
       margin: 0.25rem 0 0.75rem;
     }
-    #startDateDisplay {
+    #daysPlayedDisplay {
       font-weight: bold;
       font-size: 1.2rem;
+      margin-bottom: 0.25rem;
+    }
+    #startDateDisplay {
+      font-size: 1rem;
       margin-bottom: 1rem;
     }
     .stat-group {
@@ -127,15 +131,9 @@
       filter: brightness(0%) invert(50%);
       transform: scale(1.1);
     }
-    .challenge-link {
-      color: #e30613;
-      font-weight: bold;
-      margin-top: 1.5rem;
-      display: block;
-    }
     @media screen and (min-width: 768px) {
-      input, button {
-        max-width: 420px;
+      .input-row, input, button {
+        max-width: 600px;
       }
     }
   </style>
@@ -167,6 +165,7 @@
     <div class="footer">GRIND CARD</div>
     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
     <div class="username" id="trainerName">@Trainer</div>
+    <div id="daysPlayedDisplay">Days Played: 0</div>
     <div id="startDateDisplay">Start Date: YYYY-MM-DD</div>
 
     <div class="stat-group">
@@ -215,7 +214,6 @@
   </div>
 
   <button onclick="downloadCard()">Download My Grind Card</button>
-  <a href="https://pgplayerzero.com" class="challenge-link" target="_blank">Check out the PlayerZero Challenge</a>
 
   <div class="social-icons">
     <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
@@ -280,6 +278,7 @@
       const daysPlayed = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
 
       document.getElementById("trainerName").innerText = trainer;
+      document.getElementById("daysPlayedDisplay").innerText = `Days Played: ${daysPlayed}`;
       document.getElementById("startDateDisplay").innerText = `Start Date: ${start}`;
       document.getElementById("distanceTotal").innerText = km.toLocaleString();
       document.getElementById("distancePerDay").innerText = (km / daysPlayed).toFixed(2);
