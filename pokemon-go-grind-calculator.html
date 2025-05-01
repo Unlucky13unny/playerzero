@@ -56,7 +56,7 @@
       margin-bottom: 0.25rem;
     }
     #startDateDisplay {
-      font-size: 0.9rem;
+      font-size: 0.8rem;
       margin-bottom: 1rem;
     }
     .stat-group {
@@ -166,7 +166,7 @@
       document.getElementById("stopsTotal").innerText = stops.toLocaleString();
       document.getElementById("stopsPerDay").innerText = (stops / daysPlayed).toFixed(2);
       document.getElementById("xpTotal").innerText = xp.toLocaleString();
-      document.getElementById("xpPerDay").innerText = (xp / daysPlayed).toFixed(2).toLocaleString();
+      document.getElementById("xpPerDay").innerText = Number((xp / daysPlayed).toFixed(2)).toLocaleString();
 
       document.getElementById("card").style.display = "block";
     }
