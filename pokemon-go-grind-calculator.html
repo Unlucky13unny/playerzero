@@ -51,7 +51,7 @@
       margin: 0.25rem 0 0.75rem;
     }
     #startDateDisplay {
-      font-size: 1rem;
+      font-size: 0.9rem;
       margin-top: -0.25rem;
     }
     #daysPlayedDisplay {
@@ -238,7 +238,7 @@
           const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
           const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
-          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/([0-9]{1,2})\/[0-9]{4})/i);
+          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
           if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
@@ -284,6 +284,15 @@
       document.getElementById("xpPerDay").innerText = Number((xp / daysPlayed).toFixed(2)).toLocaleString();
 
       document.getElementById("card").style.display = "block";
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "grind_card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
     }
   </script>
 </body>
