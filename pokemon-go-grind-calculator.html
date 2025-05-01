@@ -39,7 +39,9 @@
       display: none;
       width: 100%;
       max-width: 420px;
-      background: #fff;
+      background-image: url('card-bg-image.png');
+      background-size: cover;
+      background-position: center;
       border: 4px solid #000;
       border-radius: 30px;
       margin: 2rem auto;
@@ -78,9 +80,9 @@
     }
     .unit-label {
       font-size: 0.85rem;
-      font-weight: normal;
       text-transform: uppercase;
       margin-bottom: 0.3rem;
+      font-weight: normal;
     }
     .footer {
       background: #000;
@@ -100,12 +102,6 @@
       display: none;
       max-width: 300px;
       margin-top: 1rem;
-    }
-    #feedback {
-      font-style: italic;
-      font-size: 0.9rem;
-      color: #555;
-      margin: 0.5rem 0;
     }
     @media screen and (max-width: 500px) {
       .stat-group {
@@ -129,7 +125,7 @@
     <input type="file" id="screenshot" accept="image/*">
     <button id="importBtn" onclick="importStats()">Import Stats</button>
     <img id="screenshotPreview">
-    <div id="feedback"></div>
+    <div id="feedback" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></div>
     <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
   </div>
 
@@ -197,4 +193,78 @@
 
   <script>
     function importStats() {
-      const file = document.getElementById('screenshot').files[
+      const file = document.getElementById('screenshot').files[0];
+      if (!file) return alert("Please upload a screenshot first.");
+
+      const feedback = document.getElementById("feedback");
+      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById("screenshotPreview").src = reader.result;
+        document.getElementById("screenshotPreview").style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+
+      Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
+        .then(({ data: { text } }) => {
+          const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
+          const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
+          const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
+          const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*(?:XP|xP)/i);
+          const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
+
+          if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
+          if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
+          if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
+          if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
+          if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
+
+          feedback.innerText = "✔️ Scan complete.";
+        })
+        .catch(err => {
+          console.error("Tesseract error:", err);
+          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
+        });
+    }
+
+    function calculateStats() {
+      const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
+      const start = document.getElementById("startDate").value;
+      const km = parseFloat(document.getElementById("distanceWalked").value);
+      const caught = parseInt(document.getElementById("totalCaught").value);
+      const stops = parseInt(document.getElementById("totalStops").value);
+      const xp = parseInt(document.getElementById("totalXP").value);
+
+      if (!start || isNaN(km) || isNaN(caught) || isNaN(stops) || isNaN(xp)) {
+        alert("Please fill in all stats before generating your Grind Card.");
+        return;
+      }
+
+      const daysPlayed = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
+
+      document.getElementById("trainerName").innerText = trainer;
+      document.getElementById("startDateDisplay").innerText = `Start Date: ${start}`;
+      document.getElementById("distanceTotal").innerText = km.toLocaleString();
+      document.getElementById("distancePerDay").innerText = (km / daysPlayed).toFixed(2);
+      document.getElementById("catchesTotal").innerText = caught.toLocaleString();
+      document.getElementById("catchesPerDay").innerText = (caught / daysPlayed).toFixed(2);
+      document.getElementById("stopsTotal").innerText = stops.toLocaleString();
+      document.getElementById("stopsPerDay").innerText = (stops / daysPlayed).toFixed(2);
+      document.getElementById("xpTotal").innerText = xp.toLocaleString();
+      document.getElementById("xpPerDay").innerText = (xp / daysPlayed).toFixed(2);
+
+      document.getElementById("card").style.display = "block";
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "grind_card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
