@@ -127,8 +127,8 @@
 
   <div class="input-row">
     <input type="file" id="screenshot" accept="image/*">
-    <button id="importBtn" onclick="importStats()">Import Stats</button>
-    <img id="screenshotPreview">
+    $1
+    $2
     <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
   </div>
 
@@ -142,57 +142,7 @@
 
   <div id="feedback"></div>
 
-  <div id="card">
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-    <div class="username" id="trainerName">@Trainer</div>
-    <div id="startDateDisplay">Start Date: YYYY-MM-DD</div>
-
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">Distance Walked</div>
-        <div class="value" id="distanceTotal">0</div>
-      </div>
-      <div class="stat">
-        <div class="unit-label">km/day</div>
-        <div class="value" id="distancePerDay">0</div>
-      </div>
-    </div>
-
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">Pokémon Caught</div>
-        <div class="value" id="catchesTotal">0</div>
-      </div>
-      <div class="stat">
-        <div class="unit-label">caught/day</div>
-        <div class="value" id="catchesPerDay">0</div>
-      </div>
-    </div>
-
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">PokéStops Visited</div>
-        <div class="value" id="stopsTotal">0</div>
-      </div>
-      <div class="stat">
-        <div class="unit-label">stops/day</div>
-        <div class="value" id="stopsPerDay">0</div>
-      </div>
-    </div>
-
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">Total XP</div>
-        <div class="value" id="xpTotal">0</div>
-      </div>
-      <div class="stat">
-        <div class="unit-label">XP/day</div>
-        <div class="value" id="xpPerDay">0</div>
-      </div>
-    </div>
-
-    
-  <div class="footer">GRIND CARD</div>
+  $2$1
   </div>
 
   <button onclick="downloadCard()">Download My Grind Card</button>
