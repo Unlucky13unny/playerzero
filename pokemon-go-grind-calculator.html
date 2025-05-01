@@ -111,10 +111,6 @@
       color: #555;
       font-style: italic;
     }
-    .links {
-      margin-top: 2rem;
-      font-size: 0.9rem;
-    }
     .social-icons {
       margin-top: 1rem;
     }
@@ -131,21 +127,17 @@
       filter: brightness(0%) invert(50%);
       transform: scale(1.1);
     }
-    @media screen and (max-width: 500px) {
-      .stat-group {
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: center;
-      }
-      .stat {
-        width: 45%;
-        margin-bottom: 0.5rem;
+    @media screen and (min-width: 768px) {
+      .input-row, input, button {
+        max-width: 600px;
       }
     }
   </style>
 </head>
 <body>
-  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+  <a href="https://pgplayerzero.com" target="_blank">
+    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+  </a>
   <h1>The Pokémon GO Grind Calculator</h1>
   <p>Upload your profile screenshot — we’ll auto-fill and break down your grind per day stats.</p>
 
@@ -217,11 +209,6 @@
   </div>
 
   <button onclick="downloadCard()">Download My Grind Card</button>
-
-  <div class="links">
-    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank">Join the pgPlayerZero Reddit community</a>
-    <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
-  </div>
 
   <div class="social-icons">
     <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
