@@ -138,6 +138,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
+    function preprocessImage(image, callback) {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      img.onload = () => {
+        canvas.width = img.width;
+        canvas.height = img.height;
+
+        ctx.drawImage(img, 0, 0);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+
+        for (let i = 0; i < data.length; i += 4) {
+          const avg = 0.3 * data[i] + 0.59 * data[i+1] + 0.11 * data[i+2];
+          const boost = avg > 128 ? 255 : 0;
+          data[i] = data[i+1] = data[i+2] = boost;
+        }
+
+        ctx.putImageData(imageData, 0, 0);
+        callback(canvas.toDataURL('image/png'));
+      };
+
+      img.src = URL.createObjectURL(image);
+    }
+
     function importStats() {
       const file = document.getElementById('screenshot').files[0];
       if (!file) return alert("Please upload a screenshot first.");
@@ -145,35 +171,37 @@
       const importBtn = document.getElementById("importBtn");
       const feedback = document.getElementById("feedback");
       importBtn.disabled = true;
-      feedback.innerText = "⏳ Scanning image — this may take a few seconds...";
+      feedback.innerText = "⏳ Enhancing and scanning image...";
 
-      Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
-        .then(({ data: { text } }) => {
-          console.log("OCR Result:\n", text);
+      preprocessImage(file, (processedImage) => {
+        Tesseract.recognize(processedImage, 'eng', { logger: m => console.log(m) })
+          .then(({ data: { text } }) => {
+            console.log("Enhanced OCR:\n", text);
 
-          const distanceMatch = text.match(/Distance Walked[:\s]*([\d,.]+)/i);
-          const caughtMatch = text.match(/Pok[eé]mon Caught[:\s]*([\d,]+)/i);
-          const stopsMatch = text.match(/Pok[eé]Stops Visited[:\s]*([\d,]+)/i);
-          const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*XP/i);
-          const dateMatch = text.match(/Start Date[:\s]*(\d{1,2}\/\d{1,2}\/\d{4})/i);
+            const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
+            const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
+            const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
+            const xpMatch = text.match(/Total\s*XP[^0-9]*([\d,]+)/i) || text.match(/([\d,]+)\s*XP/i);
+            const dateMatch = text.match(/Start\s+Date[:\s]*([0-9/]+)/i);
 
-          if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
-          if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
-          if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
-          if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
-          if (dateMatch) {
-            const [m, d, y] = dateMatch[1].split('/');
-            document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
-          }
+            if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
+            if (caughtMatch) document.getElementById('totalCaught').value = caughtMatch[1].replace(/,/g, '');
+            if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
+            if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
+            if (dateMatch) {
+              const [m, d, y] = dateMatch[1].split('/');
+              document.getElementById('startDate').value = `${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`;
+            }
 
-          feedback.innerText = "✔️ Scan complete.";
-          importBtn.disabled = false;
-        })
-        .catch(err => {
-          console.error("Tesseract error:", err);
-          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
-          importBtn.disabled = false;
-        });
+            feedback.innerText = "✔️ Scan complete.";
+            importBtn.disabled = false;
+          })
+          .catch(err => {
+            console.error("Tesseract error:", err);
+            feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
+            importBtn.disabled = false;
+          });
+      });
     }
 
     function calculateStats() {
