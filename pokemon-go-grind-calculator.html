@@ -39,7 +39,7 @@
       display: none;
       width: 100%;
       max-width: 420px;
-      background: #fff;
+      background: url('card-background.png') center/cover no-repeat #fff;
       border: 4px solid #000;
       border-radius: 30px;
       margin: 2rem auto;
@@ -101,6 +101,12 @@
       max-width: 300px;
       margin-top: 1rem;
     }
+    #feedback {
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: #555;
+      font-style: italic;
+    }
     @media screen and (max-width: 500px) {
       .stat-group {
         flex-direction: row;
@@ -133,6 +139,8 @@
   <input type="number" id="totalStops" placeholder="Total PokéStops Visited">
   <input type="number" id="totalXP" placeholder="Total XP">
   <button onclick="calculateStats()">Run My Stats</button>
+
+  <div id="feedback"></div>
 
   <div id="card">
     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
@@ -200,6 +208,11 @@
       };
       reader.readAsDataURL(file);
 
+      const importBtn = document.getElementById("importBtn");
+      const feedback = document.getElementById("feedback");
+      importBtn.disabled = true;
+      feedback.innerText = "🔍 Crunching numbers from your screenshot...";
+
       Tesseract.recognize(file, 'eng', { logger: m => console.log(m) })
         .then(({ data: { text } }) => {
           const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
@@ -213,10 +226,14 @@
           if (stopsMatch) document.getElementById('totalStops').value = stopsMatch[1].replace(/,/g, '');
           if (xpMatch) document.getElementById('totalXP').value = xpMatch[1].replace(/,/g, '');
           if (dateMatch) document.getElementById('startDate').value = dateMatch[1];
+
+          feedback.innerText = "✅ Stats loaded — check below to verify.";
+          importBtn.disabled = false;
         })
         .catch(err => {
           console.error("Tesseract error:", err);
-          alert("⚠️ Error scanning image. Try a clearer screenshot.");
+          feedback.innerText = "⚠️ Error scanning image. Try a clearer screenshot.";
+          importBtn.disabled = false;
         });
     }
 
