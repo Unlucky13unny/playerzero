@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Grind Calculator | Track XP, Catches, Distance & More</title>
   <meta name="description" content="Use this free Pokémon GO Grind Calculator to track your XP per day, Pokémon caught, distance walked, and PokéStops visited — all from a screenshot.">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
@@ -22,11 +23,6 @@
     .logo {
       max-width: 300px;
       height: auto;
-    }
-    h1 {
-      font-size: 2rem;
-      font-weight: bold;
-      margin-bottom: 1rem;
     }
     label {
       display: block;
@@ -50,10 +46,6 @@
       align-items: center;
       margin: 1.5rem 0;
     }
-    .input-row button {
-      margin-top: 1rem;
-      padding: 0.75rem 2rem;
-    }
     button {
       background: #111;
       color: #fff;
@@ -63,33 +55,6 @@
       font-weight: bold;
       cursor: pointer;
       margin-top: 1.5rem;
-    }
-    .result {
-      margin-top: 2rem;
-      font-size: 1.25rem;
-    }
-    .result strong {
-      color: red;
-    }
-    #feedback {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #333;
-      font-style: italic;
-    }
-    a {
-      color: red;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    .links {
-      margin-top: 2rem;
-      font-size: 0.9rem;
-    }
-    .footer-note {
-      font-size: 0.7rem;
-      color: #888;
-      margin-top: 3rem;
     }
     #screenshotPreview {
       margin-top: 1rem;
@@ -102,6 +67,51 @@
       font-weight: normal;
       font-size: 0.9rem;
       cursor: help;
+    }
+    .card-container {
+      margin-top: 3rem;
+    }
+    #card {
+      width: 1000px;
+      background: white;
+      padding: 40px;
+      margin: 2rem auto;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      position: relative;
+    }
+    .username {
+      font-size: 1.2rem;
+      margin-bottom: 20px;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin: 10px 0;
+    }
+    .section {
+      display: flex;
+      justify-content: space-around;
+      margin: 40px 0;
+    }
+    .stat {
+      flex: 1;
+    }
+    .stat h2 {
+      color: #e00;
+      font-size: 2rem;
+      margin: 10px 0 0 0;
+    }
+    .stat p {
+      margin: 4px 0;
+    }
+    .footer {
+      background: #000;
+      color: #fff;
+      font-size: 1.5rem;
+      padding: 10px;
+      position: absolute;
+      bottom: 0;
+      width: calc(100% - 80px);
     }
   </style>
 </head>
@@ -122,12 +132,7 @@
     </p>
   </div>
 
-  <div id="feedback"></div>
-
-  <label for="startDate">
-    Start Date:
-    <span class="info-icon" title="Image recognition may vary by phone. If this field doesn't autofill, type it manually.">ℹ️</span>
-  </label>
+  <label for="startDate">Start Date:</label>
   <input type="text" id="startDate" placeholder="MM/DD/YYYY or YYYY-MM-DD" />
 
   <label for="distanceWalked">Distance Walked (km):</label>
@@ -144,16 +149,52 @@
 
   <button onclick="calculateStats()">Run My Stats</button>
 
-  <div class="result" id="result"></div>
-
-  <div class="links">
-    <p><a href="https://www.reddit.com/r/pgPlayerZero" target="_blank">Join the pgPlayerZero Reddit community</a></p>
-    <p><a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a></p>
+  <div class="card-container">
+    <div id="card">
+      <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
+      <div class="username" id="trainerName">@TrainerName</div>
+      <h1>THE POKÉMON GO GRIND CALCULATOR</h1>
+      <p id="startDateDisplay">Start Date: July 10, 2016</p>
+      <div class="section">
+        <div class="stat">
+          <p><strong>DISTANCE WALKED</strong></p>
+          <h2 id="distanceTotal">14,988.9</h2>
+          <p>kilometers</p>
+        </div>
+        <div class="stat">
+          <p><strong>PER DAY</strong></p>
+          <h2 id="distancePerDay">4.66</h2>
+          <p>km/day</p>
+        </div>
+      </div>
+      <div class="section">
+        <div class="stat">
+          <p><strong>POKÉMON CAUGHT</strong></p>
+          <h2 id="catchesTotal">168,579</h2>
+          <p>Pokémon Caught</p>
+        </div>
+        <div class="stat">
+          <p><strong>PER DAY</strong></p>
+          <h2 id="catchesPerDay">52.41</h2>
+          <p>caught/day</p>
+        </div>
+      </div>
+      <div class="section">
+        <div class="stat">
+          <p><strong>TOTAL XP</strong></p>
+          <h2 id="xpTotal">210,912,431</h2>
+          <p>Total XP</p>
+        </div>
+        <div class="stat">
+          <p><strong>PER DAY</strong></p>
+          <h2 id="xpPerDay">65,548</h2>
+          <p>XP/day</p>
+        </div>
+      </div>
+      <div class="footer">GRIND CARD</div>
+    </div>
+    <button onclick="downloadCard()">Download My Grind Card</button>
   </div>
-
-  <p class="footer-note">
-    Not affiliated with Niantic, Nintendo, or The Pokémon Company. Just built by Trainers who wanted to dive into the stats behind the grind.
-  </p>
 
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script>
@@ -165,7 +206,6 @@
       const feedback = document.getElementById("feedback");
       const preview = document.getElementById("screenshotPreview");
 
-      // Show image preview
       const reader = new FileReader();
       reader.onload = () => {
         preview.src = reader.result;
@@ -183,13 +223,11 @@
           const distanceMatch = text.match(/Distance\s+Walked[:\s]*([\d,.]+)/i);
           const caughtMatch = text.match(/Pok[eé]mon\s+Caught[:\s]*([\d,]+)/i);
           const stopsMatch = text.match(/Pok[eé]Stops\s+Visited[:\s]*([\d,]+)/i);
-
           const xpMatch =
             text.match(/Total\s*XP[^0-9]*([\d,]+)/i) ||
             text.match(/Total\s*xp[^0-9]*([\d,]+)/i) ||
             text.match(/Tota[l1|i]{1,2}.*?x[pP][^0-9]*([\d,]+)/i) ||
             text.match(/([\d,]+)\s*(?:XP|xP)/i);
-
           const dateMatch = text.match(/Start\s+Date[:\s]*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i);
 
           if (distanceMatch) document.getElementById('distanceWalked').value = distanceMatch[1].replace(/,/g, '');
@@ -227,13 +265,24 @@
       const pcpd = (totalCaught / daysPlayed).toFixed(2);
       const xppd = (totalXP / daysPlayed).toFixed(2);
       const kmpd = (distanceWalked / daysPlayed).toFixed(2);
-      const sppd = (totalStops / daysPlayed).toFixed(2);
 
-      document.getElementById("result").innerHTML = `You've been playing for <strong>${daysPlayed}</strong> days.<br />
-        PCPD (Caught/Day): <strong>${pcpd}</strong><br />
-        XPPD (XP/Day): <strong>${xppd}</strong><br />
-        KMPD (Distance/Day): <strong>${kmpd}</strong><br />
-        SPPD (Stops/Day): <strong>${sppd}</strong>`;
+      document.getElementById("trainerName").innerText = "@TrainerName";
+      document.getElementById("startDateDisplay").innerText = `Start Date: ${startDateRaw}`;
+      document.getElementById("distanceTotal").innerText = distanceWalked.toLocaleString();
+      document.getElementById("distancePerDay").innerText = kmpd;
+      document.getElementById("catchesTotal").innerText = totalCaught.toLocaleString();
+      document.getElementById("catchesPerDay").innerText = pcpd;
+      document.getElementById("xpTotal").innerText = totalXP.toLocaleString();
+      document.getElementById("xpPerDay").innerText = xppd;
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "playerzero_grind_card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
     }
   </script>
 </body>
