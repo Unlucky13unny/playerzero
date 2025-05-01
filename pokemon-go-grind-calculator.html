@@ -36,6 +36,7 @@
       margin-bottom: 1rem;
     }
     #card {
+      display: none;
       width: 100%;
       max-width: 420px;
       background: white;
@@ -51,14 +52,12 @@
     }
     .section {
       display: flex;
-      flex-wrap: wrap;
       justify-content: space-between;
-      text-align: left;
+      flex-wrap: wrap;
       margin: 1.2rem 0;
     }
     .stat {
       width: 48%;
-      box-sizing: border-box;
       margin-bottom: 1rem;
     }
     .stat h2 {
@@ -91,12 +90,13 @@
     }
     @media screen and (max-width: 500px) {
       .section {
-        flex-direction: column;
-        align-items: center;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
       }
       .stat {
-        width: 100%;
-        text-align: center;
+        width: 45%;
+        margin: 0.5rem;
       }
     }
   </style>
@@ -224,6 +224,11 @@
       const stops = parseInt(document.getElementById("totalStops").value);
       const xp = parseInt(document.getElementById("totalXP").value);
 
+      if (!start || isNaN(km) || isNaN(caught) || isNaN(stops) || isNaN(xp)) {
+        alert("Please fill in all stats before generating your Grind Card.");
+        return;
+      }
+
       const daysPlayed = Math.floor((new Date() - new Date(start)) / (1000 * 60 * 60 * 24));
 
       const kmDay = (km / daysPlayed).toFixed(2);
@@ -241,6 +246,8 @@
       document.getElementById("stopsPerDay").innerText = stopsDay;
       document.getElementById("xpTotal").innerText = xp.toLocaleString();
       document.getElementById("xpPerDay").innerText = xpDay;
+
+      document.getElementById("card").style.display = "block";
     }
 
     function downloadCard() {
