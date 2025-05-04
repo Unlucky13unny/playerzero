@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
   <link rel="icon" type="image/png" href="/favicon.png" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -23,6 +23,7 @@
       margin: 0.5rem auto;
       border-radius: 5px;
       border: 1px solid #ccc;
+      display: block;
     }
     button {
       background: #111;
@@ -33,6 +34,12 @@
     .logo {
       max-width: 280px;
       margin: 1rem auto;
+    }
+    .preview {
+      max-width: 300px;
+      margin: 0.5rem auto;
+      display: none;
+      border: 1px solid #ccc;
     }
     #feedback {
       font-size: 0.9rem;
@@ -110,11 +117,13 @@
   <h1>The Pokémon GO Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
-  <input type="file" id="startImage" accept="image/*" />
-  <div class="label">Start Screenshot</div>
+  <label>Start Screenshot</label>
+  <input type="file" id="startImage" accept="image/*" onchange="previewImage('startImage', 'startPreview')" />
+  <img id="startPreview" class="preview" />
 
-  <input type="file" id="endImage" accept="image/*" />
-  <div class="label">End Screenshot</div>
+  <label>End Screenshot</label>
+  <input type="file" id="endImage" accept="image/*" onchange="previewImage('endImage', 'endPreview')" />
+  <img id="endPreview" class="preview" />
 
   <button onclick="processScreenshots()">Import Stats</button>
   <div id="feedback"></div>
@@ -125,7 +134,7 @@
   <input type="number" id="endCaught" placeholder="End Caught" />
   <input type="number" id="endSeen" placeholder="End Seen" />
   <input type="number" id="shinies" placeholder="Shinies Caught" />
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (e.g. 3)" value="3" />
+  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3" />
 
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
@@ -154,6 +163,18 @@
   </div>
 
   <script>
+    function previewImage(inputId, previewId) {
+      const file = document.getElementById(inputId).files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = document.getElementById(previewId);
+        img.src = reader.result;
+        img.style.display = "block";
+      };
+      reader.readAsDataURL(file);
+    }
+
     async function processScreenshots() {
       const startImage = document.getElementById("startImage").files[0];
       const endImage = document.getElementById("endImage").files[0];
@@ -178,8 +199,8 @@
         const start = await extractStats(startImage);
         document.getElementById("startSeen").value = start.seen;
         document.getElementById("startCaught").value = start.caught;
-        feedback.innerText = "✅ Scanning END image...";
 
+        feedback.innerText = "✅ Scanning END image...";
         const end = await extractStats(endImage);
         document.getElementById("endSeen").value = end.seen;
         document.getElementById("endCaught").value = end.caught;
@@ -187,7 +208,7 @@
         const pokeMatch = end.raw.match(/Community Day[:\s]*([A-Za-z]+)/i);
         document.getElementById("displayPokemon").innerText = pokeMatch?.[1] || "Pokémon";
 
-        feedback.innerText = "✅ Stats imported. Review & hit Run My Stats.";
+        feedback.innerText = "✅ Stats imported. Review & run your stats.";
       } catch (error) {
         console.error(error);
         feedback.innerText = "❌ Error reading one or both screenshots.";
