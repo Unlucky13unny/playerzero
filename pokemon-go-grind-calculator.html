@@ -4,16 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" href="favicon.png" />
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <link rel="icon" type="image/png" href="favicon.png" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
       background: #fff;
       color: #111;
       padding: 2rem;
-      margin: 0;
       text-align: center;
     }
     input, button {
@@ -34,14 +33,14 @@
       max-width: 280px;
       margin: 1rem auto;
     }
-    #feedback {
+    .feedback {
       font-size: 0.9rem;
       color: #666;
-      font-style: italic;
-      margin-top: 1rem;
+      margin: 0.5rem 0;
     }
     #card {
       display: none;
+      width: 100%;
       max-width: 420px;
       background: #f9f9f9;
       border: 4px solid #000;
@@ -52,8 +51,7 @@
     .label {
       font-size: 0.85rem;
       font-weight: bold;
-      text-transform: uppercase;
-      margin-bottom: 0.3rem;
+      margin-top: 1rem;
     }
     .value {
       font-size: 1.5rem;
@@ -65,9 +63,10 @@
       color: #fff;
       font-size: 1rem;
       padding: 0.75rem;
-      margin-top: 1.5rem;
       border-radius: 8px;
-      letter-spacing: 1px;
+      width: 80%;
+      max-width: 280px;
+      margin: 1rem auto;
     }
     .promo-link {
       margin-top: 1rem;
@@ -84,13 +83,13 @@
       justify-content: center;
       gap: 1rem;
     }
-    .social-icons img {
+    .social-icons a img {
       width: 36px;
       height: 36px;
       filter: brightness(0%);
       transition: filter 0.3s ease, transform 0.2s ease;
     }
-    .social-icons img:hover {
+    .social-icons a img:hover {
       filter: brightness(0%) invert(50%);
       transform: scale(1.1);
     }
@@ -98,25 +97,112 @@
 </head>
 <body>
   <a href="https://pgplayerzero.com" target="_blank">
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
   </a>
+
   <h1>The Pokémon GO Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
-  <input type="text" id="trainerName" placeholder="Trainer Name">
-  <input type="file" id="startImage" accept="image/*">
-  <input type="number" id="startSeen" placeholder="Start Seen">
-  <input type="number" id="startCaught" placeholder="Start Caught">
-  <input type="file" id="endImage" accept="image/*">
-  <input type="number" id="endSeen" placeholder="End Seen">
-  <input type="number" id="endCaught" placeholder="End Caught">
-  <input type="number" id="shinies" placeholder="Shinies Caught">
-  <input type="number" id="hoursPlayed" value="3" placeholder="Hours Played">
+  <input type="text" id="trainerName" placeholder="Trainer Name" />
+  <input type="file" id="startImage" accept="image/*" />
+  <input type="file" id="endImage" accept="image/*" />
+  <div class="feedback" id="feedback"></div>
 
-  <button onclick="processScreenshots()">Import Stats</button>
-  <div id="feedback"></div>
+  <input type="number" id="startSeen" placeholder="Start Seen" />
+  <input type="number" id="startCaught" placeholder="Start Caught" />
+  <input type="number" id="endSeen" placeholder="End Seen" />
+  <input type="number" id="endCaught" placeholder="End Caught" />
+  <input type="number" id="shinies" placeholder="Shinies Caught" />
+  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3" />
+
+  <button onclick="importStats()">Import Stats</button>
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
   <div id="card">
-    <div class="footer">
+    <div class="footer">COMMUNITY DAY</div>
+    <div class="label" id="displayTrainer">@Trainer</div>
+    <div class="label">Total Caught</div>
+    <div class="value" id="totalCaught">0</div>
+    <div class="label">Catches/Hour</div>
+    <div class="value" id="catchesPerHour">0</div>
+    <div class="label">Catch %</div>
+    <div class="value" id="catchRate">0%</div>
+    <div class="label">Shinies Caught</div>
+    <div class="value" id="shinyCount">0</div>
+  </div>
+
+  <div class="promo-link">
+    <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
+  </div>
+  <div class="social-icons">
+    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
+    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
+  </div>
+
+  <script>
+    async function importStats() {
+      const feedback = document.getElementById("feedback");
+      const startImage = document.getElementById("startImage").files[0];
+      const endImage = document.getElementById("endImage").files[0];
+
+      if (!startImage || !endImage) {
+        feedback.innerText = "Please upload both START and END screenshots.";
+        return;
+      }
+
+      const extractStats = async (file) => {
+        const { data: { text } } = await Tesseract.recognize(file, 'eng');
+        const seen = text.match(/Seen\s*:?[\s]*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
+        const caught = text.match(/Caught\s*:?[\s]*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
+        return { seen, caught };
+      };
+
+      feedback.innerText = "Scanning start image...";
+      const start = await extractStats(startImage);
+      document.getElementById("startSeen").value = start.seen;
+      document.getElementById("startCaught").value = start.caught;
+
+      feedback.innerText = "Scanning end image...";
+      const end = await extractStats(endImage);
+      document.getElementById("endSeen").value = end.seen;
+      document.getElementById("endCaught").value = end.caught;
+
+      feedback.innerText = "Scan complete.";
+    }
+
+    function generateCard() {
+      const trainer = document.getElementById("trainerName").value || "@Trainer";
+      const shinies = parseInt(document.getElementById("shinies").value) || 0;
+      const hours = parseFloat(document.getElementById("hoursPlayed").value) || 3;
+
+      const startSeen = parseInt(document.getElementById("startSeen").value);
+      const startCaught = parseInt(document.getElementById("startCaught").value);
+      const endSeen = parseInt(document.getElementById("endSeen").value);
+      const endCaught = parseInt(document.getElementById("endCaught").value);
+
+      const seenDiff = endSeen - startSeen;
+      const caughtDiff = endCaught - startCaught;
+      const catchRate = seenDiff > 0 ? ((caughtDiff / seenDiff) * 100).toFixed(1) : "0";
+
+      document.getElementById("displayTrainer").innerText = trainer;
+      document.getElementById("totalCaught").innerText = caughtDiff;
+      document.getElementById("catchesPerHour").innerText = (caughtDiff / hours).toFixed(1);
+      document.getElementById("catchRate").innerText = catchRate + "%";
+      document.getElementById("shinyCount").innerText = shinies;
+
+      document.getElementById("card").style.display = "block";
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comm_day_card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
