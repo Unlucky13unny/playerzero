@@ -76,7 +76,6 @@
       max-width: 280px;
     }
   </style>
-  <script defer src="/scripts/commday.js"></script>
 </head>
 <body>
   <div class="container">
@@ -94,7 +93,10 @@
     <label for="endImage">End Screenshot</label>
     <input type="file" id="endImage" accept="image/*">
 
+    <label for="shinies">Shinies Caught</label>
     <input type="number" id="shinies" placeholder="Shinies Caught">
+
+    <label for="hoursPlayed">Hours Played</label>
     <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
 
     <button onclick="processScreenshots()">Import Stats from Images</button>
@@ -116,5 +118,62 @@
 
     <button onclick="downloadCard()">Download Card</button>
   </div>
+
+  <script>
+    function processScreenshots() {
+      const startImage = document.getElementById("startImage").files[0];
+      const endImage = document.getElementById("endImage").files[0];
+
+      if (!startImage || !endImage) {
+        alert("Please upload both START and END screenshots.");
+        return;
+      }
+
+      const readImage = (file) => {
+        return Tesseract.recognize(file, 'eng', { logger: m => console.log(m.status) })
+          .then(({ data: { text } }) => {
+            const seen = (text.match(/seen[^\d]*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || null;
+            const caught = (text.match(/caught[^\d]*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || null;
+            const pokemon = (text.match(/\d{4}\s+([a-zA-Z]+)/) || [])[1] || null;
+            return { seen: parseInt(seen), caught: parseInt(caught), pokemon };
+          });
+      };
+
+      Promise.all([readImage(startImage), readImage(endImage)]).then(([start, end]) => {
+        if (!start.seen || !end.seen || !start.caught || !end.caught) {
+          alert("Unable to extract stats from images. Try clearer screenshots.");
+          return;
+        }
+
+        const seenDiff = end.seen - start.seen;
+        const caughtDiff = end.caught - start.caught;
+        const catchRate = seenDiff > 0 ? ((caughtDiff / seenDiff) * 100).toFixed(1) : "0";
+        const hours = parseFloat(document.getElementById("hoursPlayed").value) || 3;
+
+        document.getElementById("totalCaught").innerText = caughtDiff;
+        document.getElementById("catchesPerHour").innerText = (caughtDiff / hours).toFixed(1);
+        document.getElementById("catchRate").innerText = catchRate + "%";
+        document.getElementById("displayPokemon").innerText = end.pokemon || "Pokémon";
+      });
+    }
+
+    function generateCard() {
+      const trainer = document.getElementById("trainerName").value || "@Trainer";
+      const shinies = parseInt(document.getElementById("shinies").value) || 0;
+
+      document.getElementById("displayTrainer").innerText = trainer;
+      document.getElementById("shinyCount").innerText = shinies;
+      document.getElementById("card").classList.remove("hidden");
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comm_day_card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
 </body>
 </html>
