@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
@@ -13,6 +13,7 @@
       background: #fff;
       color: #111;
       padding: 2rem;
+      margin: 0;
       text-align: center;
     }
     input, button {
@@ -33,10 +34,11 @@
       max-width: 280px;
       margin: 1rem auto;
     }
-    .feedback {
+    #feedback {
       font-size: 0.9rem;
+      margin-top: 0.5rem;
       color: #666;
-      margin: 0.5rem 0;
+      font-style: italic;
     }
     #card {
       display: none;
@@ -47,11 +49,13 @@
       border-radius: 30px;
       margin: 2rem auto;
       padding: 1.5rem 1rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
     }
     .label {
       font-size: 0.85rem;
+      text-transform: uppercase;
       font-weight: bold;
-      margin-top: 1rem;
+      margin-bottom: 0.3rem;
     }
     .value {
       font-size: 1.5rem;
@@ -63,10 +67,13 @@
       color: #fff;
       font-size: 1rem;
       padding: 0.75rem;
+      margin-top: 1.5rem;
       border-radius: 8px;
+      letter-spacing: 1px;
       width: 80%;
       max-width: 280px;
-      margin: 1rem auto;
+      margin-left: auto;
+      margin-right: auto;
     }
     .promo-link {
       margin-top: 1rem;
@@ -97,31 +104,36 @@
 </head>
 <body>
   <a href="https://pgplayerzero.com" target="_blank">
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
+    <img src="/playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
   </a>
 
   <h1>The Pokémon GO Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
-  <input type="text" id="trainerName" placeholder="Trainer Name" />
   <input type="file" id="startImage" accept="image/*" />
+  <div class="label">Start Screenshot</div>
+
   <input type="file" id="endImage" accept="image/*" />
-  <div class="feedback" id="feedback"></div>
+  <div class="label">End Screenshot</div>
 
-  <input type="number" id="startSeen" placeholder="Start Seen" />
+  <button onclick="processScreenshots()">Import Stats</button>
+  <div id="feedback"></div>
+
+  <input type="text" id="trainerName" placeholder="Trainer Name" />
   <input type="number" id="startCaught" placeholder="Start Caught" />
-  <input type="number" id="endSeen" placeholder="End Seen" />
+  <input type="number" id="startSeen" placeholder="Start Seen" />
   <input type="number" id="endCaught" placeholder="End Caught" />
+  <input type="number" id="endSeen" placeholder="End Seen" />
   <input type="number" id="shinies" placeholder="Shinies Caught" />
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3" />
+  <input type="number" id="hoursPlayed" placeholder="Hours Played (e.g. 3)" value="3" />
 
-  <button onclick="importStats()">Import Stats</button>
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
   <div id="card">
     <div class="footer">COMMUNITY DAY</div>
     <div class="label" id="displayTrainer">@Trainer</div>
+    <div class="label" id="displayPokemon">Pokémon</div>
     <div class="label">Total Caught</div>
     <div class="value" id="totalCaught">0</div>
     <div class="label">Catches/Hour</div>
@@ -136,51 +148,60 @@
     <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
   </div>
   <div class="social-icons">
-    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
-    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
-    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
+    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram" /></a>
+    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok" /></a>
+    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit" /></a>
   </div>
 
   <script>
-    async function importStats() {
-      const feedback = document.getElementById("feedback");
+    async function processScreenshots() {
       const startImage = document.getElementById("startImage").files[0];
       const endImage = document.getElementById("endImage").files[0];
+      const feedback = document.getElementById("feedback");
 
       if (!startImage || !endImage) {
-        feedback.innerText = "Please upload both START and END screenshots.";
+        feedback.innerText = "⚠️ Please upload both START and END screenshots.";
         return;
       }
 
+      feedback.innerText = "🔍 Scanning START image...";
+
       const extractStats = async (file) => {
-        const { data: { text } } = await Tesseract.recognize(file, 'eng');
-        const seen = text.match(/Seen\s*:?[\s]*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
-        const caught = text.match(/Caught\s*:?[\s]*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
-        return { seen, caught };
+        const result = await Tesseract.recognize(file, 'eng');
+        const text = result.data.text;
+        const seen = (text.match(/Seen\s*:?[\s]?([\d,]+)/i) || [])[1]?.replace(/,/g, '') || '';
+        const caught = (text.match(/Caught\s*:?[\s]?([\d,]+)/i) || [])[1]?.replace(/,/g, '') || '';
+        return { seen, caught, raw: text };
       };
 
-      feedback.innerText = "Scanning start image...";
-      const start = await extractStats(startImage);
-      document.getElementById("startSeen").value = start.seen;
-      document.getElementById("startCaught").value = start.caught;
+      try {
+        const start = await extractStats(startImage);
+        document.getElementById("startSeen").value = start.seen;
+        document.getElementById("startCaught").value = start.caught;
+        feedback.innerText = "✅ Scanning END image...";
 
-      feedback.innerText = "Scanning end image...";
-      const end = await extractStats(endImage);
-      document.getElementById("endSeen").value = end.seen;
-      document.getElementById("endCaught").value = end.caught;
+        const end = await extractStats(endImage);
+        document.getElementById("endSeen").value = end.seen;
+        document.getElementById("endCaught").value = end.caught;
 
-      feedback.innerText = "Scan complete.";
+        const pokeMatch = end.raw.match(/Community Day[:\s]*([A-Za-z]+)/i);
+        document.getElementById("displayPokemon").innerText = pokeMatch?.[1] || "Pokémon";
+
+        feedback.innerText = "✅ Stats imported. Review & hit Run My Stats.";
+      } catch (error) {
+        console.error(error);
+        feedback.innerText = "❌ Error reading one or both screenshots.";
+      }
     }
 
     function generateCard() {
       const trainer = document.getElementById("trainerName").value || "@Trainer";
-      const shinies = parseInt(document.getElementById("shinies").value) || 0;
+      const startSeen = parseInt(document.getElementById("startSeen").value) || 0;
+      const startCaught = parseInt(document.getElementById("startCaught").value) || 0;
+      const endSeen = parseInt(document.getElementById("endSeen").value) || 0;
+      const endCaught = parseInt(document.getElementById("endCaught").value) || 0;
       const hours = parseFloat(document.getElementById("hoursPlayed").value) || 3;
-
-      const startSeen = parseInt(document.getElementById("startSeen").value);
-      const startCaught = parseInt(document.getElementById("startCaught").value);
-      const endSeen = parseInt(document.getElementById("endSeen").value);
-      const endCaught = parseInt(document.getElementById("endCaught").value);
+      const shinies = parseInt(document.getElementById("shinies").value) || 0;
 
       const seenDiff = endSeen - startSeen;
       const caughtDiff = endCaught - startCaught;
@@ -196,7 +217,7 @@
     }
 
     function downloadCard() {
-      html2canvas(document.getElementById("card")).then(canvas => {
+      html2canvas(document.getElementById("card")).then((canvas) => {
         const link = document.createElement("a");
         link.download = "comm_day_card.png";
         link.href = canvas.toDataURL("image/png");
