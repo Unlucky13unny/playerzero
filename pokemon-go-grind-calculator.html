@@ -35,6 +35,12 @@
       height: auto;
       margin: 1rem auto;
     }
+    #feedback {
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: #555;
+      font-style: italic;
+    }
     #card {
       display: none;
       width: 100%;
@@ -115,6 +121,7 @@
   <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
 
   <button onclick="processScreenshots()">Import Stats</button>
+  <div id="feedback"></div>
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
@@ -147,9 +154,10 @@
       const endInput = document.getElementById("endImage");
       const startImage = startInput?.files[0];
       const endImage = endInput?.files[0];
+      const feedback = document.getElementById("feedback");
 
       if (!startImage || !endImage) {
-        alert("Please upload both START and END screenshots.");
+        feedback.innerText = "Please upload both START and END screenshots.";
         return;
       }
 
@@ -158,8 +166,8 @@
         const text = result.data.text;
         console.log(`OCR Result (${isStart ? 'START' : 'END'}):\n` + text);
 
-        const seen = (text.match(/Seen\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
-        const caught = (text.match(/Caught\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
+        const seen = (text.match(/Seen\s*:?.*?(\d{1,6})/i) || [])[1] || "";
+        const caught = (text.match(/Caught\s*:?.*?(\d{1,6})/i) || [])[1] || "";
 
         if (isStart) {
           document.getElementById('startSeen').value = seen;
@@ -175,19 +183,13 @@
       };
 
       try {
-        const importBtn = document.querySelector('button[onclick="processScreenshots()"]');
-        if (importBtn) importBtn.innerText = "Scanning...";
-
+        feedback.innerText = "Scanning screenshots...";
         await readImage(startImage, true);
         await readImage(endImage, false);
-
-        alert("Stats successfully imported! Check console for OCR output.");
+        feedback.innerText = "Scan complete. Fields updated.";
       } catch (error) {
         console.error("Error reading screenshots:", error);
-        alert("Failed to process images. Try clearer screenshots.");
-      } finally {
-        const importBtn = document.querySelector('button[onclick="processScreenshots()"]');
-        if (importBtn) importBtn.innerText = "Import Stats";
+        feedback.innerText = "⚠️ Failed to process images. Try clearer screenshots.";
       }
     }
 
