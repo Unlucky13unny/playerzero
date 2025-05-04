@@ -281,13 +281,13 @@ function calculateStats() {
   document.getElementById("daysPlayedDisplay").innerText = `Days Played: ${daysPlayed}`;
   document.getElementById("startDateDisplay").innerHTML = `Start Date: <b>${start}</b>`;
   document.getElementById("distanceTotal").innerText = km.toLocaleString();
-  document.getElementById("distancePerDay").innerText = (km / daysPlayed).toFixed(2);
+  document.getElementById("distancePerDay").innerText = Math.round(km / daysPlayed).toLocaleString();
   document.getElementById("catchesTotal").innerText = caught.toLocaleString();
-  document.getElementById("catchesPerDay").innerText = (caught / daysPlayed).toFixed(2);
+  document.getElementById("catchesPerDay").innerText = Math.round(caught / daysPlayed).toLocaleString();
   document.getElementById("stopsTotal").innerText = stops.toLocaleString();
-  document.getElementById("stopsPerDay").innerText = (stops / daysPlayed).toFixed(2);
+  document.getElementById("stopsPerDay").innerText = Math.round(stops / daysPlayed).toLocaleString();
   document.getElementById("xpTotal").innerText = xp.toLocaleString();
-  document.getElementById("xpPerDay").innerText = (xp / daysPlayed).toFixed(0);
+  document.getElementById("xpPerDay").innerText = Math.round(xp / daysPlayed).toLocaleString();
 
   document.getElementById("card").style.display = "block";
 }
