@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <script src="/scripts/html2canvas.min.js"></script>
@@ -75,6 +75,31 @@
       width: 80%;
       max-width: 280px;
     }
+    .promo {
+      margin-top: 2rem;
+      font-size: 0.9rem;
+    }
+    .promo a {
+      color: red;
+      font-weight: bold;
+      text-decoration: none;
+    }
+    .social-icons {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .social-icons a img {
+      width: 36px;
+      height: 36px;
+      filter: brightness(0%);
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+    .social-icons a img:hover {
+      filter: brightness(0%) invert(50%);
+      transform: scale(1.1);
+    }
   </style>
 </head>
 <body>
@@ -82,8 +107,8 @@
     <a href="https://pgplayerzero.com" target="_blank">
       <img src="/playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     </a>
-    <h1>Community Day Calculator</h1>
-    <p>Upload your START and END screenshots. We’ll pull the stats and show off your grind!</p>
+    <h1>The Pokémon GO Comm Day Calculator</h1>
+    <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
     <input type="text" id="trainerName" placeholder="Trainer Name">
 
@@ -93,14 +118,13 @@
     <label for="endImage">End Screenshot</label>
     <input type="file" id="endImage" accept="image/*">
 
-    <label for="shinies">Shinies Caught</label>
-    <input type="number" id="shinies" placeholder="Shinies Caught">
+    <button onclick="processScreenshots()">Import Stats</button>
 
-    <label for="hoursPlayed">Hours Played</label>
+    <input type="number" id="shinies" placeholder="Shinies Caught">
     <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
 
-    <button onclick="processScreenshots()">Import Stats from Images</button>
-    <button onclick="generateCard()">Generate My Card</button>
+    <button onclick="generateCard()">Run My Stats</button>
+    <button onclick="downloadCard()">Download Card</button>
 
     <div id="card" class="card hidden">
       <div class="footer">COMMUNITY DAY</div>
@@ -116,14 +140,20 @@
       <div class="value" id="shinyCount">0</div>
     </div>
 
-    <button onclick="downloadCard()">Download Card</button>
+    <div class="promo">
+      <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
+      <div class="social-icons">
+        <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
+        <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+        <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
+      </div>
+    </div>
   </div>
 
   <script>
     function processScreenshots() {
       const startImage = document.getElementById("startImage").files[0];
       const endImage = document.getElementById("endImage").files[0];
-
       if (!startImage || !endImage) {
         alert("Please upload both START and END screenshots.");
         return;
