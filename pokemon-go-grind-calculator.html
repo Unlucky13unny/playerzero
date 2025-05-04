@@ -220,8 +220,8 @@
   <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
   <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
 </div>
+
 <script>
-// Script inserted below
 function importStats() {
   const file = document.getElementById('screenshot').files[0];
   if (!file) return alert("Please upload a screenshot first.");
@@ -287,7 +287,7 @@ function calculateStats() {
   document.getElementById("stopsTotal").innerText = stops.toLocaleString();
   document.getElementById("stopsPerDay").innerText = (stops / daysPlayed).toFixed(2);
   document.getElementById("xpTotal").innerText = xp.toLocaleString();
-  document.getElementById("xpPerDay").innerText = Number($1).toLocaleString();
+  document.getElementById("xpPerDay").innerText = (xp / daysPlayed).toFixed(0);
 
   document.getElementById("card").style.display = "block";
 }
