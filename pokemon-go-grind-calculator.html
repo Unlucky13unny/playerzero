@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="icon" type="image/png" href="favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
@@ -96,16 +96,15 @@
       transform: scale(1.1);
     }
     #feedback {
-      font-size: 0.9rem;
       margin-top: 1rem;
-      color: #555;
       font-style: italic;
+      color: #666;
     }
   </style>
 </head>
 <body>
   <a href="https://pgplayerzero.com" target="_blank">
-    <img src="/playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
   </a>
   <h1>The Pokémon GO Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
@@ -114,14 +113,14 @@
   <input type="file" id="startImage" accept="image/*">
   <input type="file" id="endImage" accept="image/*">
 
-  <div id="feedback"></div>
-
   <input type="number" id="startSeen" placeholder="Start Seen">
   <input type="number" id="startCaught" placeholder="Start Caught">
   <input type="number" id="endSeen" placeholder="End Seen">
   <input type="number" id="endCaught" placeholder="End Caught">
   <input type="number" id="shinies" placeholder="Shinies Caught">
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
+  <input type="number" id="hoursPlayed" placeholder="Hours Played" value="3">
+
+  <div id="feedback"></div>
 
   <button onclick="processScreenshots()">Import Stats</button>
   <button onclick="generateCard()">Run My Stats</button>
@@ -130,7 +129,7 @@
   <div id="card">
     <div class="footer">COMMUNITY DAY</div>
     <div class="label" id="displayTrainer">@Trainer</div>
-    <div class="label" id="displayPokemon">POKÉMON</div>
+    <div class="label" id="displayPokemon">Pokémon</div>
     <div class="label">Total Caught</div>
     <div class="value" id="totalCaught">0</div>
     <div class="label">Catches/Hour</div>
@@ -152,42 +151,44 @@
 
   <script>
     async function processScreenshots() {
-      const startFile = document.getElementById('startImage').files[0];
-      const endFile = document.getElementById('endImage').files[0];
+      const startImage = document.getElementById("startImage").files[0];
+      const endImage = document.getElementById("endImage").files[0];
       const feedback = document.getElementById("feedback");
 
-      if (!startFile || !endFile) {
-        feedback.innerText = "⚠️ Please upload both START and END screenshots.";
+      if (!startImage || !endImage) {
+        feedback.innerText = "Please upload both START and END screenshots.";
         return;
       }
 
-      feedback.innerText = "Reading stats from your screenshots...";
+      feedback.innerText = "Scanning START screenshot...";
 
-      const extractStats = async (file, isStart) => {
+      const extractStats = async (file) => {
         const result = await Tesseract.recognize(file, 'eng', { logger: m => console.log(m) });
         const text = result.data.text;
-
-        const seenMatch = text.match(/Seen\s*:?\s*([\d,]+)/i);
-        const caughtMatch = text.match(/Caught\s*:?\s*([\d,]+)/i);
-        const pokemonMatch = text.match(/Community Day[:\s]*([A-Za-z]+)/i);
-
-        if (isStart) {
-          if (seenMatch) document.getElementById('startSeen').value = seenMatch[1].replace(/,/g, '');
-          if (caughtMatch) document.getElementById('startCaught').value = caughtMatch[1].replace(/,/g, '');
-        } else {
-          if (seenMatch) document.getElementById('endSeen').value = seenMatch[1].replace(/,/g, '');
-          if (caughtMatch) document.getElementById('endCaught').value = caughtMatch[1].replace(/,/g, '');
-          if (pokemonMatch) document.getElementById("displayPokemon").innerText = pokemonMatch[1];
-        }
+        const seen = (text.match(/Seen\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
+        const caught = (text.match(/Caught\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
+        return { seen, caught, text };
       };
 
       try {
-        await extractStats(startFile, true);
-        await extractStats(endFile, false);
-        feedback.innerText = "✅ Stats loaded successfully. Verify below.";
-      } catch (err) {
-        console.error("Tesseract error:", err);
-        feedback.innerText = "⚠️ Error scanning images. Try clearer screenshots.";
+        const start = await extractStats(startImage);
+        document.getElementById('startSeen').value = start.seen;
+        document.getElementById('startCaught').value = start.caught;
+
+        feedback.innerText = "Scanning END screenshot...";
+
+        const end = await extractStats(endImage);
+        document.getElementById('endSeen').value = end.seen;
+        document.getElementById('endCaught').value = end.caught;
+
+        const pokeMatch = end.text.match(/Community Day[:\s]*([A-Za-z]+)/i);
+        const pokemon = pokeMatch?.[1] || "";
+        document.getElementById("displayPokemon").innerText = pokemon || "Pokémon";
+
+        feedback.innerText = "✅ Stats scanned successfully.";
+      } catch (error) {
+        console.error(error);
+        feedback.innerText = "⚠️ Error scanning images. Try a clearer screenshot.";
       }
     }
 
@@ -195,19 +196,33 @@
       const trainer = document.getElementById("trainerName").value || "@Trainer";
       const shinies = parseInt(document.getElementById("shinies").value) || 0;
       const hours = parseFloat(document.getElementById("hoursPlayed").value) || 3;
-      const startSeen = parseInt(document.getElementById("startSeen").value) || 0;
-      const startCaught = parseInt(document.getElementById("startCaught").value) || 0;
-      const endSeen = parseInt(document.getElementById("endSeen").value) || 0;
-      const endCaught = parseInt(document.getElementById("endCaught").value) || 0;
 
-      const totalCaught = endCaught - startCaught;
-      const totalSeen = endSeen - startSeen;
-      const catchRate = totalSeen > 0 ? ((totalCaught / totalSeen) * 100).toFixed(1) : "0";
+      const startSeen = parseInt(document.getElementById("startSeen").value);
+      const startCaught = parseInt(document.getElementById("startCaught").value);
+      const endSeen = parseInt(document.getElementById("endSeen").value);
+      const endCaught = parseInt(document.getElementById("endCaught").value);
+
+      const seenDiff = endSeen - startSeen;
+      const caughtDiff = endCaught - startCaught;
+      const catchRate = seenDiff > 0 ? ((caughtDiff / seenDiff) * 100).toFixed(1) : "0";
 
       document.getElementById("displayTrainer").innerText = trainer;
-      document.getElementById("totalCaught").innerText = totalCaught;
-      document.getElementById("catchesPerHour").innerText = (totalCaught / hours).toFixed(1);
+      document.getElementById("totalCaught").innerText = caughtDiff;
+      document.getElementById("catchesPerHour").innerText = (caughtDiff / hours).toFixed(1);
       document.getElementById("catchRate").innerText = catchRate + "%";
       document.getElementById("shinyCount").innerText = shinies;
 
-      document.getElementById("card
+      document.getElementById("card").style.display = "block";
+    }
+
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comm_day_card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
