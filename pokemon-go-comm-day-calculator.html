@@ -1,1 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #fff;
+      color: #111;
+      padding: 2rem;
+      margin: 0;
+      text-align: center;
+    }
+    input, button {
+      padding: 0.5rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 0.5rem auto;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .logo {
+      max-width: 280px;
+      height: auto;
+      margin: 1rem auto;
+    }
+    #card {
+      display: none;
+      width: 100%;
+      max-width: 420px;
+      background: url('card-bg-image.png') center/cover no-repeat #fff;
+      border: 4px solid #000;
+      border-radius: 30px;
+      margin: 2rem auto;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+    }
+    .label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+    .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #e30613;
+    }
+    .footer {
+      background: #000;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.75rem;
+      margin-top: 1.5rem;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 8px;
+      letter-spacing: 1px;
+      width: 80%;
+      max-width: 280px;
+    }
+  </style>
+</head>
+<body>
+<a href="https://pgplayerzero.com" target="_blank">
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+</a>
+<h1>Community Day Calculator</h1>
+<p>Input your stats from start and end of Community Day and flex your grind!</p>
+
+<input type="text" id="trainerName" placeholder="Trainer Name">
+<input type="text" id="pokemonName" placeholder="Community Day Pokémon (e.g. Pawmi)">
+<input type="text" id="month" placeholder="Month (e.g. May 2025)">
+<input type="number" id="startSeen" placeholder="Start Seen">
+<input type="number" id="endSeen" placeholder="End Seen">
+<input type="number" id="startCaught" placeholder="Start Caught">
+<input type="number" id="endCaught" placeholder="End Caught">
+<input type="number" id="shinies" placeholder="Shinies Caught">
+<input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)">
+<button onclick="generateCard()">Generate My Card</button>
+
+<div id="card">
+  <div class="footer">COMMUNITY DAY</div>
+  <div class="label" id="displayTrainer">@Trainer</div>
+  <div class="label" id="displayMonth">Month</div>
+  <div class="label" id="displayPokemon">Pokémon</div>
+  <div class="label">Total Caught</div>
+  <div class="value" id="totalCaught">0</div>
+  <div class="label">Catches/Hour</div>
+  <div class="value" id="catchesPerHour">0</div>
+  <div class="label">Catch %</div>
+  <div class="value" id="catchRate">0%</div>
+  <div class="label">Shinies Caught</div>
+  <div class="value" id="shinyCount">0</div>
+</div>
+
+<button onclick="downloadCard()">Download Card</button>
+
+<script>
+function generateCard() {
+  const trainer = document.getElementById('trainerName').value || "@Trainer";
+  const month = document.getElementById('month').value || "Month";
+  const poke = document.getElementById('pokemonName').value || "Pokémon";
+  const seenStart = parseInt(document.getElementById('startSeen').value);
+  const seenEnd = parseInt(document.getElementById('endSeen').value);
+  const caughtStart = parseInt(document.getElementById('startCaught').value);
+  const caughtEnd = parseInt(document.getElementById('endCaught').value);
+  const shinies = parseInt(document.getElementById('shinies').value) || 0;
+  const hours = parseFloat(document.getElementById('hoursPlayed').value) || 3;
+
+  if (isNaN(seenStart) || isNaN(seenEnd) || isNaN(caughtStart) || isNaN(caughtEnd)) {
+    alert("Please fill out seen and caught fields.");
+    return;
+  }
+
+  const seenDiff = seenEnd - seenStart;
+  const caughtDiff = caughtEnd - caughtStart;
+  const catchRate = seenDiff > 0 ? ((caughtDiff / seenDiff) * 100).toFixed(1) : "0";
+  const perHour = (caughtDiff / hours).toFixed(1);
+
+  document.getElementById('displayTrainer').innerText = trainer;
+  document.getElementById('displayMonth').innerText = month;
+  document.getElementById('displayPokemon').innerText = poke;
+  document.getElementById('totalCaught').innerText = caughtDiff;
+  document.getElementById('catchesPerHour').innerText = perHour;
+  document.getElementById('catchRate').innerText = catchRate + "%";
+  document.getElementById('shinyCount').innerText = shinies;
+
+  document.getElementById('card').style.display = 'block';
+}
+
+function downloadCard() {
+  html2canvas(document.getElementById("card")).then(canvas => {
+    const link = document.createElement("a");
+    link.download = "comm_day_card.png";
+    link.href = canvas.toDataURL("image/png");
+    link.click();
+  });
+}
+</script>
+</body>
+</html>
 
