@@ -156,10 +156,10 @@
       const readImage = async (file, isStart) => {
         const result = await Tesseract.recognize(file, 'eng', { logger: m => console.log(m.status) });
         const text = result.data.text;
-        console.log(`OCR Result (${isStart ? 'START' : 'END'}):`, text);
+        console.log(`OCR Result (${isStart ? 'START' : 'END'}):\n` + text);
 
-        const seen = (text.match(/Seen[^\d]*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
-        const caught = (text.match(/Caught[^\d]*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
+        const seen = (text.match(/Seen\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
+        const caught = (text.match(/Caught\s*:?\s*([\d,]+)/i) || [])[1]?.replace(/,/g, '') || "";
 
         if (isStart) {
           document.getElementById('startSeen').value = seen;
@@ -181,7 +181,7 @@
         await readImage(startImage, true);
         await readImage(endImage, false);
 
-        alert("Stats successfully imported!");
+        alert("Stats successfully imported! Check console for OCR output.");
       } catch (error) {
         console.error("Error reading screenshots:", error);
         alert("Failed to process images. Try clearer screenshots.");
