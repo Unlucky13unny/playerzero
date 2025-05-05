@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pokémon GO Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="icon" type="image/png" href="/favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
@@ -13,6 +13,7 @@
       background: #fff;
       color: #111;
       padding: 2rem;
+      margin: 0;
       text-align: center;
     }
     input, button {
@@ -31,6 +32,7 @@
     }
     .logo {
       max-width: 280px;
+      height: auto;
       margin: 1rem auto;
     }
     #card {
@@ -42,11 +44,13 @@
       border-radius: 30px;
       margin: 2rem auto;
       padding: 1.5rem 1rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
     }
     .label {
       font-size: 0.85rem;
+      text-transform: uppercase;
       font-weight: bold;
-      margin-top: 1rem;
+      margin-bottom: 0.3rem;
     }
     .value {
       font-size: 1.5rem;
@@ -58,10 +62,13 @@
       color: #fff;
       font-size: 1rem;
       padding: 0.75rem;
+      margin-top: 1.5rem;
+      margin-left: auto;
+      margin-right: auto;
       border-radius: 8px;
+      letter-spacing: 1px;
       width: 80%;
       max-width: 280px;
-      margin: 1rem auto;
     }
     .promo-link {
       margin-top: 1rem;
@@ -88,52 +95,35 @@
       filter: brightness(0%) invert(50%);
       transform: scale(1.1);
     }
-    img.preview {
-      max-width: 200px;
-      margin-top: 0.5rem;
-      display: block;
-      margin-left: auto;
-      margin-right: auto;
-    }
-    #feedback {
-      font-size: 0.9rem;
-      margin-top: 1rem;
-      color: #666;
-      font-style: italic;
-    }
   </style>
 </head>
 <body>
   <a href="https://pgplayerzero.com" target="_blank">
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo" />
+    <img src="/playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
   </a>
-
   <h1>The Pokémon GO Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
-  <input type="text" id="trainerName" placeholder="Trainer Name" />
+  <button onclick="processScreenshots()">Import Stats</button>
+  <div id="feedback" style="font-size: 0.9rem; margin: 0.5rem auto; color: #777;"></div>
 
-  <input type="file" id="startImage" accept="image/*" />
-  <img id="startPreview" class="preview" />
-  <input type="file" id="endImage" accept="image/*" />
-  <img id="endPreview" class="preview" />
+  <input type="text" id="trainerName" placeholder="Trainer Name">
+  <input type="file" id="startImage" accept="image/*">
+  <input type="number" id="startSeen" placeholder="Start Seen">
+  <input type="number" id="startCaught" placeholder="Start Caught">
+  <input type="file" id="endImage" accept="image/*">
+  <input type="number" id="endSeen" placeholder="End Seen">
+  <input type="number" id="endCaught" placeholder="End Caught">
+  <input type="number" id="shinies" placeholder="Shinies Caught">
+  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
 
-  <div id="feedback"></div>
-
-  <input type="number" id="startSeen" placeholder="Start Seen" />
-  <input type="number" id="startCaught" placeholder="Start Caught" />
-  <input type="number" id="endSeen" placeholder="End Seen" />
-  <input type="number" id="endCaught" placeholder="End Caught" />
-  <input type="number" id="shinies" placeholder="Shinies Caught" />
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3" />
-
-  <button onclick="importStats()">Import Stats</button>
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
   <div id="card">
     <div class="footer">COMMUNITY DAY</div>
     <div class="label" id="displayTrainer">@Trainer</div>
+    <div class="label" id="displayPokemon">Pokémon</div>
     <div class="label">Total Caught</div>
     <div class="value" id="totalCaught">0</div>
     <div class="label">Catches/Hour</div>
@@ -154,62 +144,56 @@
   </div>
 
   <script>
-    async function importStats() {
+    async function processScreenshots() {
+      const startInput = document.getElementById("startImage");
+      const endInput = document.getElementById("endImage");
+      const startImage = startInput?.files[0];
+      const endImage = endInput?.files[0];
       const feedback = document.getElementById("feedback");
-      const startFile = document.getElementById("startImage").files[0];
-      const endFile = document.getElementById("endImage").files[0];
-      const startPreview = document.getElementById("startPreview");
-      const endPreview = document.getElementById("endPreview");
 
-      if (!startFile || !endFile) {
+      if (!startImage || !endImage) {
         feedback.innerText = "Please upload both START and END screenshots.";
         return;
       }
 
-      const readOCR = async (file, isStart) => {
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = function (e) {
-            const img = new Image();
-            img.onload = async function () {
-              const canvas = document.createElement("canvas");
-              canvas.width = 420;
-              canvas.height = 75;
-              const ctx = canvas.getContext("2d");
-              ctx.drawImage(img, 90, 585, 420, 75, 0, 0, 420, 75);
-              const croppedDataUrl = canvas.toDataURL("image/png");
+      const readImage = async (file, isStart) => {
+        feedback.innerText = `Scanning ${isStart ? 'START' : 'END'} image...`;
 
-              const { data: { text } } = await Tesseract.recognize(croppedDataUrl, 'eng');
-              console.log(isStart ? "[START]" : "[END]", text);
+        const result = await Tesseract.recognize(file, 'eng', { logger: m => console.log(m.status) });
+        const text = result.data.text;
 
-              const seen = text.match(/Seen\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '');
-              const caught = text.match(/Caught\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '');
+        const seenMatch = text.match(/Seen\s*:?\s*([\d,]+)/i);
+        const caughtMatch = text.match(/Caught\s*:?\s*([\d,]+)/i);
+        const seen = seenMatch?.[1]?.replace(/,/g, '') || "";
+        const caught = caughtMatch?.[1]?.replace(/,/g, '') || "";
 
-              if (isStart) {
-                document.getElementById("startSeen").value = seen || "";
-                document.getElementById("startCaught").value = caught || "";
-              } else {
-                document.getElementById("endSeen").value = seen || "";
-                document.getElementById("endCaught").value = caught || "";
-              }
+        if (isStart) {
+          document.getElementById('startSeen').value = seen;
+          document.getElementById('startCaught').value = caught;
+        } else {
+          document.getElementById('endSeen').value = seen;
+          document.getElementById('endCaught').value = caught;
 
-              resolve();
-            };
-            img.src = e.target.result;
+          const pokeMatch = text.match(/Community Day[:\s]*([A-Za-z]+)/i);
+          const pokemon = pokeMatch?.[1] || "";
+          document.getElementById("displayPokemon").innerText = pokemon || "Pokémon";
+        }
 
-            // preview
-            if (isStart) startPreview.src = e.target.result;
-            else endPreview.src = e.target.result;
-          };
-          reader.readAsDataURL(file);
-        });
+        if (!seen || !caught) {
+          feedback.innerText = `⚠️ Could not confidently detect stats from ${isStart ? 'START' : 'END'} image. Please enter manually.`;
+        } else {
+          feedback.innerText = `✅ Scan complete for ${isStart ? 'START' : 'END'} image.`;
+        }
       };
 
-      feedback.innerText = "Scanning start image...";
-      await readOCR(startFile, true);
-      feedback.innerText = "Scanning end image...";
-      await readOCR(endFile, false);
-      feedback.innerText = "Scan complete.";
+      try {
+        await readImage(startImage, true);
+        await readImage(endImage, false);
+        feedback.innerText = "✅ All scans complete.";
+      } catch (err) {
+        console.error("OCR error:", err);
+        feedback.innerText = "⚠️ OCR failed. Try uploading clearer screenshots or enter stats manually.";
+      }
     }
 
     function generateCard() {
