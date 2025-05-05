@@ -15,6 +15,7 @@
       padding: 2rem;
       margin: 0;
       text-align: center;
+      image-rendering: pixelated;
     }
     input, button {
       padding: 0.5rem;
@@ -117,6 +118,8 @@
   <input type="number" id="shinies" placeholder="Shinies Caught">
   <input type="number" id="hoursPlayed" placeholder="Hours Played (default 3)" value="3">
 
+  <canvas id="canvas" style="display:none;"></canvas>
+
   <button onclick="generateCard()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
@@ -157,43 +160,60 @@
       }
 
       const readImage = async (file, isStart) => {
-        feedback.innerText = `Scanning ${isStart ? 'START' : 'END'} image...`;
+        return new Promise((resolve) => {
+          feedback.innerText = `Scanning ${isStart ? 'START' : 'END'} image...`;
 
-        const result = await Tesseract.recognize(file, 'eng', { logger: m => console.log(m.status) });
-        const text = result.data.text;
+          const img = new Image();
+          const canvas = document.getElementById('canvas');
+          const ctx = canvas.getContext('2d');
 
-        const seenMatch = text.match(/Seen\s*:?\s*([\d,]+)/i);
-        const caughtMatch = text.match(/Caught\s*:?\s*([\d,]+)/i);
-        const seen = seenMatch?.[1]?.replace(/,/g, '') || "";
-        const caught = caughtMatch?.[1]?.replace(/,/g, '') || "";
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            img.onload = function () {
+              const cropX = img.width * 0.20;
+              const cropY = img.height * 0.45;
+              const cropWidth = img.width * 0.57;
+              const cropHeight = img.height * 0.09;
 
-        if (isStart) {
-          document.getElementById('startSeen').value = seen;
-          document.getElementById('startCaught').value = caught;
-        } else {
-          document.getElementById('endSeen').value = seen;
-          document.getElementById('endCaught').value = caught;
+              canvas.width = cropWidth;
+              canvas.height = cropHeight;
+              ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-          const pokeMatch = text.match(/Community Day[:\s]*([A-Za-z]+)/i);
-          const pokemon = pokeMatch?.[1] || "";
-          document.getElementById("displayPokemon").innerText = pokemon || "Pokémon";
-        }
+              Tesseract.recognize(canvas, 'eng').then(({ data: { text } }) => {
+                console.log(`[${isStart ? 'START' : 'END'} OCR]`, text);
+                const match = text.match(/(\d+)[^\d]+(\d+)/);
+                if (match) {
+                  const seen = match[1];
+                  const caught = match[2];
 
-        if (!seen || !caught) {
-          feedback.innerText = `⚠️ Could not confidently detect stats from ${isStart ? 'START' : 'END'} image. Please enter manually.`;
-        } else {
-          feedback.innerText = `✅ Scan complete for ${isStart ? 'START' : 'END'} image.`;
-        }
+                  if (isStart) {
+                    document.getElementById('startSeen').value = seen;
+                    document.getElementById('startCaught').value = caught;
+                  } else {
+                    document.getElementById('endSeen').value = seen;
+                    document.getElementById('endCaught').value = caught;
+                  }
+
+                  feedback.innerText = `✅ Scan complete for ${isStart ? 'START' : 'END'} image.`;
+                } else {
+                  feedback.innerText = `⚠️ Could not detect stats from ${isStart ? 'START' : 'END'} image. Please enter manually.`;
+                }
+                resolve();
+              }).catch(err => {
+                console.error(err);
+                feedback.innerText = `⚠️ OCR failed on ${isStart ? 'START' : 'END'} image.`;
+                resolve();
+              });
+            };
+            img.src = e.target.result;
+          };
+          reader.readAsDataURL(file);
+        });
       };
 
-      try {
-        await readImage(startImage, true);
-        await readImage(endImage, false);
-        feedback.innerText = "✅ All scans complete.";
-      } catch (err) {
-        console.error("OCR error:", err);
-        feedback.innerText = "⚠️ OCR failed. Try uploading clearer screenshots or enter stats manually.";
-      }
+      await readImage(startImage, true);
+      await readImage(endImage, false);
+      feedback.innerText = "✅ All scans complete.";
     }
 
     function generateCard() {
