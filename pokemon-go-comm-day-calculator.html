@@ -33,11 +33,6 @@
       max-width: 280px;
       margin: 1rem auto;
     }
-    #feedback {
-      font-size: 0.9rem;
-      color: #666;
-      font-style: italic;
-    }
     #card {
       display: none;
       width: 100%;
@@ -93,6 +88,19 @@
       filter: brightness(0%) invert(50%);
       transform: scale(1.1);
     }
+    img.preview {
+      max-width: 200px;
+      margin-top: 0.5rem;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    #feedback {
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: #666;
+      font-style: italic;
+    }
   </style>
 </head>
 <body>
@@ -104,9 +112,13 @@
   <p>Upload your START and END screenshots — we’ll auto-fill and show your grind results.</p>
 
   <input type="text" id="trainerName" placeholder="Trainer Name" />
+
   <input type="file" id="startImage" accept="image/*" />
+  <img id="startPreview" class="preview" />
   <input type="file" id="endImage" accept="image/*" />
-  <div class="feedback" id="feedback"></div>
+  <img id="endPreview" class="preview" />
+
+  <div id="feedback"></div>
 
   <input type="number" id="startSeen" placeholder="Start Seen" />
   <input type="number" id="startCaught" placeholder="Start Caught" />
@@ -144,56 +156,59 @@
   <script>
     async function importStats() {
       const feedback = document.getElementById("feedback");
-      const startImg = document.getElementById("startImage").files[0];
-      const endImg = document.getElementById("endImage").files[0];
+      const startFile = document.getElementById("startImage").files[0];
+      const endFile = document.getElementById("endImage").files[0];
+      const startPreview = document.getElementById("startPreview");
+      const endPreview = document.getElementById("endPreview");
 
-      if (!startImg || !endImg) {
+      if (!startFile || !endFile) {
         feedback.innerText = "Please upload both START and END screenshots.";
         return;
       }
 
-      const cropAndRead = async (file, isStart) => {
+      const readOCR = async (file, isStart) => {
         return new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onload = async function (e) {
+          reader.onload = function (e) {
             const img = new Image();
-            img.src = e.target.result;
             img.onload = async function () {
               const canvas = document.createElement("canvas");
-              const ctx = canvas.getContext("2d");
-
               canvas.width = 420;
               canvas.height = 75;
-
-              // Crop: (x, y, width, height) from the marked box (90, 585, 510, 660)
+              const ctx = canvas.getContext("2d");
               ctx.drawImage(img, 90, 585, 420, 75, 0, 0, 420, 75);
-
               const croppedDataUrl = canvas.toDataURL("image/png");
 
               const { data: { text } } = await Tesseract.recognize(croppedDataUrl, 'eng');
+              console.log(isStart ? "[START]" : "[END]", text);
 
-              const seen = text.match(/Seen\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
-              const caught = text.match(/Caught\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '') || "";
+              const seen = text.match(/Seen\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '');
+              const caught = text.match(/Caught\s*:?\s*([\d,]+)/i)?.[1]?.replace(/,/g, '');
 
               if (isStart) {
-                document.getElementById("startSeen").value = seen;
-                document.getElementById("startCaught").value = caught;
+                document.getElementById("startSeen").value = seen || "";
+                document.getElementById("startCaught").value = caught || "";
               } else {
-                document.getElementById("endSeen").value = seen;
-                document.getElementById("endCaught").value = caught;
+                document.getElementById("endSeen").value = seen || "";
+                document.getElementById("endCaught").value = caught || "";
               }
 
               resolve();
             };
+            img.src = e.target.result;
+
+            // preview
+            if (isStart) startPreview.src = e.target.result;
+            else endPreview.src = e.target.result;
           };
           reader.readAsDataURL(file);
         });
       };
 
       feedback.innerText = "Scanning start image...";
-      await cropAndRead(startImg, true);
+      await readOCR(startFile, true);
       feedback.innerText = "Scanning end image...";
-      await cropAndRead(endImg, false);
+      await readOCR(endFile, false);
       feedback.innerText = "Scan complete.";
     }
 
