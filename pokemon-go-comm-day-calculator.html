@@ -1,34 +1,30 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comm Day Calculator</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
+      text-align: center;
       background: #fff;
       color: #111;
       padding: 2rem;
-      margin: 0;
-      text-align: center;
-    }
-    h1 {
-      font-size: 1.8rem;
-      font-weight: bold;
     }
     input, button {
       padding: 0.5rem;
-      margin: 0.5rem auto;
       width: 100%;
       max-width: 400px;
+      margin: 0.5rem auto;
+      display: block;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
     button {
       background: #111;
-      color: #fff;
+      color: white;
       font-weight: bold;
       cursor: pointer;
     }
@@ -37,67 +33,84 @@
       margin-top: 1rem;
     }
     #feedback {
-      margin: 1rem 0;
-      color: #c00;
       font-size: 0.9rem;
+      color: #c00;
+      margin: 0.5rem auto;
     }
     .stat-row {
       display: flex;
       justify-content: space-around;
-      max-width: 600px;
-      margin: 2rem auto;
+      margin-top: 1rem;
     }
     .stat-row input {
-      max-width: 150px;
+      width: 150px;
     }
   </style>
 </head>
 <body>
-  <h1>Comm Day Calculator</h1>
-  <p>Upload a screenshot and we’ll try to read your stats.</p>
-  <input type="file" id="imageUpload" accept="image/*">
-  <button onclick="processImage()">Import START Stats</button>
+  <h2>Comm Day Calculator</h2>
+  <p>Upload a screenshot and we'll try to read your stats.</p>
+  <input type="file" id="imageInput">
+  <button onclick="handleImport()">Import START Stats</button>
+  <img id="preview" />
   <div id="feedback"></div>
-  <img id="preview" style="display:none">
+
   <div class="stat-row">
     <input id="startSeen" placeholder="Start Seen">
     <input id="startCaught" placeholder="Start Caught">
   </div>
+
   <script>
-    function processImage() {
-      const file = document.getElementById('imageUpload').files[0];
-      if (!file) return alert('Please upload an image.');
+    async function handleImport() {
+      const file = document.getElementById('imageInput').files[0];
+      if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        const preview = document.getElementById('preview');
-        preview.src = reader.result;
-        preview.style.display = 'block';
+      const imgPreview = document.getElementById('preview');
+      imgPreview.src = URL.createObjectURL(file);
 
-        document.getElementById('feedback').innerText = '🧾 OCR processing...';
+      document.getElementById('feedback').innerText = '⏳ Reading image...';
 
-        Tesseract.recognize(reader.result, 'eng', {
-          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-        }).then(({ data: { text } }) => {
-          console.log('OCR Text:', text);
-
-          const seenMatch = text.match(/SEEN\s*(\d{1,5})/i);
-          const caughtMatch = text.match(/CAUGHT\s*(\d{1,5})/i);
-
-          if (seenMatch) document.getElementById('startSeen').value = seenMatch[1];
-          if (caughtMatch) document.getElementById('startCaught').value = caughtMatch[1];
-
-          if (!seenMatch || !caughtMatch) {
-            document.getElementById('feedback').innerHTML = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
-          } else {
-            document.getElementById('feedback').innerText = '';
-          }
-        }).catch(err => {
-          console.error(err);
-          document.getElementById('feedback').innerText = '⚠️ OCR failed. Try again.';
+      try {
+        const { data } = await Tesseract.recognize(file, 'eng', {
+          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
         });
-      };
-      reader.readAsDataURL(file);
+
+        const blocks = data.blocks.flatMap(block =>
+          block.paragraphs.flatMap(p =>
+            p.lines.flatMap(line => line.words.map(w => ({
+              text: w.text,
+              x: w.bbox.x0,
+              y: w.bbox.y0
+            })))
+          )
+        );
+
+        let seenAnchor = blocks.find(b => /seen/i.test(b.text));
+        let caughtAnchor = blocks.find(b => /caught/i.test(b.text));
+
+        const getClosestBelow = (anchor) => {
+          return blocks
+            .filter(b => /\d+/.test(b.text))
+            .filter(b => b.y > anchor.y && Math.abs(b.x - anchor.x) < 50)
+            .sort((a, b) => a.y - b.y)[0];
+        };
+
+        let seenVal = seenAnchor ? getClosestBelow(seenAnchor) : null;
+        let caughtVal = caughtAnchor ? getClosestBelow(caughtAnchor) : null;
+
+        if (seenVal) document.getElementById('startSeen').value = seenVal.text;
+        if (caughtVal) document.getElementById('startCaught').value = caughtVal.text;
+
+        if (!seenVal && !caughtVal) {
+          document.getElementById('feedback').innerText = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
+        } else {
+          document.getElementById('feedback').innerText = '';
+        }
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('feedback').innerText = '⚠️ Error during OCR processing.';
+      }
     }
   </script>
 </body>
