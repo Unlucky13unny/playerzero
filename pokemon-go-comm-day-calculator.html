@@ -159,10 +159,13 @@
           .then(res => res.json())
           .then(data => {
             const text = data.ParsedResults?.[0]?.ParsedText || "";
-            const numbers = text.match(/\d+/g);
-            if (numbers?.length >= 2) {
-              document.getElementById(seenId).value = numbers[0];
-              document.getElementById(caughtId).value = numbers[1];
+            const seenMatch = text.match(/SEEN\s*(\d+)/i);
+            const caughtMatch = text.match(/CAUGHT\s*(\d+)/i);
+            const seen = seenMatch ? seenMatch[1] : "";
+            const caught = caughtMatch ? caughtMatch[1] : "";
+            if (seen && caught) {
+              document.getElementById(seenId).value = seen;
+              document.getElementById(caughtId).value = caught;
               callback(true);
             } else {
               callback(false);
