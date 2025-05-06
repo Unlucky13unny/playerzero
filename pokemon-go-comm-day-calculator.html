@@ -38,7 +38,6 @@
       max-width: 300px;
       margin: 1rem auto;
       display: block;
-      border-radius: 10px;
     }
     .status {
       margin-top: 1rem;
@@ -94,22 +93,17 @@
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
   <h1>The Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and calculate your Community Day gains.</p>
-
-  <input type="file" id="imageStart">
-  <input type="file" id="imageEnd">
+  <input type="file" id="startImage">
+  <input type="file" id="endImage">
   <button onclick="runOCR()">Import Stats</button>
-
   <p class="status">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
-
-  <img id="previewImage" class="result-img" style="display:none;">
-
+  <img id="previewStart" class="result-img" style="display:none;">
+  <img id="previewEnd" class="result-img" style="display:none;">
   <input id="startSeen" placeholder="Start Seen">
   <input id="startCaught" placeholder="Start Caught">
   <input id="endSeen" placeholder="End Seen">
   <input id="endCaught" placeholder="End Caught">
-
   <button onclick="runStats()">Run My Stats</button>
-
   <div id="card" style="display:none; margin-top:2rem; border:4px solid #000; padding:1.5rem 1rem; border-radius:30px; max-width:420px; margin-left:auto; margin-right:auto;">
     <div class="footer">COMM DAY CARD</div>
     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
@@ -124,9 +118,7 @@
       </div>
     </div>
   </div>
-
   <button onclick="downloadCard()">Download My Comm Day Card</button>
-
   <div class="promo-link">
     <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
   </div>
@@ -135,59 +127,77 @@
     <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
     <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
   </div>
-
   <div id="output" class="status"></div>
-
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    async function runOCR() {
-      const fields = [
-        { file: document.getElementById('imageStart').files[0], seenField: 'startSeen', caughtField: 'startCaught' },
-        { file: document.getElementById('imageEnd').files[0], seenField: 'endSeen', caughtField: 'endCaught' }
-      ];
+    function runOCR() {
+      const startFile = document.getElementById('startImage').files[0];
+      const endFile = document.getElementById('endImage').files[0];
 
-      for (const { file, seenField, caughtField } of fields) {
-        if (!file) continue;
+      if (!startFile || !endFile) return;
+
+      const processImage = (file, previewId, seenId, caughtId, callback) => {
         const reader = new FileReader();
-        reader.onload = async () => {
+        reader.onload = () => {
           const imageBase64 = reader.result.split(',')[1];
-          document.getElementById('previewImage').src = reader.result;
-          document.getElementById('previewImage').style.display = 'block';
+          document.getElementById(previewId).src = reader.result;
+          document.getElementById(previewId).style.display = 'block';
 
-          try {
-            const res = await fetch("https://api.ocr.space/parse/image", {
-              method: "POST",
-              headers: {
-                apikey: "K84614746888957",
-                "Content-Type": "application/x-www-form-urlencoded"
-              },
-              body: new URLSearchParams({
-                base64Image: `data:image/jpeg;base64,${imageBase64}`,
-                isOverlayRequired: false,
-                scale: true,
-                OCREngine: 2
-              })
-            });
-
-            const data = await res.json();
+          fetch("https://api.ocr.space/parse/image", {
+            method: "POST",
+            headers: {
+              apikey: "K84614746888957",
+              "Content-Type": "application/x-www-form-urlencoded"
+            },
+            body: new URLSearchParams({
+              base64Image: `data:image/jpeg;base64,${imageBase64}`,
+              isOverlayRequired: false,
+              scale: true,
+              OCREngine: 2
+            })
+          })
+          .then(res => res.json())
+          .then(data => {
             const text = data.ParsedResults?.[0]?.ParsedText || "";
             const numbers = text.match(/\d+/g);
             if (numbers?.length >= 2) {
-              document.getElementById(seenField).value = numbers[0];
-              document.getElementById(caughtField).value = numbers[1];
-              document.getElementById('output').textContent = '✅ Stats pulled. Verify below.';
-              document.getElementById('output').className = 'status success';
+              document.getElementById(seenId).value = numbers[0];
+              document.getElementById(caughtId).value = numbers[1];
+              callback(true);
             } else {
-              document.getElementById('output').textContent = '⚠️ Could not read values. Try different screenshot or enter manually.';
-              document.getElementById('output').className = 'status error';
+              callback(false);
             }
-          } catch (err) {
+          })
+          .catch(err => {
             console.error(err);
-            document.getElementById('output').textContent = '⚠️ OCR failed. Try again.';
-            document.getElementById('output').className = 'status error';
-          }
+            callback(false);
+          });
         };
         reader.readAsDataURL(file);
+      };
+
+      let count = 0;
+      let success = 0;
+
+      processImage(startFile, 'previewStart', 'startSeen', 'startCaught', (ok) => {
+        count++;
+        if (ok) success++;
+        if (count === 2) finalize();
+      });
+      processImage(endFile, 'previewEnd', 'endSeen', 'endCaught', (ok) => {
+        count++;
+        if (ok) success++;
+        if (count === 2) finalize();
+      });
+
+      function finalize() {
+        if (success === 2) {
+          document.getElementById('output').textContent = '✅ Stats pulled. Verify below.';
+          document.getElementById('output').className = 'status success';
+        } else {
+          document.getElementById('output').textContent = '⚠️ Could not read values. Try different screenshot or enter manually.';
+          document.getElementById('output').className = 'status error';
+        }
       }
     }
 
