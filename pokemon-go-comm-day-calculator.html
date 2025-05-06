@@ -35,6 +35,16 @@
       height: auto;
       margin: 1rem auto;
     }
+    .field-row {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .field-row input {
+      width: 180px;
+    }
     #card {
       display: none;
       width: 100%;
@@ -125,9 +135,20 @@
 <input type="file" id="endImage" accept="image/*">
 <button onclick="processImage('end')">Import END Stats</button>
 
-<input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)">
-<input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
-<input type="number" id="shiniesCaught" placeholder="Shinies Caught">
+<div class="field-row">
+  <input type="number" id="startSeen" placeholder="Start Seen">
+  <input type="number" id="startCaught" placeholder="Start Caught">
+</div>
+<div class="field-row">
+  <input type="number" id="endSeen" placeholder="End Seen">
+  <input type="number" id="endCaught" placeholder="End Caught">
+</div>
+
+<div class="field-row">
+  <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)">
+  <input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
+  <input type="number" id="shiniesCaught" placeholder="Shinies Caught">
+</div>
 
 <button onclick="generateCard()">Run My Stats</button>
 
@@ -177,13 +198,6 @@ const cropZones = {
   caught: { left: 440, top: 475, width: 130, height: 65 }
 };
 
-let stats = {
-  startSeen: 0,
-  startCaught: 0,
-  endSeen: 0,
-  endCaught: 0
-};
-
 async function processImage(type) {
   const input = document.getElementById(type + 'Image');
   if (!input.files.length) return alert("Please upload a file.");
@@ -217,19 +231,21 @@ async function processImage(type) {
   const seenVal = parseInt(seenText.data.text.replace(/\D/g, '')) || 0;
   const caughtVal = parseInt(caughtText.data.text.replace(/\D/g, '')) || 0;
 
-  stats[type + 'Seen'] = seenVal;
-  stats[type + 'Caught'] = caughtVal;
-
-  alert(`${type.toUpperCase()} stats imported!\nSeen: ${seenVal}\nCaught: ${caughtVal}`);
+  document.getElementById(type + 'Seen').value = seenVal;
+  document.getElementById(type + 'Caught').value = caughtVal;
 }
 
 function generateCard() {
-  const hours = parseFloat(document.getElementById("hoursPlayed").value) || 1;
   const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
   const shinies = parseInt(document.getElementById("shiniesCaught").value) || 0;
+  const hours = parseFloat(document.getElementById("hoursPlayed").value) || 1;
+  const startSeen = parseInt(document.getElementById("startSeen").value) || 0;
+  const startCaught = parseInt(document.getElementById("startCaught").value) || 0;
+  const endSeen = parseInt(document.getElementById("endSeen").value) || 0;
+  const endCaught = parseInt(document.getElementById("endCaught").value) || 0;
 
-  const totalCaught = stats.endCaught - stats.startCaught;
-  const seenDiff = stats.endSeen - stats.startSeen;
+  const totalCaught = endCaught - startCaught;
+  const seenDiff = endSeen - startSeen;
   const catchPercent = seenDiff ? ((totalCaught / seenDiff) * 100).toFixed(1) : "0.0";
   const perHour = (totalCaught / hours).toFixed(1);
 
