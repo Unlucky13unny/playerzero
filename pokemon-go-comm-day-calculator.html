@@ -3,104 +3,94 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comm Day Manual Crop OCR</title>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+  <title>Comm Day OCR (OCR.Space)</title>
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
       padding: 2rem;
+      text-align: center;
+      background: #fff;
     }
     input, button {
       padding: 0.5rem;
-      margin: 0.5rem;
+      margin: 0.5rem auto;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+      display: block;
     }
-    #image {
-      max-width: 100%;
-      max-height: 500px;
+    img {
+      max-width: 300px;
+      margin: 1rem auto;
+      display: block;
     }
-    .crop-label {
+    #feedback {
+      color: #c00;
+      font-size: 0.9rem;
       margin-top: 1rem;
-      font-weight: bold;
-    }
-    #results input {
-      margin: 1rem;
-      padding: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <h1>Manual Crop OCR - Comm Day Calculator</h1>
-  <input type="file" id="upload" accept="image/*">
-  <br>
-  <canvas id="canvas" style="display: none;"></canvas>
-  <img id="image" />
+  <h2>Comm Day Calculator (via OCR.Space)</h2>
 
-  <div class="crop-label">Crop SEEN area:</div>
-  <button onclick="setSeenCrop()">Set Seen Crop</button>
-  <div class="crop-label">Crop CAUGHT area:</div>
-  <button onclick="setCaughtCrop()">Set Caught Crop</button>
-  <br>
-  <button onclick="runOCR()">Read Stats</button>
+  <input type="file" id="imageInput" accept="image/*">
+  <button onclick="sendToOCRSpace()">Try OCR</button>
 
-  <div id="results">
-    <input type="text" id="seen" placeholder="Seen Result">
-    <input type="text" id="caught" placeholder="Caught Result">
-  </div>
+  <img id="preview" style="display:none" />
+
+  <input id="startSeen" placeholder="Start Seen">
+  <input id="startCaught" placeholder="Start Caught">
+
+  <div id="feedback"></div>
 
   <script>
-    let cropper, seenData, caughtData;
+    const apiKey = "K84614746888957"; // Your OCR.Space API Key
 
-    document.getElementById('upload').addEventListener('change', e => {
-      const file = e.target.files[0];
-      if (!file) return;
-      const url = URL.createObjectURL(file);
-      document.getElementById('image').src = url;
-      setTimeout(() => {
-        if (cropper) cropper.destroy();
-        cropper = new Cropper(document.getElementById('image'), {
-          viewMode: 1,
-          movable: true,
-          zoomable: true,
-          scalable: true,
-          cropBoxMovable: true,
-          cropBoxResizable: true
+    function sendToOCRSpace() {
+      const fileInput = document.getElementById('imageInput');
+      const feedback = document.getElementById('feedback');
+      const preview = document.getElementById('preview');
+
+      const file = fileInput.files[0];
+      if (!file) return alert("Please upload an image first.");
+
+      preview.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+      feedback.innerText = "⏳ Sending to OCR.Space...";
+
+      const formData = new FormData();
+      formData.append("apikey", apiKey);
+      formData.append("language", "eng");
+      formData.append("isOverlayRequired", "false");
+      formData.append("file", file);
+
+      fetch("https://api.ocr.space/parse/image", {
+        method: "POST",
+        body: formData
+      })
+        .then(res => res.json())
+        .then(data => {
+          const parsedText = data.ParsedResults?.[0]?.ParsedText || "";
+          console.log("OCR Result:", parsedText);
+
+          const seenMatch = parsedText.match(/SEEN\s*:?\s*(\d{1,5})/i);
+          const caughtMatch = parsedText.match(/CAUGHT\s*:?\s*(\d{1,5})/i);
+
+          if (seenMatch) document.getElementById("startSeen").value = seenMatch[1];
+          if (caughtMatch) document.getElementById("startCaught").value = caughtMatch[1];
+
+          if (!seenMatch && !caughtMatch) {
+            feedback.innerText = "⚠️ Couldn't extract numbers. Try manual input.";
+          } else {
+            feedback.innerText = "✅ Stats pulled. Verify below.";
+          }
+        })
+        .catch(err => {
+          console.error("OCR Error:", err);
+          feedback.innerText = "❌ OCR failed. Try again later.";
         });
-      }, 100);
-    });
-
-    function setSeenCrop() {
-      seenData = cropper.getData();
-      alert("Seen crop zone saved.");
-    }
-
-    function setCaughtCrop() {
-      caughtData = cropper.getData();
-      alert("Caught crop zone saved.");
-    }
-
-    function runOCR() {
-      if (!seenData || !caughtData) return alert("Please set both crop zones.");
-      const img = cropper.getImageData();
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const sourceImage = document.getElementById("image");
-
-      const extractText = (crop, callback) => {
-        canvas.width = crop.width;
-        canvas.height = crop.height;
-        ctx.drawImage(sourceImage, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
-        Tesseract.recognize(canvas, 'eng', {
-          tessedit_char_whitelist: '0123456789',
-        }).then(({ data: { text } }) => {
-          callback(text.replace(/[^0-9]/g, ''));
-        });
-      };
-
-      extractText(seenData, seen => document.getElementById('seen').value = seen);
-      extractText(caughtData, caught => document.getElementById('caught').value = caught);
     }
   </script>
 </body>
