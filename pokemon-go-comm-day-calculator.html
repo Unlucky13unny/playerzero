@@ -35,9 +35,10 @@
       height: auto;
       margin: 1rem auto;
     }
-    #screenshotPreview {
+    img.preview {
       display: none;
       max-width: 300px;
+      max-height: 616px;
       margin: 1rem auto;
       border: 1px solid #ccc;
       border-radius: 8px;
@@ -60,13 +61,15 @@
 
 <input type="file" id="startUpload" accept="image/*">
 <button onclick="runTextOCR('start')">Import START Stats</button>
-<img id="startPreview" />
+<canvas id="startCanvas" style="display:none;"></canvas>
+<img id="startPreview" class="preview" />
 
 <hr style="max-width: 400px; margin: 2rem auto; border: none; border-top: 1px solid #ddd;">
 
 <input type="file" id="endUpload" accept="image/*">
 <button onclick="runTextOCR('end')">Import END Stats</button>
-<img id="endPreview" />
+<canvas id="endCanvas" style="display:none;"></canvas>
+<img id="endPreview" class="preview" />
 
 <p id="feedback"></p>
 
@@ -85,34 +88,61 @@
     start: document.getElementById('startPreview'),
     end: document.getElementById('endPreview')
   };
+  const canvases = {
+    start: document.getElementById('startCanvas'),
+    end: document.getElementById('endCanvas')
+  };
   const files = {};
   const feedback = document.getElementById('feedback');
 
-  document.getElementById('startUpload').addEventListener('change', e => {
-    files['start'] = e.target.files[0];
-    previews['start'].src = URL.createObjectURL(files['start']);
-    previews['start'].style.display = 'block';
-  });
+  function preprocessImage(image, canvas) {
+    const ctx = canvas.getContext("2d");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    ctx.drawImage(image, 0, 0);
 
-  document.getElementById('endUpload').addEventListener('change', e => {
-    files['end'] = e.target.files[0];
-    previews['end'].src = URL.createObjectURL(files['end']);
-    previews['end'].style.display = 'block';
-  });
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    for (let i = 0; i < imageData.data.length; i += 4) {
+      let avg = (imageData.data[i] + imageData.data[i+1] + imageData.data[i+2]) / 3;
+      let bin = avg > 160 ? 255 : 0;
+      imageData.data[i] = imageData.data[i+1] = imageData.data[i+2] = bin;
+    }
+    ctx.putImageData(imageData, 0, 0);
+    return canvas.toDataURL();
+  }
+
+  function handleUpload(type, event) {
+    const file = event.target.files[0];
+    files[type] = file;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = canvases[type];
+        const cleaned = preprocessImage(img, canvas);
+        previews[type].src = cleaned;
+        previews[type].style.display = 'block';
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.getElementById('startUpload').addEventListener('change', e => handleUpload('start', e));
+  document.getElementById('endUpload').addEventListener('change', e => handleUpload('end', e));
 
   async function runTextOCR(type) {
     if (!files[type]) return alert("Upload an image first.");
     feedback.innerText = `Scanning ${type.toUpperCase()} image...`;
 
-    const result = await Tesseract.recognize(files[type], 'eng');
+    const canvas = canvases[type];
+    const dataURL = canvas.toDataURL();
+
+    const result = await Tesseract.recognize(dataURL, 'eng');
     const text = result.data.text;
+    console.log(`OCR OUTPUT (${type}):`, text);
 
-    console.log(`OCR OUTPUT (${type.toUpperCase()}):\n`, text);
-    alert(text); // You can comment this line out once you confirm it works
-
-    // Normalize spacing: remove extra whitespace
     const cleanText = text.replace(/\s+/g, ' ');
-
     const seenMatch = cleanText.match(/Seen\s*[:\-]?\s*([\d,]+)/i);
     const caughtMatch = cleanText.match(/Caught\s*[:\-]?\s*([\d,]+)/i);
 
@@ -125,7 +155,7 @@
     if (seenVal && caughtVal) {
       feedback.innerText = `✅ ${type.toUpperCase()} Stats: Seen ${seenVal}, Caught ${caughtVal}`;
     } else {
-      feedback.innerText = `⚠️ OCR couldn't extract stats from ${type.toUpperCase()} image. Check spacing or enter manually.`;
+      feedback.innerText = `⚠️ Couldn't extract stats from ${type.toUpperCase()} image. Try clearer screenshot or enter manually.`;
     }
   }
 
@@ -145,8 +175,6 @@
     const shinyRate = ((shinies / totalCaught) * 100).toFixed(1);
 
     feedback.innerText = `📊 Total Caught: ${totalCaught}, Caught/Hour: ${caughtPerHour}, Shiny %: ${shinyRate}%`;
-
-    // You can hook up stat card generation here next
   }
 
   function downloadCard() {
