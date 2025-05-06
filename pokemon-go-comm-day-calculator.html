@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comm Day Calculator | PlayerZero Challenge</title>
-  <link rel="icon" type="image/png" href="favicon.png">
+  <title>Comm Day Calculator | PlayerZero</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
     body {
@@ -22,7 +21,6 @@
       margin: 0.5rem auto;
       border-radius: 5px;
       border: 1px solid #ccc;
-      display: block;
     }
     button {
       background: #111;
@@ -30,161 +28,83 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .logo {
-      max-width: 280px;
-      height: auto;
-      margin: 1rem auto;
-    }
-    img.preview {
-      display: none;
+    .preview {
       max-width: 300px;
-      height: auto;
-      margin: 1rem auto;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-    }
-    #feedback {
-      font-size: 0.9rem;
       margin-top: 1rem;
-      color: #555;
-      font-style: italic;
+    }
+    .warning {
+      font-size: 0.9rem;
+      color: #b30000;
+      margin-top: 0.5rem;
     }
   </style>
 </head>
 <body>
+  <h1>Comm Day Calculator</h1>
+  <p>Upload a screenshot and we’ll try to read your stats.</p>
 
-<a href="https://pgplayerzero.com" target="_blank">
-  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-</a>
-<h1>Comm Day Calculator</h1>
-<p>Upload your Pokédex screenshots — we'll auto-fill your grind stats.</p>
+  <input type="file" id="startImg" accept="image/*">
+  <button onclick="importStats()">Import START Stats</button>
+  <img id="preview" class="preview" style="display:none;">
+  <p id="ocrResult"></p>
 
-<input type="file" id="startUpload" accept="image/*">
-<button onclick="runTextOCR('start')">Import START Stats</button>
-<canvas id="startCanvas" style="display:none;"></canvas>
-<img id="startPreview" class="preview" />
+  <input type="number" id="startSeen" placeholder="Start Seen">
+  <input type="number" id="startCaught" placeholder="Start Caught">
 
-<hr style="max-width: 400px; margin: 2rem auto; border: none; border-top: 1px solid #ddd;">
+  <script>
+    function importStats() {
+      const fileInput = document.getElementById("startImg");
+      const file = fileInput.files[0];
+      const preview = document.getElementById("preview");
+      const ocrResult = document.getElementById("ocrResult");
 
-<input type="file" id="endUpload" accept="image/*">
-<button onclick="runTextOCR('end')">Import END Stats</button>
-<canvas id="endCanvas" style="display:none;"></canvas>
-<img id="endPreview" class="preview" />
+      if (!file) return alert("Please upload a screenshot.");
 
-<p id="feedback"></p>
+      const reader = new FileReader();
+      reader.onload = function () {
+        const img = new Image();
+        img.onload = function () {
+          // Create canvas to crop image to center region (where SEEN/CAUGHT lives)
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
 
-<input type="number" id="startSeen" placeholder="Start Seen">
-<input type="number" id="startCaught" placeholder="Start Caught">
-<input type="number" id="endSeen" placeholder="End Seen">
-<input type="number" id="endCaught" placeholder="End Caught">
-<input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
-<input type="number" id="shiniesCaught" placeholder="Shinies Caught">
+          const w = img.width;
+          const h = img.height;
 
-<button onclick="runMyStats()">Run My Stats</button>
-<button onclick="downloadCard()">Download Card</button>
+          const cropWidth = w * 0.4; // 40% of width
+          const cropHeight = h * 0.1; // 10% of height
+          const cropX = (w - cropWidth) / 2;
+          const cropY = h * 0.53; // just below the Pokémon name/number
 
-<script>
-  const previews = {
-    start: document.getElementById('startPreview'),
-    end: document.getElementById('endPreview')
-  };
-  const canvases = {
-    start: document.getElementById('startCanvas'),
-    end: document.getElementById('endCanvas')
-  };
-  const files = {};
-  const feedback = document.getElementById('feedback');
+          canvas.width = cropWidth;
+          canvas.height = cropHeight;
+          ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
 
-  function preprocessImage(image, canvas) {
-    const scale = 1.5;
-    canvas.width = image.width * scale;
-    canvas.height = image.height * scale;
-    const ctx = canvas.getContext("2d");
-    ctx.scale(scale, scale);
-    ctx.drawImage(image, 0, 0);
-    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const data = imageData.data;
-    for (let i = 0; i < data.length; i += 4) {
-      const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
-      const norm = Math.min(255, avg * 1.25);
-      data[i] = data[i + 1] = data[i + 2] = norm;
-    }
-    ctx.putImageData(imageData, 0, 0);
-    return canvas.toDataURL();
-  }
+          preview.src = reader.result;
+          preview.style.display = "block";
 
-  function handleUpload(type, event) {
-    const file = event.target.files[0];
-    files[type] = file;
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        const canvas = canvases[type];
-        const cleaned = preprocessImage(img, canvas);
-        previews[type].src = cleaned;
-        previews[type].style.display = 'block';
+          Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) })
+            .then(({ data: { text } }) => {
+              ocrResult.innerText = "🧾 OCR Result: " + text;
+              const seenMatch = text.match(/SEEN\s*(\d{1,4})/i);
+              const caughtMatch = text.match(/CAUGHT\s*(\d{1,4})/i);
+
+              if (seenMatch) document.getElementById("startSeen").value = seenMatch[1];
+              if (caughtMatch) document.getElementById("startCaught").value = caughtMatch[1];
+
+              if (!seenMatch && !caughtMatch) {
+                ocrResult.innerHTML += '<br><span class="warning">⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.</span>';
+              }
+            })
+            .catch(err => {
+              console.error("OCR Error", err);
+              ocrResult.innerHTML = '<span class="warning">⚠️ OCR failed. Try again.</span>';
+            });
+        };
+        img.src = reader.result;
       };
-      img.src = reader.result;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  document.getElementById('startUpload').addEventListener('change', e => handleUpload('start', e));
-  document.getElementById('endUpload').addEventListener('change', e => handleUpload('end', e));
-
-  async function runTextOCR(type) {
-    if (!files[type]) return alert("Upload an image first.");
-    feedback.innerText = `Scanning ${type.toUpperCase()} image...`;
-
-    const canvas = canvases[type];
-    const dataURL = canvas.toDataURL();
-
-    const result = await Tesseract.recognize(dataURL, 'eng');
-    const text = result.data.text;
-    console.log(`RAW OCR (${type}):`, text);
-    const cleanText = text.replace(/\s+/g, ' ');
-    console.log(`CLEAN TEXT (${type}):`, cleanText);
-
-    // Try to find 'SEEN' and 'CAUGHT' followed by digits anywhere after
-    const seenMatch = cleanText.match(/SEEN[^0-9]{0,20}(\d{2,5})/i);
-    const caughtMatch = cleanText.match(/CAUGHT[^0-9]{0,20}(\d{2,5})/i);
-
-    const seenVal = seenMatch ? seenMatch[1] : '';
-    const caughtVal = caughtMatch ? caughtMatch[1] : '';
-
-    document.getElementById(`${type}Seen`).value = seenVal;
-    document.getElementById(`${type}Caught`).value = caughtVal;
-
-    if (seenVal && caughtVal) {
-      feedback.innerText = `✅ ${type.toUpperCase()} Stats: Seen ${seenVal}, Caught ${caughtVal}`;
-    } else {
-      feedback.innerText = `⚠️ Couldn't extract stats from ${type.toUpperCase()} image. Try clearer screenshot or enter manually.`;
+      reader.readAsDataURL(file);
     }
-  }
-
-  function runMyStats() {
-    const startCaught = parseInt(document.getElementById('startCaught').value);
-    const endCaught = parseInt(document.getElementById('endCaught').value);
-    const hours = parseFloat(document.getElementById('hoursPlayed').value);
-    const shinies = parseInt(document.getElementById('shiniesCaught').value);
-
-    if (isNaN(startCaught) || isNaN(endCaught) || isNaN(hours)) {
-      alert("Please fill in all fields before calculating.");
-      return;
-    }
-
-    const totalCaught = endCaught - startCaught;
-    const caughtPerHour = (totalCaught / hours).toFixed(1);
-    const shinyRate = ((shinies / totalCaught) * 100).toFixed(1);
-
-    feedback.innerText = `📊 Total Caught: ${totalCaught}, Caught/Hour: ${caughtPerHour}, Shiny %: ${shinyRate}%`;
-  }
-
-  function downloadCard() {
-    alert("Card download not implemented yet.");
-  }
-</script>
-
+  </script>
 </body>
 </html>
