@@ -132,7 +132,7 @@
   <label for="endImage">End Screenshot</label>
   <input type="file" id="endImage">
 
-  <button onclick="runOCR()">Import Stats</button>
+  <button onclick="runOCR()" id="importButton">Import Stats</button>
   <img id="previewStart" class="result-img" style="display:none;">
   <img id="previewEnd" class="result-img" style="display:none;">
   <p class="status" id="output"></p>
@@ -195,6 +195,7 @@
       const startImage = document.getElementById('startImage').files[0];
       const endImage = document.getElementById('endImage').files[0];
       const output = document.getElementById('output');
+      const importBtn = document.getElementById('importButton');
 
       if (!startImage || !endImage) {
         output.textContent = '⚠️ Please upload both screenshots.';
@@ -206,6 +207,7 @@
       output.textContent = 'Reading stats from your screenshots...';
       output.className = 'status';
       output.style.display = 'block';
+      importBtn.disabled = true;
 
       // Simulate OCR process
       setTimeout(() => {
@@ -221,6 +223,7 @@
 
         output.textContent = '✅ Stats pulled. Verify below.';
         output.className = 'status success';
+        importBtn.disabled = false;
       }, 1000);
     }
 
@@ -236,7 +239,7 @@
       if (!isNaN(seenStart) && !isNaN(seenEnd) && !isNaN(caughtStart) && !isNaN(caughtEnd) && !isNaN(hours)) {
         const caught = caughtEnd - caughtStart;
         const seen = seenEnd - seenStart;
-        const catchPercent = seen > 0 ? ((caught / seen) * 100).toFixed(1) : 0;
+        const catchPercent = seen > 0 ? ((caught / seen) * 100).toFixed(1) : "0.0";
         const perHour = (caught / hours).toFixed(1);
 
         document.getElementById('deltaCaught').textContent = caught.toLocaleString();
@@ -247,9 +250,10 @@
 
         document.getElementById('card').style.display = 'block';
       } else {
-        document.getElementById('output').textContent = '⚠️ Please enter all fields to calculate.';
-        document.getElementById('output').className = 'status';
-        document.getElementById('output').style.display = 'block';
+        const output = document.getElementById('output');
+        output.textContent = '⚠️ Please enter all fields to calculate.';
+        output.className = 'status';
+        output.style.display = 'block';
       }
     }
 
