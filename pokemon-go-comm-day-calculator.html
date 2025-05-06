@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PlayerZero Comm Day Calculator</title>
+  <title>Comm Day Calculator | PlayerZero</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
@@ -42,112 +42,101 @@
 </head>
 <body>
   <h1>Comm Day Calculator</h1>
-  <p>Upload your profile screenshots and we’ll break down your grind.</p>
 
-  <input type="file" id="startImage" accept="image/*"/>
-  <br><img id="startPreview" class="preview">
-  <br><button onclick="runOCR('start')">Import START Stats</button>
+  <h3>START Screenshot</h3>
+  <input type="file" id="startImage" accept="image/*" onchange="handleUpload(event, 'start')"/>
+  <img id="startPreview" class="preview">
+  <button onclick="runOCR('start')">Import START Stats</button>
 
-  <br><input type="file" id="endImage" accept="image/*"/>
-  <br><img id="endPreview" class="preview">
-  <br><button onclick="runOCR('end')">Import END Stats</button>
+  <h3>END Screenshot</h3>
+  <input type="file" id="endImage" accept="image/*" onchange="handleUpload(event, 'end')"/>
+  <img id="endPreview" class="preview">
+  <button onclick="runOCR('end')">Import END Stats</button>
 
-  <br><br>
-  <input id="startSeen" placeholder="Start Seen">
-  <input id="startCaught" placeholder="Start Caught"><br>
-  <input id="endSeen" placeholder="End Seen">
-  <input id="endCaught" placeholder="End Caught"><br>
-  <input id="trainerName" placeholder="Trainer Name (optional)">
-  <input id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
-  <input id="shinies" placeholder="Shinies Caught"><br>
+  <h3>Stats</h3>
+  Start Seen: <input id="startSeen" placeholder="0"/>
+  Start Caught: <input id="startCaught" placeholder="0"/><br>
+  End Seen: <input id="endSeen" placeholder="0"/>
+  End Caught: <input id="endCaught" placeholder="0"/><br>
+  Trainer: <input id="trainerName" placeholder="Trainer Name"/>
+  Hours Played: <input id="hoursPlayed" placeholder="3"/>
+  Shinies: <input id="shinies" placeholder="0"/><br>
 
   <button onclick="calculate()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
-  <div id="card" style="display:none">
+  <div id="card" style="display:none;">
     <div id="cardContent"></div>
   </div>
 
   <script>
-    const previews = {
-      start: document.getElementById('startPreview'),
-      end: document.getElementById('endPreview')
-    };
-    const files = {};
+    const fileStore = { start: null, end: null };
 
-    document.getElementById('startImage').addEventListener('change', e => {
-      const file = e.target.files[0];
-      files.start = file;
-      previews.start.src = URL.createObjectURL(file);
-    });
-
-    document.getElementById('endImage').addEventListener('change', e => {
-      const file = e.target.files[0];
-      files.end = file;
-      previews.end.src = URL.createObjectURL(file);
-    });
+    function handleUpload(event, type) {
+      const file = event.target.files[0];
+      fileStore[type] = file;
+      const preview = document.getElementById(type + 'Preview');
+      preview.src = URL.createObjectURL(file);
+    }
 
     async function runOCR(type) {
-      if (!files[type]) return alert("Upload an image first.");
+      const file = fileStore[type];
+      if (!file) return alert("Please upload an image first.");
 
-      const { data: { lines } } = await Tesseract.recognize(
-        files[type],
-        'eng',
-        { tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' }
-      );
+      const { data: { lines } } = await Tesseract.recognize(file, 'eng', {
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+      });
 
-      let seenLine, caughtLine;
+      let seenAnchor, caughtAnchor;
       for (let line of lines) {
-        const text = line.text.toLowerCase();
-        if (text.includes("seen")) seenLine = line;
-        if (text.includes("caught")) caughtLine = line;
+        const txt = line.text.toLowerCase();
+        if (txt.includes("seen")) seenAnchor = line;
+        if (txt.includes("caught")) caughtAnchor = line;
       }
 
-      const getBelowNumber = (anchorLine) => {
-        const anchorY = anchorLine?.bbox.y1 || 0;
+      function findBelow(anchor) {
+        const anchorY = anchor?.bbox.y1 || 0;
+        const anchorX = anchor?.bbox.x0 || 0;
         const candidates = lines.filter(line =>
           /^\d+$/.test(line.text) &&
           line.bbox.y0 > anchorY &&
-          Math.abs(line.bbox.x0 - anchorLine.bbox.x0) < 100
+          Math.abs(line.bbox.x0 - anchorX) < 120
         );
         return candidates.length ? candidates[0].text : '';
-      };
+      }
 
-      const seenVal = getBelowNumber(seenLine);
-      const caughtVal = getBelowNumber(caughtLine);
-
-      document.getElementById(type + 'Seen').value = seenVal;
-      document.getElementById(type + 'Caught').value = caughtVal;
+      document.getElementById(type + 'Seen').value = findBelow(seenAnchor);
+      document.getElementById(type + 'Caught').value = findBelow(caughtAnchor);
     }
 
     function calculate() {
-      const startCaught = parseInt(document.getElementById('startCaught').value) || 0;
-      const endCaught = parseInt(document.getElementById('endCaught').value) || 0;
-      const startSeen = parseInt(document.getElementById('startSeen').value) || 0;
-      const endSeen = parseInt(document.getElementById('endSeen').value) || 0;
-      const trainer = document.getElementById('trainerName').value || "UNKNOWN";
+      const sCaught = parseInt(document.getElementById('startCaught').value) || 0;
+      const eCaught = parseInt(document.getElementById('endCaught').value) || 0;
+      const sSeen = parseInt(document.getElementById('startSeen').value) || 0;
+      const eSeen = parseInt(document.getElementById('endSeen').value) || 0;
       const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
       const shinies = parseInt(document.getElementById('shinies').value) || 0;
+      const trainer = document.getElementById('trainerName').value || "UNKNOWN";
 
-      const totalCaught = endCaught - startCaught;
-      const totalSeen = endSeen - startSeen;
-      const perHour = totalCaught / hours;
-      const catchRate = totalSeen > 0 ? (totalCaught / totalSeen * 100).toFixed(1) : "0";
+      const totalCaught = eCaught - sCaught;
+      const totalSeen = eSeen - sSeen;
+      const catchRate = totalSeen > 0 ? ((totalCaught / totalSeen) * 100).toFixed(1) : "0";
+      const perHour = (totalCaught / hours).toFixed(1);
 
-      const card = document.getElementById('card');
       const content = `
         <div>${trainer.toUpperCase()}</div>
         <div>POKÉMON</div>
         <div class="red" style="font-size:2rem;">${totalCaught.toLocaleString()}</div>
         <div>CATCHES/HOUR</div>
-        <div class="red">${perHour.toFixed(1)}</div>
+        <div class="red">${perHour}</div>
         <div>CATCH %</div>
         <div class="red">${catchRate}%</div>
         <div>SHINIES CAUGHT</div>
         <div class="red">${shinies}</div>
       `;
+
       document.getElementById('cardContent').innerHTML = content;
-      card.style.display = 'inline-block';
+      document.getElementById('card').style.display = 'inline-block';
     }
 
     function downloadCard() {
