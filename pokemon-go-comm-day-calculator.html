@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Comm Day Calculator | PlayerZero</title>
+  <link rel="icon" href="/favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
     body {
@@ -14,11 +15,16 @@
       margin: 0;
       text-align: center;
     }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
     input, button {
       padding: 0.5rem;
       width: 100%;
       max-width: 400px;
       margin: 0.5rem auto;
+      display: block;
       border-radius: 5px;
       border: 1px solid #ccc;
     }
@@ -28,78 +34,91 @@
       font-weight: bold;
       cursor: pointer;
     }
-    .preview {
-      max-width: 300px;
-      margin-top: 1rem;
-    }
-    .warning {
-      font-size: 0.9rem;
-      color: #b30000;
+    .error {
+      color: red;
+      font-size: 0.85rem;
       margin-top: 0.5rem;
+    }
+    #preview {
+      max-width: 300px;
+      margin: 1rem auto;
+      display: block;
+    }
+    .label-row {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .label-row input {
+      width: 180px;
     }
   </style>
 </head>
 <body>
   <h1>Comm Day Calculator</h1>
   <p>Upload a screenshot and we’ll try to read your stats.</p>
+  <input type="file" id="imageInput" accept="image/*">
+  <button onclick="processImage()">Import START Stats</button>
 
-  <input type="file" id="startImg" accept="image/*">
-  <button onclick="importStats()">Import START Stats</button>
-  <img id="preview" class="preview" style="display:none;">
-  <p id="ocrResult"></p>
+  <img id="preview" style="display:none">
+  <p class="error" id="errorText"></p>
 
-  <input type="number" id="startSeen" placeholder="Start Seen">
-  <input type="number" id="startCaught" placeholder="Start Caught">
+  <div class="label-row">
+    <input id="startSeen" placeholder="Start Seen">
+    <input id="startCaught" placeholder="Start Caught">
+  </div>
 
   <script>
-    function importStats() {
-      const fileInput = document.getElementById("startImg");
+    function processImage() {
+      const fileInput = document.getElementById('imageInput');
+      const preview = document.getElementById('preview');
+      const errorText = document.getElementById('errorText');
       const file = fileInput.files[0];
-      const preview = document.getElementById("preview");
-      const ocrResult = document.getElementById("ocrResult");
 
-      if (!file) return alert("Please upload a screenshot.");
+      if (!file) {
+        errorText.innerText = 'Please upload an image first.';
+        return;
+      }
 
       const reader = new FileReader();
-      reader.onload = function () {
+      reader.onload = () => {
+        preview.src = reader.result;
+        preview.style.display = 'block';
+
         const img = new Image();
-        img.onload = function () {
-          // Create canvas to crop image to center region (where SEEN/CAUGHT lives)
-          const canvas = document.createElement("canvas");
-          const ctx = canvas.getContext("2d");
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = img.width;
+          canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
 
-          const w = img.width;
-          const h = img.height;
+          const top = Math.floor(img.height * 0.48);
+          const height = Math.floor(img.height * 0.12);
+          const crop = ctx.getImageData(0, top, img.width, height);
 
-          const cropWidth = w * 0.4; // 40% of width
-          const cropHeight = h * 0.1; // 10% of height
-          const cropX = (w - cropWidth) / 2;
-          const cropY = h * 0.53; // just below the Pokémon name/number
+          const cropCanvas = document.createElement('canvas');
+          cropCanvas.width = img.width;
+          cropCanvas.height = height;
+          const cropCtx = cropCanvas.getContext('2d');
+          cropCtx.putImageData(crop, 0, 0);
 
-          canvas.width = cropWidth;
-          canvas.height = cropHeight;
-          ctx.drawImage(img, cropX, cropY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
-          preview.src = reader.result;
-          preview.style.display = "block";
-
-          Tesseract.recognize(canvas, 'eng', { logger: m => console.log(m) })
-            .then(({ data: { text } }) => {
-              ocrResult.innerText = "🧾 OCR Result: " + text;
-              const seenMatch = text.match(/SEEN\s*(\d{1,4})/i);
-              const caughtMatch = text.match(/CAUGHT\s*(\d{1,4})/i);
-
-              if (seenMatch) document.getElementById("startSeen").value = seenMatch[1];
-              if (caughtMatch) document.getElementById("startCaught").value = caughtMatch[1];
-
-              if (!seenMatch && !caughtMatch) {
-                ocrResult.innerHTML += '<br><span class="warning">⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.</span>';
-              }
-            })
-            .catch(err => {
-              console.error("OCR Error", err);
-              ocrResult.innerHTML = '<span class="warning">⚠️ OCR failed. Try again.</span>';
-            });
+          Tesseract.recognize(cropCanvas, 'eng', {
+            logger: m => console.log(m)
+          }).then(({ data: { text } }) => {
+            console.log('OCR Text:', text);
+            const numbers = text.match(/\d{2,4}/g);
+            if (numbers && numbers.length >= 2) {
+              document.getElementById('startSeen').value = numbers[0];
+              document.getElementById('startCaught').value = numbers[1];
+              errorText.innerText = '';
+            } else {
+              errorText.innerText = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
+            }
+          }).catch(err => {
+            console.error(err);
+            errorText.innerText = '⚠️ OCR failed. Try again.';
+          });
         };
         img.src = reader.result;
       };
