@@ -107,8 +107,14 @@
     const result = await Tesseract.recognize(files[type], 'eng');
     const text = result.data.text;
 
-    const seenMatch = text.match(/Seen\s*[:\s]*([\d,]+)/i);
-    const caughtMatch = text.match(/Caught\s*[:\s]*([\d,]+)/i);
+    console.log(`OCR OUTPUT (${type.toUpperCase()}):\n`, text);
+    alert(text); // You can comment this line out once you confirm it works
+
+    // Normalize spacing: remove extra whitespace
+    const cleanText = text.replace(/\s+/g, ' ');
+
+    const seenMatch = cleanText.match(/Seen\s*[:\-]?\s*([\d,]+)/i);
+    const caughtMatch = cleanText.match(/Caught\s*[:\-]?\s*([\d,]+)/i);
 
     const seenVal = seenMatch ? seenMatch[1].replace(/,/g, '') : '';
     const caughtVal = caughtMatch ? caughtMatch[1].replace(/,/g, '') : '';
@@ -119,7 +125,7 @@
     if (seenVal && caughtVal) {
       feedback.innerText = `✅ ${type.toUpperCase()} Stats: Seen ${seenVal}, Caught ${caughtVal}`;
     } else {
-      feedback.innerText = `⚠️ OCR couldn't read stats from ${type.toUpperCase()} image. Try clearer screenshot or enter manually.`;
+      feedback.innerText = `⚠️ OCR couldn't extract stats from ${type.toUpperCase()} image. Check spacing or enter manually.`;
     }
   }
 
@@ -140,11 +146,11 @@
 
     feedback.innerText = `📊 Total Caught: ${totalCaught}, Caught/Hour: ${caughtPerHour}, Shiny %: ${shinyRate}%`;
 
-    // Hook in card generation here if needed
+    // You can hook up stat card generation here next
   }
 
   function downloadCard() {
-    alert("Card download not implemented yet. This is your placeholder.");
+    alert("Card download not implemented yet.");
   }
 </script>
 
