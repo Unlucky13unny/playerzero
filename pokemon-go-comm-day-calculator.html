@@ -151,15 +151,18 @@
   <button onclick="runStats()">Run My Stats</button>
 
   <div id="card" class="card">
-    <div class="footer">COMMUNITY DAY CARD</div>
+    <div class="footer">COMM DAY CARD</div>
     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+    <div class="value" id="trainerDisplay">@Trainer</div>
+    <div class="label">Pokémon:</div>
+    <div class="value" id="pokemonDisplay">pokemon</div>
     <div class="stat-group">
       <div class="stat">
         <div class="label">Pokémon Caught</div>
         <div class="value" id="deltaCaught">0</div>
       </div>
       <div class="stat">
-        <div class="label">Catch %</div>
+        <div class="label">Catch Rate</div>
         <div class="value" id="catchPercent">0%</div>
       </div>
     </div>
@@ -198,6 +201,7 @@
       const caughtEnd = parseInt(document.getElementById('endCaught').value);
       const shiny = parseInt(document.getElementById('shinyCount').value);
       const hours = parseFloat(document.getElementById('hoursPlayed').value);
+      const trainer = document.getElementById('trainerName').value;
 
       if (!isNaN(seenStart) && !isNaN(seenEnd) && !isNaN(caughtStart) && !isNaN(caughtEnd) && !isNaN(hours)) {
         const caught = caughtEnd - caughtStart;
@@ -209,6 +213,7 @@
         document.getElementById('catchPercent').textContent = `${catchPercent}%`;
         document.getElementById('caughtPerHour').textContent = perHour;
         document.getElementById('shinyTotal').textContent = isNaN(shiny) ? 0 : shiny;
+        document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
 
         document.getElementById('card').style.display = 'block';
       } else {
