@@ -1,116 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comm Day Calculator</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comm Day Manual Crop OCR</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
-      background: #fff;
-      color: #111;
       padding: 2rem;
     }
     input, button {
       padding: 0.5rem;
-      width: 100%;
-      max-width: 400px;
-      margin: 0.5rem auto;
-      display: block;
-      border-radius: 5px;
-      border: 1px solid #ccc;
+      margin: 0.5rem;
     }
-    button {
-      background: #111;
-      color: white;
+    #image {
+      max-width: 100%;
+      max-height: 500px;
+    }
+    .crop-label {
+      margin-top: 1rem;
       font-weight: bold;
-      cursor: pointer;
     }
-    img {
-      max-width: 300px;
-      margin-top: 1rem;
-    }
-    #feedback {
-      font-size: 0.9rem;
-      color: #c00;
-      margin: 0.5rem auto;
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 1rem;
-    }
-    .stat-row input {
-      width: 150px;
+    #results input {
+      margin: 1rem;
+      padding: 0.5rem;
     }
   </style>
 </head>
 <body>
-  <h2>Comm Day Calculator</h2>
-  <p>Upload a screenshot and we'll try to read your stats.</p>
-  <input type="file" id="imageInput">
-  <button onclick="handleImport()">Import START Stats</button>
-  <img id="preview" />
-  <div id="feedback"></div>
+  <h1>Manual Crop OCR - Comm Day Calculator</h1>
+  <input type="file" id="upload" accept="image/*">
+  <br>
+  <canvas id="canvas" style="display: none;"></canvas>
+  <img id="image" />
 
-  <div class="stat-row">
-    <input id="startSeen" placeholder="Start Seen">
-    <input id="startCaught" placeholder="Start Caught">
+  <div class="crop-label">Crop SEEN area:</div>
+  <button onclick="setSeenCrop()">Set Seen Crop</button>
+  <div class="crop-label">Crop CAUGHT area:</div>
+  <button onclick="setCaughtCrop()">Set Caught Crop</button>
+  <br>
+  <button onclick="runOCR()">Read Stats</button>
+
+  <div id="results">
+    <input type="text" id="seen" placeholder="Seen Result">
+    <input type="text" id="caught" placeholder="Caught Result">
   </div>
 
   <script>
-    async function handleImport() {
-      const file = document.getElementById('imageInput').files[0];
+    let cropper, seenData, caughtData;
+
+    document.getElementById('upload').addEventListener('change', e => {
+      const file = e.target.files[0];
       if (!file) return;
-
-      const imgPreview = document.getElementById('preview');
-      imgPreview.src = URL.createObjectURL(file);
-
-      document.getElementById('feedback').innerText = '⏳ Reading image...';
-
-      try {
-        const { data } = await Tesseract.recognize(file, 'eng', {
-          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+      const url = URL.createObjectURL(file);
+      document.getElementById('image').src = url;
+      setTimeout(() => {
+        if (cropper) cropper.destroy();
+        cropper = new Cropper(document.getElementById('image'), {
+          viewMode: 1,
+          movable: true,
+          zoomable: true,
+          scalable: true,
+          cropBoxMovable: true,
+          cropBoxResizable: true
         });
+      }, 100);
+    });
 
-        const blocks = data.blocks.flatMap(block =>
-          block.paragraphs.flatMap(p =>
-            p.lines.flatMap(line => line.words.map(w => ({
-              text: w.text,
-              x: w.bbox.x0,
-              y: w.bbox.y0
-            })))
-          )
-        );
+    function setSeenCrop() {
+      seenData = cropper.getData();
+      alert("Seen crop zone saved.");
+    }
 
-        let seenAnchor = blocks.find(b => /seen/i.test(b.text));
-        let caughtAnchor = blocks.find(b => /caught/i.test(b.text));
+    function setCaughtCrop() {
+      caughtData = cropper.getData();
+      alert("Caught crop zone saved.");
+    }
 
-        const getClosestBelow = (anchor) => {
-          return blocks
-            .filter(b => /\d+/.test(b.text))
-            .filter(b => b.y > anchor.y && Math.abs(b.x - anchor.x) < 50)
-            .sort((a, b) => a.y - b.y)[0];
-        };
+    function runOCR() {
+      if (!seenData || !caughtData) return alert("Please set both crop zones.");
+      const img = cropper.getImageData();
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const sourceImage = document.getElementById("image");
 
-        let seenVal = seenAnchor ? getClosestBelow(seenAnchor) : null;
-        let caughtVal = caughtAnchor ? getClosestBelow(caughtAnchor) : null;
+      const extractText = (crop, callback) => {
+        canvas.width = crop.width;
+        canvas.height = crop.height;
+        ctx.drawImage(sourceImage, crop.x, crop.y, crop.width, crop.height, 0, 0, crop.width, crop.height);
+        Tesseract.recognize(canvas, 'eng', {
+          tessedit_char_whitelist: '0123456789',
+        }).then(({ data: { text } }) => {
+          callback(text.replace(/[^0-9]/g, ''));
+        });
+      };
 
-        if (seenVal) document.getElementById('startSeen').value = seenVal.text;
-        if (caughtVal) document.getElementById('startCaught').value = caughtVal.text;
-
-        if (!seenVal && !caughtVal) {
-          document.getElementById('feedback').innerText = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
-        } else {
-          document.getElementById('feedback').innerText = '';
-        }
-
-      } catch (err) {
-        console.error(err);
-        document.getElementById('feedback').innerText = '⚠️ Error during OCR processing.';
-      }
+      extractText(seenData, seen => document.getElementById('seen').value = seen);
+      extractText(caughtData, caught => document.getElementById('caught').value = caught);
     }
   </script>
 </body>
