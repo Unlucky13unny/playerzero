@@ -156,7 +156,7 @@
     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
     <div class="value" id="trainerDisplay">@Trainer</div>
     <div class="label">Pokémon:</div>
-    <div class="value" id="pokemonDisplay">pokemon</div>
+    <div class="value" id="pokemonDisplay">POKEMON</div>
     <div class="stat-group">
       <div class="stat">
         <div class="label">Pokémon Caught</div>
@@ -214,7 +214,7 @@
         document.getElementById('startSeen').value = 663;
         document.getElementById('startCaught').value = 423;
         document.getElementById('endSeen').value = 666;
-        document.getElementById('endCaught').value = 417;
+        document.getElementById('endCaught').value = 471;
 
         document.getElementById('previewStart').src = URL.createObjectURL(startImage);
         document.getElementById('previewStart').style.display = 'block';
@@ -237,9 +237,9 @@
       const trainer = document.getElementById('trainerName').value;
 
       if (!isNaN(seenStart) && !isNaN(seenEnd) && !isNaN(caughtStart) && !isNaN(caughtEnd) && !isNaN(hours)) {
-        const caught = caughtEnd - caughtStart;
-        const seen = seenEnd - seenStart;
-        const catchPercent = seen > 0 ? ((caught / seen) * 100).toFixed(1) : "0.0";
+        const seen = Math.max(1, seenEnd - seenStart);
+        const caught = Math.max(0, caughtEnd - caughtStart);
+        const catchPercent = ((caught / seen) * 100).toFixed(1);
         const perHour = (caught / hours).toFixed(1);
 
         document.getElementById('deltaCaught').textContent = caught.toLocaleString();
