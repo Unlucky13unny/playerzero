@@ -1,54 +1,104 @@
-// Archived version: OCR using fixed crop zones
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Comm Day Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #fff;
+      color: #111;
+      padding: 2rem;
+      margin: 0;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: bold;
+    }
+    input, button {
+      padding: 0.5rem;
+      margin: 0.5rem auto;
+      width: 100%;
+      max-width: 400px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    img {
+      max-width: 300px;
+      margin-top: 1rem;
+    }
+    #feedback {
+      margin: 1rem 0;
+      color: #c00;
+      font-size: 0.9rem;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-around;
+      max-width: 600px;
+      margin: 2rem auto;
+    }
+    .stat-row input {
+      max-width: 150px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Comm Day Calculator</h1>
+  <p>Upload a screenshot and we’ll try to read your stats.</p>
+  <input type="file" id="imageUpload" accept="image/*">
+  <button onclick="processImage()">Import START Stats</button>
+  <div id="feedback"></div>
+  <img id="preview" style="display:none">
+  <div class="stat-row">
+    <input id="startSeen" placeholder="Start Seen">
+    <input id="startCaught" placeholder="Start Caught">
+  </div>
+  <script>
+    function processImage() {
+      const file = document.getElementById('imageUpload').files[0];
+      if (!file) return alert('Please upload an image.');
 
-const Tesseract = window.Tesseract;
+      const reader = new FileReader();
+      reader.onload = () => {
+        const preview = document.getElementById('preview');
+        preview.src = reader.result;
+        preview.style.display = 'block';
 
-function processImage(imageFile, isStart = true) {
-  const reader = new FileReader();
-  reader.onload = function () {
-    const img = new Image();
-    img.onload = function () {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      const width = img.width;
-      const height = img.height;
-      canvas.width = width;
-      canvas.height = height;
-      ctx.drawImage(img, 0, 0);
+        document.getElementById('feedback').innerText = '🧾 OCR processing...';
 
-      // Define crop box near expected location (old method)
-      const cropX = Math.floor(width * 0.26);
-      const cropY = Math.floor(height * 0.52);
-      const cropWidth = Math.floor(width * 0.46);
-      const cropHeight = Math.floor(height * 0.07);
+        Tesseract.recognize(reader.result, 'eng', {
+          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        }).then(({ data: { text } }) => {
+          console.log('OCR Text:', text);
 
-      const imageData = ctx.getImageData(cropX, cropY, cropWidth, cropHeight);
-      const croppedCanvas = document.createElement("canvas");
-      croppedCanvas.width = cropWidth;
-      croppedCanvas.height = cropHeight;
-      const croppedCtx = croppedCanvas.getContext("2d");
-      croppedCtx.putImageData(imageData, 0, 0);
+          const seenMatch = text.match(/SEEN\s*(\d{1,5})/i);
+          const caughtMatch = text.match(/CAUGHT\s*(\d{1,5})/i);
 
-      Tesseract.recognize(croppedCanvas, 'eng', {
-        tessedit_char_whitelist: '0123456789',
-        logger: m => console.log(m)
-      }).then(({ data: { text } }) => {
-        const numbers = text.match(/\d+/g);
-        if (numbers && numbers.length >= 2) {
-          if (isStart) {
-            document.getElementById("startSeen").value = numbers[0];
-            document.getElementById("startCaught").value = numbers[1];
+          if (seenMatch) document.getElementById('startSeen').value = seenMatch[1];
+          if (caughtMatch) document.getElementById('startCaught').value = caughtMatch[1];
+
+          if (!seenMatch || !caughtMatch) {
+            document.getElementById('feedback').innerHTML = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
           } else {
-            document.getElementById("endSeen").value = numbers[0];
-            document.getElementById("endCaught").value = numbers[1];
+            document.getElementById('feedback').innerText = '';
           }
-        } else {
-          showMessage(`⚠️ Couldn't extract numbers. Try a different screenshot or enter manually.`, true);
-        }
-      });
-    };
-    img.src = reader.result;
-    document.getElementById("screenshotPreview").src = reader.result;
-    document.getElementById("screenshotPreview").style.display = "block";
-  };
-  reader.readAsDataURL(imageFile);
-}
+        }).catch(err => {
+          console.error(err);
+          document.getElementById('feedback').innerText = '⚠️ OCR failed. Try again.';
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  </script>
+</body>
+</html>
