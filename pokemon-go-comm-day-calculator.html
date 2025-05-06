@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comm Day Calculator (via OCR.Space) | PlayerZero</title>
+  <title>Comm Day Calculator | PlayerZero</title>
   <link rel="icon" type="image/png" href="/favicon.png">
   <style>
     body {
@@ -21,6 +21,7 @@
       margin: 0.5rem auto;
       border-radius: 5px;
       border: 1px solid #ccc;
+      display: block;
     }
     button {
       background: #111;
@@ -34,57 +35,98 @@
       margin: 1rem auto;
     }
     .result-img {
-      max-width: 90vw;
-      height: auto;
+      max-width: 300px;
       margin: 1rem auto;
-    }
-    .stat-row {
-      display: flex;
-      justify-content: space-around;
-      margin-top: 1rem;
-    }
-    .stat {
-      width: 40%;
+      display: block;
     }
     .status {
       margin-top: 1rem;
       font-size: 0.9rem;
+      color: #e30613;
+      font-style: italic;
     }
     .status.success {
       color: green;
+      font-style: normal;
     }
-    .status.error {
+    .footer {
+      background: #000;
+      color: #fff;
+      font-size: 1rem;
+      padding: 0.75rem;
+      margin-top: 1.5rem;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 8px;
+      letter-spacing: 1px;
+      width: 80%;
+      max-width: 280px;
+    }
+    .social-icons {
+      margin-top: 1rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+    }
+    .social-icons a img {
+      width: 36px;
+      height: 36px;
+      filter: brightness(0%);
+      transition: filter 0.3s ease, transform 0.2s ease;
+    }
+    .social-icons a img:hover {
+      filter: brightness(0%) invert(50%);
+      transform: scale(1.1);
+    }
+    .promo-link {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .promo-link a {
       color: red;
+      font-weight: bold;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <h1>Comm Day Calculator (via OCR.Space)</h1>
-
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+  <h1>Comm Day Calculator</h1>
+  <p>Upload a screenshot and we’ll try to read your stats.</p>
   <input type="file" id="imageInput">
-  <button onclick="runOCR()">Try OCR</button>
-
-  <div id="previewContainer"></div>
-
-  <div class="stat-row">
-    <input id="startSeen" placeholder="Start Seen">
-    <input id="startCaught" placeholder="Start Caught">
-  </div>
-  <div class="stat-row">
-    <input id="endSeen" placeholder="End Seen">
-    <input id="endCaught" placeholder="End Caught">
-  </div>
-
+  <button onclick="runOCR()">Import Stats</button>
+  <p class="status">⚠️ The image reader isn’t perfect. If any stats don’t auto-fill, just enter them manually below.</p>
+  <img id="previewImage" class="result-img" style="display:none;">
+  <input id="startSeen" placeholder="Start Seen">
+  <input id="startCaught" placeholder="Start Caught">
+  <input id="endSeen" placeholder="End Seen">
+  <input id="endCaught" placeholder="End Caught">
   <button onclick="runStats()">Run My Stats</button>
-  <button onclick="downloadCard()">Download My Grind Card</button>
-
-  <div id="output" class="status"></div>
-
-  <div id="card" style="display:none; margin-top:2rem; border:1px solid #ccc; padding:1rem; border-radius:10px; max-width:420px; margin-left:auto; margin-right:auto;">
-    <div><strong>Seen:</strong> <span id="deltaSeen"></span></div>
-    <div><strong>Caught:</strong> <span id="deltaCaught"></span></div>
+  <div id="card" style="display:none; margin-top:2rem; border:4px solid #000; padding:1.5rem 1rem; border-radius:30px; max-width:420px; margin-left:auto; margin-right:auto;">
+    <div class="footer">COMM DAY CARD</div>
+    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Total Seen</div>
+        <div class="value" id="deltaSeen">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Total Caught</div>
+        <div class="value" id="deltaCaught">0</div>
+      </div>
+    </div>
   </div>
-
+  <button onclick="downloadCard()">Download My Grind Card</button>
+  <div class="promo-link">
+    <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
+  </div>
+  <div class="social-icons">
+    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
+    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
+    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
+  </div>
+  <div id="output" class="status"></div>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
     function runOCR() {
       const file = document.getElementById('imageInput').files[0];
@@ -93,7 +135,8 @@
       const reader = new FileReader();
       reader.onload = () => {
         const imageBase64 = reader.result.split(',')[1];
-        document.getElementById('previewContainer').innerHTML = `<img src="${reader.result}" class="result-img">`;
+        document.getElementById('previewImage').src = reader.result;
+        document.getElementById('previewImage').style.display = 'block';
 
         fetch("https://api.ocr.space/parse/image", {
           method: "POST",
@@ -163,6 +206,5 @@
       });
     }
   </script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
