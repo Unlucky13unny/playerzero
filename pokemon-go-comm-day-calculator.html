@@ -3,45 +3,67 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Comm Day Calculator | PlayerZero</title>
+  <title>PlayerZero | Comm Day Calculator</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background: #fff;
-      padding: 1rem;
+      font-family: 'Segoe UI', sans-serif;
+      background: #f9f9f9;
       color: #111;
+      padding: 2rem;
       text-align: center;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
     }
     input, button {
-      margin: 0.5rem;
       padding: 0.5rem;
       font-size: 1rem;
+      margin: 0.5rem;
+      border-radius: 8px;
+      border: 1px solid #aaa;
+    }
+    button {
+      background-color: #ff4757;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #e84118;
     }
     .preview {
-      max-width: 300px;
+      max-width: 320px;
       margin: 0.5rem auto;
+      border-radius: 12px;
+      border: 2px solid #ddd;
       display: block;
-      border: 1px solid #ccc;
     }
     #card {
+      display: none;
       margin-top: 2rem;
-      padding: 1rem;
-      display: inline-block;
-      border: 3px solid black;
-      border-radius: 2rem;
-      text-align: center;
-      background: #f9f9f9;
-      font-weight: bold;
+      padding: 1.5rem;
+      border-radius: 20px;
+      background: #fff;
+      border: 3px solid #000;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
     }
     #card .red {
-      color: red;
+      color: #e84118;
+    }
+    #log {
+      font-size: 0.9rem;
+      color: #666;
+      margin-top: 1rem;
     }
   </style>
 </head>
 <body>
-  <h1>Comm Day Calculator</h1>
+  <h1>PlayerZero | Comm Day Calculator</h1>
 
   <h3>START Screenshot</h3>
   <input type="file" id="startImage" accept="image/*" onchange="handleUpload(event, 'start')"/>
@@ -53,21 +75,23 @@
   <img id="endPreview" class="preview">
   <button onclick="runOCR('end')">Import END Stats</button>
 
-  <h3>Stats</h3>
-  Start Seen: <input id="startSeen" placeholder="0"/>
-  Start Caught: <input id="startCaught" placeholder="0"/><br>
-  End Seen: <input id="endSeen" placeholder="0"/>
-  End Caught: <input id="endCaught" placeholder="0"/><br>
-  Trainer: <input id="trainerName" placeholder="Trainer Name"/>
-  Hours Played: <input id="hoursPlayed" placeholder="3"/>
-  Shinies: <input id="shinies" placeholder="0"/><br>
+  <h3>Inputs</h3>
+  <input id="startSeen" placeholder="Start Seen"/>
+  <input id="startCaught" placeholder="Start Caught"/><br/>
+  <input id="endSeen" placeholder="End Seen"/>
+  <input id="endCaught" placeholder="End Caught"/><br/>
+  <input id="trainerName" placeholder="Trainer Name"/>
+  <input id="hoursPlayed" placeholder="Hours Played"/>
+  <input id="shinies" placeholder="Shinies Caught"/><br/>
 
   <button onclick="calculate()">Run My Stats</button>
   <button onclick="downloadCard()">Download Card</button>
 
-  <div id="card" style="display:none;">
+  <div id="card">
     <div id="cardContent"></div>
   </div>
+
+  <div id="log"></div>
 
   <script>
     const fileStore = { start: null, end: null };
@@ -81,32 +105,44 @@
 
     async function runOCR(type) {
       const file = fileStore[type];
+      const log = document.getElementById("log");
       if (!file) return alert("Please upload an image first.");
 
-      const { data: { lines } } = await Tesseract.recognize(file, 'eng', {
-        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-      });
+      log.innerText = `Processing ${type.toUpperCase()} image...`;
 
-      let seenAnchor, caughtAnchor;
-      for (let line of lines) {
-        const txt = line.text.toLowerCase();
-        if (txt.includes("seen")) seenAnchor = line;
-        if (txt.includes("caught")) caughtAnchor = line;
+      try {
+        const result = await Tesseract.recognize(file, 'eng', {
+          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+        });
+
+        const lines = result.data.lines;
+        let seenAnchor, caughtAnchor;
+
+        for (let line of lines) {
+          const text = line.text.toLowerCase();
+          if (text.includes("seen")) seenAnchor = line;
+          if (text.includes("caught")) caughtAnchor = line;
+        }
+
+        function findNumber(anchor) {
+          if (!anchor) return '';
+          const y = anchor.bbox.y1;
+          const x = anchor.bbox.x0;
+          const candidates = lines.filter(l =>
+            /^\d+$/.test(l.text) &&
+            l.bbox.y0 > y &&
+            Math.abs(l.bbox.x0 - x) < 100
+          );
+          return candidates.length ? candidates[0].text : '';
+        }
+
+        document.getElementById(type + 'Seen').value = findNumber(seenAnchor);
+        document.getElementById(type + 'Caught').value = findNumber(caughtAnchor);
+        log.innerText = `${type.toUpperCase()} OCR complete. Fields updated.`;
+      } catch (e) {
+        console.error(e);
+        log.innerText = "OCR failed. Please check your image.";
       }
-
-      function findBelow(anchor) {
-        const anchorY = anchor?.bbox.y1 || 0;
-        const anchorX = anchor?.bbox.x0 || 0;
-        const candidates = lines.filter(line =>
-          /^\d+$/.test(line.text) &&
-          line.bbox.y0 > anchorY &&
-          Math.abs(line.bbox.x0 - anchorX) < 120
-        );
-        return candidates.length ? candidates[0].text : '';
-      }
-
-      document.getElementById(type + 'Seen').value = findBelow(seenAnchor);
-      document.getElementById(type + 'Caught').value = findBelow(caughtAnchor);
     }
 
     function calculate() {
@@ -124,14 +160,14 @@
       const perHour = (totalCaught / hours).toFixed(1);
 
       const content = `
-        <div>${trainer.toUpperCase()}</div>
+        <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">${trainer.toUpperCase()}</div>
         <div>POKÉMON</div>
-        <div class="red" style="font-size:2rem;">${totalCaught.toLocaleString()}</div>
+        <div class="red" style="font-size: 2rem;">${totalCaught.toLocaleString()}</div>
         <div>CATCHES/HOUR</div>
         <div class="red">${perHour}</div>
         <div>CATCH %</div>
         <div class="red">${catchRate}%</div>
-        <div>SHINIES CAUGHT</div>
+        <div>SHINIES</div>
         <div class="red">${shinies}</div>
       `;
 
