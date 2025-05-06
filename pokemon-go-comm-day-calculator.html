@@ -1,129 +1,54 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" href="/favicon.png">
-  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #fff;
-      color: #111;
-      padding: 2rem;
-      margin: 0;
-      text-align: center;
-    }
-    h1 {
-      font-size: 2rem;
-      margin-bottom: 1rem;
-    }
-    input, button {
-      padding: 0.5rem;
-      width: 100%;
-      max-width: 400px;
-      margin: 0.5rem auto;
-      display: block;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      background: #111;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .error {
-      color: red;
-      font-size: 0.85rem;
-      margin-top: 0.5rem;
-    }
-    #preview {
-      max-width: 300px;
-      margin: 1rem auto;
-      display: block;
-    }
-    .label-row {
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-    .label-row input {
-      width: 180px;
-    }
-  </style>
-</head>
-<body>
-  <h1>Comm Day Calculator</h1>
-  <p>Upload a screenshot and we’ll try to read your stats.</p>
-  <input type="file" id="imageInput" accept="image/*">
-  <button onclick="processImage()">Import START Stats</button>
+// Archived version: OCR using fixed crop zones
 
-  <img id="preview" style="display:none">
-  <p class="error" id="errorText"></p>
+const Tesseract = window.Tesseract;
 
-  <div class="label-row">
-    <input id="startSeen" placeholder="Start Seen">
-    <input id="startCaught" placeholder="Start Caught">
-  </div>
+function processImage(imageFile, isStart = true) {
+  const reader = new FileReader();
+  reader.onload = function () {
+    const img = new Image();
+    img.onload = function () {
+      const canvas = document.createElement("canvas");
+      const ctx = canvas.getContext("2d");
+      const width = img.width;
+      const height = img.height;
+      canvas.width = width;
+      canvas.height = height;
+      ctx.drawImage(img, 0, 0);
 
-  <script>
-    function processImage() {
-      const fileInput = document.getElementById('imageInput');
-      const preview = document.getElementById('preview');
-      const errorText = document.getElementById('errorText');
-      const file = fileInput.files[0];
+      // Define crop box near expected location (old method)
+      const cropX = Math.floor(width * 0.26);
+      const cropY = Math.floor(height * 0.52);
+      const cropWidth = Math.floor(width * 0.46);
+      const cropHeight = Math.floor(height * 0.07);
 
-      if (!file) {
-        errorText.innerText = 'Please upload an image first.';
-        return;
-      }
+      const imageData = ctx.getImageData(cropX, cropY, cropWidth, cropHeight);
+      const croppedCanvas = document.createElement("canvas");
+      croppedCanvas.width = cropWidth;
+      croppedCanvas.height = cropHeight;
+      const croppedCtx = croppedCanvas.getContext("2d");
+      croppedCtx.putImageData(imageData, 0, 0);
 
-      const reader = new FileReader();
-      reader.onload = () => {
-        preview.src = reader.result;
-        preview.style.display = 'block';
-
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-
-          const top = Math.floor(img.height * 0.48);
-          const height = Math.floor(img.height * 0.12);
-          const crop = ctx.getImageData(0, top, img.width, height);
-
-          const cropCanvas = document.createElement('canvas');
-          cropCanvas.width = img.width;
-          cropCanvas.height = height;
-          const cropCtx = cropCanvas.getContext('2d');
-          cropCtx.putImageData(crop, 0, 0);
-
-          Tesseract.recognize(cropCanvas, 'eng', {
-            logger: m => console.log(m)
-          }).then(({ data: { text } }) => {
-            console.log('OCR Text:', text);
-            const numbers = text.match(/\d{2,4}/g);
-            if (numbers && numbers.length >= 2) {
-              document.getElementById('startSeen').value = numbers[0];
-              document.getElementById('startCaught').value = numbers[1];
-              errorText.innerText = '';
-            } else {
-              errorText.innerText = '⚠️ Couldn\'t extract numbers. Try a different screenshot or enter manually.';
-            }
-          }).catch(err => {
-            console.error(err);
-            errorText.innerText = '⚠️ OCR failed. Try again.';
-          });
-        };
-        img.src = reader.result;
-      };
-      reader.readAsDataURL(file);
-    }
-  </script>
-</body>
-</html>
+      Tesseract.recognize(croppedCanvas, 'eng', {
+        tessedit_char_whitelist: '0123456789',
+        logger: m => console.log(m)
+      }).then(({ data: { text } }) => {
+        const numbers = text.match(/\d+/g);
+        if (numbers && numbers.length >= 2) {
+          if (isStart) {
+            document.getElementById("startSeen").value = numbers[0];
+            document.getElementById("startCaught").value = numbers[1];
+          } else {
+            document.getElementById("endSeen").value = numbers[0];
+            document.getElementById("endCaught").value = numbers[1];
+          }
+        } else {
+          showMessage(`⚠️ Couldn't extract numbers. Try a different screenshot or enter manually.`, true);
+        }
+      });
+    };
+    img.src = reader.result;
+    document.getElementById("screenshotPreview").src = reader.result;
+    document.getElementById("screenshotPreview").style.display = "block";
+  };
+  reader.readAsDataURL(imageFile);
+}
