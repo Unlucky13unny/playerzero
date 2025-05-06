@@ -1,271 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Comm Day Calculator | PlayerZero</title>
-  <link rel="icon" href="/favicon.png" />
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <title>PlayerZero Comm Day Calculator</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     body {
       font-family: sans-serif;
       background: #fff;
+      padding: 1rem;
       color: #111;
-      padding: 2rem;
-      margin: 0;
       text-align: center;
     }
     input, button {
+      margin: 0.5rem;
       padding: 0.5rem;
-      width: 100%;
-      max-width: 400px;
+      font-size: 1rem;
+    }
+    .preview {
+      max-width: 300px;
       margin: 0.5rem auto;
-      border-radius: 5px;
+      display: block;
       border: 1px solid #ccc;
     }
-    button {
-      background: #111;
-      color: #fff;
-      font-weight: bold;
-      cursor: pointer;
-    }
-    .logo {
-      max-width: 280px;
-      height: auto;
-      margin: 1rem auto;
-    }
-    .field-row {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 0.5rem;
-      margin-top: 1rem;
-    }
-    .field-row input {
-      width: 180px;
-    }
     #card {
-      display: none;
-      width: 100%;
-      max-width: 420px;
-      background: url('card-bg-image.png') center/cover no-repeat #fff;
-      border: 4px solid #000;
-      border-radius: 30px;
-      margin: 2rem auto;
-      padding: 1.5rem 1rem;
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
-    }
-    .username {
-      font-size: 1.1rem;
-      margin: 0.25rem 0 0.75rem;
-    }
-    .stat-group {
-      display: flex;
-      justify-content: space-between;
-      margin: 1rem 0;
-      border-top: 1px solid #eee;
-      padding-top: 1rem;
-    }
-    .stat {
-      width: 48%;
-    }
-    .label {
-      font-size: 0.85rem;
-      text-transform: uppercase;
+      margin-top: 2rem;
+      padding: 1rem;
+      display: inline-block;
+      border: 3px solid black;
+      border-radius: 2rem;
+      text-align: center;
+      background: #f9f9f9;
       font-weight: bold;
-      margin-bottom: 0.3rem;
     }
-    .value {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #e30613;
-    }
-    .footer {
-      background: #000;
-      color: #fff;
-      font-size: 1rem;
-      padding: 0.75rem;
-      margin-top: 1.5rem;
-      margin-left: auto;
-      margin-right: auto;
-      border-radius: 8px;
-      letter-spacing: 1px;
-      width: 80%;
-      max-width: 280px;
-    }
-    .social-icons {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-    .social-icons a img {
-      width: 36px;
-      height: 36px;
-      filter: brightness(0%);
-      transition: filter 0.3s ease, transform 0.2s ease;
-    }
-    .social-icons a img:hover {
-      filter: brightness(0%) invert(50%);
-      transform: scale(1.1);
-    }
-    .promo-link {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-    .promo-link a {
+    #card .red {
       color: red;
-      font-weight: bold;
-      text-decoration: none;
     }
   </style>
 </head>
 <body>
-<a href="https://pgplayerzero.com" target="_blank">
-  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-</a>
+  <h1>Comm Day Calculator</h1>
+  <p>Upload your profile screenshots and we’ll break down your grind.</p>
 
-<h1>Comm Day Calculator</h1>
-<p>Upload your profile screenshots and we’ll break down your grind.</p>
+  <input type="file" id="startImage" accept="image/*"/>
+  <br><img id="startPreview" class="preview">
+  <br><button onclick="runOCR('start')">Import START Stats</button>
 
-<input type="file" id="startImage" accept="image/*">
-<button onclick="processImage('start')">Import START Stats</button>
+  <br><input type="file" id="endImage" accept="image/*"/>
+  <br><img id="endPreview" class="preview">
+  <br><button onclick="runOCR('end')">Import END Stats</button>
 
-<input type="file" id="endImage" accept="image/*">
-<button onclick="processImage('end')">Import END Stats</button>
+  <br><br>
+  <input id="startSeen" placeholder="Start Seen">
+  <input id="startCaught" placeholder="Start Caught"><br>
+  <input id="endSeen" placeholder="End Seen">
+  <input id="endCaught" placeholder="End Caught"><br>
+  <input id="trainerName" placeholder="Trainer Name (optional)">
+  <input id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
+  <input id="shinies" placeholder="Shinies Caught"><br>
 
-<div class="field-row">
-  <input type="number" id="startSeen" placeholder="Start Seen">
-  <input type="number" id="startCaught" placeholder="Start Caught">
-</div>
-<div class="field-row">
-  <input type="number" id="endSeen" placeholder="End Seen">
-  <input type="number" id="endCaught" placeholder="End Caught">
-</div>
+  <button onclick="calculate()">Run My Stats</button>
+  <button onclick="downloadCard()">Download Card</button>
 
-<div class="field-row">
-  <input type="text" id="trainerNameInput" placeholder="Trainer Name (optional)">
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
-  <input type="number" id="shiniesCaught" placeholder="Shinies Caught">
-</div>
-
-<button onclick="generateCard()">Run My Stats</button>
-
-<div id="card">
-  <div class="footer">COMM DAY CARD</div>
-  <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-  <div class="username" id="trainerDisplay">@Trainer</div>
-
-  <div class="stat-group">
-    <div class="stat">
-      <div class="label">Total Caught</div>
-      <div class="value" id="totalCaughtDisplay">0</div>
-    </div>
-    <div class="stat">
-      <div class="label">Catch %</div>
-      <div class="value" id="catchPercentDisplay">0%</div>
-    </div>
+  <div id="card" style="display:none">
+    <div id="cardContent"></div>
   </div>
 
-  <div class="stat-group">
-    <div class="stat">
-      <div class="label">Caught per Hour</div>
-      <div class="value" id="caughtPerHourDisplay">0</div>
-    </div>
-    <div class="stat">
-      <div class="label">Shinies</div>
-      <div class="value" id="shiniesDisplay">0</div>
-    </div>
-  </div>
-</div>
+  <script>
+    const previews = {
+      start: document.getElementById('startPreview'),
+      end: document.getElementById('endPreview')
+    };
+    const files = {};
 
-<button onclick="downloadCard()">Download My Comm Day Card</button>
+    document.getElementById('startImage').addEventListener('change', e => {
+      const file = e.target.files[0];
+      files.start = file;
+      previews.start.src = URL.createObjectURL(file);
+    });
 
-<div class="promo-link">
-  <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
-</div>
+    document.getElementById('endImage').addEventListener('change', e => {
+      const file = e.target.files[0];
+      files.end = file;
+      previews.end.src = URL.createObjectURL(file);
+    });
 
-<div class="social-icons">
-  <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
-  <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
-  <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
-</div>
+    async function runOCR(type) {
+      if (!files[type]) return alert("Upload an image first.");
 
-<script>
-const cropZones = {
-  seen: { left: 270, top: 475, width: 130, height: 65 },
-  caught: { left: 440, top: 475, width: 130, height: 65 }
-};
+      const { data: { lines } } = await Tesseract.recognize(
+        files[type],
+        'eng',
+        { tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' }
+      );
 
-async function processImage(type) {
-  const input = document.getElementById(type + 'Image');
-  if (!input.files.length) return alert("Please upload a file.");
+      let seenLine, caughtLine;
+      for (let line of lines) {
+        const text = line.text.toLowerCase();
+        if (text.includes("seen")) seenLine = line;
+        if (text.includes("caught")) caughtLine = line;
+      }
 
-  const img = new Image();
-  img.src = URL.createObjectURL(input.files[0]);
-  await img.decode();
+      const getBelowNumber = (anchorLine) => {
+        const anchorY = anchorLine?.bbox.y1 || 0;
+        const candidates = lines.filter(line =>
+          /^\d+$/.test(line.text) &&
+          line.bbox.y0 > anchorY &&
+          Math.abs(line.bbox.x0 - anchorLine.bbox.x0) < 100
+        );
+        return candidates.length ? candidates[0].text : '';
+      };
 
-  const canvas = document.createElement("canvas");
-  canvas.width = img.naturalWidth;
-  canvas.height = img.naturalHeight;
-  const ctx = canvas.getContext("2d");
-  ctx.drawImage(img, 0, 0);
+      const seenVal = getBelowNumber(seenLine);
+      const caughtVal = getBelowNumber(caughtLine);
 
-  const seen = ctx.getImageData(cropZones.seen.left, cropZones.seen.top, cropZones.seen.width, cropZones.seen.height);
-  const caught = ctx.getImageData(cropZones.caught.left, cropZones.caught.top, cropZones.caught.width, cropZones.caught.height);
+      document.getElementById(type + 'Seen').value = seenVal;
+      document.getElementById(type + 'Caught').value = caughtVal;
+    }
 
-  const seenCanvas = document.createElement("canvas");
-  seenCanvas.width = cropZones.seen.width;
-  seenCanvas.height = cropZones.seen.height;
-  seenCanvas.getContext("2d").putImageData(seen, 0, 0);
+    function calculate() {
+      const startCaught = parseInt(document.getElementById('startCaught').value) || 0;
+      const endCaught = parseInt(document.getElementById('endCaught').value) || 0;
+      const startSeen = parseInt(document.getElementById('startSeen').value) || 0;
+      const endSeen = parseInt(document.getElementById('endSeen').value) || 0;
+      const trainer = document.getElementById('trainerName').value || "UNKNOWN";
+      const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
+      const shinies = parseInt(document.getElementById('shinies').value) || 0;
 
-  const caughtCanvas = document.createElement("canvas");
-  caughtCanvas.width = cropZones.caught.width;
-  caughtCanvas.height = cropZones.caught.height;
-  caughtCanvas.getContext("2d").putImageData(caught, 0, 0);
+      const totalCaught = endCaught - startCaught;
+      const totalSeen = endSeen - startSeen;
+      const perHour = totalCaught / hours;
+      const catchRate = totalSeen > 0 ? (totalCaught / totalSeen * 100).toFixed(1) : "0";
 
-  const seenText = await Tesseract.recognize(seenCanvas, 'eng', { tessedit_char_whitelist: '0123456789', psm: 7 });
-  const caughtText = await Tesseract.recognize(caughtCanvas, 'eng', { tessedit_char_whitelist: '0123456789', psm: 7 });
+      const card = document.getElementById('card');
+      const content = `
+        <div>${trainer.toUpperCase()}</div>
+        <div>POKÉMON</div>
+        <div class="red" style="font-size:2rem;">${totalCaught.toLocaleString()}</div>
+        <div>CATCHES/HOUR</div>
+        <div class="red">${perHour.toFixed(1)}</div>
+        <div>CATCH %</div>
+        <div class="red">${catchRate}%</div>
+        <div>SHINIES CAUGHT</div>
+        <div class="red">${shinies}</div>
+      `;
+      document.getElementById('cardContent').innerHTML = content;
+      card.style.display = 'inline-block';
+    }
 
-  const seenVal = parseInt(seenText.data.text.replace(/\D/g, '')) || 0;
-  const caughtVal = parseInt(caughtText.data.text.replace(/\D/g, '')) || 0;
-
-  document.getElementById(type + 'Seen').value = seenVal;
-  document.getElementById(type + 'Caught').value = caughtVal;
-}
-
-function generateCard() {
-  const trainer = document.getElementById("trainerNameInput").value || "@Trainer";
-  const shinies = parseInt(document.getElementById("shiniesCaught").value) || 0;
-  const hours = parseFloat(document.getElementById("hoursPlayed").value) || 1;
-  const startSeen = parseInt(document.getElementById("startSeen").value) || 0;
-  const startCaught = parseInt(document.getElementById("startCaught").value) || 0;
-  const endSeen = parseInt(document.getElementById("endSeen").value) || 0;
-  const endCaught = parseInt(document.getElementById("endCaught").value) || 0;
-
-  const totalCaught = endCaught - startCaught;
-  const seenDiff = endSeen - startSeen;
-  const catchPercent = seenDiff ? ((totalCaught / seenDiff) * 100).toFixed(1) : "0.0";
-  const perHour = (totalCaught / hours).toFixed(1);
-
-  document.getElementById("trainerDisplay").innerText = trainer;
-  document.getElementById("totalCaughtDisplay").innerText = totalCaught.toLocaleString();
-  document.getElementById("catchPercentDisplay").innerText = `${catchPercent}%`;
-  document.getElementById("caughtPerHourDisplay").innerText = perHour;
-  document.getElementById("shiniesDisplay").innerText = shinies;
-
-  document.getElementById("card").style.display = "block";
-}
-
-function downloadCard() {
-  html2canvas(document.getElementById("card")).then(canvas => {
-    const link = document.createElement("a");
-    link.download = "comm_day_card.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  });
-}
-</script>
+    function downloadCard() {
+      html2canvas(document.getElementById("card")).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "commday_card.png";
+        link.href = canvas.toDataURL();
+        link.click();
+      });
+    }
+  </script>
 </body>
 </html>
