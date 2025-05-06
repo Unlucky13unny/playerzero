@@ -1,97 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Comm Day OCR (OCR.Space)</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comm Day Calculator (via OCR.Space) | PlayerZero</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
   <style>
     body {
       font-family: sans-serif;
-      padding: 2rem;
-      text-align: center;
       background: #fff;
+      color: #111;
+      padding: 2rem;
+      margin: 0;
+      text-align: center;
     }
     input, button {
       padding: 0.5rem;
-      margin: 0.5rem auto;
       width: 100%;
       max-width: 400px;
+      margin: 0.5rem auto;
       border-radius: 5px;
       border: 1px solid #ccc;
-      display: block;
     }
-    img {
-      max-width: 300px;
+    button {
+      background: #111;
+      color: #fff;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .logo {
+      max-width: 280px;
+      height: auto;
       margin: 1rem auto;
-      display: block;
     }
-    #feedback {
-      color: #c00;
-      font-size: 0.9rem;
+    .result-img {
+      max-width: 90vw;
+      height: auto;
+      margin: 1rem auto;
+    }
+    .stat-row {
+      display: flex;
+      justify-content: space-around;
       margin-top: 1rem;
+    }
+    .stat {
+      width: 40%;
+    }
+    .status {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+    }
+    .status.success {
+      color: green;
+    }
+    .status.error {
+      color: red;
     }
   </style>
 </head>
 <body>
-  <h2>Comm Day Calculator (via OCR.Space)</h2>
+  <h1>Comm Day Calculator (via OCR.Space)</h1>
 
-  <input type="file" id="imageInput" accept="image/*">
-  <button onclick="sendToOCRSpace()">Try OCR</button>
+  <input type="file" id="imageInput">
+  <button onclick="runOCR()">Try OCR</button>
 
-  <img id="preview" style="display:none" />
+  <div id="previewContainer"></div>
 
-  <input id="startSeen" placeholder="Start Seen">
-  <input id="startCaught" placeholder="Start Caught">
+  <div class="stat-row">
+    <input id="startSeen" placeholder="Start Seen">
+    <input id="startCaught" placeholder="Start Caught">
+  </div>
+  <div class="stat-row">
+    <input id="endSeen" placeholder="End Seen">
+    <input id="endCaught" placeholder="End Caught">
+  </div>
 
-  <div id="feedback"></div>
+  <button onclick="runStats()">Run My Stats</button>
+  <button onclick="downloadCard()">Download My Grind Card</button>
+
+  <div id="output" class="status"></div>
+
+  <div id="card" style="display:none; margin-top:2rem; border:1px solid #ccc; padding:1rem; border-radius:10px; max-width:420px; margin-left:auto; margin-right:auto;">
+    <div><strong>Seen:</strong> <span id="deltaSeen"></span></div>
+    <div><strong>Caught:</strong> <span id="deltaCaught"></span></div>
+  </div>
 
   <script>
-    const apiKey = "K84614746888957"; // Your OCR.Space API Key
+    function runOCR() {
+      const file = document.getElementById('imageInput').files[0];
+      if (!file) return;
 
-    function sendToOCRSpace() {
-      const fileInput = document.getElementById('imageInput');
-      const feedback = document.getElementById('feedback');
-      const preview = document.getElementById('preview');
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imageBase64 = reader.result.split(',')[1];
+        document.getElementById('previewContainer').innerHTML = `<img src="${reader.result}" class="result-img">`;
 
-      const file = fileInput.files[0];
-      if (!file) return alert("Please upload an image first.");
-
-      preview.src = URL.createObjectURL(file);
-      preview.style.display = 'block';
-      feedback.innerText = "⏳ Sending to OCR.Space...";
-
-      const formData = new FormData();
-      formData.append("apikey", apiKey);
-      formData.append("language", "eng");
-      formData.append("isOverlayRequired", "false");
-      formData.append("file", file);
-
-      fetch("https://api.ocr.space/parse/image", {
-        method: "POST",
-        body: formData
-      })
+        fetch("https://api.ocr.space/parse/image", {
+          method: "POST",
+          headers: {
+            apikey: "K84614746888957",
+            "Content-Type": "application/x-www-form-urlencoded"
+          },
+          body: new URLSearchParams({
+            base64Image: `data:image/jpeg;base64,${imageBase64}`,
+            isOverlayRequired: false,
+            scale: true,
+            OCREngine: 2
+          })
+        })
         .then(res => res.json())
         .then(data => {
-          const parsedText = data.ParsedResults?.[0]?.ParsedText || "";
-          console.log("OCR Result:", parsedText);
-
-          const seenMatch = parsedText.match(/SEEN\s*:?\s*(\d{1,5})/i);
-          const caughtMatch = parsedText.match(/CAUGHT\s*:?\s*(\d{1,5})/i);
-
-          if (seenMatch) document.getElementById("startSeen").value = seenMatch[1];
-          if (caughtMatch) document.getElementById("startCaught").value = caughtMatch[1];
-
-          if (!seenMatch && !caughtMatch) {
-            feedback.innerText = "⚠️ Couldn't extract numbers. Try manual input.";
+          const text = data.ParsedResults?.[0]?.ParsedText || "";
+          const numbers = text.match(/\d+/g);
+          if (numbers?.length >= 2) {
+            const [first, second] = numbers;
+            if (!document.getElementById('startSeen').value) {
+              document.getElementById('startSeen').value = first;
+              document.getElementById('startCaught').value = second;
+            } else {
+              document.getElementById('endSeen').value = first;
+              document.getElementById('endCaught').value = second;
+            }
+            document.getElementById('output').textContent = '✅ Stats pulled. Verify below.';
+            document.getElementById('output').className = 'status success';
           } else {
-            feedback.innerText = "✅ Stats pulled. Verify below.";
+            document.getElementById('output').textContent = '⚠️ Could not read values. Try different screenshot or enter manually.';
+            document.getElementById('output').className = 'status error';
           }
         })
         .catch(err => {
-          console.error("OCR Error:", err);
-          feedback.innerText = "❌ OCR failed. Try again later.";
+          console.error(err);
+          document.getElementById('output').textContent = '⚠️ OCR failed. Try again.';
+          document.getElementById('output').className = 'status error';
         });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function runStats() {
+      const seenStart = parseInt(document.getElementById('startSeen').value);
+      const seenEnd = parseInt(document.getElementById('endSeen').value);
+      const caughtStart = parseInt(document.getElementById('startCaught').value);
+      const caughtEnd = parseInt(document.getElementById('endCaught').value);
+
+      if (!isNaN(seenStart) && !isNaN(seenEnd) && !isNaN(caughtStart) && !isNaN(caughtEnd)) {
+        document.getElementById('deltaSeen').textContent = seenEnd - seenStart;
+        document.getElementById('deltaCaught').textContent = caughtEnd - caughtStart;
+        document.getElementById('card').style.display = 'block';
+      } else {
+        document.getElementById('output').textContent = '⚠️ Please enter all fields to calculate.';
+        document.getElementById('output').className = 'status error';
+      }
+    }
+
+    function downloadCard() {
+      const card = document.getElementById("card");
+      html2canvas(card).then(canvas => {
+        const link = document.createElement("a");
+        link.download = "comm_day_card.png";
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      });
     }
   </script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 </body>
 </html>
