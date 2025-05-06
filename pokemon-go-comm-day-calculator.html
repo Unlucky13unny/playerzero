@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Comm Day Calculator | PlayerZero</title>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Comm Day Calculator | PlayerZero Challenge</title>
+  <link rel="icon" type="image/png" href="favicon.png">
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
   <style>
     body {
@@ -15,19 +15,14 @@
       margin: 0;
       text-align: center;
     }
-    .logo {
-      max-width: 280px;
-      margin-bottom: 1rem;
-    }
     input, button {
-      padding: 0.6rem;
+      padding: 0.5rem;
       width: 100%;
       max-width: 400px;
       margin: 0.5rem auto;
-      border-radius: 6px;
+      border-radius: 5px;
       border: 1px solid #ccc;
       display: block;
-      font-size: 1rem;
     }
     button {
       background: #111;
@@ -35,85 +30,55 @@
       font-weight: bold;
       cursor: pointer;
     }
-    button:hover {
-      background: #d62828;
+    .logo {
+      max-width: 280px;
+      height: auto;
+      margin: 1rem auto;
     }
-    .label {
-      margin-top: 1.5rem;
-      font-weight: bold;
-    }
-    .preview {
+    #screenshotPreview {
+      display: none;
       max-width: 300px;
-      margin-top: 0.5rem;
-      border: 2px solid #000;
+      margin: 1rem auto;
+      border: 1px solid #ccc;
       border-radius: 8px;
-      display: none;
     }
-    .stat-output {
-      margin-top: 2rem;
-      font-size: 1.1rem;
-      line-height: 1.8;
-    }
-    .red {
-      color: #d62828;
-      font-weight: bold;
-    }
-    #debug {
-      font-family: monospace;
-      text-align: left;
-      max-width: 600px;
-      margin: 2rem auto;
-      white-space: pre-wrap;
-      background: #f9f9f9;
-      border: 1px dashed #aaa;
-      padding: 1rem;
-      display: none;
+    #feedback {
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      color: #555;
+      font-style: italic;
     }
   </style>
 </head>
 <body>
 
 <a href="https://pgplayerzero.com" target="_blank">
-  <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
 </a>
+<h1>Comm Day Calculator</h1>
+<p>Upload your Pokédex screenshots — we'll auto-fill your grind stats.</p>
 
-<h1>The Pokémon GO Comm Day Calculator</h1>
-<p>Upload both screenshots — we’ll auto-fill and break down your grind.</p>
+<input type="file" id="startUpload" accept="image/*">
+<button onclick="runTextOCR('start')">Import START Stats</button>
+<img id="startPreview" />
 
-<div>
-  <label class="label">START Screenshot</label>
-  <input type="file" id="startUpload" accept="image/*"/>
-  <img id="startPreview" class="preview"/>
-  <button onclick="runAnchorOCR('start')">Import START Stats</button>
+<hr style="max-width: 400px; margin: 2rem auto; border: none; border-top: 1px solid #ddd;">
 
-  <label class="label">END Screenshot</label>
-  <input type="file" id="endUpload" accept="image/*"/>
-  <img id="endPreview" class="preview"/>
-  <button onclick="runAnchorOCR('end')">Import END Stats</button>
+<input type="file" id="endUpload" accept="image/*">
+<button onclick="runTextOCR('end')">Import END Stats</button>
+<img id="endPreview" />
 
-  <p style="max-width: 400px; font-size: 0.85rem; color: #666;">⚠️ The image reader isn’t perfect. You can manually adjust stats below if needed.</p>
+<p id="feedback"></p>
 
-  <input type="number" id="startSeen" placeholder="Start Seen">
-  <input type="number" id="startCaught" placeholder="Start Caught">
-  <input type="number" id="endSeen" placeholder="End Seen">
-  <input type="number" id="endCaught" placeholder="End Caught">
-  <input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
-  <input type="number" id="shinyCaught" placeholder="Shinies Caught (Optional)">
+<input type="number" id="startSeen" placeholder="Start Seen">
+<input type="number" id="startCaught" placeholder="Start Caught">
+<input type="number" id="endSeen" placeholder="End Seen">
+<input type="number" id="endCaught" placeholder="End Caught">
+<input type="number" id="hoursPlayed" placeholder="Hours Played (e.g., 3)">
+<input type="number" id="shiniesCaught" placeholder="Shinies Caught">
 
-  <button onclick="runMyStats()">Run My Stats</button>
-  <button onclick="downloadCard()">Download Card</button>
-
-  <div class="stat-output" id="results" style="display:none;">
-    <div>Total Caught: <span class="red" id="totalCaught"></span></div>
-    <div>Catches/Hour: <span class="red" id="caughtPerHour"></span></div>
-    <div>Catch %: <span class="red" id="catchRate"></span></div>
-    <div>Shinies Caught: <span class="red" id="shinyTotal"></span></div>
-  </div>
-</div>
-
-<canvas id="cardCanvas" style="display:none;"></canvas>
-
-<div id="debug"></div>
+<button onclick="runMyStats()">Run My Stats</button>
+<button onclick="downloadCard()">Download Card</button>
 
 <script>
   const previews = {
@@ -121,91 +86,65 @@
     end: document.getElementById('endPreview')
   };
   const files = {};
-  const debug = document.getElementById('debug');
+  const feedback = document.getElementById('feedback');
 
   document.getElementById('startUpload').addEventListener('change', e => {
-    const file = e.target.files[0];
-    files['start'] = file;
-    previews['start'].src = URL.createObjectURL(file);
+    files['start'] = e.target.files[0];
+    previews['start'].src = URL.createObjectURL(files['start']);
     previews['start'].style.display = 'block';
   });
 
   document.getElementById('endUpload').addEventListener('change', e => {
-    const file = e.target.files[0];
-    files['end'] = file;
-    previews['end'].src = URL.createObjectURL(file);
+    files['end'] = e.target.files[0];
+    previews['end'].src = URL.createObjectURL(files['end']);
     previews['end'].style.display = 'block';
   });
 
-  async function runAnchorOCR(type) {
+  async function runTextOCR(type) {
     if (!files[type]) return alert("Upload an image first.");
-    debug.innerText = `Running OCR on ${type.toUpperCase()} image...`;
-    debug.style.display = "block";
+    feedback.innerText = `Scanning ${type.toUpperCase()} image...`;
 
-    const result = await Tesseract.recognize(files[type], 'eng', {
-      tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-      preserve_interword_spaces: 1
-    });
+    const result = await Tesseract.recognize(files[type], 'eng');
+    const text = result.data.text;
 
-    const words = result.data.words;
-    debug.innerText = `OCR RESULTS for ${type.toUpperCase()}:\n\n` +
-      words.map(w => `${w.text} [x:${w.bbox.x0}, y:${w.bbox.y0}]`).join('\n');
+    const seenMatch = text.match(/Seen\s*[:\s]*([\d,]+)/i);
+    const caughtMatch = text.match(/Caught\s*[:\s]*([\d,]+)/i);
 
-    let seenAnchor = null, caughtAnchor = null;
-    for (let word of words) {
-      const text = word.text.toLowerCase();
-      if (text.includes('seen') && !seenAnchor) seenAnchor = word;
-      if (text.includes('caught') && !caughtAnchor) caughtAnchor = word;
+    const seenVal = seenMatch ? seenMatch[1].replace(/,/g, '') : '';
+    const caughtVal = caughtMatch ? caughtMatch[1].replace(/,/g, '') : '';
+
+    document.getElementById(`${type}Seen`).value = seenVal;
+    document.getElementById(`${type}Caught`).value = caughtVal;
+
+    if (seenVal && caughtVal) {
+      feedback.innerText = `✅ ${type.toUpperCase()} Stats: Seen ${seenVal}, Caught ${caughtVal}`;
+    } else {
+      feedback.innerText = `⚠️ OCR couldn't read stats from ${type.toUpperCase()} image. Try clearer screenshot or enter manually.`;
     }
-
-    const findClosestNumberBelow = (anchor) => {
-      if (!anchor) return '';
-      const anchorY = anchor.bbox.y1;
-      const anchorX = anchor.bbox.x0;
-      const candidates = words.filter(w => {
-        return /^\d+$/.test(w.text) &&
-          w.bbox.y0 > anchorY &&
-          Math.abs(w.bbox.x0 - anchorX) < 100;
-      });
-      return candidates.length ? candidates[0].text : '';
-    };
-
-    const seenVal = findClosestNumberBelow(seenAnchor);
-    const caughtVal = findClosestNumberBelow(caughtAnchor);
-
-    document.getElementById(type + 'Seen').value = seenVal;
-    document.getElementById(type + 'Caught').value = caughtVal;
-
-    debug.innerText += `\n\nExtracted:\nSeen: ${seenVal}\nCaught: ${caughtVal}`;
   }
 
   function runMyStats() {
-    const sSeen = parseInt(document.getElementById('startSeen').value || 0);
-    const sCaught = parseInt(document.getElementById('startCaught').value || 0);
-    const eSeen = parseInt(document.getElementById('endSeen').value || 0);
-    const eCaught = parseInt(document.getElementById('endCaught').value || 0);
-    const hrs = parseFloat(document.getElementById('hoursPlayed').value || 1);
-    const shiny = parseInt(document.getElementById('shinyCaught').value || 0);
+    const startCaught = parseInt(document.getElementById('startCaught').value);
+    const endCaught = parseInt(document.getElementById('endCaught').value);
+    const hours = parseFloat(document.getElementById('hoursPlayed').value);
+    const shinies = parseInt(document.getElementById('shiniesCaught').value);
 
-    const total = eCaught - sCaught;
-    const perHr = (total / hrs).toFixed(1);
-    const catchRate = ((total / (eSeen - sSeen)) * 100).toFixed(1);
+    if (isNaN(startCaught) || isNaN(endCaught) || isNaN(hours)) {
+      alert("Please fill in all fields before calculating.");
+      return;
+    }
 
-    document.getElementById('totalCaught').innerText = total;
-    document.getElementById('caughtPerHour').innerText = perHr;
-    document.getElementById('catchRate').innerText = isNaN(catchRate) ? '0%' : `${catchRate}%`;
-    document.getElementById('shinyTotal').innerText = shiny;
+    const totalCaught = endCaught - startCaught;
+    const caughtPerHour = (totalCaught / hours).toFixed(1);
+    const shinyRate = ((shinies / totalCaught) * 100).toFixed(1);
 
-    document.getElementById('results').style.display = 'block';
+    feedback.innerText = `📊 Total Caught: ${totalCaught}, Caught/Hour: ${caughtPerHour}, Shiny %: ${shinyRate}%`;
+
+    // Hook in card generation here if needed
   }
 
   function downloadCard() {
-    html2canvas(document.querySelector("#results")).then(canvas => {
-      const link = document.createElement("a");
-      link.download = "comm_day_card.png";
-      link.href = canvas.toDataURL("image/png");
-      link.click();
-    });
+    alert("Card download not implemented yet. This is your placeholder.");
   }
 </script>
 
