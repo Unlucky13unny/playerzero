@@ -37,7 +37,6 @@
     }
     img.preview {
       display: none;
-      width: 100%;
       max-width: 300px;
       height: auto;
       margin: 1rem auto;
@@ -97,19 +96,18 @@
   const feedback = document.getElementById('feedback');
 
   function preprocessImage(image, canvas) {
+    const scale = 1.5;
+    canvas.width = image.width * scale;
+    canvas.height = image.height * scale;
     const ctx = canvas.getContext("2d");
-    canvas.width = image.width;
-    canvas.height = image.height;
+    ctx.scale(scale, scale);
     ctx.drawImage(image, 0, 0);
-
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    for (let i = 0; i < imageData.data.length; i += 4) {
-      const r = imageData.data[i];
-      const g = imageData.data[i + 1];
-      const b = imageData.data[i + 2];
-      let avg = 0.299 * r + 0.587 * g + 0.114 * b;
-      avg = Math.min(255, avg * 1.2); // brighten a little
-      imageData.data[i] = imageData.data[i + 1] = imageData.data[i + 2] = avg;
+    let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    for (let i = 0; i < data.length; i += 4) {
+      const avg = 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2];
+      const norm = Math.min(255, avg * 1.25);
+      data[i] = data[i + 1] = data[i + 2] = norm;
     }
     ctx.putImageData(imageData, 0, 0);
     return canvas.toDataURL();
@@ -144,14 +142,16 @@
 
     const result = await Tesseract.recognize(dataURL, 'eng');
     const text = result.data.text;
-    console.log(`OCR OUTPUT (${type}):`, text);
-
+    console.log(`RAW OCR (${type}):`, text);
     const cleanText = text.replace(/\s+/g, ' ');
-    const seenMatch = cleanText.match(/SEEN[^0-9]*([\d,]+)/i);
-    const caughtMatch = cleanText.match(/CAUGHT[^0-9]*([\d,]+)/i);
+    console.log(`CLEAN TEXT (${type}):`, cleanText);
 
-    const seenVal = seenMatch ? seenMatch[1].replace(/,/g, '') : '';
-    const caughtVal = caughtMatch ? caughtMatch[1].replace(/,/g, '') : '';
+    // Try to find 'SEEN' and 'CAUGHT' followed by digits anywhere after
+    const seenMatch = cleanText.match(/SEEN[^0-9]{0,20}(\d{2,5})/i);
+    const caughtMatch = cleanText.match(/CAUGHT[^0-9]{0,20}(\d{2,5})/i);
+
+    const seenVal = seenMatch ? seenMatch[1] : '';
+    const caughtVal = caughtMatch ? caughtMatch[1] : '';
 
     document.getElementById(`${type}Seen`).value = seenVal;
     document.getElementById(`${type}Caught`).value = caughtVal;
