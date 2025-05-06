@@ -1,188 +1,161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PlayerZero | Comm Day Calculator</title>
+  <title>Comm Day Calculator | PlayerZero</title>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <style>
     body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f9f9f9;
-      color: #111;
+      margin: 0;
+      font-family: sans-serif;
+      background: #fff;
+      color: #222;
       padding: 2rem;
       text-align: center;
     }
     h1 {
       font-size: 2rem;
-      margin-bottom: 1rem;
+      margin-bottom: 1.5rem;
+      color: #111;
     }
-    input, button {
-      padding: 0.5rem;
+    input[type="file"] {
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+    .button {
+      display: inline-block;
+      background-color: #d62828; /* RED */
+      color: #fff;
+      padding: 12px 24px;
+      margin: 10px;
       font-size: 1rem;
-      margin: 0.5rem;
-      border-radius: 8px;
-      border: 1px solid #aaa;
-    }
-    button {
-      background-color: #ff4757;
-      color: white;
+      font-weight: bold;
       border: none;
+      border-radius: 12px;
       cursor: pointer;
+      transition: background 0.3s ease;
     }
-    button:hover {
-      background-color: #e84118;
+    .button:hover {
+      background-color: #a91d1d;
     }
     .preview {
-      max-width: 320px;
-      margin: 0.5rem auto;
-      border-radius: 12px;
-      border: 2px solid #ddd;
-      display: block;
-    }
-    #card {
-      display: none;
-      margin-top: 2rem;
-      padding: 1.5rem;
-      border-radius: 20px;
-      background: #fff;
-      border: 3px solid #000;
       max-width: 300px;
-      margin-left: auto;
-      margin-right: auto;
+      margin: 1rem 0;
+      border: 2px solid #333;
+      border-radius: 8px;
     }
-    #card .red {
-      color: #e84118;
+    .stats input {
+      width: 80px;
+      font-size: 1rem;
+      padding: 0.4rem;
+      margin: 0.25rem;
+      border: 2px solid #ccc;
+      border-radius: 6px;
+      text-align: center;
     }
-    #log {
-      font-size: 0.9rem;
-      color: #666;
-      margin-top: 1rem;
+    .debug {
+      font-family: monospace;
+      text-align: left;
+      max-width: 600px;
+      margin: 2rem auto;
+      white-space: pre-wrap;
+      background: #f9f9f9;
+      border: 1px dashed #ccc;
+      padding: 1rem;
+      display: none; /* Change to block for dev mode */
     }
   </style>
 </head>
 <body>
-  <h1>PlayerZero | Comm Day Calculator</h1>
+
+  <h1>Comm Day Calculator</h1>
 
   <h3>START Screenshot</h3>
-  <input type="file" id="startImage" accept="image/*" onchange="handleUpload(event, 'start')"/>
-  <img id="startPreview" class="preview">
-  <button onclick="runOCR('start')">Import START Stats</button>
+  <input type="file" id="startUpload" accept="image/*"/><br/>
+  <img id="startPreview" class="preview" /><br/>
+  <button class="button" onclick="runAnchorOCR('start')">Import START Stats</button>
 
   <h3>END Screenshot</h3>
-  <input type="file" id="endImage" accept="image/*" onchange="handleUpload(event, 'end')"/>
-  <img id="endPreview" class="preview">
-  <button onclick="runOCR('end')">Import END Stats</button>
+  <input type="file" id="endUpload" accept="image/*"/><br/>
+  <img id="endPreview" class="preview" /><br/>
+  <button class="button" onclick="runAnchorOCR('end')">Import END Stats</button>
 
-  <h3>Inputs</h3>
-  <input id="startSeen" placeholder="Start Seen"/>
-  <input id="startCaught" placeholder="Start Caught"/><br/>
-  <input id="endSeen" placeholder="End Seen"/>
-  <input id="endCaught" placeholder="End Caught"/><br/>
-  <input id="trainerName" placeholder="Trainer Name"/>
-  <input id="hoursPlayed" placeholder="Hours Played"/>
-  <input id="shinies" placeholder="Shinies Caught"/><br/>
-
-  <button onclick="calculate()">Run My Stats</button>
-  <button onclick="downloadCard()">Download Card</button>
-
-  <div id="card">
-    <div id="cardContent"></div>
+  <h3>Stats</h3>
+  <div class="stats">
+    Start Seen: <input id="startSeen" readonly/>
+    Start Caught: <input id="startCaught" readonly/><br/>
+    End Seen: <input id="endSeen" readonly/>
+    End Caught: <input id="endCaught" readonly/>
   </div>
 
-  <div id="log"></div>
+  <div id="debug" class="debug"></div>
 
   <script>
-    const fileStore = { start: null, end: null };
+    const previews = {
+      start: document.getElementById('startPreview'),
+      end: document.getElementById('endPreview')
+    };
+    const files = {};
+    const debug = document.getElementById('debug');
 
-    function handleUpload(event, type) {
-      const file = event.target.files[0];
-      fileStore[type] = file;
-      const preview = document.getElementById(type + 'Preview');
-      preview.src = URL.createObjectURL(file);
-    }
+    document.getElementById('startUpload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      files['start'] = file;
+      previews['start'].src = URL.createObjectURL(file);
+    });
 
-    async function runOCR(type) {
-      const file = fileStore[type];
-      const log = document.getElementById("log");
-      if (!file) return alert("Please upload an image first.");
+    document.getElementById('endUpload').addEventListener('change', e => {
+      const file = e.target.files[0];
+      files['end'] = file;
+      previews['end'].src = URL.createObjectURL(file);
+    });
 
-      log.innerText = `Processing ${type.toUpperCase()} image...`;
+    async function runAnchorOCR(type) {
+      if (!files[type]) return alert("Upload an image first.");
 
-      try {
-        const result = await Tesseract.recognize(file, 'eng', {
-          tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
-        });
+      debug.innerText = `Running OCR on ${type.toUpperCase()} image...`;
+      debug.style.display = "block";
 
-        const lines = result.data.lines;
-        let seenAnchor, caughtAnchor;
-
-        for (let line of lines) {
-          const text = line.text.toLowerCase();
-          if (text.includes("seen")) seenAnchor = line;
-          if (text.includes("caught")) caughtAnchor = line;
-        }
-
-        function findNumber(anchor) {
-          if (!anchor) return '';
-          const y = anchor.bbox.y1;
-          const x = anchor.bbox.x0;
-          const candidates = lines.filter(l =>
-            /^\d+$/.test(l.text) &&
-            l.bbox.y0 > y &&
-            Math.abs(l.bbox.x0 - x) < 100
-          );
-          return candidates.length ? candidates[0].text : '';
-        }
-
-        document.getElementById(type + 'Seen').value = findNumber(seenAnchor);
-        document.getElementById(type + 'Caught').value = findNumber(caughtAnchor);
-        log.innerText = `${type.toUpperCase()} OCR complete. Fields updated.`;
-      } catch (e) {
-        console.error(e);
-        log.innerText = "OCR failed. Please check your image.";
-      }
-    }
-
-    function calculate() {
-      const sCaught = parseInt(document.getElementById('startCaught').value) || 0;
-      const eCaught = parseInt(document.getElementById('endCaught').value) || 0;
-      const sSeen = parseInt(document.getElementById('startSeen').value) || 0;
-      const eSeen = parseInt(document.getElementById('endSeen').value) || 0;
-      const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
-      const shinies = parseInt(document.getElementById('shinies').value) || 0;
-      const trainer = document.getElementById('trainerName').value || "UNKNOWN";
-
-      const totalCaught = eCaught - sCaught;
-      const totalSeen = eSeen - sSeen;
-      const catchRate = totalSeen > 0 ? ((totalCaught / totalSeen) * 100).toFixed(1) : "0";
-      const perHour = (totalCaught / hours).toFixed(1);
-
-      const content = `
-        <div style="font-size: 1.2rem; margin-bottom: 0.5rem;">${trainer.toUpperCase()}</div>
-        <div>POKÉMON</div>
-        <div class="red" style="font-size: 2rem;">${totalCaught.toLocaleString()}</div>
-        <div>CATCHES/HOUR</div>
-        <div class="red">${perHour}</div>
-        <div>CATCH %</div>
-        <div class="red">${catchRate}%</div>
-        <div>SHINIES</div>
-        <div class="red">${shinies}</div>
-      `;
-
-      document.getElementById('cardContent').innerHTML = content;
-      document.getElementById('card').style.display = 'inline-block';
-    }
-
-    function downloadCard() {
-      html2canvas(document.getElementById("card")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "commday_card.png";
-        link.href = canvas.toDataURL();
-        link.click();
+      const result = await Tesseract.recognize(files[type], 'eng', {
+        tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
+        preserve_interword_spaces: 1
       });
+
+      const words = result.data.words;
+
+      debug.innerText = `OCR RESULTS for ${type.toUpperCase()}:\n\n` +
+        words.map(w => `${w.text} [x:${w.bbox.x0}, y:${w.bbox.y0}]`).join('\n');
+
+      let seenAnchor = null, caughtAnchor = null;
+
+      for (let word of words) {
+        const text = word.text.toLowerCase();
+        if (text.includes('seen') && !seenAnchor) seenAnchor = word;
+        if (text.includes('caught') && !caughtAnchor) caughtAnchor = word;
+      }
+
+      const findClosestNumberBelow = (anchor) => {
+        if (!anchor) return '';
+        const anchorY = anchor.bbox.y1;
+        const anchorX = anchor.bbox.x0;
+        const candidates = words.filter(w => {
+          return /^\d+$/.test(w.text) &&
+            w.bbox.y0 > anchorY &&
+            Math.abs(w.bbox.x0 - anchorX) < 100;
+        });
+        return candidates.length ? candidates[0].text : '';
+      };
+
+      const seenVal = findClosestNumberBelow(seenAnchor);
+      const caughtVal = findClosestNumberBelow(caughtAnchor);
+
+      document.getElementById(type + 'Seen').value = seenVal;
+      document.getElementById(type + 'Caught').value = caughtVal;
+
+      debug.innerText += `\n\nExtracted:\nSeen: ${seenVal}\nCaught: ${caughtVal}`;
     }
   </script>
+
 </body>
 </html>
