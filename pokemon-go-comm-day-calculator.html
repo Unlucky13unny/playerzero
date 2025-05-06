@@ -147,8 +147,8 @@
     console.log(`OCR OUTPUT (${type}):`, text);
 
     const cleanText = text.replace(/\s+/g, ' ');
-    const seenMatch = cleanText.match(/Seen\s*[:\-]?\s*([\d,]+)/i);
-    const caughtMatch = cleanText.match(/Caught\s*[:\-]?\s*([\d,]+)/i);
+    const seenMatch = cleanText.match(/SEEN[^0-9]*([\d,]+)/i);
+    const caughtMatch = cleanText.match(/CAUGHT[^0-9]*([\d,]+)/i);
 
     const seenVal = seenMatch ? seenMatch[1].replace(/,/g, '') : '';
     const caughtVal = caughtMatch ? caughtMatch[1].replace(/,/g, '') : '';
