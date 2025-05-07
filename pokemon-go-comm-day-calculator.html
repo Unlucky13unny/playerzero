@@ -35,7 +35,7 @@
             margin: 1rem auto;
         }
         .card {
-            background: url('grind-card-bg.png') center/cover no-repeat;
+            background: url('card-bg-image.png') center/cover no-repeat;
             display: none;
             width: 100%;
             max-width: 420px;
@@ -56,14 +56,10 @@
             letter-spacing: 1px;
         }
         .stat-group {
-            display: flex;
-            justify-content: space-between;
             margin: 1rem 0;
-            border-top: 1px solid #eee;
-            padding-top: 1rem;
         }
         .stat {
-            width: 48%;
+            margin-bottom: 0.5rem;
         }
         .label {
             font-size: 0.85rem;
@@ -72,12 +68,9 @@
             margin-bottom: 0.3rem;
         }
         .value {
-            font-size: 1.5rem;
+            font-size: 1.75rem;
             font-weight: bold;
             color: #e30613;
-        }
-        .value.pokemon {
-            font-size: 1.75rem;
         }
     </style>
 </head>
@@ -85,37 +78,32 @@
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     <h1>Comm Day Calculator</h1>
 
+    <!-- Image Uploads -->
     <label for="startImage">Start Screenshot</label>
     <input type="file" id="startImage">
     <label for="endImage">End Screenshot</label>
     <input type="file" id="endImage">
     <button onclick="runOCR()" id="importButton">Import Stats</button>
-    <p class="status" id="output"></p>
 
-    <h3>Trainer Name (auto-fills if detected, editable):</h3>
+    <!-- Form Inputs -->
     <input id="trainerName" placeholder="Trainer Name">
-
-    <h3>Pokémon Name (auto-detect if possible, editable):</h3>
     <input id="pokemonName" placeholder="Pokémon Name">
-
-    <h3>Start Stats</h3>
     <input id="startSeen" placeholder="Start Seen">
     <input id="startCaught" placeholder="Start Caught">
-
-    <h3>End Stats</h3>
     <input id="endSeen" placeholder="End Seen">
     <input id="endCaught" placeholder="End Caught">
     <input id="shinyCount" placeholder="Shiny Count">
     <input id="hoursPlayed" placeholder="Hours Played">
-
+    
     <button onclick="runStats()">Run My Stats</button>
 
+    <!-- Card Display -->
     <div id="card" class="card">
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
         <div class="value" id="trainerDisplay">Trainer Name</div>
         <div class="label">POKÉMON:</div>
-        <div class="value pokemon" id="pokemonDisplay">POKEMON</div>
+        <div class="value" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
@@ -126,8 +114,6 @@
                 <div class="label">CATCH RATE</div>
                 <div class="value" id="catchPercent">0%</div>
             </div>
-        </div>
-        <div class="stat-group">
             <div class="stat">
                 <div class="label">CAUGHT PER HOUR</div>
                 <div class="value" id="caughtPerHour">0.0</div>
@@ -159,8 +145,8 @@
             document.getElementById('catchPercent').textContent = `${catchPercent}%`;
             document.getElementById('caughtPerHour').textContent = perHour;
             document.getElementById('shinyTotal').textContent = shiny;
-            document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
-            document.getElementById('pokemonDisplay').textContent = pokemon || "POKEMON";
+            document.getElementById('trainerDisplay').textContent = trainer;
+            document.getElementById('pokemonDisplay').textContent = pokemon;
             document.getElementById('card').style.display = 'block';
         }
     </script>
