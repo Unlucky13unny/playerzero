@@ -83,7 +83,7 @@
 
   <script>
     async function runOCR() {
-      const apiKey = 'K84614746888957'; // Replace with your key if it changes
+      const apiKey = 'K84614746888957';
       const files = [document.getElementById('startImage').files[0], document.getElementById('endImage').files[0]];
       const output = document.getElementById('output');
       const importBtn = document.getElementById('importButton');
@@ -143,8 +143,8 @@
         output.textContent = '✅ Stats pulled. Verify below.';
         output.className = 'status success';
       } catch (error) {
-        console.error("OCR Error: ", error);
-        output.textContent = '⚠️ Error processing images. Try again.';
+        console.error("OCR Error: ", error.message);
+        output.textContent = `⚠️ Error processing images: ${error.message}`;
         output.className = 'status';
       }
       importBtn.disabled = false;
