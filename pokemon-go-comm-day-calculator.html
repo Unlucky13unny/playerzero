@@ -34,21 +34,37 @@
       height: auto;
       margin: 1rem auto;
     }
-    .result-img {
-      max-width: 300px;
-      margin: 1rem auto;
-      display: block;
-    }
-    .status {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-      color: #e30613;
-      font-style: italic;
+    .card {
+      background: url('card-bg-image.png') center/cover no-repeat #fff;
       display: none;
+      width: 100%;
+      max-width: 420px;
+      border: 4px solid #000;
+      border-radius: 30px;
+      margin: 2rem auto;
+      padding: 1.5rem 1rem;
+      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
     }
-    .status.success {
-      color: green;
-      font-style: normal;
+    .stat-group {
+      display: flex;
+      justify-content: space-between;
+      margin: 1rem 0;
+      border-top: 1px solid #eee;
+      padding-top: 1rem;
+    }
+    .stat {
+      width: 48%;
+    }
+    .label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      font-weight: bold;
+      margin-bottom: 0.3rem;
+    }
+    .value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #e30613;
     }
   </style>
 </head>
@@ -56,16 +72,6 @@
   <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
   <h1>The Comm Day Calculator</h1>
   <p>Upload your START and END screenshots — we’ll auto-fill and calculate your Community Day gains.</p>
-
-  <label for="startImage">Start Screenshot</label>
-  <input type="file" id="startImage">
-  <label for="endImage">End Screenshot</label>
-  <input type="file" id="endImage">
-
-  <button onclick="runOCR()" id="importButton">Import Stats</button>
-  <img id="previewStart" class="result-img" style="display:none;">
-  <img id="previewEnd" class="result-img" style="display:none;">
-  <p class="status" id="output"></p>
 
   <h3>Start Stats</h3>
   <input id="startSeen" placeholder="Start Seen">
@@ -81,75 +87,61 @@
 
   <button onclick="runStats()">Run My Stats</button>
 
-  <script>
-    async function runOCR() {
-      const apiKey = 'K84614746888957';
-      const files = [document.getElementById('startImage').files[0], document.getElementById('endImage').files[0]];
-      const output = document.getElementById('output');
-      const importBtn = document.getElementById('importButton');
+  <div id="card" class="card">
+    <div class="footer">COMM DAY CARD</div>
+    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
+    <div class="value" id="trainerDisplay">@Trainer</div>
+    <div class="label">Pokémon:</div>
+    <div class="value" id="pokemonDisplay">POKEMON</div>
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Pokémon Caught</div>
+        <div class="value" id="deltaCaught">0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Catch Rate</div>
+        <div class="value" id="catchPercent">0%</div>
+      </div>
+    </div>
+    <div class="stat-group">
+      <div class="stat">
+        <div class="label">Caught per Hour</div>
+        <div class="value" id="caughtPerHour">0.0</div>
+      </div>
+      <div class="stat">
+        <div class="label">Shiny Count</div>
+        <div class="value" id="shinyTotal">0</div>
+      </div>
+    </div>
+  </div>
 
-      if (!files[0] || !files[1]) {
-        output.textContent = '⚠️ Please upload both screenshots.';
-        output.className = 'status';
-        output.style.display = 'block';
+  <script>
+    function runStats() {
+      const seenStart = parseInt(document.getElementById('startSeen').value);
+      const seenEnd = parseInt(document.getElementById('endSeen').value);
+      const caughtStart = parseInt(document.getElementById('startCaught').value);
+      const caughtEnd = parseInt(document.getElementById('endCaught').value);
+      const shiny = parseInt(document.getElementById('shinyCount').value);
+      const hours = parseFloat(document.getElementById('hoursPlayed').value);
+      const trainer = document.getElementById('trainerName').value;
+
+      if (isNaN(seenStart) || isNaN(seenEnd) || isNaN(caughtStart) || isNaN(caughtEnd) || isNaN(hours)) {
+        alert("Please fill in all fields properly.");
         return;
       }
 
-      output.textContent = '🔍 Reading stats from your screenshots...';
-      output.className = 'status';
-      output.style.display = 'block';
-      importBtn.disabled = true;
+      const seen = Math.max(1, seenEnd - seenStart);
+      const caught = Math.max(0, caughtEnd - caughtStart);
+      const catchPercent = ((caught / seen) * 100).toFixed(1);
+      const perHour = (caught / hours).toFixed(1);
 
-      try {
-        const promises = files.map(file => {
-          const formData = new FormData();
-          formData.append("file", file);
-          formData.append("apikey", apiKey);
-          formData.append("isOverlayRequired", "false");
-          formData.append("language", "eng");
-          formData.append("OCREngine", "2");
-
-          return fetch("https://api.ocr.space/parse/image", {
-            method: "POST",
-            body: formData
-          }).then(res => res.json());
-        });
-
-        const [startData, endData] = await Promise.all(promises);
-
-        console.log("Start Data OCR: ", startData);
-        console.log("End Data OCR: ", endData);
-
-        const startText = startData.ParsedResults[0].ParsedText;
-        const endText = endData.ParsedResults[0].ParsedText;
-
-        const startSeen = startText.match(/Seen\s+(\d+)/i);
-        const startCaught = startText.match(/Caught\s+(\d+)/i);
-
-        const endSeen = endText.match(/Seen\s+(\d+)/i);
-        const endCaught = endText.match(/Caught\s+(\d+)/i);
-
-        document.getElementById('startSeen').value = startSeen ? startSeen[1] : "Not Found";
-        document.getElementById('startCaught').value = startCaught ? startCaught[1] : "Not Found";
-        document.getElementById('endSeen').value = endSeen ? endSeen[1] : "Not Found";
-        document.getElementById('endCaught').value = endCaught ? endCaught[1] : "Not Found";
-
-        // Preview Images
-        document.getElementById('previewStart').src = URL.createObjectURL(files[0]);
-        document.getElementById('previewStart').style.display = 'block';
-        document.getElementById('previewEnd').src = URL.createObjectURL(files[1]);
-        document.getElementById('previewEnd').style.display = 'block';
-
-        output.textContent = '✅ Stats pulled. Verify below.';
-        output.className = 'status success';
-      } catch (error) {
-        console.error("OCR Error: ", error.message);
-        output.textContent = `⚠️ Error processing images: ${error.message}`;
-        output.className = 'status';
-      }
-      importBtn.disabled = false;
+      document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
+      document.getElementById('deltaCaught').textContent = caught.toLocaleString();
+      document.getElementById('catchPercent').textContent = `${catchPercent}%`;
+      document.getElementById('caughtPerHour').textContent = perHour;
+      document.getElementById('shinyTotal').textContent = isNaN(shiny) ? 0 : shiny;
+      document.getElementById('card').style.display = 'block';
     }
   </script>
-
 </body>
 </html>
