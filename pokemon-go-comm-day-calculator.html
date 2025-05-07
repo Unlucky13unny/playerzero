@@ -83,6 +83,17 @@
     <label for="trainerName">Trainer Name (auto-fills if detected, editable):</label>
     <input id="trainerName" placeholder="Trainer Name">
 
+    <h3>Start Stats</h3>
+    <input id="startSeen" placeholder="Start Seen">
+    <input id="startCaught" placeholder="Start Caught">
+
+    <h3>End Stats</h3>
+    <input id="endSeen" placeholder="End Seen">
+    <input id="endCaught" placeholder="End Caught">
+
+    <input id="shinyCount" placeholder="Shiny Count">
+    <input id="hoursPlayed" placeholder="Hours Played">
+
     <button onclick="runStats()">Run My Stats</button>
 
     <div id="card" class="card">
@@ -124,24 +135,7 @@
             // Trainer name
             const trainerInput = document.getElementById('trainerName');
             const trainer = trainerInput.value || "@Trainer";
-            
-            // Auto-fill logic (if empty, attempt to pull from OCR)
-            if (trainer === "@Trainer") {
-                Tesseract.recognize(startImage, 'eng', { logger: m => console.log(m) })
-                .then(({ data: { text } }) => {
-                    const nameMatch = text.match(/@([a-zA-Z0-9_]+)/);
-                    if (nameMatch) {
-                        trainerInput.value = nameMatch[1];
-                        document.getElementById('trainerDisplay').textContent = nameMatch[1];
-                    } else {
-                        document.getElementById('trainerDisplay').textContent = "@Trainer";
-                    }
-                }).catch(err => {
-                    console.log("Name not detected: ", err);
-                });
-            } else {
-                document.getElementById('trainerDisplay').textContent = trainer;
-            }
+            document.getElementById('trainerDisplay').textContent = trainer;
 
             // Calculations
             const seen = Math.max(1, seenEnd - seenStart);
