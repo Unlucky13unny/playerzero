@@ -56,7 +56,6 @@
         }
         .stat-group {
             margin: 1rem 0;
-            border-top: 1px solid #eee;
             padding-top: 1rem;
         }
         .stat {
@@ -80,16 +79,11 @@
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     <h1>Comm Day Calculator</h1>
 
-    <label for="startImage">Start Screenshot</label>
-    <input type="file" id="startImage">
-    <label for="endImage">End Screenshot</label>
-    <input type="file" id="endImage">
-    <button onclick="importStats()">Import Stats</button>
-
-    <p class="status" id="output"></p>
-
     <label for="trainerName">Trainer Name (auto-fills if detected, editable):</label>
     <input id="trainerName" placeholder="Trainer Name">
+    
+    <label for="pokemonName">Pokémon Name (auto-detect if possible, editable):</label>
+    <input id="pokemonName" placeholder="Pokémon Name">
 
     <h3>Start Stats</h3>
     <input id="startSeen" placeholder="Start Seen">
@@ -108,6 +102,7 @@
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
         <div class="value" id="trainerDisplay">@Trainer</div>
+        <div class="value" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
@@ -130,11 +125,6 @@
     </div>
 
     <script>
-        function importStats() {
-            const trainerField = document.getElementById('trainerName');
-            trainerField.value = "AutoDetectLumbr"; // Placeholder for auto-detect
-        }
-
         function runStats() {
             const seenStart = parseInt(document.getElementById('startSeen').value);
             const seenEnd = parseInt(document.getElementById('endSeen').value);
@@ -143,10 +133,11 @@
             const shiny = parseInt(document.getElementById('shinyCount').value) || 0;
             const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
 
-            // Trainer name
-            const trainerInput = document.getElementById('trainerName');
-            const trainer = trainerInput.value || "@Trainer";
+            // Trainer and Pokemon Names
+            const trainer = document.getElementById('trainerName').value || "@Trainer";
+            const pokemon = document.getElementById('pokemonName').value || "POKEMON";
             document.getElementById('trainerDisplay').textContent = trainer;
+            document.getElementById('pokemonDisplay').textContent = pokemon;
 
             // Calculations
             const seen = Math.max(1, seenEnd - seenStart);
