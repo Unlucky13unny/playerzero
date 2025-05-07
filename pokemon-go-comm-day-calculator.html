@@ -45,7 +45,7 @@
             color: green;
             font-style: normal;
         }
-        .card {
+        #card {
             background: url('card-bg-image.png') center/cover no-repeat #fff;
             display: none;
             width: 100%;
@@ -86,6 +86,16 @@
             font-weight: bold;
             color: #e30613;
         }
+        .username {
+            font-size: 1.2rem;
+            margin: 0.25rem 0 0.75rem;
+            font-weight: bold;
+            color: #e30613;
+        }
+        .pokemon-name {
+            font-size: 1.1rem;
+            color: #e30613;
+        }
     </style>
 </head>
 <body>
@@ -117,27 +127,26 @@
     <div id="card" class="card">
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-        <div class="value" id="trainerDisplay">Trainer Name</div>
-        <div class="label">POKÉMON:</div>
-        <div class="value" id="pokemonDisplay">POKEMON</div>
+        <div class="username" id="trainerDisplay">Trainer Name</div>
+        <div class="pokemon-name" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
-                <div class="label">POKÉMON CAUGHT</div>
+                <div class="label">Pokémon Caught</div>
                 <div class="value" id="deltaCaught">0</div>
             </div>
             <div class="stat">
-                <div class="label">CATCH RATE</div>
+                <div class="label">Catch Rate</div>
                 <div class="value" id="catchPercent">0%</div>
             </div>
         </div>
         <div class="stat-group">
             <div class="stat">
-                <div class="label">CAUGHT PER HOUR</div>
+                <div class="label">Caught per Hour</div>
                 <div class="value" id="caughtPerHour">0.0</div>
             </div>
             <div class="stat">
-                <div class="label">SHINY COUNT</div>
+                <div class="label">Shiny Count</div>
                 <div class="value" id="shinyTotal">0</div>
             </div>
         </div>
@@ -163,6 +172,7 @@
             document.getElementById('caughtPerHour').textContent = perHour;
             document.getElementById('shinyTotal').textContent = shiny;
             document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
+            document.getElementById('pokemonDisplay').textContent = "POKEMON"; // Placeholder for now
             document.getElementById('card').style.display = 'block';
         }
     </script>
