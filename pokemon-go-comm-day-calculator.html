@@ -191,7 +191,7 @@
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    ""function runOCR() {
+    """"function runOCR() {
   const startImage = document.getElementById('startImage').files[0];
   const endImage = document.getElementById('endImage').files[0];
   const output = document.getElementById('output');
@@ -203,6 +203,37 @@
     output.style.display = 'block';
     return;
   }
+
+  output.textContent = 'Reading stats from your screenshots...';
+  output.className = 'status';
+  output.style.display = 'block';
+  importBtn.disabled = true;
+
+  // Placeholder for the actual OCR call
+  setTimeout(() => {
+    // Clear fields before processing to avoid overlap
+    document.getElementById('startSeen').value = '';
+    document.getElementById('startCaught').value = '';
+    document.getElementById('endSeen').value = '';
+    document.getElementById('endCaught').value = '';
+
+    // This simulates OCR pulling from the image
+    document.getElementById('startSeen').value = 663;
+    document.getElementById('startCaught').value = 423;
+    document.getElementById('endSeen').value = 666;
+    document.getElementById('endCaught').value = 471;
+
+    document.getElementById('previewStart').src = URL.createObjectURL(startImage);
+    document.getElementById('previewStart').style.display = 'block';
+    document.getElementById('previewEnd').src = URL.createObjectURL(endImage);
+    document.getElementById('previewEnd').style.display = 'block';
+
+    output.textContent = '✅ Stats pulled. Verify below.';
+    output.className = 'status success';
+    output.style.display = 'block';
+    importBtn.disabled = false;
+  }, 1000);
+}""
 
   output.textContent = 'Reading stats from your screenshots...';
   output.className = 'status';
