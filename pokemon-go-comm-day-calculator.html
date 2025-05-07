@@ -35,16 +35,17 @@
             margin: 1rem auto;
         }
         .card {
-            background: url('card-bg-image.png') center/cover no-repeat #fff;
+            background: url('comm-day-card-bg.png') center/cover no-repeat;
             display: none;
             width: 100%;
             max-width: 420px;
             height: 600px;
-            border: 4px solid #000;
-            border-radius: 30px;
+            border-radius: 20px;
             margin: 2rem auto;
             padding: 1.5rem 1rem;
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+            color: white;
+            border: 4px solid black;
         }
         .footer {
             background: #000;
@@ -79,6 +80,15 @@
         .value.pokemon {
             font-size: 1.75rem;
         }
+        .card-header {
+            background: #000;
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            padding: 0.5rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -111,7 +121,7 @@
     <button onclick="runStats()">Run My Stats</button>
 
     <div id="card" class="card">
-        <div class="footer">COMM DAY CARD</div>
+        <div class="card-header">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
         <div class="value" id="trainerDisplay">Trainer Name</div>
         <div class="label">POKÉMON:</div>
