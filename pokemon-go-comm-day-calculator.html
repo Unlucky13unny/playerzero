@@ -34,12 +34,11 @@
             height: auto;
             margin: 1rem auto;
         }
-        #card {
+        .card {
             background: url('card-bg-image.png') center/cover no-repeat #fff;
             display: none;
             width: 100%;
             max-width: 420px;
-            height: 620px;
             border: 4px solid #000;
             border-radius: 30px;
             margin: 2rem auto;
@@ -56,70 +55,42 @@
             letter-spacing: 1px;
         }
         .stat-group {
-            display: flex;
-            justify-content: space-between;
             margin: 1rem 0;
             border-top: 1px solid #eee;
             padding-top: 1rem;
         }
         .stat {
-            width: 48%;
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
         }
         .label {
             font-size: 0.85rem;
             text-transform: uppercase;
             font-weight: bold;
-            margin-bottom: 0.3rem;
         }
         .value {
             font-size: 1.5rem;
             font-weight: bold;
             color: #e30613;
         }
-        .username {
-            font-size: 1.2rem;
-            margin: 0.25rem 0 0.75rem;
-            font-weight: bold;
-            color: #e30613;
-        }
-        .pokemon-name {
-            font-size: 1.1rem;
-            color: #e30613;
-            margin-bottom: 1rem;
-        }
     </style>
 </head>
 <body>
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-    <h1>The Comm Day Calculator</h1>
+    <h1>Comm Day Calculator</h1>
 
-    <label for="startImage">Start Screenshot</label>
-    <input type="file" id="startImage">
-    <label for="endImage">End Screenshot</label>
-    <input type="file" id="endImage">
-
-    <button onclick="runOCR()" id="importButton">Import Stats</button>
-    <p class="status" id="output"></p>
-
-    <h3>Start Stats</h3>
-    <input id="startSeen" placeholder="Start Seen">
-    <input id="startCaught" placeholder="Start Caught">
-
-    <h3>End Stats</h3>
-    <input id="endSeen" placeholder="End Seen">
-    <input id="endCaught" placeholder="End Caught">
-
+    <label for="trainerName">Trainer Name (auto-fills if detected, editable):</label>
     <input id="trainerName" placeholder="Trainer Name">
-    <input id="shinyCount" placeholder="Shiny Count">
-    <input id="hoursPlayed" placeholder="Hours Played">
 
     <button onclick="runStats()">Run My Stats</button>
 
     <div id="card" class="card">
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-        <div class="username" id="trainerDisplay">Trainer Name</div>
-        <div class="pokemon-name" id="pokemonDisplay">POKEMON</div>
+        <div class="value" id="trainerDisplay">@Trainer</div>
+        <div class="label">POKÉMON:</div>
+        <div class="value" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
@@ -130,10 +101,8 @@
                 <div class="label">Catch Rate</div>
                 <div class="value" id="catchPercent">0%</div>
             </div>
-        </div>
-        <div class="stat-group">
             <div class="stat">
-                <div class="label">Caught per Hour</div>
+                <div class="label">Caught Per Hour</div>
                 <div class="value" id="caughtPerHour">0.0</div>
             </div>
             <div class="stat">
@@ -151,8 +120,30 @@
             const caughtEnd = parseInt(document.getElementById('endCaught').value);
             const shiny = parseInt(document.getElementById('shinyCount').value) || 0;
             const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
-            const trainer = document.getElementById('trainerName').value;
 
+            // Trainer name
+            const trainerInput = document.getElementById('trainerName');
+            const trainer = trainerInput.value || "@Trainer";
+            
+            // Auto-fill logic (if empty, attempt to pull from OCR)
+            if (trainer === "@Trainer") {
+                Tesseract.recognize(startImage, 'eng', { logger: m => console.log(m) })
+                .then(({ data: { text } }) => {
+                    const nameMatch = text.match(/@([a-zA-Z0-9_]+)/);
+                    if (nameMatch) {
+                        trainerInput.value = nameMatch[1];
+                        document.getElementById('trainerDisplay').textContent = nameMatch[1];
+                    } else {
+                        document.getElementById('trainerDisplay').textContent = "@Trainer";
+                    }
+                }).catch(err => {
+                    console.log("Name not detected: ", err);
+                });
+            } else {
+                document.getElementById('trainerDisplay').textContent = trainer;
+            }
+
+            // Calculations
             const seen = Math.max(1, seenEnd - seenStart);
             const caught = Math.max(0, caughtEnd - caughtStart);
             const catchPercent = ((caught / seen) * 100).toFixed(1);
@@ -162,8 +153,6 @@
             document.getElementById('catchPercent').textContent = `${catchPercent}%`;
             document.getElementById('caughtPerHour').textContent = perHour;
             document.getElementById('shinyTotal').textContent = shiny;
-            document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
-            document.getElementById('pokemonDisplay').textContent = "POKEMON"; // Placeholder for now
             document.getElementById('card').style.display = 'block';
         }
     </script>
