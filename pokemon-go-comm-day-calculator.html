@@ -35,35 +35,49 @@
             margin: 1rem auto;
         }
         .card {
-            background: url('card-bg-image.png') center/cover no-repeat #fff;
+            background: url('grind-card-bg.png') center/cover no-repeat;
             display: none;
             width: 100%;
             max-width: 420px;
-            border: 4px solid #000;
-            border-radius: 30px;
+            height: 600px;
+            border-radius: 20px;
             margin: 2rem auto;
             padding: 1.5rem 1rem;
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
+            color: white;
         }
-        .header {
+        .footer {
             background: #000;
             color: #fff;
-            font-size: 1.2rem;
-            padding: 0.5rem;
+            font-size: 1rem;
+            padding: 0.75rem;
+            margin-top: 1.5rem;
             border-radius: 8px;
-            margin-bottom: 1rem;
+            letter-spacing: 1px;
+        }
+        .stat-group {
+            display: flex;
+            justify-content: space-between;
+            margin: 1rem 0;
+            border-top: 1px solid #eee;
+            padding-top: 1rem;
         }
         .stat {
-            margin-bottom: 0.5rem;
-            color: red;
-            font-weight: bold;
-            font-size: 1.1rem;
+            width: 48%;
         }
         .label {
-            font-size: 0.8rem;
-            color: #111;
+            font-size: 0.85rem;
             text-transform: uppercase;
             font-weight: bold;
+            margin-bottom: 0.3rem;
+        }
+        .value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #e30613;
+        }
+        .value.pokemon {
+            font-size: 1.75rem;
         }
     </style>
 </head>
@@ -71,10 +85,24 @@
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     <h1>Comm Day Calculator</h1>
 
-    <input id="trainerName" placeholder="Trainer Name (auto-fills if detected, editable)">
-    <input id="pokemonName" placeholder="Pokémon Name (auto-detect if possible, editable)">
+    <label for="startImage">Start Screenshot</label>
+    <input type="file" id="startImage">
+    <label for="endImage">End Screenshot</label>
+    <input type="file" id="endImage">
+    <button onclick="runOCR()" id="importButton">Import Stats</button>
+    <p class="status" id="output"></p>
+
+    <h3>Trainer Name (auto-fills if detected, editable):</h3>
+    <input id="trainerName" placeholder="Trainer Name">
+
+    <h3>Pokémon Name (auto-detect if possible, editable):</h3>
+    <input id="pokemonName" placeholder="Pokémon Name">
+
+    <h3>Start Stats</h3>
     <input id="startSeen" placeholder="Start Seen">
     <input id="startCaught" placeholder="Start Caught">
+
+    <h3>End Stats</h3>
     <input id="endSeen" placeholder="End Seen">
     <input id="endCaught" placeholder="End Caught">
     <input id="shinyCount" placeholder="Shiny Count">
@@ -83,48 +111,56 @@
     <button onclick="runStats()">Run My Stats</button>
 
     <div id="card" class="card">
-        <div class="header">COMM DAY CARD</div>
+        <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-        
-        <div class="stat" id="trainerDisplay">Trainer Name</div>
-        <div class="stat" id="pokemonDisplay">Pokémon Name</div>
+        <div class="value" id="trainerDisplay">Trainer Name</div>
+        <div class="label">POKÉMON:</div>
+        <div class="value pokemon" id="pokemonDisplay">POKEMON</div>
 
-        <div class="label">Pokémon Caught</div>
-        <div class="stat" id="deltaCaught">0</div>
-
-        <div class="label">Catch Rate</div>
-        <div class="stat" id="catchPercent">0%</div>
-
-        <div class="label">Caught Per Hour</div>
-        <div class="stat" id="caughtPerHour">0.0</div>
-
-        <div class="label">Shiny Count</div>
-        <div class="stat" id="shinyTotal">0</div>
+        <div class="stat-group">
+            <div class="stat">
+                <div class="label">POKÉMON CAUGHT</div>
+                <div class="value" id="deltaCaught">0</div>
+            </div>
+            <div class="stat">
+                <div class="label">CATCH RATE</div>
+                <div class="value" id="catchPercent">0%</div>
+            </div>
+        </div>
+        <div class="stat-group">
+            <div class="stat">
+                <div class="label">CAUGHT PER HOUR</div>
+                <div class="value" id="caughtPerHour">0.0</div>
+            </div>
+            <div class="stat">
+                <div class="label">SHINY COUNT</div>
+                <div class="value" id="shinyTotal">0</div>
+            </div>
+        </div>
     </div>
 
     <script>
         function runStats() {
-            const trainer = document.getElementById('trainerName').value || "Trainer Name";
-            const pokemon = document.getElementById('pokemonName').value || "Pokémon Name";
             const seenStart = parseInt(document.getElementById('startSeen').value);
             const seenEnd = parseInt(document.getElementById('endSeen').value);
             const caughtStart = parseInt(document.getElementById('startCaught').value);
             const caughtEnd = parseInt(document.getElementById('endCaught').value);
             const shiny = parseInt(document.getElementById('shinyCount').value) || 0;
             const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
+            const trainer = document.getElementById('trainerName').value;
+            const pokemon = document.getElementById('pokemonName').value;
 
             const seen = Math.max(1, seenEnd - seenStart);
             const caught = Math.max(0, caughtEnd - caughtStart);
             const catchPercent = ((caught / seen) * 100).toFixed(1);
             const perHour = (caught / hours).toFixed(1);
 
-            document.getElementById('trainerDisplay').textContent = trainer;
-            document.getElementById('pokemonDisplay').textContent = pokemon;
             document.getElementById('deltaCaught').textContent = caught.toLocaleString();
             document.getElementById('catchPercent').textContent = `${catchPercent}%`;
             document.getElementById('caughtPerHour').textContent = perHour;
             document.getElementById('shinyTotal').textContent = shiny;
-
+            document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
+            document.getElementById('pokemonDisplay').textContent = pokemon || "POKEMON";
             document.getElementById('card').style.display = 'block';
         }
     </script>
