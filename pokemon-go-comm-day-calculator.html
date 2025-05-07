@@ -50,76 +50,6 @@
       color: green;
       font-style: normal;
     }
-    .footer {
-      background: #000;
-      color: #fff;
-      font-size: 1rem;
-      padding: 0.75rem;
-      margin-top: 1.5rem;
-      margin-left: auto;
-      margin-right: auto;
-      border-radius: 8px;
-      letter-spacing: 1px;
-      width: 80%;
-      max-width: 280px;
-    }
-    .social-icons {
-      margin-top: 1rem;
-      display: flex;
-      justify-content: center;
-      gap: 1rem;
-    }
-    .social-icons a img {
-      width: 36px;
-      height: 36px;
-      filter: brightness(0%);
-      transition: filter 0.3s ease, transform 0.2s ease;
-    }
-    .social-icons a img:hover {
-      filter: brightness(0%) invert(50%);
-      transform: scale(1.1);
-    }
-    .promo-link {
-      margin-top: 1rem;
-      font-size: 0.9rem;
-    }
-    .promo-link a {
-      color: red;
-      font-weight: bold;
-      text-decoration: none;
-    }
-    .card {
-      background: url('card-bg-image.png') center/cover no-repeat #fff;
-      display: none;
-      width: 100%;
-      max-width: 420px;
-      border: 4px solid #000;
-      border-radius: 30px;
-      margin: 2rem auto;
-      padding: 1.5rem 1rem;
-      box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
-    }
-    .stat-group {
-      display: flex;
-      justify-content: space-between;
-      margin: 1rem 0;
-      border-top: 1px solid #eee;
-      padding-top: 1rem;
-    }
-    .stat {
-      width: 48%;
-    }
-    .label {
-      font-size: 0.85rem;
-      text-transform: uppercase;
-      font-weight: bold;
-      margin-bottom: 0.3rem;
-    }
-    .value {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: #e30613;
-    }
   </style>
 </head>
 <body>
@@ -151,119 +81,27 @@
 
   <button onclick="runStats()">Run My Stats</button>
 
-  <div id="card" class="card">
-    <div class="footer">COMM DAY CARD</div>
-    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-    <div class="value" id="trainerDisplay">@Trainer</div>
-    <div class="label">Pokémon:</div>
-    <div class="value" id="pokemonDisplay">POKEMON</div>
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">Pokémon Caught</div>
-        <div class="value" id="deltaCaught">0</div>
-      </div>
-      <div class="stat">
-        <div class="label">Catch Rate</div>
-        <div class="value" id="catchPercent">0%</div>
-      </div>
-    </div>
-    <div class="stat-group">
-      <div class="stat">
-        <div class="label">Caught per Hour</div>
-        <div class="value" id="caughtPerHour">0.0</div>
-      </div>
-      <div class="stat">
-        <div class="label">Shiny Count</div>
-        <div class="value" id="shinyTotal">0</div>
-      </div>
-    </div>
-  </div>
-
-  <button onclick="downloadCard()">Download My Comm Day Card</button>
-  <div class="promo-link">
-    <a href="https://pgplayerzero.com" target="_blank">Check out the PlayerZero Challenge</a>
-  </div>
-  <div class="social-icons">
-    <a href="https://instagram.com/pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram"></a>
-    <a href="https://tiktok.com/@pgplayerzero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok"></a>
-    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank"><img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit"></a>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
-    """"function runOCR() {
-  const startImage = document.getElementById('startImage').files[0];
-  const endImage = document.getElementById('endImage').files[0];
-  const output = document.getElementById('output');
-  const importBtn = document.getElementById('importButton');
+    function runOCR() {
+      const startImage = document.getElementById('startImage').files[0];
+      const endImage = document.getElementById('endImage').files[0];
+      const output = document.getElementById('output');
+      const importBtn = document.getElementById('importButton');
 
-  if (!startImage || !endImage) {
-    output.textContent = '⚠️ Please upload both screenshots.';
-    output.className = 'status';
-    output.style.display = 'block';
-    return;
-  }
+      if (!startImage || !endImage) {
+        output.textContent = '⚠️ Please upload both screenshots.';
+        output.className = 'status';
+        output.style.display = 'block';
+        return;
+      }
 
-  output.textContent = 'Reading stats from your screenshots...';
-  output.className = 'status';
-  output.style.display = 'block';
-  importBtn.disabled = true;
+      output.textContent = 'Reading stats from your screenshots...';
+      output.className = 'status';
+      output.style.display = 'block';
+      importBtn.disabled = true;
 
-  // Placeholder for the actual OCR call
-  setTimeout(() => {
-    // Clear fields before processing to avoid overlap
-    document.getElementById('startSeen').value = '';
-    document.getElementById('startCaught').value = '';
-    document.getElementById('endSeen').value = '';
-    document.getElementById('endCaught').value = '';
-
-    // This simulates OCR pulling from the image
-    document.getElementById('startSeen').value = 663;
-    document.getElementById('startCaught').value = 423;
-    document.getElementById('endSeen').value = 666;
-    document.getElementById('endCaught').value = 471;
-
-    document.getElementById('previewStart').src = URL.createObjectURL(startImage);
-    document.getElementById('previewStart').style.display = 'block';
-    document.getElementById('previewEnd').src = URL.createObjectURL(endImage);
-    document.getElementById('previewEnd').style.display = 'block';
-
-    output.textContent = '✅ Stats pulled. Verify below.';
-    output.className = 'status success';
-    output.style.display = 'block';
-    importBtn.disabled = false;
-  }, 1000);
-}""
-
-  output.textContent = 'Reading stats from your screenshots...';
-  output.className = 'status';
-  output.style.display = 'block';
-  importBtn.disabled = true;
-
-  // Simulate OCR process for separate Start and End runs
-  setTimeout(() => {
-    // Clear fields before processing to avoid overlap
-    document.getElementById('startSeen').value = '';
-    document.getElementById('startCaught').value = '';
-    document.getElementById('endSeen').value = '';
-    document.getElementById('endCaught').value = '';
-
-    // Placeholder for the actual OCR call
-    document.getElementById('startSeen').value = 663;
-    document.getElementById('startCaught').value = 423;
-    document.getElementById('endSeen').value = 666;
-    document.getElementById('endCaught').value = 471;
-
-    document.getElementById('previewStart').src = URL.createObjectURL(startImage);
-    document.getElementById('previewStart').style.display = 'block';
-    document.getElementById('previewEnd').src = URL.createObjectURL(endImage);
-    document.getElementById('previewEnd').style.display = 'block';
-
-    output.textContent = '✅ Stats pulled. Verify below.';
-    output.className = 'status success';
-    importBtn.disabled = false;
-  }, 1000);
-}""
+      // Simulate OCR process
+      setTimeout(() => {
         document.getElementById('startSeen').value = 663;
         document.getElementById('startCaught').value = 423;
         document.getElementById('endSeen').value = 666;
@@ -276,47 +114,9 @@
 
         output.textContent = '✅ Stats pulled. Verify below.';
         output.className = 'status success';
-        importBtn.disabled = false;
-      }, 1000);
-    }
-
-    function runStats() {
-      const seenStart = parseInt(document.getElementById('startSeen').value);
-      const seenEnd = parseInt(document.getElementById('endSeen').value);
-      const caughtStart = parseInt(document.getElementById('startCaught').value);
-      const caughtEnd = parseInt(document.getElementById('endCaught').value);
-      const shiny = parseInt(document.getElementById('shinyCount').value);
-      const hours = parseFloat(document.getElementById('hoursPlayed').value);
-      const trainer = document.getElementById('trainerName').value;
-
-      if (!isNaN(seenStart) && !isNaN(seenEnd) && !isNaN(caughtStart) && !isNaN(caughtEnd) && !isNaN(hours)) {
-        const seen = Math.max(1, seenEnd - seenStart);
-        const caught = Math.max(0, caughtEnd - caughtStart);
-        const catchPercent = ((caught / seen) * 100).toFixed(1);
-        const perHour = (caught / hours).toFixed(1);
-
-        document.getElementById('deltaCaught').textContent = caught.toLocaleString();
-        document.getElementById('catchPercent').textContent = `${catchPercent}%`;
-        document.getElementById('caughtPerHour').textContent = perHour;
-        document.getElementById('shinyTotal').textContent = isNaN(shiny) ? 0 : shiny;
-        document.getElementById('trainerDisplay').textContent = trainer || "@Trainer";
-
-        document.getElementById('card').style.display = 'block';
-      } else {
-        const output = document.getElementById('output');
-        output.textContent = '⚠️ Please enter all fields to calculate.';
-        output.className = 'status';
         output.style.display = 'block';
-      }
-    }
-
-    function downloadCard() {
-      html2canvas(document.getElementById("card")).then(canvas => {
-        const link = document.createElement("a");
-        link.download = "comm_day_card.png";
-        link.href = canvas.toDataURL("image/png");
-        link.click();
-      });
+        importBtn.disabled = false;
+      }, 1500);
     }
   </script>
 </body>
