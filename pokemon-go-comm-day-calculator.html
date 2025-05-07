@@ -80,6 +80,14 @@
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     <h1>Comm Day Calculator</h1>
 
+    <label for="startImage">Start Screenshot</label>
+    <input type="file" id="startImage">
+    <label for="endImage">End Screenshot</label>
+    <input type="file" id="endImage">
+    <button onclick="importStats()">Import Stats</button>
+
+    <p class="status" id="output"></p>
+
     <label for="trainerName">Trainer Name (auto-fills if detected, editable):</label>
     <input id="trainerName" placeholder="Trainer Name">
 
@@ -100,8 +108,6 @@
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
         <div class="value" id="trainerDisplay">@Trainer</div>
-        <div class="label">POKÉMON:</div>
-        <div class="value" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
@@ -124,6 +130,11 @@
     </div>
 
     <script>
+        function importStats() {
+            const trainerField = document.getElementById('trainerName');
+            trainerField.value = "AutoDetectLumbr"; // Placeholder for auto-detect
+        }
+
         function runStats() {
             const seenStart = parseInt(document.getElementById('startSeen').value);
             const seenEnd = parseInt(document.getElementById('endSeen').value);
