@@ -34,22 +34,12 @@
             height: auto;
             margin: 1rem auto;
         }
-        .status {
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            color: #e30613;
-            font-style: italic;
-            display: none;
-        }
-        .status.success {
-            color: green;
-            font-style: normal;
-        }
         .card {
             background: url('card-bg-image.png') center/cover no-repeat #fff;
             display: none;
             width: 100%;
             max-width: 420px;
+            height: 600px;
             border: 4px solid #000;
             border-radius: 30px;
             margin: 2rem auto;
@@ -86,45 +76,46 @@
             font-weight: bold;
             color: #e30613;
         }
+        .value.pokemon {
+            font-size: 1.75rem;
+        }
     </style>
 </head>
 <body>
     <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
     <h1>Comm Day Calculator</h1>
 
-    <div id="mainContent">
-        <label for="startImage">Start Screenshot</label>
-        <input type="file" id="startImage">
-        <label for="endImage">End Screenshot</label>
-        <input type="file" id="endImage">
-        <button onclick="runOCR()" id="importButton">Import Stats</button>
-        <p class="status" id="output"></p>
+    <label for="startImage">Start Screenshot</label>
+    <input type="file" id="startImage">
+    <label for="endImage">End Screenshot</label>
+    <input type="file" id="endImage">
+    <button onclick="runOCR()" id="importButton">Import Stats</button>
+    <p class="status" id="output"></p>
 
-        <h3>Trainer Name (auto-fills if detected, editable):</h3>
-        <input id="trainerName" placeholder="Trainer Name">
+    <h3>Trainer Name (auto-fills if detected, editable):</h3>
+    <input id="trainerName" placeholder="Trainer Name">
 
-        <h3>Pokémon Name (auto-detect if possible, editable):</h3>
-        <input id="pokemonName" placeholder="Pokémon Name">
+    <h3>Pokémon Name (auto-detect if possible, editable):</h3>
+    <input id="pokemonName" placeholder="Pokémon Name">
 
-        <h3>Start Stats</h3>
-        <input id="startSeen" placeholder="Start Seen">
-        <input id="startCaught" placeholder="Start Caught">
+    <h3>Start Stats</h3>
+    <input id="startSeen" placeholder="Start Seen">
+    <input id="startCaught" placeholder="Start Caught">
 
-        <h3>End Stats</h3>
-        <input id="endSeen" placeholder="End Seen">
-        <input id="endCaught" placeholder="End Caught">
-        <input id="shinyCount" placeholder="Shiny Count">
-        <input id="hoursPlayed" placeholder="Hours Played">
+    <h3>End Stats</h3>
+    <input id="endSeen" placeholder="End Seen">
+    <input id="endCaught" placeholder="End Caught">
+    <input id="shinyCount" placeholder="Shiny Count">
+    <input id="hoursPlayed" placeholder="Hours Played">
 
-        <button onclick="runStats()">Run My Stats</button>
-    </div>
+    <button onclick="runStats()">Run My Stats</button>
 
     <div id="card" class="card">
         <div class="footer">COMM DAY CARD</div>
         <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
         <div class="value" id="trainerDisplay">Trainer Name</div>
         <div class="label">POKÉMON:</div>
-        <div class="value" id="pokemonDisplay">POKEMON</div>
+        <div class="value pokemon" id="pokemonDisplay">POKEMON</div>
 
         <div class="stat-group">
             <div class="stat">
