@@ -29,15 +29,16 @@
 <body>
     <header class="site-header">
         <div class="container">
-            <a href="https://pgplayerzero.com">
-                <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-            </a>
             <nav class="top-navigation">
                 <a href="https://pgplayerzero.com" class="btn btn-nav">Home</a>
                 <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="btn btn-nav">Grind Calc</a>
                 <a href="https://pgplayerzero.com/pokemon-go-comm-day-calculator" class="btn btn-nav active">Comm Day Calc</a>
+                <button id="prizeInfoBtn" class="btn btn-nav">Prize Info</button>
                 <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="btn btn-nav">Contact</a>
             </nav>
+            <a href="https://pgplayerzero.com">
+                <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+            </a>
         </div>
     </header>
 
@@ -171,6 +172,21 @@
         </div>
     </footer>
 
+    <!-- Modal HTML -->
+    <div id="prizeInfoModal" class="modal">
+        <div class="modal-content">
+            <button id="closeModal" class="modal-close">&times;</button>
+            <h2 class="modal-title">Current Prize Pool</h2>
+            <p class="prize-item"><strong>1<sup>st</sup> – <span class="prize-amount">15K Pokécoins</span></strong></p>
+            <p class="prize-item"><strong>2<sup>nd</sup> – <span class="prize-amount">10K Pokécoins</span></strong></p>
+            <p class="prize-item"><strong>3<sup>rd</sup> – <span class="prize-amount">7K Pokécoins</span></strong></p>
+            <p class="prize-details">+ 9 daily and category specific prize opportunities</p>
+            <p class="prize-tagline">The challenge where the prize pool grows with the participants.</p>
+            <p class="prize-focus">More players.<br>More winners.<br>Bigger rewards.</p>
+            <p class="prize-note"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
+        </div>
+    </div>
+    
     <!-- JavaScript -->
     <script src="js/main.js"></script>
     <script src="js/comm-day.js"></script>
