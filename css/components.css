@@ -16,32 +16,38 @@
 }
 
 .btn-primary {
-  background-color: #111;
-  color: #fff;
-  padding: 1rem 2rem;
-  font-size: 1rem;
-  margin-bottom: 2rem;
+  background-color: #111 !important;
+  color: #fff !important;
+  padding: 1rem 2rem !important;
+  font-size: 1rem !important;
+  margin-bottom: 2rem !important;
+  border-radius: 5px !important;
 }
 
 .btn-primary:hover {
-  background-color: #333;
+  background-color: #333 !important;
 }
 
 .btn-nav {
-  background-color: #111;
-  color: #fff;
-  font-size: 0.85rem;
-  padding: 8px 14px;
+  background-color: #111 !important;
+  color: #fff !important;
+  font-size: 0.85rem !important;
+  padding: 8px 14px !important;
+  border-radius: 5px !important;
 }
 
 .btn-nav:hover {
-  background-color: #333;
+  background-color: #333 !important;
+}
+
+.btn-nav.active {
+  background-color: #e30613 !important;
 }
 
 @media (max-width: 600px) {
   .btn-nav {
-    font-size: 0.75rem;
-    padding: 6px 10px;
+    font-size: 0.75rem !important;
+    padding: 6px 10px !important;
   }
 }
 
