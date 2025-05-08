@@ -16,258 +16,148 @@
   <meta property="og:url" content="https://pgplayerzero.com" />
   <meta name="twitter:card" content="summary_large_image" />
 
-  <style>
-    body {
-      font-family: sans-serif;
-      background: #fff;
-      color: #111;
-      margin: 0;
-      padding: 2rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    img.logo {
-      max-width: 400px;
-      margin-bottom: 1rem;
-    }
-
-    .stacked-tagline-container {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-    }
-
-    .stacked-tagline {
-      display: inline-block;
-      text-align: left;
-      font-weight: bold;
-      font-style: italic;
-      font-size: 1rem;
-      line-height: 1.2;
-      margin-bottom: 1rem;
-    }
-
-    .intro {
-      font-size: 1rem;
-      font-weight: 500;
-      max-width: 650px;
-      margin-bottom: 1.5rem;
-      line-height: 1.4;
-    }
-
-    a.button {
-      background: black;
-      color: white;
-      text-decoration: none;
-      padding: 1rem 2rem;
-      border-radius: 5px;
-      font-size: 1rem;
-      margin-bottom: 3rem;
-      display: inline-block;
-    }
-
-    .faq {
-      max-width: 700px;
-      text-align: left;
-      width: 100%;
-    }
-
-    .faq h2 {
-      font-size: 1.5rem;
-      margin-top: 2rem;
-    }
-
-    .faq details {
-      background: #eee;
-      margin: 0.5rem 0;
-      padding: 1rem;
-      border-radius: 5px;
-      transition: background 0.3s;
-      width: 100%;
-    }
-
-    .faq summary {
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .top-buttons {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      display: flex;
-      gap: 10px;
-      z-index: 1000;
-    }
-
-    .top-button-style {
-      background-color: black;
-      color: white;
-      font-weight: bold;
-      font-size: 0.85rem;
-      padding: 8px 14px;
-      border-radius: 5px;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .top-button-style:hover {
-      background-color: #333;
-    }
-
-    @media (max-width: 600px) {
-      .top-buttons {
-        top: 10px;
-        right: 10px;
-        gap: 6px;
-      }
-
-      .top-button-style {
-        font-size: 0.75rem;
-        padding: 6px 10px;
-      }
-    }
-  </style>
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
 </head>
 
 <body>
-
-  <div class="top-buttons">
-    <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="top-button-style">Grind Calc</a>
-    <button id="prizeInfoBtn" class="top-button-style">Prize Info</button>
-    <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="top-button-style">Contact</a>
-  </div>
-
-  <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
-
-  <div class="stacked-tagline-container">
-    <div class="stacked-tagline">
-      It's not about what you've accomplished.<br />
-      It's about what you're about to...
+  <header class="site-header">
+    <div class="container">
+      <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
+      <nav class="top-navigation">
+        <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="btn btn-nav">Grind Calc</a>
+        <a href="https://pgplayerzero.com/comm-day-calculator" class="btn btn-nav">Comm Day Calc</a>
+        <button id="prizeInfoBtn" class="btn btn-nav">Prize Info</button>
+        <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="btn btn-nav">Contact</a>
+      </nav>
     </div>
-  </div>
+  </header>
 
-  <p class="intro">
-    A first-of-its-kind <strong style="color: red;">CHALLENGE</strong>...<br />
-    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...built for players who <strong>GRIND</strong>.<br />
-    <strong>FLEX</strong> your stats, let the community know you show out,<br />
-    and put some <strong>RESPECT</strong> on your name!
-  </p>
+  <main class="main-content">
+    <div class="container">
+      <div class="hero-section">
+        <div class="stacked-tagline-container">
+          <div class="stacked-tagline">
+            It's not about what you've accomplished.<br />
+            It's about what you're about to...
+          </div>
+        </div>
 
-  <a href="https://challenge.pgplayerzero.com/register" class="button" role="button" aria-label="Enter the PlayerZero Challenge now">Enter Now</a>
+        <p class="intro">
+          A first-of-its-kind <strong class="text-highlight">CHALLENGE</strong>...<br />
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;...built for players who <strong>GRIND</strong>.<br />
+          <strong>FLEX</strong> your stats, let the community know you show out,<br />
+          and put some <strong>RESPECT</strong> on your name!
+        </p>
 
-  <div class="faq">
-    <h2>FAQs</h2>
+        <a href="https://challenge.pgplayerzero.com/register" class="btn btn-primary" role="button" aria-label="Enter the PlayerZero Challenge now">Enter Now</a>
+      </div>
 
-    <details>
-      <summary>What is the PlayerZero Challenge?</summary>
-      <p>This is a community competition for Pokémon GO players. It’s not affiliated with any game publisher — just a grind-it-out contest for bragging rights, stats, and prizes.</p>
-    </details>
+      <section class="faq-section">
+        <h2>FAQs</h2>
 
-    <details>
-      <summary>Who’s behind the PlayerZero Challenge?</summary>
-      <p>The challenge is backed by <a href="https://unluckybunny.com" target="_blank" style="color: red; font-weight: bold;">Unlucky Bunny</a> — an independent creative brand focused on building unique, community-first experiences. From underground competitions to bizarre street marketing, Unlucky Bunny thrives on blending chaos with competition. PlayerZero is their latest experiment in that mission.</p>
-    </details>
+        <details class="faq-item">
+          <summary>What is the PlayerZero Challenge?</summary>
+          <p>This is a community competition for Pokémon GO players. It's not affiliated with any game publisher — just a grind-it-out contest for bragging rights, stats, and prizes.</p>
+        </details>
 
-    <details>
-      <summary>How do I join?</summary>
-      <p>Submit your Trainer Code, stats, and screenshots through the entry form and pay the entry fee to lock in your spot.</p>
-    </details>
+        <details class="faq-item">
+          <summary>Who's behind the PlayerZero Challenge?</summary>
+          <p>The challenge is backed by <a href="https://unluckybunny.com" target="_blank" class="brand-link">Unlucky Bunny</a> — an independent creative brand focused on building unique, community-first experiences. From underground competitions to bizarre street marketing, Unlucky Bunny thrives on blending chaos with competition. PlayerZero is their latest experiment in that mission.</p>
+        </details>
 
-    <details>
-      <summary>When does the challenge start?</summary>
-      <p>Once we hit the minimum number of players to fund the base prize pool, we'll set a launch date. You’ll be notified well in advance so you have time to prepare and plan your grind.</p>
-    </details>
+        <details class="faq-item">
+          <summary>How do I join?</summary>
+          <p>Submit your Trainer Code, stats, and screenshots through the entry form and pay the entry fee to lock in your spot.</p>
+        </details>
 
-    <details>
-      <summary>What stats count?</summary>
-      <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, distance walked, and PokéStops visited. Final categories and scoring methods will be shared before the challenge begins and may shift based on participation.</p>
-    </details>
+        <details class="faq-item">
+          <summary>When does the challenge start?</summary>
+          <p>Once we hit the minimum number of players to fund the base prize pool, we'll set a launch date. You'll be notified well in advance so you have time to prepare and plan your grind.</p>
+        </details>
 
-    <details>
-      <summary>What do I win?</summary>
-      <p>All prizes will be awarded in PokéCoins, including end-of-challenge rewards for top scorers and bonus drops from social media challenges. The more players who enter, the bigger the prize pool — and the more winners we’ll be able to reward in each tier.</p>
-    </details>
+        <details class="faq-item">
+          <summary>What stats count?</summary>
+          <p>This challenge is all about the grind — tracked through quantifiable stats like XP gain, Pokémon caught, distance walked, and PokéStops visited. Final categories and scoring methods will be shared before the challenge begins and may shift based on participation.</p>
+        </details>
 
-    <details>
-      <summary>How many winners will there be?</summary>
-      <p>The number of winners scales with the community. At minimum, we aim to award prizes to the top 3 overall performers, the top 5 in each tracked stat, and 2–5 daily winners through social media challenges. The bigger the event, the bigger the prize pool — and the more players we can reward. Our goal is to recognize both consistency and creativity across the entire challenge.</p>
-    </details>
+        <details class="faq-item">
+          <summary>What do I win?</summary>
+          <p>All prizes will be awarded in PokéCoins, including end-of-challenge rewards for top scorers and bonus drops from social media challenges. The more players who enter, the bigger the prize pool — and the more winners we'll be able to reward in each tier.</p>
+        </details>
 
-    <details>
-      <summary>How are winners notified?</summary>
-      <p>We'll contact winners via the email submitted on your entry form.<br>
-      You can also follow us on
-      Instagram <a href="https://instagram.com/pgPlayerZero" target="_blank" style="color: red; text-decoration: underline;"><strong>@pgPlayerZero</strong></a>
-      and
-      TikTok <a href="https://tiktok.com/@pgPlayerZero" target="_blank" style="color: red; text-decoration: underline;"><strong>@pgPlayerZero</strong></a>
-      for winner shoutouts, daily highlights, and bonus prize drops.</p>
-    </details>
+        <details class="faq-item">
+          <summary>How many winners will there be?</summary>
+          <p>The number of winners scales with the community. At minimum, we aim to award prizes to the top 3 overall performers, the top 5 in each tracked stat, and 2–5 daily winners through social media challenges. The bigger the event, the bigger the prize pool — and the more players we can reward. Our goal is to recognize both consistency and creativity across the entire challenge.</p>
+        </details>
 
-    <details>
-      <summary>What if I miss the start?</summary>
-      <p>The challenge runs for a full 7 days. You can join late and still submit both your starting and ending stats. Just make sure you complete both submission forms before the deadline!</p>
-    </details>
+        <details class="faq-item">
+          <summary>How are winners notified?</summary>
+          <p>We'll contact winners via the email submitted on your entry form.<br>
+          You can also follow us on
+          Instagram <a href="https://instagram.com/pgPlayerZero" target="_blank" class="social-link">@pgPlayerZero</a>
+          and
+          TikTok <a href="https://tiktok.com/@pgPlayerZero" target="_blank" class="social-link">@pgPlayerZero</a>
+          for winner shoutouts, daily highlights, and bonus prize drops.</p>
+        </details>
 
-    <details>
-      <summary>Will player level be a scoring factor?</summary>
-      <p>No. All scoring metrics are chosen to level the playing field. Whether you’re a new or veteran trainer, the categories are designed to reward hustle — not legacy advantage.</p>
-    </details>
+        <details class="faq-item">
+          <summary>What if I miss the start?</summary>
+          <p>The challenge runs for a full 7 days. You can join late and still submit both your starting and ending stats. Just make sure you complete both submission forms before the deadline!</p>
+        </details>
 
-    <details>
-      <summary>What prevents cheating?</summary>
-      <p>We require screenshots before and after the challenge. These are reviewed both manually and with image verification tools. Additional security measures are in place to help ensure fair play. Any suspicious, altered, or unverifiable images will result in immediate disqualification — no refunds.</p>
-    </details>
+        <details class="faq-item">
+          <summary>Will player level be a scoring factor?</summary>
+          <p>No. All scoring metrics are chosen to level the playing field. Whether you're a new or veteran trainer, the categories are designed to reward hustle — not legacy advantage.</p>
+        </details>
 
-    <details>
-      <summary>Is this an official Pokémon GO event?</summary>
-      <p>Nope. The PlayerZero Challenge is an independent, community-run competition. It’s not affiliated with, endorsed by, or sponsored by Pokémon, Nintendo, Niantic, or any of their partners. We’re just fans who like to compete and create something fun for other players.</p>
-    </details>
+        <details class="faq-item">
+          <summary>What prevents cheating?</summary>
+          <p>We require screenshots before and after the challenge. These are reviewed both manually and with image verification tools. Additional security measures are in place to help ensure fair play. Any suspicious, altered, or unverifiable images will result in immediate disqualification — no refunds.</p>
+        </details>
 
-  </div>
+        <details class="faq-item">
+          <summary>Is this an official Pokémon GO event?</summary>
+          <p>Nope. The PlayerZero Challenge is an independent, community-run competition. It's not affiliated with, endorsed by, or sponsored by Pokémon, Nintendo, Niantic, or any of their partners. We're just fans who like to compete and create something fun for other players.</p>
+        </details>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="social-links">
+        <a href="https://instagram.com/pgPlayerZero" target="_blank" class="social-icon">
+          <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
+        </a>
+        <a href="https://tiktok.com/@pgPlayerZero" target="_blank" class="social-icon">
+          <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+        </a>
+        <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank" class="social-icon">
+          <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit">
+        </a>
+      </div>
+    </div>
+  </footer>
 
   <!-- Prize Info Modal -->
-  <div id="prizeInfoModal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: white; color: black; padding: 2rem; border-radius: 10px; max-width: 500px; width: 90%; text-align: left; position: relative;">
-      <button id="closeModal" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 2rem; font-weight: bold; cursor: pointer;">&times;</button>
-      <h2 style="font-size: 1.25rem; margin-bottom: 1rem; font-weight: bold; text-decoration: underline;">Current Prize Pool</h2>
-      <p style="margin: 0.5rem 0;"><strong>1<sup>st</sup> – <span style='color: #FF0000;'>15K Pokécoins</span></strong></p>
-      <p style="margin: 0.5rem 0;"><strong>2<sup>nd</sup> – <span style='color: #FF0000;'>10K Pokécoins</span></strong></p>
-      <p style="margin: 0.5rem 0;"><strong>3<sup>rd</sup> – <span style='color: #FF0000;'>7K Pokécoins</span></strong></p>
-      <p style="margin: 1rem 0; font-weight: bold;">+ 9 daily and category specific prize opportunities</p>
-      <p style="margin-top: 2rem;">The challenge where the prize pool grows with the participants.</p>
-      <p style="font-style: italic; margin-top: 1rem;">More players.<br>More winners.<br>Bigger rewards.</p>
-      <p style="font-size: 0.8rem; margin-top: 1.5rem;"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
+  <div id="prizeInfoModal" class="modal">
+    <div class="modal-content">
+      <button id="closeModal" class="modal-close">&times;</button>
+      <h2 class="modal-title">Current Prize Pool</h2>
+      <p class="prize-item"><strong>1<sup>st</sup> – <span class="prize-amount">15K Pokécoins</span></strong></p>
+      <p class="prize-item"><strong>2<sup>nd</sup> – <span class="prize-amount">10K Pokécoins</span></strong></p>
+      <p class="prize-item"><strong>3<sup>rd</sup> – <span class="prize-amount">7K Pokécoins</span></strong></p>
+      <p class="prize-details">+ 9 daily and category specific prize opportunities</p>
+      <p class="prize-tagline">The challenge where the prize pool grows with the participants.</p>
+      <p class="prize-focus">More players.<br>More winners.<br>Bigger rewards.</p>
+      <p class="prize-note"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
     </div>
   </div>
 
-  <!-- Modal Script -->
-  <script>
-    const prizeBtn = document.getElementById('prizeInfoBtn');
-    const prizeModal = document.getElementById('prizeInfoModal');
-    const closeModal = document.getElementById('closeModal');
-
-    prizeBtn.addEventListener('click', () => {
-      prizeModal.style.display = 'flex';
-    });
-
-    closeModal.addEventListener('click', () => {
-      prizeModal.style.display = 'none';
-    });
-
-    prizeModal.addEventListener('click', (e) => {
-      if (e.target === prizeModal) {
-        prizeModal.style.display = 'none';
-      }
-    });
-  </script>
-
+  <!-- Scripts -->
+  <script src="js/main.js"></script>
 </body>
 </html>
