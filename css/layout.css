@@ -6,6 +6,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem;
+  position: relative;
 }
 
 /* Responsive adjustments */
@@ -26,7 +27,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  position: relative;
 }
 
 /* Main content */
@@ -35,7 +35,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
 }
 
 /* Hero section */
@@ -44,6 +43,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-align: center;
 }
 
 /* Footer */
@@ -66,17 +66,18 @@
 
 /* Navigation */
 .top-navigation {
-  position: static;
+  position: absolute;
+  top: 20px;
+  right: 20px;
   display: flex;
   gap: 10px;
   z-index: 1000;
-  margin-top: 1rem;
-  justify-content: center;
-  flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
   .top-navigation {
+    position: static;
+    margin-top: 1rem;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -106,6 +107,7 @@
   max-width: 650px;
   margin-bottom: 1.5rem;
   line-height: 1.4;
+  text-align: center;
 }
 
 /* FAQ section */
@@ -113,6 +115,7 @@
   max-width: 700px;
   text-align: left;
   width: 100%;
+  margin: 0 auto;
 }
 
 /* Social links */
