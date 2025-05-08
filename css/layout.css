@@ -19,6 +19,7 @@
 .site-header {
   padding: 1.5rem 0 1rem;
   position: relative;
+  text-align: center;
 }
 
 .site-header .container {
@@ -54,7 +55,7 @@
 /* Logo */
 .logo {
   max-width: 400px;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -65,18 +66,17 @@
 
 /* Navigation */
 .top-navigation {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: static;
   display: flex;
   gap: 10px;
   z-index: 1000;
+  margin-top: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
   .top-navigation {
-    position: static;
-    margin-top: 1rem;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -87,7 +87,7 @@
   display: flex;
   justify-content: center;
   width: 100%;
-  margin-bottom: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .stacked-tagline {
