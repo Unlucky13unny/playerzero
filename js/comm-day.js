@@ -5,6 +5,7 @@
 // Set up file input previews
 document.addEventListener('DOMContentLoaded', function() {
   setupImagePreviews();
+  setupModalFunctionality();
 });
 
 /**
@@ -23,6 +24,37 @@ function setupImagePreviews() {
   if (endImage) {
     endImage.addEventListener('change', function() {
       previewImage(this, 'endPreview');
+    });
+  }
+}
+
+/**
+ * Set up the modal functionality
+ */
+function setupModalFunctionality() {
+  const prizeBtn = document.getElementById('prizeInfoBtn');
+  const prizeModal = document.getElementById('prizeInfoModal');
+  const closeModal = document.getElementById('closeModal');
+  
+  if (prizeBtn && prizeModal && closeModal) {
+    prizeBtn.addEventListener('click', () => {
+      prizeModal.style.display = 'flex';
+    });
+    
+    closeModal.addEventListener('click', () => {
+      prizeModal.style.display = 'none';
+    });
+    
+    prizeModal.addEventListener('click', (e) => {
+      if (e.target === prizeModal) {
+        prizeModal.style.display = 'none';
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && prizeModal.style.display === 'flex') {
+        prizeModal.style.display = 'none';
+      }
     });
   }
 }
@@ -76,16 +108,29 @@ function runOCR() {
       });
     })
     .then(({ startData, endData }) => {
+      // Extract Pokémon name if available
+      if (startData.pokemonName) {
+        document.getElementById('pokemonName').value = startData.pokemonName;
+      }
+      
       // Auto-populate form fields with the OCR results
       if (startData.seen) document.getElementById('startSeen').value = startData.seen;
       if (startData.caught) document.getElementById('startCaught').value = startData.caught;
       if (endData.seen) document.getElementById('endSeen').value = endData.seen;
       if (endData.caught) document.getElementById('endCaught').value = endData.caught;
       
+      // Check for shinies in the data
+      if (endData.shiny) document.getElementById('shinyCount').value = endData.shiny;
+      
       // Update feedback and enable button
-      feedback.innerHTML = 'Stats imported successfully! Please verify accuracy below.';
+      feedback.innerHTML = 'Stats imported! Please verify and complete any missing fields.';
       feedback.className = 'feedback success';
       importBtn.disabled = false;
+      
+      // Auto-set trainer name if not set
+      if (document.getElementById('trainerName').value === '') {
+        document.getElementById('trainerName').value = 'Trainer';
+      }
     })
     .catch(error => {
       console.error('OCR error:', error);
@@ -108,41 +153,66 @@ function processImage(file, type) {
   .then(({ data: { text } }) => {
     console.log(`Full OCR text (${type}):`, text);
     
-    // Extract the numbers we need
-    const seenMatch = text.match(/Seen\s*:?\s*(\d+)/i) || 
-                      text.match(/(\d+)\s*seen/i);
+    // Extract information from the OCR text
+    // For Pokémon GO, we are specifically looking for SEEN and CAUGHT numbers
     
-    const caughtMatch = text.match(/Caught\s*:?\s*(\d+)/i) || 
-                        text.match(/(\d+)\s*caught/i);
+    // First, try to find direct patterns for these values
+    const seenMatch = text.match(/SEEN\s*\n*\s*(\d+)/i) || 
+                      text.match(/Seen\s*\n*\s*:?\s*(\d+)/i) ||
+                      text.match(/(\d+)\s*Seen/i);
     
-    // Pokemon name extraction (may not be reliable with OCR)
-    const pokemonName = extractPokemonName(text);
+    const caughtMatch = text.match(/CAUGHT\s*\n*\s*(\d+)/i) || 
+                        text.match(/Caught\s*\n*\s*:?\s*(\d+)/i) ||
+                        text.match(/(\d+)\s*Caught/i);
     
-    if (type === 'start' && pokemonName) {
-      document.getElementById('pokemonName').value = pokemonName;
+    // Look for any lines with numbers, as a fallback
+    const allNumbers = text.match(/\b\d+\b/g) || [];
+    
+    // Try to extract Pokémon name - it's usually in all caps near the top
+    // Pokémon GO shows it as something like ©0919 NYMBLE
+    const pokemonNameMatch = text.match(/\d+\s*([A-Z]{3,})/i);
+    
+    // Check for shiny indicators
+    const shinyMatch = text.match(/SHINY\s*(\d+)/i) || text.match(/(\d+)\s*SHIN(Y|IES)/i);
+    
+    // Prepare the result object
+    const result = {
+      seen: null,
+      caught: null,
+      pokemonName: null,
+      shiny: null
+    };
+    
+    // Set values if found
+    if (seenMatch) {
+      result.seen = seenMatch[1].trim().replace(/[^0-9]/g, '');
+    } else if (allNumbers.length >= 2) {
+      // If we couldn't find explicit matches but have numbers,
+      // assume the larger might be seen and smaller caught
+      const numbers = allNumbers.map(n => parseInt(n));
+      numbers.sort((a, b) => b - a); // Sort in descending order
+      result.seen = numbers[0].toString();
     }
     
-    // Return extracted data
-    return {
-      seen: seenMatch ? seenMatch[1].replace(/,/g, '') : null,
-      caught: caughtMatch ? caughtMatch[1].replace(/,/g, '') : null,
-      pokemonName: pokemonName
-    };
+    if (caughtMatch) {
+      result.caught = caughtMatch[1].trim().replace(/[^0-9]/g, '');
+    } else if (allNumbers.length >= 2) {
+      // If we couldn't find explicit matches but have numbers
+      const numbers = allNumbers.map(n => parseInt(n));
+      numbers.sort((a, b) => b - a); // Sort in descending order
+      result.caught = numbers[1].toString();
+    }
+    
+    if (pokemonNameMatch) {
+      result.pokemonName = pokemonNameMatch[1].trim();
+    }
+    
+    if (shinyMatch) {
+      result.shiny = shinyMatch[1].trim().replace(/[^0-9]/g, '');
+    }
+    
+    return result;
   });
-}
-
-/**
- * Try to extract Pokemon name from OCR text
- * Note: This is challenging and may need to be manually entered
- * @param {string} text - The OCR extracted text
- * @return {string|null} Extracted Pokemon name or null
- */
-function extractPokemonName(text) {
-  // This is a simplified attempt - may need manual entry
-  const pokedexMatch = text.match(/Pok[eé]dex\s*entry[:\s]*#\d+\s*([A-Za-z]+)/i);
-  if (pokedexMatch) return pokedexMatch[1];
-  
-  return null;
 }
 
 /**
@@ -167,6 +237,11 @@ function runStats() {
   
   if (pokemon.trim() === '') {
     alert('Please enter the Pokémon name.');
+    return;
+  }
+  
+  if (hoursPlayed <= 0) {
+    alert('Hours played must be greater than zero.');
     return;
   }
   
