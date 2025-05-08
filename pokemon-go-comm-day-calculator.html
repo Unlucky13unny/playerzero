@@ -4,151 +4,174 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comm Day Calculator | PlayerZero</title>
-    <link rel="icon" type="image/png" href="/favicon.png">
-    <style>
-        body {
-            font-family: sans-serif;
-            background: #fff;
-            color: #111;
-            padding: 2rem;
-            margin: 0;
-            text-align: center;
-        }
-        input, button {
-            padding: 0.5rem;
-            width: 100%;
-            max-width: 400px;
-            margin: 0.5rem auto;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-            display: block;
-        }
-        button {
-            background: #111;
-            color: #fff;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .logo {
-            max-width: 280px;
-            height: auto;
-            margin: 1rem auto;
-        }
-        .card {
-            background: url('card-bg-image.png') center/cover no-repeat;
-            display: none;
-            width: 100%;
-            max-width: 420px;
-            height: 600px;
-            border-radius: 20px;
-            margin: 2rem auto;
-            padding: 1.5rem 1rem;
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2);
-            color: white;
-        }
-        .footer {
-            background: #000;
-            color: #fff;
-            font-size: 1rem;
-            padding: 0.75rem;
-            margin-top: 1.5rem;
-            border-radius: 8px;
-            letter-spacing: 1px;
-        }
-        .stat-group {
-            margin: 1rem 0;
-        }
-        .stat {
-            margin-bottom: 0.5rem;
-        }
-        .label {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            font-weight: bold;
-            margin-bottom: 0.3rem;
-        }
-        .value {
-            font-size: 1.75rem;
-            font-weight: bold;
-            color: #e30613;
-        }
-    </style>
+    <meta name="description" content="Track your Community Day stats with PlayerZero's Comm Day Calculator. Import screenshots, calculate your Pokémon catches, and share your results.">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    
+    <!-- Social Sharing Metadata -->
+    <meta property="og:title" content="Comm Day Calculator | PlayerZero" />
+    <meta property="og:description" content="Track your Community Day performance and share your results with the PlayerZero Comm Day Calculator." />
+    <meta property="og:image" content="https://pgplayerzero.com/comm-day-social.jpg" />
+    <meta property="og:url" content="https://pgplayerzero.com/comm-day-calculator" />
+    <meta name="twitter:card" content="summary_large_image" />
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/layout.css">
+    <link rel="stylesheet" href="css/components.css">
+    
+    <!-- External Libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@2.1.5/dist/tesseract.min.js"></script>
 </head>
 <body>
-    <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-    <h1>Comm Day Calculator</h1>
+    <header class="site-header">
+        <div class="container">
+            <a href="https://pgplayerzero.com">
+                <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
+            </a>
+            <nav class="top-navigation">
+                <a href="https://pgplayerzero.com" class="btn btn-nav">Home</a>
+                <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="btn btn-nav">Grind Calc</a>
+                <a href="https://pgplayerzero.com/comm-day-calculator" class="btn btn-nav active">Comm Day Calc</a>
+                <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="btn btn-nav">Contact</a>
+            </nav>
+        </div>
+    </header>
 
-    <!-- Image Uploads -->
-    <label for="startImage">Start Screenshot</label>
-    <input type="file" id="startImage">
-    <label for="endImage">End Screenshot</label>
-    <input type="file" id="endImage">
-    <button onclick="runOCR()" id="importButton">Import Stats</button>
+    <main class="main-content">
+        <div class="container">
+            <h1>Community Day Calculator</h1>
+            <p class="intro">Track your Community Day performance! Upload your before and after screenshots to automatically calculate your stats.</p>
+            
+            <section class="upload-section">
+                <h2>Upload Screenshots</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="startImage">Start Screenshot</label>
+                        <input type="file" id="startImage" accept="image/*" class="file-input">
+                        <img id="startPreview" class="img-preview" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endImage">End Screenshot</label>
+                        <input type="file" id="endImage" accept="image/*" class="file-input">
+                        <img id="endPreview" class="img-preview" style="display: none;">
+                    </div>
+                </div>
+                
+                <button onclick="runOCR()" id="importButton" class="btn btn-primary">Import Stats</button>
+                <div id="ocrFeedback" class="feedback"></div>
+            </section>
+            
+            <section class="manual-input-section">
+                <h2>Or Enter Stats Manually</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="trainerName">Trainer Name</label>
+                        <input type="text" id="trainerName" placeholder="Your trainer name">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="pokemonName">Pokémon Name</label>
+                        <input type="text" id="pokemonName" placeholder="Featured Pokémon">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="startSeen">Start Seen</label>
+                        <input type="number" id="startSeen" placeholder="Pokémon seen (before)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endSeen">End Seen</label>
+                        <input type="number" id="endSeen" placeholder="Pokémon seen (after)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="startCaught">Start Caught</label>
+                        <input type="number" id="startCaught" placeholder="Pokémon caught (before)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endCaught">End Caught</label>
+                        <input type="number" id="endCaught" placeholder="Pokémon caught (after)">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="shinyCount">Shiny Count</label>
+                        <input type="number" id="shinyCount" placeholder="Number of shinies caught">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="hoursPlayed">Hours Played</label>
+                        <input type="number" id="hoursPlayed" placeholder="Hours spent playing" step="0.5">
+                    </div>
+                </div>
+                
+                <button onclick="runStats()" class="btn btn-primary">Calculate My Stats</button>
+            </section>
+            
+            <section class="result-section">
+                <div id="card" class="card comm-day-card" style="display: none;">
+                    <div class="card-header">COMM DAY CARD</div>
+                    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
+                    <div class="trainer-name" id="trainerDisplay">Trainer Name</div>
+                    
+                    <div class="pokemon-info">
+                        <div class="label">POKÉMON:</div>
+                        <div class="value pokemon-name" id="pokemonDisplay">POKEMON</div>
+                    </div>
 
-    <!-- Form Inputs -->
-    <input id="trainerName" placeholder="Trainer Name">
-    <input id="pokemonName" placeholder="Pokémon Name">
-    <input id="startSeen" placeholder="Start Seen">
-    <input id="startCaught" placeholder="Start Caught">
-    <input id="endSeen" placeholder="End Seen">
-    <input id="endCaught" placeholder="End Caught">
-    <input id="shinyCount" placeholder="Shiny Count">
-    <input id="hoursPlayed" placeholder="Hours Played">
-    
-    <button onclick="runStats()">Run My Stats</button>
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="label">POKÉMON CAUGHT</div>
+                            <div class="value" id="deltaCaught">0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">CATCH RATE</div>
+                            <div class="value" id="catchPercent">0%</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">CAUGHT PER HOUR</div>
+                            <div class="value" id="caughtPerHour">0.0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">SHINY COUNT</div>
+                            <div class="value" id="shinyTotal">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="downloadCard()" id="downloadBtn" class="btn btn-primary" style="display: none;">Download My Comm Day Card</button>
+            </section>
+        </div>
+    </main>
 
-    <!-- Card Display -->
-    <div id="card" class="card">
-        <div class="footer">COMM DAY CARD</div>
-        <img src="playerzero-logo.png" alt="PlayerZero Logo" class="logo">
-        <div class="value" id="trainerDisplay">Trainer Name</div>
-        <div class="label">POKÉMON:</div>
-        <div class="value" id="pokemonDisplay">POKEMON</div>
-
-        <div class="stat-group">
-            <div class="stat">
-                <div class="label">POKÉMON CAUGHT</div>
-                <div class="value" id="deltaCaught">0</div>
-            </div>
-            <div class="stat">
-                <div class="label">CATCH RATE</div>
-                <div class="value" id="catchPercent">0%</div>
-            </div>
-            <div class="stat">
-                <div class="label">CAUGHT PER HOUR</div>
-                <div class="value" id="caughtPerHour">0.0</div>
-            </div>
-            <div class="stat">
-                <div class="label">SHINY COUNT</div>
-                <div class="value" id="shinyTotal">0</div>
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>Share your Comm Day Card on social media with <strong>#PlayerZeroGrind</strong></p>
+                <div class="social-links">
+                    <a href="https://instagram.com/pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
+                    </a>
+                    <a href="https://tiktok.com/@pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                    </a>
+                    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit">
+                    </a>
+                </div>
             </div>
         </div>
-    </div>
+    </footer>
 
-    <script>
-        function runStats() {
-            const seenStart = parseInt(document.getElementById('startSeen').value);
-            const seenEnd = parseInt(document.getElementById('endSeen').value);
-            const caughtStart = parseInt(document.getElementById('startCaught').value);
-            const caughtEnd = parseInt(document.getElementById('endCaught').value);
-            const shiny = parseInt(document.getElementById('shinyCount').value) || 0;
-            const hours = parseFloat(document.getElementById('hoursPlayed').value) || 1;
-            const trainer = document.getElementById('trainerName').value;
-            const pokemon = document.getElementById('pokemonName').value;
-
-            const seen = Math.max(1, seenEnd - seenStart);
-            const caught = Math.max(0, caughtEnd - caughtStart);
-            const catchPercent = ((caught / seen) * 100).toFixed(1);
-            const perHour = (caught / hours).toFixed(1);
-
-            document.getElementById('deltaCaught').textContent = caught.toLocaleString();
-            document.getElementById('catchPercent').textContent = `${catchPercent}%`;
-            document.getElementById('caughtPerHour').textContent = perHour;
-            document.getElementById('shinyTotal').textContent = shiny;
-            document.getElementById('trainerDisplay').textContent = trainer;
-            document.getElementById('pokemonDisplay').textContent = pokemon;
-            document.getElementById('card').style.display = 'block';
-        }
-    </script>
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/comm-day.js"></script>
 </body>
 </html>
