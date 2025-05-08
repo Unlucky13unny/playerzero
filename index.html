@@ -20,18 +20,73 @@
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/layout.css">
   <link rel="stylesheet" href="css/components.css">
+  
+  <!-- Override styles to fix header layout -->
+  <style>
+    /* Override header styles directly in the HTML */
+    .site-header {
+      padding: 20px 0;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .site-header .container {
+      width: 100%;
+      max-width: 1200px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .top-navigation {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+      width: 100%;
+    }
+    
+    .logo {
+      max-width: 400px;
+      margin: 0 auto 20px;
+      display: block;
+      clear: both;
+    }
+    
+    .btn-nav {
+      background-color: #111 !important;
+      color: #fff !important;
+      font-size: 0.85rem !important;
+      padding: 8px 14px !important;
+      border-radius: 5px !important;
+      text-decoration: none !important;
+      font-weight: bold !important;
+      display: inline-block !important;
+    }
+    
+    .btn-nav:hover {
+      background-color: #333 !important;
+    }
+    
+    .btn-nav.active {
+      background-color: #e30613 !important;
+    }
+  </style>
 </head>
 
 <body>
   <header class="site-header">
     <div class="container">
-      <nav class="top-navigation">
+      <div class="top-navigation">
         <a href="https://pgplayerzero.com" class="btn btn-nav active">Home</a>
         <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="btn btn-nav">Grind Calc</a>
         <a href="https://www.pgplayerzero.com/pokemon-go-comm-day-calculator" class="btn btn-nav">Comm Day Calc</a>
         <button id="prizeInfoBtn" class="btn btn-nav">Prize Info</button>
         <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="btn btn-nav">Contact</a>
-      </nav>
+      </div>
       <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo" />
     </div>
   </header>
