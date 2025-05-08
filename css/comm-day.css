@@ -1,15 +1,79 @@
 /* Additional CSS for the Comm Day Calculator */
 
+/* Page specific overrides */
+.main-content {
+  text-align: left;
+}
+
+h1, .intro {
+  text-align: center;
+}
+
+/* Sections */
+.upload-section,
+.manual-input-section,
+.result-section {
+  background: #f9f9f9;
+  border-radius: 10px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+section h2 {
+  margin-top: 0;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 0.5rem;
+}
+
 /* Form layout */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.5rem;
   margin: 1.5rem 0;
 }
 
 .form-group {
   margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
+}
+
+.form-group input:focus {
+  border-color: #111;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(0,0,0,0.1);
+}
+
+/* Buttons */
+.btn {
+  padding: 0.75rem 1.5rem;
+  margin: 1rem 0;
+  font-weight: bold;
+}
+
+.btn-primary {
+  background-color: #111 !important;
+  color: #fff !important;
+}
+
+.btn-primary:hover {
+  background-color: #333 !important;
 }
 
 /* Image preview */
@@ -21,12 +85,39 @@
   border-radius: 5px;
 }
 
+.file-input {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 0.75rem;
+  background: white;
+}
+
+/* Feedback messages */
+.feedback {
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 5px;
+  font-style: italic;
+}
+
+.feedback.error {
+  background-color: #ffecec;
+  color: #e30613;
+}
+
+.feedback.success {
+  background-color: #ecffec;
+  color: #28a745;
+}
+
 /* Comm Day Card Styling */
 .comm-day-card {
-  background: url('card-bg-image.png') center/cover no-repeat;
+  background: #222;
   color: white;
   padding: 2rem;
   text-align: center;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .card-header {
@@ -41,7 +132,7 @@
 }
 
 .card-logo {
-  max-width: 200px;
+  max-width: 180px;
   margin: 0 auto 1rem;
 }
 
@@ -58,6 +149,7 @@
 .pokemon-name {
   font-size: 1.75rem;
   margin-top: 0.25rem;
+  color: #e30613;
 }
 
 /* Stats grid */
@@ -85,24 +177,26 @@
   color: #e30613;
 }
 
-/* Section styling */
-.upload-section,
-.manual-input-section,
-.result-section {
-  margin-bottom: 3rem;
-  padding: 1.5rem;
-  background: #f9f9f9;
-  border-radius: 10px;
-}
-
 /* Active navigation */
 .btn-nav.active {
-  background-color: #e30613;
+  background-color: #e30613 !important;
 }
 
+/* Responsive adjustments */
 @media (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+  
   .stat-grid {
     grid-template-columns: 1fr;
     gap: 1rem;
+  }
+  
+  .upload-section,
+  .manual-input-section,
+  .result-section {
+    padding: 1.5rem;
   }
 }
