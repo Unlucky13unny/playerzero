@@ -1,0 +1,108 @@
+/* Additional CSS for the Comm Day Calculator */
+
+/* Form layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+/* Image preview */
+.img-preview {
+  max-width: 100%;
+  max-height: 200px;
+  margin-top: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+/* Comm Day Card Styling */
+.comm-day-card {
+  background: url('card-bg-image.png') center/cover no-repeat;
+  color: white;
+  padding: 2rem;
+  text-align: center;
+}
+
+.card-header {
+  background: #000;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 0.75rem;
+  margin: -2rem -2rem 1.5rem;
+  border-radius: 15px 15px 0 0;
+  letter-spacing: 1px;
+}
+
+.card-logo {
+  max-width: 200px;
+  margin: 0 auto 1rem;
+}
+
+.trainer-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+}
+
+.pokemon-info {
+  margin-bottom: 1.5rem;
+}
+
+.pokemon-name {
+  font-size: 1.75rem;
+  margin-top: 0.25rem;
+}
+
+/* Stats grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-item .label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
+
+.stat-item .value {
+  font-size: 1.75rem;
+  font-weight: bold;
+  color: #e30613;
+}
+
+/* Section styling */
+.upload-section,
+.manual-input-section,
+.result-section {
+  margin-bottom: 3rem;
+  padding: 1.5rem;
+  background: #f9f9f9;
+  border-radius: 10px;
+}
+
+/* Active navigation */
+.btn-nav.active {
+  background-color: #e30613;
+}
+
+@media (max-width: 768px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
