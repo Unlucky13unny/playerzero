@@ -1,83 +1,7 @@
 /**
- * Community Day Calculator JavaScript
+ * Enhanced OCR for Pokémon GO Screenshots
+ * This implementation adds preprocessing to improve Tesseract's performance
  */
-
-// Set up file input previews
-document.addEventListener('DOMContentLoaded', function() {
-  setupImagePreviews();
-  setupModalFunctionality();
-});
-
-/**
- * Set up image preview when files are selected
- */
-function setupImagePreviews() {
-  const startImage = document.getElementById('startImage');
-  const endImage = document.getElementById('endImage');
-  
-  if (startImage) {
-    startImage.addEventListener('change', function() {
-      previewImage(this, 'startPreview');
-    });
-  }
-  
-  if (endImage) {
-    endImage.addEventListener('change', function() {
-      previewImage(this, 'endPreview');
-    });
-  }
-}
-
-/**
- * Set up the modal functionality
- */
-function setupModalFunctionality() {
-  const prizeBtn = document.getElementById('prizeInfoBtn');
-  const prizeModal = document.getElementById('prizeInfoModal');
-  const closeModal = document.getElementById('closeModal');
-  
-  if (prizeBtn && prizeModal && closeModal) {
-    prizeBtn.addEventListener('click', () => {
-      prizeModal.style.display = 'flex';
-    });
-    
-    closeModal.addEventListener('click', () => {
-      prizeModal.style.display = 'none';
-    });
-    
-    prizeModal.addEventListener('click', (e) => {
-      if (e.target === prizeModal) {
-        prizeModal.style.display = 'none';
-      }
-    });
-    
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && prizeModal.style.display === 'flex') {
-        prizeModal.style.display = 'none';
-      }
-    });
-  }
-}
-
-/**
- * Preview an image in the specified element
- * @param {HTMLInputElement} input - The file input element
- * @param {string} previewId - ID of the preview image element
- */
-function previewImage(input, previewId) {
-  const preview = document.getElementById(previewId);
-  
-  if (input.files && input.files[0] && preview) {
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-      preview.src = e.target.result;
-      preview.style.display = 'block';
-    };
-    
-    reader.readAsDataURL(input.files[0]);
-  }
-}
 
 /**
  * Run OCR on both start and end screenshots
@@ -96,123 +20,305 @@ function runOCR() {
   
   // Disable button and show processing status
   importBtn.disabled = true;
-  feedback.innerHTML = 'Processing screenshots... This may take a moment.';
-  feedback.className = 'feedback';
+  feedback.innerHTML = '<div class="loading-spinner"></div> Analyzing screenshots... This may take a moment.';
+  feedback.className = 'feedback processing';
   
-  // Process start image
-  processImage(startFile, 'start')
-    .then(startData => {
-      // Once start image is done, process end image
-      return processImage(endFile, 'end').then(endData => {
-        return { startData, endData };
-      });
-    })
-    .then(({ startData, endData }) => {
-      // Extract Pokémon name if available
-      if (startData.pokemonName) {
-        document.getElementById('pokemonName').value = startData.pokemonName;
-      }
-      
-      // Auto-populate form fields with the OCR results
-      if (startData.seen) document.getElementById('startSeen').value = startData.seen;
-      if (startData.caught) document.getElementById('startCaught').value = startData.caught;
-      if (endData.seen) document.getElementById('endSeen').value = endData.seen;
-      if (endData.caught) document.getElementById('endCaught').value = endData.caught;
-      
-      // Check for shinies in the data
-      if (endData.shiny) document.getElementById('shinyCount').value = endData.shiny;
-      
-      // Update feedback and enable button
-      feedback.innerHTML = 'Stats imported! Please verify and complete any missing fields.';
+  // First preprocess the images to enhance text visibility
+  Promise.all([
+    preprocessImage(startFile),
+    preprocessImage(endFile)
+  ])
+  .then(([startCanvas, endCanvas]) => {
+    // After preprocessing, run OCR on the enhanced images
+    return Promise.all([
+      recognizeText(startCanvas, 'start'),
+      recognizeText(endCanvas, 'end')
+    ]);
+  })
+  .then(([startData, endData]) => {
+    console.log("OCR Results:", { startData, endData });
+    
+    // Auto-populate form fields with the OCR results
+    let fieldsPopulated = 0;
+    
+    if (startData.pokemonName) {
+      document.getElementById('pokemonName').value = startData.pokemonName;
+      fieldsPopulated++;
+    }
+    
+    if (startData.seen) {
+      document.getElementById('startSeen').value = startData.seen;
+      fieldsPopulated++;
+    }
+    
+    if (startData.caught) {
+      document.getElementById('startCaught').value = startData.caught;
+      fieldsPopulated++;
+    }
+    
+    if (endData.seen) {
+      document.getElementById('endSeen').value = endData.seen;
+      fieldsPopulated++;
+    }
+    
+    if (endData.caught) {
+      document.getElementById('endCaught').value = endData.caught;
+      fieldsPopulated++;
+    }
+    
+    if (endData.shiny) {
+      document.getElementById('shinyCount').value = endData.shiny;
+      fieldsPopulated++;
+    }
+    
+    // Update feedback based on how many fields were populated
+    if (fieldsPopulated >= 4) {
+      feedback.innerHTML = '✅ Stats extracted successfully! Please review and adjust if needed.';
       feedback.className = 'feedback success';
-      importBtn.disabled = false;
       
-      // Auto-set trainer name if not set
-      if (document.getElementById('trainerName').value === '') {
-        document.getElementById('trainerName').value = 'Trainer';
-      }
-    })
-    .catch(error => {
-      console.error('OCR error:', error);
-      feedback.innerHTML = '⚠️ Error processing images. Please check your screenshots or enter stats manually.';
+      // Show the difference calculation
+      updateDifferences();
+    } else if (fieldsPopulated > 0) {
+      feedback.innerHTML = '⚠️ Some stats were extracted. Please complete the missing fields.';
+      feedback.className = 'feedback warning';
+    } else {
+      feedback.innerHTML = '⚠️ Could not extract stats. Try adjusting the screenshots or enter values manually.';
       feedback.className = 'feedback error';
-      importBtn.disabled = false;
-    });
+    }
+    
+    importBtn.disabled = false;
+  })
+  .catch(error => {
+    console.error('OCR error:', error);
+    feedback.innerHTML = '⚠️ Error processing images. Try cropping screenshots to just show the stats area.';
+    feedback.className = 'feedback error';
+    importBtn.disabled = false;
+  });
 }
 
 /**
- * Process a single image with OCR
+ * Preprocess image to improve OCR accuracy
  * @param {File} file - The image file to process
- * @param {string} type - Either 'start' or 'end' to indicate screenshot type
- * @return {Promise<Object>} OCR results
+ * @returns {Promise<HTMLCanvasElement>} Canvas with processed image
  */
-function processImage(file, type) {
-  return Tesseract.recognize(file, 'eng', { 
-    logger: m => console.log(`OCR (${type}):`, m)
-  })
-  .then(({ data: { text } }) => {
-    console.log(`Full OCR text (${type}):`, text);
+function preprocessImage(file) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const reader = new FileReader();
     
-    // Extract information from the OCR text
-    // For Pokémon GO, we are specifically looking for SEEN and CAUGHT numbers
-    
-    // First, try to find direct patterns for these values
-    const seenMatch = text.match(/SEEN\s*\n*\s*(\d+)/i) || 
-                      text.match(/Seen\s*\n*\s*:?\s*(\d+)/i) ||
-                      text.match(/(\d+)\s*Seen/i);
-    
-    const caughtMatch = text.match(/CAUGHT\s*\n*\s*(\d+)/i) || 
-                        text.match(/Caught\s*\n*\s*:?\s*(\d+)/i) ||
-                        text.match(/(\d+)\s*Caught/i);
-    
-    // Look for any lines with numbers, as a fallback
-    const allNumbers = text.match(/\b\d+\b/g) || [];
-    
-    // Try to extract Pokémon name - it's usually in all caps near the top
-    // Pokémon GO shows it as something like ©0919 NYMBLE
-    const pokemonNameMatch = text.match(/\d+\s*([A-Z]{3,})/i);
-    
-    // Check for shiny indicators
-    const shinyMatch = text.match(/SHINY\s*(\d+)/i) || text.match(/(\d+)\s*SHIN(Y|IES)/i);
-    
-    // Prepare the result object
-    const result = {
-      seen: null,
-      caught: null,
-      pokemonName: null,
-      shiny: null
+    reader.onload = function(e) {
+      img.onload = function() {
+        // Create a canvas element
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas dimensions to match image
+        canvas.width = img.width;
+        canvas.height = img.height;
+        
+        // Draw the image to the canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Get image data to manipulate
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imageData.data;
+        
+        // Apply image processing to enhance text visibility
+        // This works especially well for the light blue background of Pokémon GO
+        for (let i = 0; i < data.length; i += 4) {
+          // Check if pixel is light blue (Pokémon GO background)
+          const isLightBlue = data[i] > 100 && data[i+1] > 190 && data[i+2] > 220;
+          
+          if (isLightBlue) {
+            // Make background white for better contrast
+            data[i] = 255;     // R
+            data[i+1] = 255;   // G
+            data[i+2] = 255;   // B
+          } else {
+            // Enhance contrast for non-background elements
+            // Boost black text
+            if (data[i] < 100 && data[i+1] < 100 && data[i+2] < 100) {
+              data[i] = 0;      // R
+              data[i+1] = 0;    // G
+              data[i+2] = 0;    // B
+            }
+          }
+        }
+        
+        // Put the modified data back
+        ctx.putImageData(imageData, 0, 0);
+        
+        // Resolve the canvas for OCR
+        resolve(canvas);
+      };
+      
+      img.onerror = function() {
+        reject(new Error("Failed to load image"));
+      };
+      
+      img.src = e.target.result;
     };
     
-    // Set values if found
-    if (seenMatch) {
-      result.seen = seenMatch[1].trim().replace(/[^0-9]/g, '');
-    } else if (allNumbers.length >= 2) {
-      // If we couldn't find explicit matches but have numbers,
-      // assume the larger might be seen and smaller caught
-      const numbers = allNumbers.map(n => parseInt(n));
-      numbers.sort((a, b) => b - a); // Sort in descending order
-      result.seen = numbers[0].toString();
-    }
+    reader.onerror = function() {
+      reject(new Error("Failed to read file"));
+    };
     
-    if (caughtMatch) {
-      result.caught = caughtMatch[1].trim().replace(/[^0-9]/g, '');
-    } else if (allNumbers.length >= 2) {
-      // If we couldn't find explicit matches but have numbers
-      const numbers = allNumbers.map(n => parseInt(n));
-      numbers.sort((a, b) => b - a); // Sort in descending order
-      result.caught = numbers[1].toString();
-    }
-    
-    if (pokemonNameMatch) {
-      result.pokemonName = pokemonNameMatch[1].trim();
-    }
-    
-    if (shinyMatch) {
-      result.shiny = shinyMatch[1].trim().replace(/[^0-9]/g, '');
-    }
-    
-    return result;
+    reader.readAsDataURL(file);
   });
+}
+
+/**
+ * Perform text recognition on preprocessed image
+ * @param {HTMLCanvasElement} canvas - Preprocessed image canvas
+ * @param {string} type - Either 'start' or 'end'
+ * @returns {Promise<Object>} Extracted data
+ */
+function recognizeText(canvas, type) {
+  return new Promise((resolve, reject) => {
+    // Convert canvas to a format Tesseract can use
+    const dataUrl = canvas.toDataURL('image/png');
+    
+    // Configure Tesseract for better accuracy with number recognition
+    const tessConfig = {
+      lang: 'eng',
+      tessedit_char_whitelist: '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ:/ ',
+      tessedit_pageseg_mode: '6', // Assume a single uniform text block
+    };
+    
+    // Run Tesseract OCR
+    Tesseract.recognize(dataUrl, tessConfig)
+      .then(({ data }) => {
+        // Get text and words from result
+        const text = data.text;
+        const words = data.words.map(w => w.text);
+        
+        console.log(`OCR ${type} result:`, text);
+        console.log(`OCR ${type} words:`, words);
+        
+        // Extract specific information from Pokémon GO format
+        const result = extractPokemonGoStats(text, words);
+        resolve(result);
+      })
+      .catch(err => {
+        console.error("Tesseract error:", err);
+        reject(err);
+      });
+  });
+}
+
+/**
+ * Extract Pokémon GO stats from OCR text
+ * @param {string} text - Full OCR text
+ * @param {Array<string>} words - Individual words from OCR
+ * @returns {Object} Extracted stats
+ */
+function extractPokemonGoStats(text, words) {
+  const result = {
+    seen: null,
+    caught: null,
+    pokemonName: null,
+    shiny: null
+  };
+  
+  // Find Pokemon name (usually all caps after a number)
+  const pokemonNameMatch = text.match(/\d+\s+([A-Z]{3,})/);
+  if (pokemonNameMatch) {
+    result.pokemonName = pokemonNameMatch[1].trim();
+  }
+  
+  // Look for "SEEN" and the number next to it
+  const seenMatch = text.match(/SEEN\s*[\n\r:]*\s*(\d+)/i);
+  if (seenMatch) {
+    result.seen = seenMatch[1].trim();
+  } else {
+    // Try finding the word "SEEN" and then look for nearby numbers
+    const seenIndex = words.findIndex(w => w.match(/SEEN/i));
+    if (seenIndex >= 0 && seenIndex < words.length - 1) {
+      // Check the next few words for a number
+      for (let i = 1; i <= 3; i++) {
+        if (seenIndex + i < words.length && words[seenIndex + i].match(/^\d+$/)) {
+          result.seen = words[seenIndex + i];
+          break;
+        }
+      }
+    }
+  }
+  
+  // Look for "CAUGHT" and the number next to it
+  const caughtMatch = text.match(/CAUGHT\s*[\n\r:]*\s*(\d+)/i);
+  if (caughtMatch) {
+    result.caught = caughtMatch[1].trim();
+  } else {
+    // Try finding the word "CAUGHT" and then look for nearby numbers
+    const caughtIndex = words.findIndex(w => w.match(/CAUGHT/i));
+    if (caughtIndex >= 0 && caughtIndex < words.length - 1) {
+      // Check the next few words for a number
+      for (let i = 1; i <= 3; i++) {
+        if (caughtIndex + i < words.length && words[caughtIndex + i].match(/^\d+$/)) {
+          result.caught = words[caughtIndex + i];
+          break;
+        }
+      }
+    }
+  }
+  
+  // Look for "SHINY" indicator
+  if (text.includes("SHINY")) {
+    result.shiny = "1"; // Default to 1 if we find SHINY but no count
+    
+    // Try to find a number near SHINY
+    const shinyMatch = text.match(/SHINY\s*(\d+)/i);
+    if (shinyMatch) {
+      result.shiny = shinyMatch[1].trim();
+    }
+  }
+  
+  // Fallback: Look for pairs of numbers which might be seen/caught
+  if (!result.seen || !result.caught) {
+    const numbers = text.match(/\b\d+\b/g) || [];
+    if (numbers.length >= 2) {
+      // Find two consecutive numbers that might be seen/caught
+      for (let i = 0; i < numbers.length - 1; i++) {
+        const num1 = parseInt(numbers[i]);
+        const num2 = parseInt(numbers[i + 1]);
+        
+        // Usually seen > caught
+        if (num1 > num2) {
+          result.seen = result.seen || numbers[i];
+          result.caught = result.caught || numbers[i + 1];
+          break;
+        }
+      }
+    }
+  }
+  
+  return result;
+}
+
+/**
+ * Update differences display as user types
+ */
+function updateDifferences() {
+  const startSeen = parseInt(document.getElementById('startSeen').value) || 0;
+  const endSeen = parseInt(document.getElementById('endSeen').value) || 0;
+  const startCaught = parseInt(document.getElementById('startCaught').value) || 0;
+  const endCaught = parseInt(document.getElementById('endCaught').value) || 0;
+  
+  // If we have valid before/after values, show the difference
+  if (endSeen >= startSeen && endCaught >= startCaught) {
+    const seenDiff = endSeen - startSeen;
+    const caughtDiff = endCaught - startCaught;
+    const catchRate = seenDiff > 0 ? (caughtDiff / seenDiff) * 100 : 0;
+    
+    const diffDisplay = document.getElementById('statsDifference');
+    if (diffDisplay) {
+      diffDisplay.innerHTML = `
+        <strong>Session Summary:</strong> You encountered ${seenDiff} Pokémon and caught ${caughtDiff} of them.
+        That's a ${catchRate.toFixed(1)}% catch rate!
+      `;
+      diffDisplay.style.display = 'block';
+    }
+  }
 }
 
 /**
@@ -230,8 +336,13 @@ function runStats() {
   const hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 1;
   
   // Validate inputs
-  if (endSeen < startSeen || endCaught < startCaught) {
-    alert('End values must be greater than or equal to start values.');
+  if (endSeen < startSeen) {
+    alert('End "Seen" value must be greater than or equal to start "Seen" value.');
+    return;
+  }
+  
+  if (endCaught < startCaught) {
+    alert('End "Caught" value must be greater than or equal to start "Caught" value.');
     return;
   }
   
@@ -262,6 +373,12 @@ function runStats() {
   // Show card and download button
   document.getElementById('card').style.display = 'block';
   document.getElementById('downloadBtn').style.display = 'inline-block';
+  
+  // Scroll to the card
+  document.getElementById('card').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  });
 }
 
 /**
@@ -289,5 +406,94 @@ function downloadCard() {
   }).catch(error => {
     console.error('Error generating image:', error);
     alert('Error generating image. Please try again.');
+  });
+}
+
+// Initialize on document load
+document.addEventListener('DOMContentLoaded', function() {
+  setupImagePreviews();
+  setupModalFunctionality();
+  setupFieldListeners();
+});
+
+/**
+ * Set up image preview when files are selected
+ */
+function setupImagePreviews() {
+  const startImage = document.getElementById('startImage');
+  const endImage = document.getElementById('endImage');
+  
+  if (startImage) {
+    startImage.addEventListener('change', function() {
+      previewImage(this, 'startPreview');
+    });
+  }
+  
+  if (endImage) {
+    endImage.addEventListener('change', function() {
+      previewImage(this, 'endPreview');
+    });
+  }
+}
+
+/**
+ * Preview an image in the specified element
+ */
+function previewImage(input, previewId) {
+  const preview = document.getElementById(previewId);
+  
+  if (input.files && input.files[0] && preview) {
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+/**
+ * Set up the prize info modal functionality
+ */
+function setupModalFunctionality() {
+  const prizeBtn = document.getElementById('prizeInfoBtn');
+  const prizeModal = document.getElementById('prizeInfoModal');
+  const closeModal = document.getElementById('closeModal');
+  
+  if (prizeBtn && prizeModal && closeModal) {
+    prizeBtn.addEventListener('click', () => {
+      prizeModal.style.display = 'flex';
+    });
+    
+    closeModal.addEventListener('click', () => {
+      prizeModal.style.display = 'none';
+    });
+    
+    prizeModal.addEventListener('click', (e) => {
+      if (e.target === prizeModal) {
+        prizeModal.style.display = 'none';
+      }
+    });
+    
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && prizeModal.style.display === 'flex') {
+        prizeModal.style.display = 'none';
+      }
+    });
+  }
+}
+
+/**
+ * Set up listeners for form fields to update differences
+ */
+function setupFieldListeners() {
+  const fields = ['startSeen', 'endSeen', 'startCaught', 'endCaught'];
+  fields.forEach(fieldId => {
+    const field = document.getElementById(fieldId);
+    if (field) {
+      field.addEventListener('input', updateDifferences);
+    }
   });
 }
