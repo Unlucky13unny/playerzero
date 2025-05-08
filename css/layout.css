@@ -1,0 +1,124 @@
+/* layout.css - Page structure, grids, and spacing */
+
+/* Container */
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .container {
+    padding: 0 1rem;
+  }
+}
+
+/* Header */
+.site-header {
+  padding: 1.5rem 0 1rem;
+  position: relative;
+}
+
+.site-header .container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+/* Main content */
+.main-content {
+  padding: 1rem 0 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+/* Hero section */
+.hero-section {
+  margin-bottom: 3rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Footer */
+.site-footer {
+  padding: 2rem 0;
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  max-width: 400px;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+  .logo {
+    max-width: 280px;
+  }
+}
+
+/* Navigation */
+.top-navigation {
+  position: absolute;
+  top: 0;
+  right: 0;
+  display: flex;
+  gap: 10px;
+  z-index: 1000;
+}
+
+@media (max-width: 768px) {
+  .top-navigation {
+    position: static;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+/* Tagline */
+.stacked-tagline-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  margin-bottom: 1.5rem;
+}
+
+.stacked-tagline {
+  display: inline-block;
+  text-align: left;
+  font-weight: bold;
+  font-style: italic;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+/* Intro text */
+.intro {
+  font-size: 1rem;
+  font-weight: 500;
+  max-width: 650px;
+  margin-bottom: 1.5rem;
+  line-height: 1.4;
+}
+
+/* FAQ section */
+.faq-section {
+  max-width: 700px;
+  text-align: left;
+  width: 100%;
+}
+
+/* Social links */
+.social-links {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
