@@ -1,5 +1,6 @@
 /**
- * Optimized OCR specifically for Pokémon GO stats screens
+ * OCR.space Implementation for Pokémon GO Comm Day Calculator
+ * Drop-in replacement for the existing OCR functionality
  */
 
 // Initialize on document load
@@ -123,6 +124,243 @@ function updateDifferenceDisplay() {
 }
 
 /**
+ * Process image with OCR.space API
+ * @param {File} imageFile - The image file to process
+ * @returns {Promise<string>} - The extracted text
+ */
+function processWithOCRspace(imageFile) {
+  // Create form data
+  const formData = new FormData();
+  formData.append('file', imageFile);
+  formData.append('apikey', 'helloworld'); // Free API key
+  formData.append('language', 'eng');
+  formData.append('scale', 'true'); // Helps with small text
+  formData.append('OCREngine', '2'); // More accurate engine
+  
+  // For Pokémon GO screenshots, these settings help:
+  formData.append('detectOrientation', 'true');
+  formData.append('isTable', 'false');
+  
+  return fetch('https://api.ocr.space/parse/image', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => {
+    if (!response.ok) {
+      throw new Error(`OCR API error: ${response.status}`);
+    }
+    return response.json();
+  })
+  .then(result => {
+    console.log('OCR Result:', result);
+    
+    if (result.OCRExitCode !== 1) {
+      throw new Error(`OCR processing failed: ${result.ErrorMessage || 'Unknown error'}`);
+    }
+    
+    if (result.ParsedResults && result.ParsedResults.length > 0) {
+      return result.ParsedResults[0].ParsedText;
+    }
+    
+    throw new Error('No text found in image');
+  });
+}
+
+/**
+ * Extract Pokémon GO stats from OCR text
+ * @param {string} text - The OCR extracted text
+ * @returns {Object} - Extracted stats
+ */
+function extractPokemonStats(text) {
+  console.log('Extracting stats from:', text);
+  
+  const stats = {
+    seen: null,
+    caught: null,
+    pokemon: null
+  };
+  
+  // Clean up the text for better matching
+  const cleanText = text.replace(/\r\n/g, '\n').replace(/\n+/g, ' ').trim();
+  
+  // Look for common Pokémon GO stat patterns
+  
+  // Seen count - various formats
+  const seenPattern = /SEEN\s*[:\s]*(\d+)/i;
+  const seenMatch = cleanText.match(seenPattern);
+  if (seenMatch && seenMatch[1]) {
+    stats.seen = seenMatch[1].trim();
+  }
+  
+  // Caught count - various formats
+  const caughtPattern = /CAUGHT\s*[:\s]*(\d+)/i;
+  const caughtMatch = cleanText.match(caughtPattern);
+  if (caughtMatch && caughtMatch[1]) {
+    stats.caught = caughtMatch[1].trim();
+  }
+  
+  // Try to extract Pokémon name (usually all caps after numbers)
+  const pokemonNamePattern = /\d+\s+([A-Z]{3,})/;
+  const pokemonMatch = cleanText.match(pokemonNamePattern);
+  if (pokemonMatch && pokemonMatch[1]) {
+    stats.pokemon = pokemonMatch[1].trim();
+  }
+  
+  // If we couldn't find stats with the patterns, try looking for numbers
+  if (!stats.seen || !stats.caught) {
+    // Find all numbers in text
+    const numbers = cleanText.match(/\b\d+\b/g) || [];
+    
+    // If we have at least two numbers, assume the larger is seen, smaller is caught
+    if (numbers.length >= 2) {
+      const parsedNumbers = numbers.map(n => parseInt(n, 10))
+                                  .filter(n => n > 0 && n < 100000);
+      
+      parsedNumbers.sort((a, b) => b - a); // Sort descending
+      
+      if (!stats.seen && parsedNumbers.length > 0) {
+        stats.seen = parsedNumbers[0].toString();
+      }
+      
+      if (!stats.caught && parsedNumbers.length > 1) {
+        stats.caught = parsedNumbers[1].toString();
+      }
+    }
+  }
+  
+  return stats;
+}
+
+/**
+ * Optimize image before sending to OCR
+ * @param {File} imageFile - The image file to optimize
+ * @returns {Promise<File>} - Optimized image file
+ */
+function optimizeImageForOCR(imageFile) {
+  return new Promise((resolve, reject) => {
+    // Create image element
+    const img = new Image();
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+      img.onload = function() {
+        try {
+          // Create canvas for image processing
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          
+          // Set canvas size to match image
+          canvas.width = img.width;
+          canvas.height = img.height;
+          
+          // Draw image to canvas
+          ctx.drawImage(img, 0, 0);
+          
+          // Get image data for processing
+          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imageData.data;
+          
+          // Process image for better OCR
+          for (let i = 0; i < data.length; i += 4) {
+            // Check if pixel is light blue (Pokémon GO background)
+            const isLightBlue = data[i] > 100 && data[i+1] > 180 && data[i+2] > 200;
+            
+            if (isLightBlue) {
+              // Make background white
+              data[i] = 255;     // R
+              data[i+1] = 255;   // G
+              data[i+2] = 255;   // B
+            } else {
+              // Boost contrast for text
+              const brightness = (data[i] + data[i+1] + data[i+2]) / 3;
+              if (brightness < 120) {
+                // Make dark text darker
+                data[i] = Math.max(0, data[i] - 50);
+                data[i+1] = Math.max(0, data[i+1] - 50);
+                data[i+2] = Math.max(0, data[i+2] - 50);
+              }
+            }
+          }
+          
+          // Put processed data back to canvas
+          ctx.putImageData(imageData, 0, 0);
+          
+          // Convert canvas to file
+          canvas.toBlob(blob => {
+            resolve(new File([blob], 'optimized.jpg', { type: 'image/jpeg' }));
+          }, 'image/jpeg', 0.9);
+        } catch (error) {
+          console.error('Image optimization error:', error);
+          resolve(imageFile); // Fall back to original file
+        }
+      };
+      
+      img.onerror = function() {
+        console.error('Failed to load image');
+        resolve(imageFile); // Fall back to original file
+      };
+      
+      img.src = e.target.result;
+    };
+    
+    reader.onerror = function() {
+      console.error('Failed to read file');
+      resolve(imageFile); // Fall back to original file
+    };
+    
+    reader.readAsDataURL(imageFile);
+  });
+}
+
+/**
+ * Bank screenshots for future improvement (if user consents)
+ * @param {File} startFile - Start screenshot
+ * @param {File} endFile - End screenshot
+ * @param {Object} metadata - Associated data
+ */
+function bankScreenshots(startFile, endFile, metadata) {
+  // Only if user consented (consent checkbox should be added to HTML)
+  const consent = document.getElementById('consentCheckbox')?.checked;
+  if (!consent) return;
+  
+  // For Community Day collection, you can use:
+  
+  // Option 1: Email (simplest, no server required)
+  emailScreenshots(startFile, endFile, metadata);
+  
+  // Option 2: Create downloadable package
+  // createScreenshotPackage(startFile, endFile, metadata);
+}
+
+/**
+ * Email screenshots using a service like formsubmit.co
+ * This is a simple solution that requires no backend
+ */
+function emailScreenshots(startFile, endFile, metadata) {
+  // Create form data
+  const formData = new FormData();
+  
+  // Add files
+  formData.append('start_image', startFile);
+  formData.append('end_image', endFile);
+  
+  // Add metadata
+  formData.append('metadata', JSON.stringify(metadata, null, 2));
+  
+  // Set destination email (replace with your email)
+  formData.append('_to', 'screenshots@yourservice.com');
+  
+  // Send with formsubmit.co (free service)
+  // You'll need to confirm your email the first time
+  fetch('https://formsubmit.co/screenshots@yourservice.com', {
+    method: 'POST',
+    body: formData
+  })
+  .then(response => console.log('Screenshots banked'))
+  .catch(error => console.error('Error banking screenshots:', error));
+}
+
+/**
  * Run OCR on uploaded screenshots
  */
 function runOCR() {
@@ -136,311 +374,82 @@ function runOCR() {
     return;
   }
   
-  // Show processing feedback
+  // Show processing status
   feedback.innerHTML = '<div class="loading-spinner"></div> Analyzing screenshots...';
   feedback.className = 'feedback processing';
   
-  // Instead of relying on complex OCR, use a simpler approach focusing on the stats area
+  // Optimize images first
   Promise.all([
-    processStatsImage(startFile, 'start'),
-    processStatsImage(endFile, 'end')
+    optimizeImageForOCR(startFile),
+    optimizeImageForOCR(endFile)
   ])
-  .then(([startStats, endStats]) => {
-    console.log('Extracted stats:', { startStats, endStats });
-    
-    // Populate form fields with detected values
-    let fieldsPopulated = 0;
-    
-    if (startStats.seen) {
-      document.getElementById('startSeen').value = startStats.seen;
-      fieldsPopulated++;
-    }
-    
-    if (startStats.caught) {
-      document.getElementById('startCaught').value = startStats.caught;
-      fieldsPopulated++;
-    }
-    
-    if (endStats.seen) {
-      document.getElementById('endSeen').value = endStats.seen;
-      fieldsPopulated++;
-    }
-    
-    if (endStats.caught) {
-      document.getElementById('endCaught').value = endStats.caught;
-      fieldsPopulated++;
-    }
-    
-    // Extract Pokémon name if found
-    if (startStats.pokemon || endStats.pokemon) {
-      document.getElementById('pokemonName').value = startStats.pokemon || endStats.pokemon;
-      fieldsPopulated++;
-    }
-    
-    // Check for shinies
-    if (startStats.shiny || endStats.shiny) {
-      document.getElementById('shinyCount').value = startStats.shiny || endStats.shiny || 1;
-      fieldsPopulated++;
-    }
-    
-    // Update feedback based on results
-    if (fieldsPopulated >= 4) {
-      feedback.innerHTML = '✅ Stats extracted successfully! Review below.';
-      feedback.className = 'feedback success';
-      updateDifferenceDisplay();
-    } else if (fieldsPopulated > 0) {
-      feedback.innerHTML = '⚠️ Partially extracted. Please complete missing fields.';
-      feedback.className = 'feedback warning';
-    } else {
-      feedback.innerHTML = '❗ Could not extract stats. Please enter manually or try cropping screenshots to show just the SEEN and CAUGHT area.';
-      feedback.className = 'feedback error';
-    }
+  .then(([optimizedStartFile, optimizedEndFile]) => {
+    // Process start image
+    return processWithOCRspace(optimizedStartFile)
+      .then(startText => {
+        // Extract stats from start image
+        const startStats = extractPokemonStats(startText);
+        console.log('Start stats:', startStats);
+        
+        // Update form with start values
+        if (startStats.seen) document.getElementById('startSeen').value = startStats.seen;
+        if (startStats.caught) document.getElementById('startCaught').value = startStats.caught;
+        if (startStats.pokemon) document.getElementById('pokemonName').value = startStats.pokemon;
+        
+        // Now process end image
+        return processWithOCRspace(optimizedEndFile)
+          .then(endText => {
+            // Extract stats from end image
+            const endStats = extractPokemonStats(endText);
+            console.log('End stats:', endStats);
+            
+            // Update form with end values
+            if (endStats.seen) document.getElementById('endSeen').value = endStats.seen;
+            if (endStats.caught) document.getElementById('endCaught').value = endStats.caught;
+            if (!startStats.pokemon && endStats.pokemon) {
+              document.getElementById('pokemonName').value = endStats.pokemon;
+            }
+            
+            // Collect the metadata
+            const metadata = {
+              timestamp: new Date().toISOString(),
+              startStats: startStats,
+              endStats: endStats,
+              screen: {
+                width: window.innerWidth,
+                height: window.innerHeight
+              }
+            };
+            
+            // Bank screenshots for future improvement
+            bankScreenshots(startFile, endFile, metadata);
+            
+            // Update feedback
+            const fieldsPopulated = 
+              (startStats.seen ? 1 : 0) + 
+              (startStats.caught ? 1 : 0) + 
+              (endStats.seen ? 1 : 0) + 
+              (endStats.caught ? 1 : 0);
+            
+            if (fieldsPopulated >= 3) {
+              feedback.innerHTML = '✅ Stats extracted successfully! Please verify and adjust if needed.';
+              feedback.className = 'feedback success';
+              updateDifferenceDisplay();
+            } else if (fieldsPopulated > 0) {
+              feedback.innerHTML = '⚠️ Partial stats extracted. Please fill in the missing values.';
+              feedback.className = 'feedback warning';
+            } else {
+              feedback.innerHTML = '❌ Could not extract stats. Please enter manually.';
+              feedback.className = 'feedback error';
+            }
+          });
+      });
   })
   .catch(error => {
-    console.error('Error processing images:', error);
-    feedback.innerHTML = '❗ Error processing images. Try cropping screenshots to just show the stats area.';
+    console.error('OCR error:', error);
+    feedback.innerHTML = '❌ Error analyzing screenshots. Please try again or enter stats manually.';
     feedback.className = 'feedback error';
   });
-}
-
-/**
- * Process image to extract Pokémon GO stats
- * Using a more simplified, focused approach for the specific stats region
- */
-function processStatsImage(file, type) {
-  return new Promise((resolve, reject) => {
-    // Create an image from the file
-    const img = new Image();
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-      img.onload = function() {
-        try {
-          // Create canvas to analyze image
-          const canvas = document.createElement('canvas');
-          const ctx = canvas.getContext('2d');
-          canvas.width = img.width;
-          canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          
-          // For Pokémon GO, focus on bottom third where SEEN/CAUGHT usually appear
-          const statsArea = {
-            x: 0,
-            y: Math.floor(img.height * 0.6),  // Bottom 40% of screen
-            width: img.width,
-            height: Math.floor(img.height * 0.4)
-          };
-          
-          // Extract just the stats region
-          const statsImageData = ctx.getImageData(
-            statsArea.x, statsArea.y, statsArea.width, statsArea.height
-          );
-          
-          // Draw the stats region to a new canvas
-          const statsCanvas = document.createElement('canvas');
-          statsCanvas.width = statsArea.width;
-          statsCanvas.height = statsArea.height;
-          const statsCtx = statsCanvas.getContext('2d');
-          statsCtx.putImageData(statsImageData, 0, 0);
-          
-          // Enhance the image for OCR
-          enhanceImageForOCR(statsCtx, statsCanvas.width, statsCanvas.height);
-          
-          // Run OCR on the enhanced image
-          Tesseract.recognize(
-            statsCanvas.toDataURL('image/png'),
-            'eng',
-            { 
-              logger: m => console.log(`OCR Progress (${type}):`, m),
-              tessedit_char_whitelist: '0123456789SENCATUGHDsencatughd: ',
-            }
-          )
-          .then(result => {
-            // Process the OCR result to extract stats
-            const text = result.data.text;
-            console.log(`OCR Text (${type}):`, text);
-            
-            // Extract stats using more specific patterns
-            const stats = extractPokemonStats(text, result.data.words || []);
-            
-            // If the stats area didn't work, try the whole image
-            if (!stats.seen && !stats.caught) {
-              // Enhance whole image
-              enhanceImageForOCR(ctx, canvas.width, canvas.height);
-              
-              // Try OCR on whole image
-              return Tesseract.recognize(
-                canvas.toDataURL('image/png'),
-                'eng',
-                { 
-                  logger: m => console.log(`Full OCR Progress (${type}):`, m),
-                  tessedit_char_whitelist: '0123456789SENCATUGHDsencatughd: ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz',
-                }
-              )
-              .then(fullResult => {
-                console.log(`Full OCR Text (${type}):`, fullResult.data.text);
-                return extractPokemonStats(
-                  fullResult.data.text, 
-                  fullResult.data.words || [],
-                  true  // Use broader extraction patterns for whole image
-                );
-              });
-            }
-            
-            return stats;
-          })
-          .then(stats => {
-            // Log and resolve the extracted stats
-            console.log(`Extracted stats (${type}):`, stats);
-            resolve(stats);
-          })
-          .catch(err => {
-            console.error(`OCR error (${type}):`, err);
-            reject(err);
-          });
-        } catch (error) {
-          console.error('Image processing error:', error);
-          reject(error);
-        }
-      };
-      
-      img.onerror = function() {
-        reject(new Error('Failed to load image'));
-      };
-      
-      img.src = e.target.result;
-    };
-    
-    reader.onerror = function() {
-      reject(new Error('Failed to read file'));
-    };
-    
-    reader.readAsDataURL(file);
-  });
-}
-
-/**
- * Enhance image for better OCR recognition
- */
-function enhanceImageForOCR(ctx, width, height) {
-  // Get image data
-  const imageData = ctx.getImageData(0, 0, width, height);
-  const data = imageData.data;
-  
-  // Enhance contrast and convert Pokémon GO blue background to white
-  for (let i = 0; i < data.length; i += 4) {
-    const r = data[i];
-    const g = data[i + 1];
-    const b = data[i + 2];
-    
-    // Check if pixel is light blue (Pokémon GO background)
-    if (r > 100 && g > 180 && b > 200) {
-      // Convert to white
-      data[i] = 255;     // R
-      data[i + 1] = 255; // G
-      data[i + 2] = 255; // B
-    } else {
-      // Check if pixel is dark (potential text)
-      const brightness = (r + g + b) / 3;
-      if (brightness < 100) {
-        // Enhance contrast for text
-        data[i] = 0;     // R
-        data[i + 1] = 0; // G
-        data[i + 2] = 0; // B
-      }
-    }
-  }
-  
-  // Update the image with our changes
-  ctx.putImageData(imageData, 0, 0);
-}
-
-/**
- * Extract Pokémon stats from OCR text
- */
-function extractPokemonStats(text, words, fullImage = false) {
-  const stats = {
-    seen: null,
-    caught: null,
-    pokemon: null,
-    shiny: null
-  };
-  
-  // Normalize text for better matching
-  const normalizedText = text.toLowerCase().replace(/\s+/g, ' ');
-  
-  // Look for common patterns in Pokémon GO stat display
-  
-  // SEEN and CAUGHT often appear with numbers
-  const seenPattern = fullImage ? 
-    /seen[:\s]*(\d+)/i : 
-    /seen[:\s]*(\d+)/i;
-  
-  const caughtPattern = fullImage ? 
-    /caught[:\s]*(\d+)/i : 
-    /caught[:\s]*(\d+)/i;
-  
-  // Extract SEEN count
-  const seenMatch = normalizedText.match(seenPattern);
-  if (seenMatch && seenMatch[1]) {
-    stats.seen = seenMatch[1].trim();
-  }
-  
-  // Extract CAUGHT count
-  const caughtMatch = normalizedText.match(caughtPattern);
-  if (caughtMatch && caughtMatch[1]) {
-    stats.caught = caughtMatch[1].trim();
-  }
-  
-  // If we couldn't find patterns, look for isolated numbers
-  if ((!stats.seen || !stats.caught) && words.length > 0) {
-    // Convert words to array of possible numbers
-    const numbers = words
-      .map(w => w.text.trim())
-      .filter(w => /^\d+$/.test(w))
-      .map(n => parseInt(n, 10))
-      .filter(n => n > 0 && n < 100000);  // Filter out unreasonable values
-    
-    // Sort numbers in descending order
-    numbers.sort((a, b) => b - a);
-    
-    // If we have at least two numbers, guess that larger is seen, smaller is caught
-    if (numbers.length >= 2 && !stats.seen && !stats.caught) {
-      stats.seen = numbers[0].toString();
-      stats.caught = numbers[1].toString();
-    }
-    // If we have one stat and one number, guess the other
-    else if (numbers.length >= 1) {
-      if (stats.seen && !stats.caught) {
-        // Find next largest number less than seen
-        const seenValue = parseInt(stats.seen, 10);
-        const caughtValue = numbers.find(n => n < seenValue);
-        if (caughtValue) stats.caught = caughtValue.toString();
-      } 
-      else if (!stats.seen && stats.caught) {
-        // Find next largest number greater than caught
-        const caughtValue = parseInt(stats.caught, 10);
-        const seenValue = numbers.find(n => n > caughtValue);
-        if (seenValue) stats.seen = seenValue.toString();
-      }
-    }
-  }
-  
-  // Try to extract Pokémon name
-  if (fullImage) {
-    // Pokémon names in GO are usually all caps after a number (trainer ID)
-    const pokemonMatch = text.match(/\d+\s+([A-Z]{4,})/);
-    if (pokemonMatch && pokemonMatch[1]) {
-      stats.pokemon = pokemonMatch[1].trim();
-    }
-    
-    // Check for SHINY indicators
-    if (text.toLowerCase().includes('shiny')) {
-      stats.shiny = '1';
-    }
-  }
-  
-  return stats;
 }
 
 /**
