@@ -25,7 +25,7 @@
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
-    <!-- Override styles to fix header layout -->
+    <!-- Override styles to fix header layout and improve styling -->
     <style>
       /* Override header styles directly in the HTML */
       .site-header {
@@ -79,7 +79,123 @@
         background-color: #e30613 !important;
       }
       
-      /* Feedback and spinner styles */
+      /* Form section styling */
+      .upload-section,
+      .manual-input-section,
+      .result-section {
+        background: #f8f9f9;
+        border-radius: 10px;
+        padding: 25px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-bottom: 30px;
+      }
+      
+      .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 20px;
+        margin-bottom: 20px;
+      }
+      
+      .form-group {
+        margin-bottom: 15px;
+      }
+      
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: bold;
+      }
+      
+      .form-group input {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      
+      /* Improved consent box styling */
+      .consent-box {
+        margin: 15px 0;
+        padding: 15px;
+        background-color: #f5f9ff;
+        border-left: 4px solid #0066cc;
+        border-radius: 5px;
+        font-size: 0.95rem;
+      }
+      
+      .consent-box input[type="checkbox"] {
+        margin-right: 8px;
+        transform: scale(1.2);
+      }
+      
+      .consent-box label {
+        display: inline;
+        font-weight: bold;
+        color: #333;
+      }
+      
+      .consent-info {
+        margin-top: 8px;
+        font-size: 0.85rem;
+        color: #555;
+        padding-left: 24px;
+      }
+      
+      /* Improved feedback message styling */
+      .feedback {
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 5px;
+        font-weight: 500;
+      }
+      
+      .feedback.processing {
+        background-color: #f8f9fa;
+        border-left: 4px solid #6c757d;
+        display: flex;
+        align-items: center;
+      }
+      
+      .feedback.success {
+        background-color: #e8f7ee;
+        border-left: 4px solid #28a745;
+        color: #155724;
+      }
+      
+      .feedback.warning {
+        background-color: #fff3cd;
+        border-left: 4px solid #ffc107;
+        color: #856404;
+      }
+      
+      .feedback.error {
+        background-color: #f8d7da;
+        border-left: 4px solid #dc3545;
+        color: #721c24;
+      }
+      
+      /* Stats difference display */
+      #statsDifference {
+        background-color: #e8f4ff;
+        border-left: 4px solid #0066cc;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 5px;
+        font-weight: 500;
+        color: #004085;
+      }
+      
+      /* Image preview styling */
+      .img-preview {
+        max-width: 100%;
+        max-height: 200px;
+        margin-top: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+      }
+      
+      /* Loading spinner */
       .loading-spinner {
         display: inline-block;
         width: 20px;
@@ -95,232 +211,53 @@
         to { transform: rotate(360deg); }
       }
       
-      .feedback {
-        padding: 15px;
-        margin: 15px 0;
-        border-radius: 5px;
+      /* Card styling */
+      .comm-day-card {
+        background: linear-gradient(135deg, #111 0%, #222 100%);
+        color: white;
+        padding: 2rem;
+        text-align: center;
+        border-radius: 15px;
+        margin: 2rem auto;
+        max-width: 420px;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
       }
       
-      .feedback.processing {
-        background-color: #f9f9f9;
-        border-left: 4px solid #666;
-        display: flex;
-        align-items: center;
+      .card-header {
+        background: #e30613;
+        margin: -2rem -2rem 1.5rem -2rem;
+        padding: 1rem;
+        border-radius: 10px 10px 0 0;
+        font-weight: bold;
+        letter-spacing: 1px;
       }
       
-      .feedback.success {
-        background-color: #f0fff0;
-        border-left: 4px solid #28a745;
+      .trainer-name {
+        font-size: 1.5rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
       }
       
-      .feedback.warning {
-        background-color: #fff9e6;
-        border-left: 4px solid #ffc107;
+      .pokemon-name {
+        font-size: 1.75rem;
+        margin-top: 0.25rem;
+        color: #e30613;
       }
       
-      .feedback.error {
-        background-color: #fff0f0;
-        border-left: 4px solid #e30613;
+      .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-top: 1.5rem;
       }
       
-      /* Consent box styles */
-      .consent-box {
-        margin: 15px 0;
-        padding: 10px 15px;
-        background-color: #f8f9f9;
-        border-left: 3px solid #0066cc;
-        border-radius: 5px;
-      }
-      
-      .consent-box label {
-        display: inline;
-        font-weight: normal;
-        margin-left: 5px;
-      }
-      
-      .consent-info {
-        margin-top: 5px;
+      .stat-item .label {
         font-size: 0.85rem;
-        color: #666;
-        padding-left: 20px;
+        text-transform: uppercase;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
       }
-    </style>
-</head>
-<body>
-    <header class="site-header">
-        <div class="container">
-            <div class="top-navigation">
-                <a href="https://pgplayerzero.com" class="btn btn-nav">Home</a>
-                <a href="https://pgplayerzero.com/pokemon-go-grind-calculator" class="btn btn-nav">Grind Calc</a>
-                <a href="https://pgplayerzero.com/pokemon-go-comm-day-calculator" class="btn btn-nav active">Comm Day Calc</a>
-                <button id="prizeInfoBtn" class="btn btn-nav">Prize Info</button>
-                <a href="https://challenge.pgplayerzero.com/contact" target="_blank" class="btn btn-nav">Contact</a>
-            </div>
-            <a href="https://pgplayerzero.com">
-                <img src="playerzero-logo.png" alt="PlayerZero Challenge Logo" class="logo">
-            </a>
-        </div>
-    </header>
-
-    <main class="main-content">
-        <div class="container">
-            <h1>Community Day Calculator</h1>
-            <p class="intro">Track your Community Day performance! Upload your before and after screenshots to automatically calculate your stats.</p>
-            
-            <section class="upload-section">
-                <h2>Upload Screenshots</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="startImage">Start Screenshot</label>
-                        <input type="file" id="startImage" accept="image/*" class="file-input">
-                        <img id="startPreview" class="img-preview" style="display: none;">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="endImage">End Screenshot</label>
-                        <input type="file" id="endImage" accept="image/*" class="file-input">
-                        <img id="endPreview" class="img-preview" style="display: none;">
-                    </div>
-                </div>
-                
-                <!-- Add consent checkbox -->
-                <div class="consent-box">
-                    <input type="checkbox" id="consentCheckbox" checked>
-                    <label for="consentCheckbox">
-                        Help improve our OCR! Allow PlayerZero to securely store these screenshots to enhance future scanning accuracy.
-                    </label>
-                    <div class="consent-info">
-                        <p>During Community Day weekend, we're collecting screenshot samples to improve our recognition system. Your screenshots help us make this tool better for everyone!</p>
-                    </div>
-                </div>
-                
-                <button onclick="runOCR()" id="importButton" class="btn btn-primary">Import Stats</button>
-                <div id="ocrFeedback" class="feedback"></div>
-                <div id="statsDifference" style="display: none;"></div>
-            </section>
-            
-            <section class="manual-input-section">
-                <h2>Or Enter Stats Manually</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="trainerName">Trainer Name</label>
-                        <input type="text" id="trainerName" placeholder="Your trainer name">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="pokemonName">Pokémon Name</label>
-                        <input type="text" id="pokemonName" placeholder="Featured Pokémon">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="startSeen">Start Seen</label>
-                        <input type="number" id="startSeen" placeholder="Pokémon seen (before)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="endSeen">End Seen</label>
-                        <input type="number" id="endSeen" placeholder="Pokémon seen (after)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="startCaught">Start Caught</label>
-                        <input type="number" id="startCaught" placeholder="Pokémon caught (before)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="endCaught">End Caught</label>
-                        <input type="number" id="endCaught" placeholder="Pokémon caught (after)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="shinyCount">Shiny Count</label>
-                        <input type="number" id="shinyCount" placeholder="Number of shinies caught">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="hoursPlayed">Hours Played</label>
-                        <input type="number" id="hoursPlayed" placeholder="Hours spent playing" step="0.5" value="3">
-                    </div>
-                </div>
-                
-                <button onclick="runStats()" class="btn btn-primary">Calculate My Stats</button>
-            </section>
-            
-            <section class="result-section">
-                <div id="card" class="card comm-day-card" style="display: none;">
-                    <div class="card-header">COMM DAY CARD</div>
-                    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
-                    <div class="trainer-name" id="trainerDisplay">Trainer Name</div>
-                    
-                    <div class="pokemon-info">
-                        <div class="label">POKÉMON:</div>
-                        <div class="value pokemon-name" id="pokemonDisplay">POKEMON</div>
-                    </div>
-
-                    <div class="stat-grid">
-                        <div class="stat-item">
-                            <div class="label">POKÉMON CAUGHT</div>
-                            <div class="value" id="deltaCaught">0</div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="label">CATCH RATE</div>
-                            <div class="value" id="catchPercent">0%</div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="label">CAUGHT PER HOUR</div>
-                            <div class="value" id="caughtPerHour">0.0</div>
-                        </div>
-                        
-                        <div class="stat-item">
-                            <div class="label">SHINY COUNT</div>
-                            <div class="value" id="shinyTotal">0</div>
-                        </div>
-                    </div>
-                </div>
-                
-                <button onclick="downloadCard()" id="downloadBtn" class="btn btn-primary" style="display: none;">Download My Comm Day Card</button>
-            </section>
-        </div>
-    </main>
-
-    <footer class="site-footer">
-        <div class="container">
-            <div class="footer-content">
-                <p>Share your Comm Day Card on social media with <strong>#PlayerZeroGrind</strong></p>
-                <div class="social-links">
-                    <a href="https://instagram.com/pgPlayerZero" target="_blank" class="social-icon">
-                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
-                    </a>
-                    <a href="https://tiktok.com/@pgPlayerZero" target="_blank" class="social-icon">
-                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
-                    </a>
-                    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank" class="social-icon">
-                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit">
-                    </a>
-                </div>
-            </div>
-        </div>
-    </footer>
-
-    <!-- Modal HTML -->
-    <div id="prizeInfoModal" class="modal">
-        <div class="modal-content">
-            <button id="closeModal" class="modal-close">&times;</button>
-            <h2 class="modal-title">Current Prize Pool</h2>
-            <p class="prize-item"><strong>1<sup>st</sup> – <span class="prize-amount">15K Pokécoins</span></strong></p>
-            <p class="prize-item"><strong>2<sup>nd</sup> – <span class="prize-amount">10K Pokécoins</span></strong></p>
-            <p class="prize-item"><strong>3<sup>rd</sup> – <span class="prize-amount">7K Pokécoins</span></strong></p>
-            <p class="prize-details">+ 9 daily and category specific prize opportunities</p>
-            <p class="prize-tagline">The challenge where the prize pool grows with the participants.</p>
-            <p class="prize-focus">More players.<br>More winners.<br>Bigger rewards.</p>
-            <p class="prize-note"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
-        </div>
-    </div>
-    
-    <!-- JavaScript -->
-    <script src="js/main.js"></script>
-    <script src="js/comm-day.js"></script>
-</body>
-</html>
+      
+      .stat-item .value {
+        font-size: 1.75rem;
+        font-weight: bold;
