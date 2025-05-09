@@ -43,19 +43,21 @@ function setupModal() {
     const btn = document.getElementById('prizeInfoBtn');
     const closeBtn = document.getElementById('closeModal');
     
-    btn.onclick = function() {
-        modal.style.display = 'block';
-    };
-    
-    closeBtn.onclick = function() {
-        modal.style.display = 'none';
-    };
-    
-    window.onclick = function(event) {
-        if (event.target == modal) {
+    if (btn && closeBtn && modal) {
+        btn.onclick = function() {
+            modal.style.display = 'block';
+        };
+        
+        closeBtn.onclick = function() {
             modal.style.display = 'none';
-        }
-    };
+        };
+        
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        };
+    }
 }
 
 // The OCR simulation function - in a real implementation, this would call an API
@@ -78,78 +80,15 @@ function runOCR() {
     
     // Simulate processing delay
     setTimeout(function() {
-        // In a real implementation, this would be the result from the OCR API
-        // For now, we'll use the values from the screenshot as example
+        // Until a proper OCR service is implemented, we'll guide the user to use manual input
+        ocrFeedback.innerHTML = '⚠️ Screenshot processing is currently being improved. Please enter your stats manually below.';
+        ocrFeedback.className = 'feedback warning';
         
-        // Get data from the manual input fields to populate as defaults
-        const pokemonName = document.getElementById('pokemonName').value || 'ALERE';
+        // Jump to manual input section
+        document.querySelector('.manual-input-section').scrollIntoView({ behavior: 'smooth' });
         
-        // The issue appears to be with these values - let's fix them
-        // Instead of hard-coding values that don't match, let's extract correct values
-        // from the screenshots using proper OCR (simulated here)
-        
-        // These values should come from OCR processing of the images
-        // For this example, using the actual values from the screenshots provided
-        // IMPORTANT: We need to properly identify which image is start vs. end
-        // based on the timestamp in the screenshots, not just the order uploaded
-        
-        // First, examine the timestamps to determine which is start vs end
-        // For now, we'll simulate this examination with a function
-        const { startSeen, startCaught, endSeen, endCaught, pokemonIdentified } = determineStartAndEndValues(startImage, endImage);
-        
-        // Function that would determine the proper order based on timestamps
-        function determineStartAndEndValues(startImg, endImg) {
-            // In a real implementation, we would:
-            // 1. Extract the timestamps from both images (e.g., "2:59" vs "8:15")
-            // 2. Compare them to determine which is earlier
-            // 3. Return the values in the correct order
-            
-            // Based on the provided screenshots where image 1 (2:59) is earlier than image 2 (8:15)
-            return {
-                startSeen: 656,     // From first image (2:59)
-                startCaught: 417,   // From first image (2:59)
-                endSeen: 663,       // From second image (8:15)
-                endCaught: 423,     // From second image (8:15)
-                pokemonIdentified: "NYMBLE"  // From both images
-            };
-        }
-        
-        // Calculate the difference (what the user caught during Community Day)
-        const deltaEncountered = endSeen - startSeen;
-        const deltaCaught = endCaught - startCaught;
-        
-        // Calculate catch rate percentage
-        const catchRate = deltaEncountered > 0 ? 
-            ((deltaCaught / deltaEncountered) * 100).toFixed(1) : 0;
-        
-        // Update UI with extracted values
-        document.getElementById('startSeen').value = startSeen;
-        document.getElementById('endSeen').value = endSeen;
-        document.getElementById('startCaught').value = startCaught;
-        document.getElementById('endCaught').value = endCaught;
-        document.getElementById('pokemonName').value = pokemonName;
-        
-        // Show success message with extracted stats
-        ocrFeedback.innerHTML = '✅ Stats extracted successfully! Please verify and adjust if needed.';
-        ocrFeedback.className = 'feedback success';
-        
-        // Make sure we're calculating positive values
-        // If end values are lower than start values, warn the user they might have uploaded in wrong order
-        if (endSeen < startSeen || endCaught < startCaught) {
-            ocrFeedback.innerHTML = '⚠️ Warning: Your end values are lower than start values. Did you upload the screenshots in the correct order?';
-            ocrFeedback.className = 'feedback warning';
-            
-            // For demonstration purposes, we'll continue with absolute differences
-            deltaEncountered = Math.abs(endSeen - startSeen);
-            deltaCaught = Math.abs(endCaught - startCaught);
-        }
-        
-        // Display stats summary
-        statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaEncountered} Pokémon and caught ${deltaCaught} of them. That's a ${catchRate}% catch rate!`;
-        statsDifference.style.display = 'block';
-        
-        // Calculate and display the card
-        runStats();
+        // Focus on the first input field
+        document.getElementById('trainerName').focus();
     }, 1500);
 }
 
@@ -168,7 +107,18 @@ function runStats() {
     // Calculate statistics
     const deltaSeen = endSeen - startSeen;
     const deltaCaught = endCaught - startCaught;
-    const catchPercent = deltaSeen > 0 ? ((deltaCaught / deltaSeen) * 100).toFixed(1) : 0;
+    
+    // Validate the values make sense
+    if (deltaSeen < 0 || deltaCaught < 0) {
+        const ocrFeedback = document.getElementById('ocrFeedback');
+        ocrFeedback.innerHTML = '⚠️ Warning: Your end values are lower than start values. Did you mix up your before/after numbers?';
+        ocrFeedback.className = 'feedback warning';
+        ocrFeedback.style.display = 'block';
+        return;
+    }
+    
+    // Calculate percentages and rates
+    const catchPercent = deltaSeen > 0 ? ((deltaCaught / deltaSeen) * 100).toFixed(1) : '0.0';
     const caughtPerHour = (deltaCaught / hoursPlayed).toFixed(1);
     
     // Update the card with calculated values
@@ -179,9 +129,17 @@ function runStats() {
     document.getElementById('caughtPerHour').textContent = caughtPerHour;
     document.getElementById('shinyTotal').textContent = shinyCount;
     
+    // Display stats summary
+    const statsDifference = document.getElementById('statsDifference');
+    statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchPercent}% catch rate!`;
+    statsDifference.style.display = 'block';
+    
     // Show the card and download button
     document.getElementById('card').style.display = 'block';
     document.getElementById('downloadBtn').style.display = 'block';
+    
+    // Scroll to the results
+    document.getElementById('card').scrollIntoView({ behavior: 'smooth' });
 }
 
 // Function to download the card as an image
