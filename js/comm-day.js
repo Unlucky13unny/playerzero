@@ -60,8 +60,19 @@ function setupModal() {
     }
 }
 
-// The OCR simulation function - in a real implementation, this would call an API
-function runOCR() {
+// Get API key (obfuscated)
+function getApiKey() {
+    // Obfuscated key construction
+    const p1 = "K84";
+    const p2 = "614";
+    const p3 = "746";
+    const p4 = "888";
+    const p5 = "957";
+    return p1 + p2 + p3 + p4 + p5;
+}
+
+// Process images using the OCR API
+async function runOCR() {
     const startImage = document.getElementById('startImage');
     const endImage = document.getElementById('endImage');
     const ocrFeedback = document.getElementById('ocrFeedback');
@@ -78,18 +89,234 @@ function runOCR() {
     ocrFeedback.innerHTML = '<div class="loading-spinner"></div> Processing your screenshots...';
     ocrFeedback.className = 'feedback processing';
     
-    // Simulate processing delay
-    setTimeout(function() {
-        // Until a proper OCR service is implemented, we'll guide the user to use manual input
-        ocrFeedback.innerHTML = '⚠️ Screenshot processing is currently being improved. Please enter your stats manually below.';
-        ocrFeedback.className = 'feedback warning';
+    try {
+        // Process start image
+        const startResult = await processImageWithOCR(startImage.files[0]);
+        console.log("Start OCR Result:", startResult);
         
-        // Jump to manual input section
-        document.querySelector('.manual-input-section').scrollIntoView({ behavior: 'smooth' });
+        // Process end image
+        const endResult = await processImageWithOCR(endImage.files[0]);
+        console.log("End OCR Result:", endResult);
         
-        // Focus on the first input field
-        document.getElementById('trainerName').focus();
-    }, 1500);
+        // Extract Pokémon stats
+        const pokemonName = extractPokemonName(startResult, endResult);
+        const startStats = extractStats(startResult);
+        const endStats = extractStats(endResult);
+        
+        console.log("Extracted Start Stats:", startStats);
+        console.log("Extracted End Stats:", endStats);
+        
+        // Update form fields with the extracted values
+        document.getElementById('pokemonName').value = pokemonName;
+        document.getElementById('startSeen').value = startStats.seen;
+        document.getElementById('endSeen').value = endStats.seen;
+        document.getElementById('startCaught').value = startStats.caught;
+        document.getElementById('endCaught').value = endStats.caught;
+        
+        // Check if the values make sense (end should be >= start)
+        const deltaSeen = endStats.seen - startStats.seen;
+        const deltaCaught = endStats.caught - startStats.caught;
+        
+        if (deltaSeen < 0 || deltaCaught < 0) {
+            ocrFeedback.innerHTML = '⚠️ Warning: The extracted end values are lower than start values. ' +
+                'This might indicate the screenshots were uploaded in reverse order or OCR errors. ' +
+                'Please verify and adjust the values if needed.';
+            ocrFeedback.className = 'feedback warning';
+        } else {
+            ocrFeedback.innerHTML = '✅ Stats extracted successfully! Please verify and adjust if needed.';
+            ocrFeedback.className = 'feedback success';
+            
+            // Calculate catch rate
+            const catchRate = deltaSeen > 0 ? ((deltaCaught / deltaSeen) * 100).toFixed(1) : "0.0";
+            
+            // Display stats summary
+            statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchRate}% catch rate!`;
+            statsDifference.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('OCR processing error:', error);
+        ocrFeedback.innerHTML = '❌ Error processing screenshots. Please try entering your stats manually.';
+        ocrFeedback.className = 'feedback error';
+    }
+}
+
+// Process image with OCR API (OCR.space API)
+async function processImageWithOCR(imageFile) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        
+        reader.onload = async function(e) {
+            try {
+                // Get base64 image data
+                const base64Image = e.target.result.split(',')[1];
+                
+                // Call OCR.space API
+                const formData = new FormData();
+                formData.append('apikey', getApiKey());
+                formData.append('base64Image', base64Image);
+                formData.append('language', 'eng');
+                formData.append('scale', 'true');
+                formData.append('OCREngine', '2');
+                
+                const response = await fetch('https://api.ocr.space/parse/image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    throw new Error('OCR API request failed');
+                }
+                
+                const result = await response.json();
+                
+                if (result.IsErroredOnProcessing) {
+                    throw new Error(result.ErrorMessage || 'OCR processing failed');
+                }
+                
+                resolve(result);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        
+        reader.onerror = function(error) {
+            reject(error);
+        };
+        
+        reader.readAsDataURL(imageFile);
+    });
+}
+
+// Extract Pokémon name from OCR results
+function extractPokemonName(startResult, endResult) {
+    // For OCR.space API
+    let pokemonName = "";
+    
+    // Try to find the Pokémon name in either result
+    // Check end result first (might be clearer)
+    if (endResult && endResult.ParsedResults && endResult.ParsedResults.length > 0) {
+        const text = endResult.ParsedResults[0].ParsedText;
+        
+        // Look for Pokémon name pattern - typically all caps in the middle
+        const nameRegex = /\b([A-Z]{4,})\b/g;
+        const matches = text.match(nameRegex);
+        
+        if (matches && matches.length > 0) {
+            // Find the most likely Pokémon name (filter out common UI text)
+            const uiElements = ['SEEN', 'CAUGHT', 'BATTLE', 'INFO', 'SHINY', 'LUCKY'];
+            for (const match of matches) {
+                if (!uiElements.includes(match)) {
+                    pokemonName = match;
+                    break;
+                }
+            }
+        }
+    }
+    
+    // If not found in end result, try start result
+    if (!pokemonName && startResult && startResult.ParsedResults && startResult.ParsedResults.length > 0) {
+        const text = startResult.ParsedResults[0].ParsedText;
+        
+        const nameRegex = /\b([A-Z]{4,})\b/g;
+        const matches = text.match(nameRegex);
+        
+        if (matches && matches.length > 0) {
+            const uiElements = ['SEEN', 'CAUGHT', 'BATTLE', 'INFO', 'SHINY', 'LUCKY'];
+            for (const match of matches) {
+                if (!uiElements.includes(match)) {
+                    pokemonName = match;
+                    break;
+                }
+            }
+        }
+    }
+    
+    return pokemonName || "POKEMON";
+}
+
+// Extract stats from OCR result
+function extractStats(ocrResult) {
+    // Default values if extraction fails
+    let seen = 0;
+    let caught = 0;
+    
+    // For OCR.space API
+    if (ocrResult && ocrResult.ParsedResults && ocrResult.ParsedResults.length > 0) {
+        const text = ocrResult.ParsedResults[0].ParsedText;
+        
+        // First look for explicit "SEEN" and "CAUGHT" labels
+        // Regex to handle variations in OCR text recognition
+        const seenRegex = /SEEN\s*[:\s]\s*(\d+)/i;
+        const caughtRegex = /CAUGHT\s*[:\s]\s*(\d+)/i;
+        
+        const seenMatch = text.match(seenRegex);
+        const caughtMatch = text.match(caughtRegex);
+        
+        if (seenMatch) {
+            seen = parseInt(seenMatch[1]);
+        }
+        
+        if (caughtMatch) {
+            caught = parseInt(caughtMatch[1]);
+        }
+        
+        // If we couldn't find labeled stats, try to extract numbers near the SEEN/CAUGHT words
+        if ((seen === 0 || caught === 0)) {
+            // Try to find the stats box that typically shows SEEN and CAUGHT numbers
+            // In Pokémon GO, these typically appear as two numbers in the middle of the screen
+            const lines = text.split('\n');
+            
+            // Look for lines with "SEEN" or "CAUGHT" and try to extract nearby numbers
+            for (let i = 0; i < lines.length; i++) {
+                const line = lines[i].trim();
+                
+                if (line.includes('SEEN') && !seenMatch) {
+                    // Look for numbers in this line or adjacent lines
+                    const numberMatch = line.match(/\d+/);
+                    if (numberMatch) {
+                        seen = parseInt(numberMatch[0]);
+                    } else if (i + 1 < lines.length) {
+                        // Check next line
+                        const nextLineNumber = lines[i + 1].match(/\d+/);
+                        if (nextLineNumber) {
+                            seen = parseInt(nextLineNumber[0]);
+                        }
+                    }
+                }
+                
+                if (line.includes('CAUGHT') && !caughtMatch) {
+                    // Look for numbers in this line or adjacent lines
+                    const numberMatch = line.match(/\d+/);
+                    if (numberMatch) {
+                        caught = parseInt(numberMatch[0]);
+                    } else if (i + 1 < lines.length) {
+                        // Check next line
+                        const nextLineNumber = lines[i + 1].match(/\d+/);
+                        if (nextLineNumber) {
+                            caught = parseInt(nextLineNumber[0]);
+                        }
+                    }
+                }
+            }
+            
+            // Last resort: if we still don't have values, look for numbers in the stats section region
+            if (seen === 0 || caught === 0) {
+                const numbers = text.match(/\d+/g) || [];
+                
+                if (numbers.length >= 2) {
+                    const parsedNumbers = numbers.map(num => parseInt(num)).filter(num => num > 0);
+                    parsedNumbers.sort((a, b) => b - a); // Sort in descending order
+                    
+                    if (parsedNumbers.length >= 2) {
+                        if (seen === 0) seen = parsedNumbers[0];
+                        if (caught === 0) caught = parsedNumbers[1];
+                    }
+                }
+            }
+        }
+    }
+    
+    return { seen, caught };
 }
 
 // Calculate and display stats
@@ -131,7 +358,7 @@ function runStats() {
     
     // Display stats summary
     const statsDifference = document.getElementById('statsDifference');
-    statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchPercent}% catch rate!`;
+    statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchRate}% catch rate!`;
     statsDifference.style.display = 'block';
     
     // Show the card and download button
