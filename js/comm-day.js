@@ -183,50 +183,79 @@ function extractPokemonStats(text) {
   // Clean up the text for better matching
   const cleanText = text.replace(/\r\n/g, '\n').replace(/\n+/g, ' ').trim();
   
-  // Look for common Pokémon GO stat patterns
+  // Enhanced patterns for Pokémon GO stat screens
   
-  // Seen count - various formats
-  const seenPattern = /SEEN\s*[:\s]*(\d+)/i;
-  const seenMatch = cleanText.match(seenPattern);
-  if (seenMatch && seenMatch[1]) {
-    stats.seen = seenMatch[1].trim();
+  // Seen count - checking multiple patterns
+  const seenPatterns = [
+    /SEEN\s*[:\s]*(\d+)/i,          // "SEEN: 123" or "SEEN 123"
+    /seen[:\s]*(\d+)/i,              // "seen: 123" or "seen 123"
+    /(\d+)\s*seen/i,                // "123 seen"
+    /(\d+)[:\s]*Seen/i              // "123: Seen" or "123 Seen"
+  ];
+  
+  // Try each pattern until we find a match
+  for (const pattern of seenPatterns) {
+    const match = cleanText.match(pattern);
+    if (match && match[1]) {
+      stats.seen = match[1].trim();
+      break;
+    }
   }
   
-  // Caught count - various formats
-  const caughtPattern = /CAUGHT\s*[:\s]*(\d+)/i;
-  const caughtMatch = cleanText.match(caughtPattern);
-  if (caughtMatch && caughtMatch[1]) {
-    stats.caught = caughtMatch[1].trim();
+  // Caught count - checking multiple patterns
+  const caughtPatterns = [
+    /CAUGHT\s*[:\s]*(\d+)/i,        // "CAUGHT: 123" or "CAUGHT 123"
+    /caught[:\s]*(\d+)/i,            // "caught: 123" or "caught 123"
+    /(\d+)\s*caught/i,              // "123 caught"
+    /(\d+)[:\s]*Caught/i            // "123: Caught" or "123 Caught"
+  ];
+  
+  // Try each pattern until we find a match
+  for (const pattern of caughtPatterns) {
+    const match = cleanText.match(pattern);
+    if (match && match[1]) {
+      stats.caught = match[1].trim();
+      break;
+    }
   }
   
-  // Try to extract Pokémon name (usually all caps after numbers)
+  // Try to extract Pokémon name
   const pokemonNamePattern = /\d+\s+([A-Z]{3,})/;
   const pokemonMatch = cleanText.match(pokemonNamePattern);
   if (pokemonMatch && pokemonMatch[1]) {
     stats.pokemon = pokemonMatch[1].trim();
   }
   
-  // If we couldn't find stats with the patterns, try looking for numbers
+  // For your specific screenshot pattern - numbers at bottom of screen
+  // Looking for simple numbers near the middle of the screen
   if (!stats.seen || !stats.caught) {
     // Find all numbers in text
     const numbers = cleanText.match(/\b\d+\b/g) || [];
     
-    // If we have at least two numbers, assume the larger is seen, smaller is caught
     if (numbers.length >= 2) {
-      const parsedNumbers = numbers.map(n => parseInt(n, 10))
-                                  .filter(n => n > 0 && n < 100000);
+      // Filter to reasonable range (0-100000)
+      const validNumbers = numbers
+        .map(n => parseInt(n.trim(), 10))
+        .filter(n => !isNaN(n) && n >= 0 && n < 100000);
       
-      parsedNumbers.sort((a, b) => b - a); // Sort descending
+      // Sort by size (typically seen > caught)
+      validNumbers.sort((a, b) => b - a);
       
-      if (!stats.seen && parsedNumbers.length > 0) {
-        stats.seen = parsedNumbers[0].toString();
-      }
-      
-      if (!stats.caught && parsedNumbers.length > 1) {
-        stats.caught = parsedNumbers[1].toString();
+      // If found valid numbers and still missing stats
+      if (validNumbers.length >= 2) {
+        if (!stats.seen) {
+          stats.seen = validNumbers[0].toString();
+        }
+        if (!stats.caught) {
+          // For your screenshots, caught value is usually the second largest number
+          stats.caught = validNumbers[1].toString();
+        }
       }
     }
   }
+  
+  // Debug
+  console.log('Extracted stats:', stats);
   
   return stats;
 }
@@ -324,16 +353,11 @@ function bankScreenshots(startFile, endFile, metadata) {
   if (!consent) return;
   
   // For Community Day collection, you can use:
-  
-  // Option 1: Email (simplest, no server required)
   emailScreenshots(startFile, endFile, metadata);
-  
-  // Option 2: Create downloadable package
-  // createScreenshotPackage(startFile, endFile, metadata);
 }
 
 /**
- * Email screenshots using a service like formsubmit.co
+ * Email screenshots using a service like formspree.io
  * This is a simple solution that requires no backend
  */
 function emailScreenshots(startFile, endFile, metadata) {
@@ -341,20 +365,28 @@ function emailScreenshots(startFile, endFile, metadata) {
   const formData = new FormData();
   
   // Add files
-  formData.append('start_image', startFile);
-  formData.append('end_image', endFile);
+  formData.append('startImage', startFile);
+  formData.append('endImage', endFile);
   
-  // Add metadata
+  // Add metadata as JSON
   formData.append('metadata', JSON.stringify(metadata, null, 2));
   
-  // Set destination email (replace with your email)
-  formData.append('_to', 'screenshots@yourservice.com');
+  // Add UI device info
+  formData.append('screenWidth', window.innerWidth);
+  formData.append('screenHeight', window.innerHeight);
+  formData.append('userAgent', navigator.userAgent);
   
-  // Send with formsubmit.co (free service)
-  // You'll need to confirm your email the first time
-  fetch('https://formsubmit.co/screenshots@yourservice.com', {
+  // Set a reasonable subject line
+  formData.append('_subject', 'PlayerZero CommDay Screenshot Bank');
+  
+  // Send with formspree.io - replace with your email
+  // You'll need to sign up at formspree.io for a free account
+  fetch('https://formspree.io/f/YOUR_FORM_ID', {
     method: 'POST',
-    body: formData
+    body: formData,
+    headers: {
+      'Accept': 'application/json'
+    }
   })
   .then(response => console.log('Screenshots banked'))
   .catch(error => console.error('Error banking screenshots:', error));
