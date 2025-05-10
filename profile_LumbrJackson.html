@@ -6,6 +6,68 @@
     <title>Trainer Profile | PlayerZero</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/profile.css">
+    <style>
+        /* Inline fixes for critical alignment */
+        .level-container {
+            display: inline-block;
+            width: 60px;
+            margin-right: 20px;
+            text-align: center; /* This centers both children */
+        }
+        
+        .level-number {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+            display: block;
+        }
+        
+        .level-label {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
+            display: block;
+        }
+        
+        .team-info {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .team-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+            background-color: #FFDE00; /* Instinct color */
+        }
+        
+        .start-date {
+            color: #757575;
+        }
+        
+        .friend-code-row {
+            margin-top: 15px;
+        }
+        
+        .code-number {
+            font-family: monospace;
+            font-size: 1.2rem;
+            margin-right: 15px;
+        }
+        
+        .copy-btn {
+            background-color: #e30613;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            font-weight: bold;
+        }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
     <script src="js/profile.js" defer></script>
 </head>
@@ -35,25 +97,23 @@
                 <h1>LumbrJackson</h1>
             </div>
             
-            <!-- Profile Info - UPDATED for perfect vertical alignment -->
-            <div class="profile-info">
-                <div class="level-row">
-                    <!-- Combined level block for vertical alignment -->
-                    <div class="level-block">
-                        <div class="level-number">50</div>
-                    </div>
-                    <div class="team-info">
-                        <span class="team-dot instinct"></span>
+            <!-- SIMPLIFIED STRUCTURE with centered alignment -->
+            <div>
+                <div>
+                    <span class="level-container">
+                        <span class="level-number">50</span>
+                    </span>
+                    <span class="team-info">
+                        <span class="team-dot"></span>
                         <span class="team-name">Instinct</span>
-                    </div>
+                    </span>
                 </div>
                 
-                <div class="level-label-row">
-                    <!-- Level label now in same vertical line -->
-                    <div class="level-block">
-                        <div class="level-label">LVL</div>
-                    </div>
-                    <div class="start-date">Start Date: 7/10/2025</div>
+                <div>
+                    <span class="level-container">
+                        <span class="level-label">LVL</span>
+                    </span>
+                    <span class="start-date">Start Date: 7/10/2025</span>
                 </div>
                 
                 <div class="friend-code-row">
