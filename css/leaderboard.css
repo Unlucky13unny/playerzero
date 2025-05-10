@@ -208,3 +208,135 @@
 
 .page-indicator {
     font-size
+.page-indicator {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 1000;
+    overflow: auto;
+}
+
+.modal-content {
+    background-color: white;
+    margin: 5% auto;
+    padding: 20px;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 10px;
+    position: relative;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 28px;
+    cursor: pointer;
+    color: #aaa;
+}
+
+.close-btn:hover {
+    color: var(--primary-color);
+}
+
+.verification-images {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.current-stats, .previous-stats {
+    width: 48%;
+    min-width: 300px;
+    margin-bottom: 20px;
+}
+
+.verification-images img {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+}
+
+.verification-images h3 {
+    margin-bottom: 10px;
+    font-size: 1.2rem;
+}
+
+.verification-data {
+    background-color: #f9f9f9;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}
+
+#verification-stats {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+#verification-stats li {
+    padding: 5px 0;
+    font-weight: bold;
+}
+
+.report-section {
+    text-align: center;
+    margin-top: 20px;
+}
+
+#report-btn {
+    background-color: #ff9800;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+#report-btn:hover {
+    background-color: #e68a00;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .filter-controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .team-filter, .search-filter {
+        margin-bottom: 15px;
+    }
+    
+    #find-me-btn {
+        width: 100%;
+    }
+    
+    .leaderboard-table {
+        font-size: 0.9rem;
+    }
+    
+    .verification-images {
+        flex-direction: column;
+    }
+    
+    .current-stats, .previous-stats {
+        width: 100%;
+    }
+}
