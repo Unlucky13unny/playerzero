@@ -27,50 +27,45 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Trainer Info - Ultra Minimal -->
-        <section class="trainer-info-section">
+        <!-- Profile Card -->
+        <section class="profile-card">
             <h1 class="trainer-name">LumbrJackson</h1>
-            <div class="trainer-level-row">
-                <div class="level-badge">50</div>
-                <div class="team-indicator">
+            <div class="level-info">
+                <div class="level-number">50</div>
+                <div class="team-info">
                     <span class="team-dot instinct"></span>
                     <span class="team-name">Instinct</span>
+                    <span class="start-date">Since 7/10/2016</span>
                 </div>
-                <div class="start-date">Since 7/10/2016</div>
             </div>
             <div class="level-label">LVL</div>
-            <div class="trainer-code-row">
-                <span class="code-value">205655364353</span>
+            <div class="friend-code">
+                <span class="code-number">205655364353</span>
                 <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
             </div>
         </section>
 
-        <!-- Rest of the content remains unchanged -->
-        <!-- Stats and Play Style -->
-        <section class="stats-and-playstyle">
-            <div class="stats-column">
-                <div class="stat-block">
+        <!-- Stats and Chart Section -->
+        <section class="stats-and-chart">
+            <div class="stats-list">
+                <div class="stat-item">
                     <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
                 </div>
-                
-                <div class="stat-block">
+                <div class="stat-item">
                     <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
                 </div>
-                
-                <div class="stat-block">
+                <div class="stat-item">
                     <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
                 </div>
-                
-                <div class="stat-block">
+                <div class="stat-item">
                     <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
                 </div>
             </div>
-            
-            <div class="playstyle-column">
+            <div class="chart-container">
                 <canvas id="radarChart"></canvas>
             </div>
         </section>
