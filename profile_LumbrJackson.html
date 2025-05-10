@@ -10,72 +10,60 @@
 </head>
 <body>
     <!-- Main Content -->
-    <main class="container">
-        <!-- Trainer Name -->
-        <div class="trainer-name">LumbrJackson</div>
-        
-        <!-- Trainer Info Grid -->
-        <div class="trainer-grid">
-            <div class="grid-row">
-                <div class="level-cell">50</div>
-                <div class="info-cell">
-                    <div class="team-info">
-                        <span class="team-dot instinct"></span>
-                        <span class="team-name">Instinct</span>
-                    </div>
+    <div class="container">
+        <!-- Trainer Info -->
+        <div class="trainer-section">
+            <h1>LumbrJackson</h1>
+            
+            <div class="level-row">
+                <div class="level-number">50</div>
+                <div class="team-info">
+                    <span class="team-circle"></span>
+                    <span>Instinct</span>
                 </div>
             </div>
-            <div class="grid-row">
-                <div class="level-label-cell">LVL</div>
-                <div class="info-cell">Start Date: 7/10/2016</div>
+            
+            <div class="date-row">
+                <div class="level-label">LVL</div>
+                <div class="start-date">Since 7/10/2016</div>
             </div>
-            <div class="grid-row">
-                <div class="code-cell" colspan="2">
-                    <span class="code-number">205655364353</span>
-                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                </div>
+            
+            <div class="code-row">
+                <span class="friend-code">205655364353</span>
+                <button class="copy-button">Copy</button>
             </div>
         </div>
-
-        <!-- Stats and Chart Section -->
-        <div class="stats-and-chart">
+        
+        <!-- Stats and Chart -->
+        <div class="content-section">
             <div class="stats-column">
-                <div class="stat-item">
+                <div class="stat-box">
                     <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-box">
                     <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-box">
                     <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-box">
                     <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
                 </div>
             </div>
+            
             <div class="chart-column">
-                <canvas id="radarChart"></canvas>
+                <canvas id="radar-chart"></canvas>
             </div>
         </div>
-    </main>
+    </div>
 
-    <!-- JavaScript -->
-    <script src="js/main.js"></script>
     <script src="js/profile.js"></script>
-    <script>
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text)
-                .then(() => {
-                    showNotification('Friend code copied!', 'success');
-                })
-                .catch(err => {
-                    console.error('Failed to copy: ', err);
-                });
-        }
-    </script>
 </body>
 </html>
