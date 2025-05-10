@@ -27,7 +27,7 @@ body {
     padding: 0 20px;
 }
 
-/* Header section - no black banner */
+/* Header section */
 .site-header {
     background-color: white;
     box-shadow: var(--shadow);
@@ -65,7 +65,7 @@ body {
     color: white;
 }
 
-/* Profile Card (table-like layout without borders) */
+/* Profile Card */
 .profile-card {
     background-color: white;
     border-radius: 8px;
@@ -74,54 +74,62 @@ body {
     margin: 30px 0;
 }
 
-.trainer-name-row h1 {
+.trainer-name h1 {
     font-size: 2.5rem;
     font-weight: 700;
     margin: 0 0 20px 0;
 }
 
-/* UPDATED: Reduced spacing between level and LVL text */
-.profile-grid {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0; /* Reduced from 10px */
-    align-items: center;
+/* NEW TABLE STRUCTURE */
+.profile-table {
+    width: 100%;
+    max-width: 600px;
+    border-collapse: collapse;
+    /* Uncomment to show borders for debugging */
+    /*border: 1px solid #ddd;*/
+}
+
+.profile-table td {
+    /* Uncomment to show borders for debugging */
+    /*border: 1px solid #ddd;*/
+    padding: 5px 10px;
+    vertical-align: middle;
 }
 
 .level-cell {
     font-size: 3rem;
     font-weight: 700;
-    grid-column: 1;
-    grid-row: 1;
-    margin-bottom: -5px; /* Added negative margin to reduce space */
-    line-height: 1.1; /* Reduced line height */
+    line-height: 1;
+    text-align: right;
+    padding-right: 15px !important;
+    width: 80px;
 }
 
 .level-label-cell {
     font-size: 1.5rem;
     font-weight: 700;
-    grid-column: 1;
-    grid-row: 2;
-    line-height: 1.1; /* Reduced line height */
+    line-height: 1;
+    text-align: right;
+    padding-right: 15px !important;
 }
 
-.info-cell {
-    grid-column: 2;
-    display: flex;
-    align-items: center;
-}
-
-.team-info {
+.team-info-cell {
     display: flex;
     align-items: center;
     gap: 10px;
+    padding-left: 15px !important;
+}
+
+.date-cell {
+    color: var(--dark-gray);
+    padding-left: 15px !important;
 }
 
 .team-dot {
+    display: inline-block;
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background-color: var(--instinct-color);
 }
 
 .instinct {
@@ -136,16 +144,11 @@ body {
     background-color: var(--valor-color);
 }
 
-.start-date {
-    color: var(--dark-gray);
-}
-
-.friend-code-cell {
-    grid-column: 1 / span 2;
+.code-cell {
+    padding: 15px 10px 5px 0 !important; 
     display: flex;
     align-items: center;
     gap: 15px;
-    margin-top: 15px;
 }
 
 .code-number {
@@ -199,19 +202,19 @@ body {
     color: var(--text-color);
 }
 
-/* UPDATED: Chart styling to ensure it's visible */
+/* Chart styling */
 .chart-column {
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 20px;
-    min-height: 300px; /* Ensure minimum height for chart */
+    min-height: 300px;
 }
 
 canvas#radarChart {
     max-width: 100%;
-    height: 300px !important; /* Force height */
-    width: 300px !important; /* Force width */
+    height: 300px !important;
+    width: 300px !important;
 }
 
 /* Weekly Updates */
@@ -345,5 +348,16 @@ canvas#radarChart {
         width: 100% !important;
         height: auto !important;
         max-height: 300px;
+    }
+    
+    .level-cell,
+    .level-label-cell {
+        text-align: left;
+        padding-right: 10px !important;
+    }
+    
+    .team-info-cell,
+    .date-cell {
+        padding-left: 10px !important;
     }
 }
