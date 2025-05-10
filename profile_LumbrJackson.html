@@ -12,7 +12,7 @@
     <script src="js/profile.js" defer></script>
 </head>
 <body>
-    <!-- Navigation Header (without black banner) -->
+    <!-- Navigation Header -->
     <header class="site-header">
         <div class="container">
             <div class="logo-container">
@@ -33,30 +33,32 @@
         <!-- Profile Info Card -->
         <section class="profile-card">
             <!-- Trainer Name -->
-            <div class="trainer-name-row">
+            <div class="trainer-name">
                 <h1>LumbrJackson</h1>
             </div>
             
-            <!-- Level and Team -->
-            <div class="profile-grid">
-                <div class="level-cell">50</div>
-                <div class="info-cell">
-                    <div class="team-info">
+            <!-- Profile Info Table -->
+            <table class="profile-table">
+                <tr>
+                    <td class="level-cell">50</td>
+                    <td class="team-info-cell">
                         <span class="team-dot instinct"></span>
-                        <span>Instinct</span>
-                    </div>
-                </div>
-                
-                <div class="level-label-cell">LVL</div>
-                <div class="info-cell">
-                    <div class="start-date">Since 7/10/2016</div>
-                </div>
-                
-                <div class="friend-code-cell">
-                    <span class="code-number">205655364353</span>
-                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                </div>
-            </div>
+                        <span class="team-name">Instinct</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="level-label-cell">LVL</td>
+                    <td class="date-cell">
+                        Start Date: 7/10/2025
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="code-cell">
+                        <span class="code-number">205655364353</span>
+                        <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                    </td>
+                </tr>
+            </table>
         </section>
 
         <!-- Stats and Chart Section -->
