@@ -9,11 +9,11 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Navigation Header -->
+    <!-- Navigation Header (without black banner) -->
     <header class="site-header">
         <div class="container">
             <div class="logo-container">
-                <img src="playerzero-logo.png" alt="PlayerZero" class="logo">
+                <img src="images/playerzero-logo.png" alt="PlayerZero" class="logo">
             </div>
             <nav class="main-nav">
                 <ul>
@@ -27,59 +27,61 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Trainer Profile -->
-        <section class="trainer-profile">
-            <div class="trainer-header">
-                <div class="trainer-avatar">
-                    <img src="images/trainer-avatar.png" alt="Trainer Avatar">
-                    <div class="team-badge instinct"></div>
+        <!-- Profile Info Card -->
+        <section class="profile-card">
+            <!-- Trainer Name -->
+            <div class="trainer-name-row">
+                <h1>LumbrJackson</h1>
+            </div>
+            
+            <!-- Level and Team -->
+            <div class="profile-grid">
+                <div class="level-cell">50</div>
+                <div class="info-cell">
+                    <div class="team-info">
+                        <span class="team-dot instinct"></span>
+                        <span>Instinct</span>
+                    </div>
                 </div>
-                <div class="trainer-info">
-                    <h1>LumbrJackson</h1>
-                    <div class="trainer-meta">
-                        <span class="level">50 <small>LVL</small></span>
-                        <span class="team">Instinct</span>
-                        <span class="start-date">Since 7/10/2016</span>
-                    </div>
-                    <div class="trainer-code">
-                        <span>205655364353</span>
-                        <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                    </div>
+                
+                <div class="level-label-cell">LVL</div>
+                <div class="info-cell">
+                    <div class="start-date">Since 7/10/2016</div>
+                </div>
+                
+                <div class="friend-code-cell" colspan="2">
+                    <span class="code-number">205655364353</span>
+                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
                 </div>
             </div>
         </section>
 
-        <!-- Stats Display -->
-        <section class="stats-display">
-            <div class="stats-grid">
-                <div class="stat-item">
+        <!-- Stats and Chart Section -->
+        <section class="stats-and-chart">
+            <div class="stats-column">
+                <div class="stat-box">
                     <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
                 </div>
-                <div class="stat-item">
+                <div class="stat-box">
                     <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
                 </div>
-                <div class="stat-item">
+                <div class="stat-box">
                     <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
                 </div>
-                <div class="stat-item">
+                <div class="stat-box">
                     <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
                 </div>
             </div>
-        </section>
-
-        <!-- Play Style Analysis -->
-        <section class="playstyle-section">
-            <h2>Play Style Analysis</h2>
-            <div class="chart-container">
+            <div class="chart-column">
                 <canvas id="radarChart"></canvas>
             </div>
         </section>
 
-        <!-- Weekly Updates -->
+        <!-- Weekly Updates (kept as they are) -->
         <section class="updates-section">
             <h2>Weekly Progress</h2>
             
@@ -123,37 +125,3 @@
                             <span class="update-value">+382</span>
                         </div>
                         <div class="update-item">
-                            <span class="update-label">Pokéstops</span>
-                            <span class="update-value">+196</span>
-                        </div>
-                        <div class="update-item">
-                            <span class="update-label">XP</span>
-                            <span class="update-value">+981,329</span>
-                        </div>
-                    </div>
-                    <div class="update-image">
-                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
-                    </div>
-                </div>
-            </div>
-        </section>
-    </main>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <div class="container">
-            <p>&copy; 2023 PlayerZero - Pokémon GO Stat Tracking</p>
-        </div>
-    </footer>
-
-    <!-- JavaScript -->
-    <script src="js/main.js"></script>
-    <script src="js/profile.js"></script>
-    <script>
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text);
-            showNotification('Friend code copied to clipboard!', 'success');
-        }
-    </script>
-</body>
-</html>
