@@ -101,24 +101,27 @@ body {
     margin-bottom: 15px;
 }
 
-/* UPDATED: Fixed width level block with centered LVL */
+/* UPDATED: Perfect centering of LVL under 50 */
 .level-block {
-    width: 50px; /* Reduced width */
+    width: 60px; /* Exact width to match "50" */
     display: flex;
     flex-direction: column;
-    margin-right: 20px; /* Reduced space by half */
+    align-items: flex-start; /* Left align both elements */
+    margin-right: 20px;
 }
 
 .level-number {
     font-size: 3rem;
     font-weight: 700;
     line-height: 1;
+    width: 100%; /* Take full width of parent */
 }
 
 .level-label {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1;
+    width: 100%; /* Take full width of parent */
 }
 
 .team-info {
