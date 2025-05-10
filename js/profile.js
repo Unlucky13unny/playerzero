@@ -77,24 +77,3 @@ function setupRadarChart() {
         console.error('Chart.js not loaded');
     }
 }
-
-/**
- * Calculate normalized play style values for radar chart
- * @param {Object} stats - Player's stats
- * @return {Array} Normalized values for radar chart
- */
-function calculatePlayStyle(stats) {
-    // These thresholds would be adjusted based on your player base
-    const maxDistance = 20000; // km
-    const maxCaught = 200000; // Pokémon
-    const maxPokestops = 150000; // Pokéstops
-    const maxXP = 300000000; // XP
-    
-    // Calculate normalized scores (0-100)
-    const walker = Math.min(100, (stats.distanceWalked / maxDistance) * 100);
-    const catcher = Math.min(100, (stats.pokemonCaught / maxCaught) * 100);
-    const explorer = Math.min(100, (stats.pokestopsVisited / maxPokestops) * 100);
-    const grinder = Math.min(100, (stats.totalXP / maxXP) * 100);
-    
-    return [walker, catcher, explorer, grinder];
-}
