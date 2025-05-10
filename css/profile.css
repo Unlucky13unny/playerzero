@@ -80,56 +80,58 @@ body {
     margin: 0 0 20px 0;
 }
 
-/* NEW TABLE STRUCTURE */
-.profile-table {
-    width: 100%;
+/* UPDATED: Left-aligned layout with vertical alignment */
+.profile-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     max-width: 600px;
-    border-collapse: collapse;
-    /* Uncomment to show borders for debugging */
-    /*border: 1px solid #ddd;*/
 }
 
-.profile-table td {
-    /* Uncomment to show borders for debugging */
-    /*border: 1px solid #ddd;*/
-    padding: 5px 10px;
-    vertical-align: middle;
+.level-row, .level-label-row, .friend-code-row {
+    display: flex;
+    align-items: center;
 }
 
-.level-cell {
+.level-row {
+    margin-bottom: -5px;
+}
+
+.level-label-row {
+    margin-bottom: 15px;
+}
+
+/* UPDATED: Fixed width level block with centered LVL */
+.level-block {
+    width: 50px; /* Reduced width */
+    display: flex;
+    flex-direction: column;
+    margin-right: 20px; /* Reduced space by half */
+}
+
+.level-number {
     font-size: 3rem;
     font-weight: 700;
     line-height: 1;
-    text-align: right;
-    padding-right: 15px !important;
-    width: 80px;
 }
 
-.level-label-cell {
+.level-label {
     font-size: 1.5rem;
     font-weight: 700;
     line-height: 1;
-    text-align: right;
-    padding-right: 15px !important;
 }
 
-.team-info-cell {
+.team-info {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding-left: 15px !important;
-}
-
-.date-cell {
-    color: var(--dark-gray);
-    padding-left: 15px !important;
 }
 
 .team-dot {
-    display: inline-block;
     width: 18px;
     height: 18px;
     border-radius: 50%;
+    display: inline-block;
 }
 
 .instinct {
@@ -144,8 +146,11 @@ body {
     background-color: var(--valor-color);
 }
 
-.code-cell {
-    padding: 15px 10px 5px 0 !important; 
+.start-date {
+    color: var(--dark-gray);
+}
+
+.friend-code-row {
     display: flex;
     align-items: center;
     gap: 15px;
@@ -350,14 +355,8 @@ canvas#radarChart {
         max-height: 300px;
     }
     
-    .level-cell,
-    .level-label-cell {
-        text-align: left;
-        padding-right: 10px !important;
-    }
-    
-    .team-info-cell,
-    .date-cell {
-        padding-left: 10px !important;
+    /* Responsive profile info */
+    .level-block {
+        margin-right: 15px;
     }
 }
