@@ -1,11 +1,20 @@
+/**
+ * JavaScript for PlayerZero Profile Page
+ */
 document.addEventListener('DOMContentLoaded', function() {
     // Set up radar chart for play style
     setupRadarChart();
+    
+    // Load example profile data
+    loadExampleProfile();
 });
 
-// Create the radar chart for play style analysis
+/**
+ * Create the radar chart for play style analysis
+ */
 function setupRadarChart() {
-    const ctx = document.getElementById('radarChart').getContext('2d');
+    const ctx = document.getElementById('radarChart');
+    if (!ctx) return; // Exit if element doesn't exist
     
     // Sample data - this would be calculated based on player stats
     const data = {
@@ -54,26 +63,125 @@ function setupRadarChart() {
         }
     };
     
-    new Chart(ctx, config);
+    // Check if Chart.js is loaded
+    if (typeof Chart !== 'undefined') {
+        new Chart(ctx, config);
+    } else {
+        console.error('Chart.js not loaded');
+    }
 }
 
-// This function would be called when we have actual player data
+/**
+ * Load example profile data (for demonstration)
+ */
+function loadExampleProfile() {
+    // Example player data - this would come from your database in a real implementation
+    const playerData = {
+        name: 'LumbrJackson',
+        team: 'instinct',
+        level: 50,
+        startDate: '2016-07-10',
+        friendCode: '1234 5678 9012',
+        stats: {
+            distanceWalked: 15019.30,
+            pokemonCaught: 170216,
+            pokestopsVisited: 109998,
+            totalXP: 212130283
+        },
+        weeklyGains: {
+            distanceWalked: 32.5,
+            pokemonCaught: 415,
+            pokestopsVisited: 221,
+            totalXP: 1254789
+        },
+        previousWeekGains: {
+            distanceWalked: 28.7,
+            pokemonCaught: 382,
+            pokestopsVisited: 196,
+            totalXP: 981329
+        }
+    };
+    
+    // Calculate PlayerZero score
+    playerData.playerZeroScore = calculatePlayerZeroScore(playerData.stats);
+    
+    // Update profile with this data
+    updateProfile(playerData);
+}
+
+/**
+ * Update profile UI with player data
+ * @param {Object} playerData - Player's profile data
+ */
 function updateProfile(playerData) {
-    // Update profile information
-    document.querySelector('.trainer-name').textContent = playerData.name;
-    document.querySelector('.trainer-level span').textContent = playerData.level;
-    document.querySelector('.trainer-since').textContent = 'Playing since: ' + formatDate(playerData.startDate);
-    document.querySelector('.friend-code').textContent = 'Friend Code: ' + playerData.friendCode;
+    // Update basic profile information
+    const elements = {
+        trainerName: document.querySelector('.trainer-name'),
+        trainerLevel: document.querySelector('.trainer-level span'),
+        trainerSince: document.querySelector('.trainer-since'),
+        friendCode: document.querySelector('.friend-code'),
+        score: document.querySelector('.score')
+    };
     
-    // Update stats
-    document.querySelector('.stat-value:nth-of-type(1)').textContent = formatNumber(playerData.stats.distanceWalked) + ' km';
-    document.querySelector('.stat-value:nth-of-type(2)').textContent = formatNumber(playerData.stats.pokemonCaught);
-    document.querySelector('.stat-value:nth-of-type(3)').textContent = formatNumber(playerData.stats.pokestopsVisited);
-    document.querySelector('.stat-value:nth-of-type(4)').textContent = formatNumber(playerData.stats.totalXP);
+    // Only update elements that exist
+    if (elements.trainerName) elements.trainerName.textContent = playerData.name;
+    if (elements.trainerLevel) elements.trainerLevel.textContent = playerData.level;
+    if (elements.trainerSince) elements.trainerSince.textContent = 'Playing since: ' + formatDate(playerData.startDate);
+    if (elements.friendCode) elements.friendCode.textContent = 'Friend Code: ' + playerData.friendCode;
+    if (elements.score) elements.score.textContent = playerData.playerZeroScore;
     
-    // Update PlayerZero score
-    document.querySelector('.score').textContent = playerData.playerZeroScore;
+    // Update stats values
+    const statBoxes = document.querySelectorAll('.stat-box');
+    if (statBoxes.length >= 4) {
+        const statValues = [
+            formatNumber(playerData.stats.distanceWalked) + ' km',
+            formatNumber(playerData.stats.pokemonCaught),
+            formatNumber(playerData.stats.pokestopsVisited),
+            formatNumber(playerData.stats.totalXP)
+        ];
+        
+        const weeklyChanges = [
+            '+' + playerData.weeklyGains.distanceWalked + ' km',
+            '+' + formatNumber(playerData.weeklyGains.pokemonCaught),
+            '+' + formatNumber(playerData.weeklyGains.pokestopsVisited),
+            '+' + formatNumber(playerData.weeklyGains.totalXP)
+        ];
+        
+        statBoxes.forEach((box, index) => {
+            if (index < 4) {
+                const valueElement = box.querySelector('.stat-value');
+                const changeElement = box.querySelector('.stat-change');
+                
+                if (valueElement) valueElement.textContent = statValues[index];
+                if (changeElement) {
+                    changeElement.textContent = weeklyChanges[index] + ' this week';
+                    changeElement.classList.add('positive');
+                }
+            }
+        });
+    }
     
-    // This would update the radar chart with actual player data
-    // updateRadarChart(playerData.playstyle);
+    // Update weekly update cards (for a real implementation)
+    // updateWeeklyCards(playerData.weeklyUpdates);
+}
+
+/**
+ * Calculate normalized play style values for radar chart
+ * @param {Object} stats - Player's stats
+ * @return {Array} Normalized values for radar chart
+ */
+function calculatePlayStyle(stats) {
+    // These thresholds would be adjusted based on your player base
+    const maxDistance = 20000; // km
+    const maxCaught = 200000; // Pokémon
+    const maxPokestops = 150000; // Pokéstops
+    const maxXP = 300000000; // XP
+    
+    // Calculate normalized scores (0-100)
+    const walker = Math.min(100, (stats.distanceWalked / maxDistance) * 100);
+    const catcher = Math.min(100, (stats.pokemonCaught / maxCaught) * 100);
+    const explorer = Math.min(100, (stats.pokestopsVisited / maxPokestops) * 100);
+    const grinder = Math.min(100, (stats.totalXP / maxXP) * 100);
+    
+    return [walker, catcher, explorer, grinder];
 }
