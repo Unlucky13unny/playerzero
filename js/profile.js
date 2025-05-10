@@ -81,38 +81,16 @@ function setupRadarChart() {
 }
 
 /**
- * Calculate normalized play style values for radar chart
- * @param {Object} stats - Player's stats
- * @return {Array} Normalized values for radar chart
- */
-function calculatePlayStyle(stats) {
-    // These thresholds would be adjusted based on your player base
-    const maxDistance = 20000; // km
-    const maxCaught = 200000; // Pokémon
-    const maxPokestops = 150000; // Pokéstops
-    const maxXP = 300000000; // XP
-    
-    // Calculate normalized scores (0-100)
-    const walker = Math.min(100, (stats.distanceWalked / maxDistance) * 100);
-    const catcher = Math.min(100, (stats.pokemonCaught / maxCaught) * 100);
-    const explorer = Math.min(100, (stats.pokestopsVisited / maxPokestops) * 100);
-    const grinder = Math.min(100, (stats.totalXP / maxXP) * 100);
-    
-    return [walker, catcher, explorer, grinder];
-}
-
-/**
  * Copy text to clipboard
  * @param {string} text - Text to copy
  */
 function copyToClipboard(text) {
     navigator.clipboard.writeText(text)
         .then(() => {
-            showNotification('Friend code copied to clipboard!', 'success');
+            showNotification('Friend code copied!', 'success');
         })
         .catch(err => {
             console.error('Failed to copy: ', err);
-            showNotification('Failed to copy to clipboard', 'error');
         });
 }
 
@@ -128,30 +106,6 @@ function showNotification(message, type = 'info') {
         notification = document.createElement('div');
         notification.id = 'notification';
         document.body.appendChild(notification);
-        
-        // Add styles if not in CSS
-        const style = document.createElement('style');
-        style.textContent = `
-            #notification {
-                position: fixed;
-                bottom: 20px;
-                right: 20px;
-                padding: 10px 15px;
-                border-radius: 4px;
-                background-color: #333;
-                color: white;
-                font-size: 14px;
-                z-index: 1000;
-                opacity: 0;
-                transition: opacity 0.3s;
-                max-width: 300px;
-            }
-            #notification.success { background-color: #4CAF50; }
-            #notification.error { background-color: #F44336; }
-            #notification.warning { background-color: #FF9800; }
-            #notification.show { opacity: 1; }
-        `;
-        document.head.appendChild(style);
     }
     
     // Set message and type
