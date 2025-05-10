@@ -1,261 +1,86 @@
-/* Ultra-Minimalist Profile Styles */
-
-:root {
-    --primary-color: #e30613;
-    --text-color: #333;
-    --light-gray: #f5f5f5;
-    --medium-gray: #e0e0e0;
-    --dark-gray: #757575;
-    --instinct-color: #FFDE00;
-    --mystic-color: #0077BE;
-    --valor-color: #FF0000;
-}
-
-body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    line-height: 1.6;
-    color: var(--text-color);
-    background-color: #fff;
-    margin: 0;
-    padding: 0;
-}
-
-.container {
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 0 20px;
-}
-
-/* Header styling */
-.site-header {
-    background-color: white;
-    padding: 15px 0;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.site-header .container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.logo {
-    height: 40px;
-}
-
-.main-nav ul {
-    display: flex;
-    list-style: none;
-    margin: 0;
-    padding: 0;
-}
-
-.main-nav a {
-    color: var(--text-color);
-    text-decoration: none;
-    padding: 10px 15px;
-    font-weight: 500;
-}
-
-.main-nav a.active {
-    color: var(--primary-color);
-}
-
-/* Trainer Info */
+/* Updated ultra-minimal trainer info section */
 .trainer-info-section {
     padding: 30px 0 20px;
 }
 
-.trainer-header {
-    text-align: left;
-}
-
-.trainer-header h1 {
+.trainer-name {
     font-size: 2.2rem;
-    margin: 0 0 10px;
-    font-weight: 600;
+    margin: 0 0 5px;
+    font-weight: 700;
+    color: #000;
 }
 
-.trainer-meta {
+.trainer-level-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
     align-items: center;
+    gap: 15px;
+    margin-bottom: 2px;
 }
 
-.level {
-    font-weight: 600;
-    color: var(--primary-color);
+.level-badge {
+    font-size: 2.5rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
-.team {
-    position: relative;
-    padding-left: 22px;
+.team-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
-.team:before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 16px;
-    height: 16px;
+.team-dot {
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
+    display: inline-block;
 }
 
-.team.instinct:before {
+.team-dot.instinct {
     background-color: var(--instinct-color);
 }
 
-.team.mystic:before {
+.team-dot.mystic {
     background-color: var(--mystic-color);
 }
 
-.team.valor:before {
+.team-dot.valor {
     background-color: var(--valor-color);
 }
 
-.trainer-code {
-    font-family: monospace;
-    background: var(--light-gray);
-    padding: 5px 10px;
-    border-radius: 4px;
-    display: inline-flex;
-    align-items: center;
+.team-name, .start-date {
+    color: var(--dark-gray);
+    font-size: 1rem;
 }
 
-.copy-btn {
-    background: var(--primary-color);
-    color: white;
-    border: none;
-    padding: 3px 8px;
-    margin-left: 10px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 0.8rem;
+.level-label {
+    font-size: 1.3rem;
+    font-weight: 700;
+    margin-top: -5px;
+    margin-bottom: 15px;
 }
 
-/* Stats and Play Style Section */
-.stats-and-playstyle {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    margin: 30px 0;
-}
-
-.stats-column {
+.trainer-code-row {
     display: flex;
-    flex-direction: column;
+    align-items: center;
     gap: 10px;
 }
 
-.stat-block {
-    background-color: var(--light-gray);
-    padding: 15px 20px;
+.code-value {
+    font-family: monospace;
+    font-size: 1.1rem;
+}
+
+.copy-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 3px 10px;
     border-radius: 4px;
-}
-
-.stat-label {
     font-size: 0.9rem;
-    color: var(--dark-gray);
-    margin-bottom: 5px;
+    cursor: pointer;
 }
 
-.stat-value {
-    font-size: 1.8rem;
-    font-weight: 600;
-    color: var(--text-color);
-}
-
-.playstyle-column {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Weekly Updates */
-.updates-section {
-    margin-top: 40px;
-}
-
-.updates-section h2 {
-    font-size: 1.5rem;
-    font-weight: 500;
-    margin-bottom: 20px;
-}
-
-.update-card {
-    background-color: var(--light-gray);
-    border-radius: 4px;
-    margin-bottom: 15px;
-    overflow: hidden;
-}
-
-.update-card.current {
-    border-left: 4px solid var(--primary-color);
-}
-
-.update-date {
-    padding: 12px 20px;
-    font-weight: 500;
-    color: var(--text-color);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.update-card.current .update-date {
-    font-weight: 600;
-}
-
-.update-content {
-    padding: 15px 20px;
-}
-
-.update-stats {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 15px;
-}
-
-.update-stat {
-    display: flex;
-    flex-direction: column;
-}
-
-.update-label {
-    font-size: 0.9rem;
-    color: var(--dark-gray);
-}
-
-.update-value {
-    font-size: 1.2rem;
-    font-weight: 500;
-    color: var(--primary-color);
-}
-
-/* Footer */
-.site-footer {
-    margin-top: 60px;
-    padding: 20px 0;
-    background-color: var(--light-gray);
-    color: var(--dark-gray);
-    text-align: center;
-    font-size: 0.9rem;
-}
-
-/* Responsive Adjustments */
-@media (max-width: 768px) {
-    .stats-and-playstyle {
-        grid-template-columns: 1fr;
-    }
-    
-    .trainer-meta {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-    }
-    
-    .update-stats {
-        grid-template-columns: repeat(2, 1fr);
-    }
+.copy-btn:hover {
+    background-color: #c00;
 }
