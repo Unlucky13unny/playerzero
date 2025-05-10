@@ -12,9 +12,9 @@
     <!-- Navigation Header -->
     <header class="site-header">
         <div class="container">
-            <div class="logo-container">
-                <img src="playerzero-logo.png" alt="PlayerZero" class="logo">
-            </div>
+            <a href="index.html" class="logo-container">
+                <img src="images/playerzero-logo.png" alt="PlayerZero" class="logo">
+            </a>
             <nav class="main-nav">
                 <ul>
                     <li><a href="index.html">Home</a></li>
@@ -27,54 +27,47 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Trainer Profile -->
-        <section class="trainer-profile">
+        <!-- Trainer Info -->
+        <section class="trainer-info-section">
             <div class="trainer-header">
-                <div class="trainer-avatar">
-                    <img src="images/trainer-avatar.png" alt="Trainer Avatar">
-                    <div class="team-badge instinct"></div>
-                </div>
-                <div class="trainer-info">
-                    <h1>LumbrJackson</h1>
-                    <div class="trainer-meta">
-                        <span class="level">50 <small>LVL</small></span>
-                        <span class="team">Instinct</span>
-                        <span class="start-date">Since 7/10/2016</span>
-                    </div>
-                    <div class="trainer-code">
+                <h1>LumbrJackson</h1>
+                <div class="trainer-meta">
+                    <span class="level">50 <small>LVL</small></span>
+                    <span class="team instinct">Instinct</span>
+                    <span class="start-date">Since 7/10/2016</span>
+                    <span class="trainer-code">
                         <span>205655364353</span>
                         <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                    </div>
+                    </span>
                 </div>
             </div>
         </section>
 
-        <!-- Stats Display -->
-        <section class="stats-display">
-            <div class="stats-grid">
-                <div class="stat-item">
+        <!-- Stats and Play Style -->
+        <section class="stats-and-playstyle">
+            <div class="stats-column">
+                <div class="stat-block">
                     <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
                 </div>
             </div>
-        </section>
-
-        <!-- Play Style Analysis -->
-        <section class="playstyle-section">
-            <h2>Play Style Analysis</h2>
-            <div class="chart-container">
+            
+            <div class="playstyle-column">
                 <canvas id="radarChart"></canvas>
             </div>
         </section>
@@ -86,26 +79,23 @@
             <div class="update-card current">
                 <div class="update-date">November 5, 2023</div>
                 <div class="update-content">
-                    <div class="update-details">
-                        <div class="update-item">
+                    <div class="update-stats">
+                        <div class="update-stat">
                             <span class="update-label">Distance</span>
                             <span class="update-value">+32.5 km</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">Catches</span>
                             <span class="update-value">+415</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">Pokéstops</span>
                             <span class="update-value">+221</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">XP</span>
                             <span class="update-value">+1,254,789</span>
                         </div>
-                    </div>
-                    <div class="update-image">
-                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
                     </div>
                 </div>
             </div>
@@ -113,26 +103,23 @@
             <div class="update-card">
                 <div class="update-date">October 29, 2023</div>
                 <div class="update-content">
-                    <div class="update-details">
-                        <div class="update-item">
+                    <div class="update-stats">
+                        <div class="update-stat">
                             <span class="update-label">Distance</span>
                             <span class="update-value">+28.7 km</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">Catches</span>
                             <span class="update-value">+382</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">Pokéstops</span>
                             <span class="update-value">+196</span>
                         </div>
-                        <div class="update-item">
+                        <div class="update-stat">
                             <span class="update-label">XP</span>
                             <span class="update-value">+981,329</span>
                         </div>
-                    </div>
-                    <div class="update-image">
-                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
                     </div>
                 </div>
             </div>
