@@ -9,72 +9,137 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="container">
+            <a href="index.html" class="logo-container">
+                <img src="images/playerzero-logo.png" alt="PlayerZero" class="logo">
+            </a>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="profile.html" class="active">Profile</a></li>
+                    <li><a href="leaderboard.html">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
     <!-- Main Content -->
     <main class="container">
-        <!-- Trainer Name -->
-        <div class="trainer-name">LumbrJackson</div>
-        
-        <!-- Trainer Info Grid -->
-        <div class="trainer-grid">
-            <div class="grid-row">
-                <div class="level-cell">50</div>
-                <div class="info-cell">
-                    <div class="team-info">
-                        <span class="team-dot instinct"></span>
-                        <span class="team-name">Instinct</span>
-                    </div>
+        <!-- Trainer Info -->
+        <section class="trainer-info-section">
+            <div class="trainer-header">
+                <h1>LumbrJackson</h1>
+                <div class="trainer-meta">
+                    <span class="level">50 <small>LVL</small></span>
+                    <span class="team instinct">Instinct</span>
+                    <span class="start-date">Since 7/10/2016</span>
+                    <span class="trainer-code">
+                        <span>205655364353</span>
+                        <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                    </span>
                 </div>
             </div>
-            <div class="grid-row">
-                <div class="level-label-cell">LVL</div>
-                <div class="info-cell">Since 7/10/2016</div>
-            </div>
-            <div class="grid-row">
-                <div class="code-cell" colspan="2">
-                    <span class="code-number">205655364353</span>
-                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                </div>
-            </div>
-        </div>
+        </section>
 
-        <!-- Stats and Chart Section -->
-        <div class="stats-and-chart">
+        <!-- Stats and Play Style -->
+        <section class="stats-and-playstyle">
             <div class="stats-column">
-                <div class="stat-item">
+                <div class="stat-block">
                     <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
                 </div>
-                <div class="stat-item">
+                
+                <div class="stat-block">
                     <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
                 </div>
             </div>
-            <div class="chart-column">
+            
+            <div class="playstyle-column">
                 <canvas id="radarChart"></canvas>
             </div>
-        </div>
+        </section>
+
+        <!-- Weekly Updates -->
+        <section class="updates-section">
+            <h2>Weekly Progress</h2>
+            
+            <div class="update-card current">
+                <div class="update-date">November 5, 2023</div>
+                <div class="update-content">
+                    <div class="update-stats">
+                        <div class="update-stat">
+                            <span class="update-label">Distance</span>
+                            <span class="update-value">+32.5 km</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">Catches</span>
+                            <span class="update-value">+415</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">Pokéstops</span>
+                            <span class="update-value">+221</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">XP</span>
+                            <span class="update-value">+1,254,789</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="update-card">
+                <div class="update-date">October 29, 2023</div>
+                <div class="update-content">
+                    <div class="update-stats">
+                        <div class="update-stat">
+                            <span class="update-label">Distance</span>
+                            <span class="update-value">+28.7 km</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">Catches</span>
+                            <span class="update-value">+382</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">Pokéstops</span>
+                            <span class="update-value">+196</span>
+                        </div>
+                        <div class="update-stat">
+                            <span class="update-label">XP</span>
+                            <span class="update-value">+981,329</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2023 PlayerZero - Pokémon GO Stat Tracking</p>
+        </div>
+    </footer>
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
     <script src="js/profile.js"></script>
     <script>
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text)
-                .then(() => {
-                    showNotification('Friend code copied!', 'success');
-                })
-                .catch(err => {
-                    console.error('Failed to copy: ', err);
-                });
+            navigator.clipboard.writeText(text);
+            showNotification('Friend code copied to clipboard!', 'success');
         }
     </script>
 </body>
