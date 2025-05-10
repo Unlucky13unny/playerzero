@@ -1,0 +1,128 @@
+/* Base Styles */
+:root {
+    --primary-color: #e30613; /* PlayerZero red */
+    --dark-color: #111111;
+    --light-color: #f4f4f4;
+    --text-color: #333333;
+    --border-color: #dddddd;
+    
+    /* Team colors */
+    --instinct-color: #FFCE00;
+    --mystic-color: #0077BE;
+    --valor-color: #FF0000;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--light-color);
+}
+
+.container {
+    width: 90%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+/* Header Styles */
+.site-header {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 15px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.site-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    max-height: 60px;
+}
+
+.main-nav ul {
+    display: flex;
+    list-style: none;
+}
+
+.main-nav li {
+    margin-left: 20px;
+}
+
+.main-nav a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.main-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+.main-nav a.active {
+    background-color: var(--primary-color);
+}
+
+/* Main Content */
+main {
+    padding: 30px 0;
+}
+
+section {
+    margin-bottom: 30px;
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+h1, h2, h3, h4 {
+    color: var(--dark-color);
+    margin-bottom: 15px;
+}
+
+/* Footer */
+.site-footer {
+    background-color: var(--dark-color);
+    color: white;
+    text-align: center;
+    padding: 20px 0;
+    margin-top: 40px;
+}
+
+/* Utility Classes */
+.positive {
+    color: green;
+}
+
+.negative {
+    color: red;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .site-header .container {
+        flex-direction: column;
+    }
+    
+    .logo-container {
+        margin-bottom: 15px;
+    }
+    
+    .main-nav ul {
+        justify-content: center;
+    }
+}
