@@ -9,49 +9,36 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <!-- Navigation Header -->
-    <header class="site-header">
-        <div class="container">
-            <a href="index.html" class="logo-container">
-                <img src="images/playerzero-logo.png" alt="PlayerZero" class="logo">
-            </a>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.html">Home</a></li>
-                    <li><a href="profile.html" class="active">Profile</a></li>
-                    <li><a href="leaderboard.html">Leaderboard</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
-
     <!-- Main Content -->
     <main class="container">
-        <!-- Profile Card -->
-        <section class="profile-card">
-            <h1 class="trainer-name">LumbrJackson</h1>
-            
-            <div class="level-row">
-                <div class="level-number">50</div>
-                <div class="level-details">
+        <!-- Trainer Name -->
+        <div class="trainer-name">LumbrJackson</div>
+        
+        <!-- Trainer Info Grid -->
+        <div class="trainer-grid">
+            <div class="grid-row">
+                <div class="level-cell">50</div>
+                <div class="info-cell">
                     <div class="team-info">
                         <span class="team-dot instinct"></span>
                         <span class="team-name">Instinct</span>
                     </div>
-                    <div class="start-date">Since 7/10/2016</div>
                 </div>
             </div>
-            
-            <div class="level-label">LVL</div>
-            
-            <div class="friend-code">
-                <span class="code-number">205655364353</span>
-                <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+            <div class="grid-row">
+                <div class="level-label-cell">LVL</div>
+                <div class="info-cell">Start Date: 7/10/2016</div>
             </div>
-        </section>
+            <div class="grid-row">
+                <div class="code-cell" colspan="2">
+                    <span class="code-number">205655364353</span>
+                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Stats and Chart Section -->
-        <section class="stats-and-chart">
+        <div class="stats-and-chart">
             <div class="stats-column">
                 <div class="stat-item">
                     <div class="stat-label">Distance Walked</div>
@@ -73,7 +60,7 @@
             <div class="chart-column">
                 <canvas id="radarChart"></canvas>
             </div>
-        </section>
+        </div>
     </main>
 
     <!-- JavaScript -->
