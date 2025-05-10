@@ -1,5 +1,6 @@
-/* Profile Page Styles */
+/* Modern, Minimalist Profile Styles */
 
+/* Color variables */
 :root {
     --primary-color: #e30613;
     --text-color: #333;
@@ -9,195 +10,305 @@
     --instinct-color: #FFDE00;
     --mystic-color: #0077BE;
     --valor-color: #FF0000;
-    --bg-color: #fff;
+    --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
 body {
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     color: var(--text-color);
-    background-color: var(--bg-color);
-    margin: 0;
-    padding: 0;
+    background-color: #fff;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 0 20px;
 }
 
-/* Trainer Name */
-.trainer-name {
-    font-size: 2.8rem;
-    font-weight: 700;
-    color: #000;
-    margin: 40px 0 30px;
+/* Header section - keeping it simple */
+.site-header {
+    background-color: white;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 100;
 }
 
-/* Grid Layout for Trainer Info */
-.trainer-grid {
-    width: 100%;
-    max-width: 600px;
-    margin-bottom: 40px;
-}
-
-.grid-row {
+.main-nav ul {
     display: flex;
-    width: 100%;
+    list-style: none;
+    padding: 0;
 }
 
-.level-cell {
-    font-size: 3.5rem;
-    font-weight: 700;
-    padding: 5px 20px 5px 0;
-    width: 100px;
-}
-
-.level-label-cell {
-    font-size: 1.8rem;
-    font-weight: 700;
-    padding: 5px 20px 5px 0;
-    width: 100px;
-}
-
-.info-cell {
-    flex: 1;
-    padding: 5px 0;
-    display: flex;
-    align-items: center;
-}
-
-.team-info {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-
-.team-dot {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+.main-nav a {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 15px 20px;
     display: inline-block;
+    font-weight: 500;
 }
 
-.team-dot.instinct {
+.main-nav a.active {
+    color: var(--primary-color);
+    position: relative;
+}
+
+.main-nav a.active:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 20px;
+    right: 20px;
+    height: 3px;
+    background-color: var(--primary-color);
+}
+
+/* Trainer Profile */
+.trainer-profile {
+    padding: 40px 0 20px;
+}
+
+.trainer-header {
+    display: flex;
+    align-items: center;
+    gap: 30px;
+}
+
+.trainer-avatar {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+}
+
+.trainer-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.team-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid white;
+}
+
+.team-badge.instinct {
     background-color: var(--instinct-color);
 }
 
-.team-dot.mystic {
+.team-badge.mystic {
     background-color: var(--mystic-color);
 }
 
-.team-dot.valor {
+.team-badge.valor {
     background-color: var(--valor-color);
 }
 
-.team-name {
-    font-size: 1.2rem;
+.trainer-info h1 {
+    font-size: 2.4rem;
+    margin: 0 0 10px;
+    font-weight: 600;
+}
+
+.trainer-meta {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 15px;
     color: var(--dark-gray);
 }
 
-.code-cell {
-    padding: 20px 0;
-    display: flex;
-    align-items: center;
-    gap: 15px;
+.level {
+    font-weight: 600;
+    color: var(--primary-color);
 }
 
-.code-number {
+.trainer-code {
+    display: flex;
+    align-items: center;
     font-family: monospace;
-    font-size: 1.3rem;
+    font-size: 1.2rem;
+    background: var(--light-gray);
+    padding: 8px 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+    display: inline-flex;
 }
 
 .copy-btn {
-    background-color: var(--primary-color);
+    background: var(--primary-color);
     color: white;
     border: none;
-    padding: 5px 15px;
+    padding: 5px 10px;
+    margin-left: 10px;
     border-radius: 4px;
-    font-size: 1rem;
     cursor: pointer;
-    font-weight: bold;
+    font-size: 0.8rem;
 }
 
-.copy-btn:hover {
-    background-color: #c00;
+/* Stats Display */
+.stats-display {
+    margin: 30px 0;
 }
 
-/* Stats and Chart Section */
-.stats-and-chart {
+.stats-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 30px;
-    padding: 20px 0;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 20px;
 }
 
-.stats-column {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-/* THIS IS THE ONLY CHANGE - MADE STAT ITEMS MATCH THE IMAGE */
 .stat-item {
+    padding: 20px;
+    border-radius: 8px;
     background-color: var(--light-gray);
-    padding: 15px 20px;
+    transition: transform 0.2s;
+}
+
+.stat-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow);
 }
 
 .stat-label {
-    font-size: 1rem;
+    font-size: 0.9rem;
     color: var(--dark-gray);
     margin-bottom: 5px;
 }
 
 .stat-value {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 600;
     color: var(--text-color);
 }
 
-.chart-column {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+/* Play Style Chart */
+.playstyle-section {
+    margin: 40px 0;
 }
 
-/* Notification */
-#notification {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    padding: 10px 15px;
-    border-radius: 4px;
-    background-color: #333;
+.playstyle-section h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.chart-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 0;
+}
+
+/* Weekly Updates */
+.updates-section {
+    margin: 40px 0;
+}
+
+.updates-section h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+    color: var(--text-color);
+}
+
+.update-card {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--light-gray);
+}
+
+.update-card.current {
+    border: 1px solid var(--primary-color);
+    background-color: white;
+}
+
+.update-date {
+    padding: 12px 20px;
+    font-weight: 500;
+    color: var(--text-color);
+    border-bottom: 1px solid var(--medium-gray);
+}
+
+.update-card.current .update-date {
+    background-color: var(--primary-color);
     color: white;
-    font-size: 14px;
-    z-index: 1000;
-    opacity: 0;
-    transition: opacity 0.3s;
-    max-width: 300px;
 }
 
-#notification.success {
-    background-color: #4CAF50;
+.update-content {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
 }
 
-#notification.show {
-    opacity: 1;
+.update-details {
+    flex: 1;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.update-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-label {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+}
+
+.update-value {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+.update-image {
+    width: 180px;
+    flex-shrink: 0;
+}
+
+.stats-image {
+    width: 100%;
+    border-radius: 4px;
+    display: block;
+}
+
+/* Footer */
+.site-footer {
+    margin-top: 60px;
+    padding: 20px 0;
+    background-color: var(--light-gray);
+    color: var(--dark-gray);
+    text-align: center;
+    font-size: 0.9rem;
 }
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
-    .stats-and-chart {
-        grid-template-columns: 1fr;
+    .trainer-header {
+        flex-direction: column;
+        text-align: center;
     }
     
-    .trainer-name {
-        font-size: 2.2rem;
+    .trainer-meta {
+        justify-content: center;
     }
     
-    .level-cell {
-        font-size: 2.8rem;
+    .update-content {
+        flex-direction: column;
+    }
+    
+    .update-image {
+        width: 100%;
+        max-width: 300px;
+        margin: 0 auto;
     }
 }
