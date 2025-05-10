@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayerZero Leaderboards</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/leaderboard.css">
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="PlayerZero Logo" class="logo">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="leaderboard.html" class="active">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Leaderboard Header -->
+        <section class="leaderboard-header">
+            <h1>PlayerZero Leaderboards</h1>
+            
+            <!-- Main Tabs: All-Time vs Weekly -->
+            <div class="main-tabs">
+                <button class="tab-btn active" data-tab="all-time">All-Time Leaders</button>
+                <button class="tab-btn" data-tab="weekly">Weekly Gainers</button>
+            </div>
+            
+            <!-- Category Tabs for sorting -->
+            <div class="category-tabs">
+                <button class="category-btn active" data-category="playerzero">PlayerZero Score</button>
+                <button class="category-btn" data-category="distance">Distance Walked</button>
+                <button class="category-btn" data-category="catches">Pokémon Caught</button>
+                <button class="category-btn" data-category="pokestops">Pokéstops Visited</button>
+                <button class="category-btn" data-category="xp">Total XP</button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-controls">
+                <div class="team-filter">
+                    <label for="team-select">Team:</label>
+                    <select id="team-select">
+                        <option value="all">All Teams</option>
+                        <option value="instinct">Instinct</option>
+                        <option value="mystic">Mystic</option>
+                        <option value="valor">Valor</option>
+                    </select>
+                </div>
+                
+                <div class="search-filter">
+                    <input type="text" id="player-search" placeholder="Search player name...">
+                    <button id="search-btn">Search</button>
+                </div>
+                
+                <button id="find-me-btn">Find My Rank</button>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Content - All-Time Tab -->
+        <section id="all-time-tab" class="leaderboard-content active">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Level</th>
+                        <th>PlayerZero Score</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example rows - would be generated dynamically -->
+                    <tr>
+                        <td class="rank">1</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                LumbrJackson
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-instinct.png" alt="Team Instinct" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">1785.42</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="LumbrJackson">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">2</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                PokeGrinder42
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">1742.18</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="PokeGrinder42">View Proof</button>
+                        </td>
+                    </tr>
+                    <!-- More rows would be dynamically generated -->
+                </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev" disabled>Previous</button>
+                <span class="page-indicator">Page 1 of 10</span>
+                <button class="page-btn next">Next</button>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Content - Weekly Tab (hidden initially) -->
+        <section id="weekly-tab" class="leaderboard-content">
+            <div class="weekly-header">
+                <h2>Week of October 30 - November 5, 2023</h2>
+            </div>
+            
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Level</th>
+                        <th>Weekly Gain</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example rows for weekly gainers -->
+                    <tr>
+                        <td class="rank">1</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                XPHunter99
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-mystic.png" alt="Team Mystic" class="team-icon">
+                        </td>
+                        <td class="level">48</td>
+                        <td class="gain">+25 points</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="XPHunter99">View Proof</button>
+                        </td>
+                    </tr>
+                    <!-- More rows would be dynamically generated -->
+                </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev" disabled>Previous</button>
+                <span class="page-indicator">Page 1 of 5</span>
+                <button class="page-btn next">Next</button>
+            </div>
+        </section>
+        
+        <!-- Verification Modal (hidden by default) -->
+        <div id="verification-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Verification: <span id="modal-player-name">Player Name</span></h2>
+                
+                <div class="verification-images">
+                    <div class="current-stats">
+                        <h3>Current Stats (Nov 5, 2023)</h3>
+                        <img src="images/profile-placeholder.jpg" alt="Current Stats" id="current-stats-img">
+                    </div>
+                    
+                    <div class="previous-stats">
+                        <h3>Previous Stats (Oct 29, 2023)</h3>
+                        <img src="images/profile-placeholder.jpg" alt="Previous Stats" id="previous-stats-img">
+                    </div>
+                </div>
+                
+                <div class="verification-data">
+                    <h3>Weekly Changes</h3>
+                    <ul id="verification-stats">
+                        <li>Distance: +32.5 km</li>
+                        <li>Catches: +415</li>
+                        <li>Pokéstops: +221</li>
+                        <li>XP: +1,254,789</li>
+                        <li>PlayerZero Score: +12</li>
+                    </ul>
+                </div>
+                
+                <div class="report-section">
+                    <button id="report-btn">Report Suspicious Data</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2023 PlayerZero - The Ultimate Pokémon GO Stat Tracker</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/leaderboard.js"></script>
+</body>
+</html>
