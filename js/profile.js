@@ -33,6 +33,8 @@ function setupRadarChart() {
         type: 'radar',
         data: data,
         options: {
+            responsive: true,
+            maintainAspectRatio: true,
             scales: {
                 r: {
                     angleLines: {
