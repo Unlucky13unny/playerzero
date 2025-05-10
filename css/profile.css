@@ -1,29 +1,97 @@
-/* Updated ultra-minimal trainer info section */
-.trainer-info-section {
-    padding: 30px 0 20px;
+/* Profile Page Styles */
+
+:root {
+    --primary-color: #e30613;
+    --text-color: #333;
+    --light-gray: #f5f5f5;
+    --medium-gray: #e0e0e0;
+    --dark-gray: #757575;
+    --instinct-color: #FFDE00;
+    --mystic-color: #0077BE;
+    --valor-color: #FF0000;
+    --bg-color: #f5f5f5;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--bg-color);
+    margin: 0;
+    padding: 0;
+}
+
+.container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header styling */
+.site-header {
+    background-color: #111;
+    padding: 10px 0;
+}
+
+.site-header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    height: 40px;
+}
+
+.main-nav ul {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.main-nav a {
+    color: white;
+    text-decoration: none;
+    padding: 8px 15px;
+    margin: 0 5px;
+    border-radius: 4px;
+}
+
+.main-nav a.active {
+    background-color: var(--primary-color);
+}
+
+/* Profile Card */
+.profile-card {
+    background-color: white;
+    padding: 30px;
+    border-radius: 8px;
+    margin: 30px 0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .trainer-name {
     font-size: 2.2rem;
-    margin: 0 0 5px;
+    margin: 0 0 10px;
     font-weight: 700;
     color: #000;
 }
 
-.trainer-level-row {
+.level-info {
     display: flex;
     align-items: center;
     gap: 15px;
     margin-bottom: 2px;
 }
 
-.level-badge {
+.level-number {
     font-size: 2.5rem;
     font-weight: 700;
     line-height: 1;
 }
 
-.team-indicator {
+.team-info {
     display: flex;
     align-items: center;
     gap: 8px;
@@ -60,13 +128,13 @@
     margin-bottom: 15px;
 }
 
-.trainer-code-row {
+.friend-code {
     display: flex;
     align-items: center;
     gap: 10px;
 }
 
-.code-value {
+.code-number {
     font-family: monospace;
     font-size: 1.1rem;
 }
@@ -83,4 +151,133 @@
 
 .copy-btn:hover {
     background-color: #c00;
+}
+
+/* Stats and Chart Section */
+.stats-and-chart {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin: 30px 0;
+}
+
+.stats-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stat-item {
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 8px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.chart-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Weekly Updates */
+.updates-section {
+    margin-top: 40px;
+}
+
+.updates-section h2 {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.update-card {
+    background-color: white;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.update-card.current {
+    border-left: 4px solid var(--primary-color);
+}
+
+.update-date {
+    padding: 12px 20px;
+    font-weight: 500;
+    color: var(--text-color);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.update-card.current .update-date {
+    font-weight: 600;
+}
+
+.update-content {
+    padding: 15px 20px;
+}
+
+.update-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.update-stat {
+    display: flex;
+    flex-direction: column;
+}
+
+.update-label {
+    font-size: 0.9rem;
+    color: var(--dark-gray);
+}
+
+.update-value {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--primary-color);
+}
+
+/* Footer */
+.site-footer {
+    margin-top: 60px;
+    padding: 20px 0;
+    background-color: #111;
+    color: white;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .stats-and-chart {
+        grid-template-columns: 1fr;
+    }
+    
+    .team-info {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .update-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
