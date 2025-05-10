@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PlayerZero Profile</title>
+    <title>Trainer Profile | PlayerZero</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/profile.css">
-    <!-- Chart.js for radar chart -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -14,7 +13,7 @@
     <header class="site-header">
         <div class="container">
             <div class="logo-container">
-                <img src="images/logo.png" alt="PlayerZero Logo" class="logo">
+                <img src="images/logo.png" alt="PlayerZero" class="logo">
             </div>
             <nav class="main-nav">
                 <ul>
@@ -28,58 +27,51 @@
 
     <!-- Main Content -->
     <main class="container">
-        <!-- Profile Header Section -->
-        <section class="profile-header">
-            <div class="profile-card">
-                <div class="profile-image-container">
-                    <img src="images/profile-placeholder.jpg" alt="Trainer" class="profile-image">
-                    <div class="team-badge instinct">
-                        <img src="images/team-instinct.png" alt="Team Instinct">
-                    </div>
+        <!-- Trainer Profile -->
+        <section class="trainer-profile">
+            <div class="trainer-header">
+                <div class="trainer-avatar">
+                    <img src="images/trainer-avatar.png" alt="Trainer Avatar">
+                    <div class="team-badge instinct"></div>
                 </div>
-                <div class="profile-info">
-                    <h1 class="trainer-name">LumbrJackson</h1>
-                    <div class="trainer-details">
-                        <p class="trainer-level">Level <span>50</span></p>
-                        <p class="trainer-since">Playing since: July 10, 2016</p>
-                        <p class="friend-code">Friend Code: 1234 5678 9012</p>
+                <div class="trainer-info">
+                    <h1>LumbrJackson</h1>
+                    <div class="trainer-meta">
+                        <span class="level">50 <small>LVL</small></span>
+                        <span class="team">Instinct</span>
+                        <span class="start-date">Since 7/10/2016</span>
                     </div>
-                </div>
-                <div class="playerZero-score-container">
-                    <h2>PlayerZero Score</h2>
-                    <div class="score">1785</div>
+                    <div class="trainer-code">
+                        <span>205655364353</span>
+                        <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                    </div>
                 </div>
             </div>
         </section>
 
-        <!-- Stats Display Section -->
-        <section class="stats-section">
-            <h2>Trainer Statistics</h2>
+        <!-- Stats Display -->
+        <section class="stats-display">
             <div class="stats-grid">
-                <div class="stat-box">
-                    <h3>Distance Walked</h3>
+                <div class="stat-item">
+                    <div class="stat-label">Distance Walked</div>
                     <div class="stat-value">15,019.30 km</div>
-                    <div class="stat-change positive">+32.5 km this week</div>
                 </div>
-                <div class="stat-box">
-                    <h3>Pokémon Caught</h3>
+                <div class="stat-item">
+                    <div class="stat-label">Pokémon Caught</div>
                     <div class="stat-value">170,216</div>
-                    <div class="stat-change positive">+415 this week</div>
                 </div>
-                <div class="stat-box">
-                    <h3>Pokéstops Visited</h3>
+                <div class="stat-item">
+                    <div class="stat-label">Pokéstops Visited</div>
                     <div class="stat-value">109,998</div>
-                    <div class="stat-change positive">+221 this week</div>
                 </div>
-                <div class="stat-box">
-                    <h3>Total XP</h3>
+                <div class="stat-item">
+                    <div class="stat-label">Total XP</div>
                     <div class="stat-value">212,130,283</div>
-                    <div class="stat-change positive">+1,254,789 this week</div>
                 </div>
             </div>
         </section>
 
-        <!-- Play Style Chart Section -->
+        <!-- Play Style Analysis -->
         <section class="playstyle-section">
             <h2>Play Style Analysis</h2>
             <div class="chart-container">
@@ -87,53 +79,60 @@
             </div>
         </section>
 
-        <!-- Weekly Updates Section -->
+        <!-- Weekly Updates -->
         <section class="updates-section">
-            <h2>Weekly Updates</h2>
-            <div class="update-card">
-                <div class="update-header">
-                    <h3>November 5, 2023</h3>
-                    <span class="update-badge">Latest</span>
-                </div>
+            <h2>Weekly Progress</h2>
+            
+            <div class="update-card current">
+                <div class="update-date">November 5, 2023</div>
                 <div class="update-content">
-                    <div class="stats-card-image">
-                        <img src="images/profile-placeholder.jpg" alt="Stats Card">
-                    </div>
-                    <div class="weekly-changes">
-                        <h4>Weekly Progress</h4>
-                        <ul>
-                            <li>Distance: +32.5 km</li>
-                            <li>Catches: +415</li>
-                            <li>Pokéstops: +221</li>
-                            <li>XP: +1,254,789</li>
-                        </ul>
-                        <div class="score-change">
-                            PlayerZero Score: +12 points
+                    <div class="update-details">
+                        <div class="update-item">
+                            <span class="update-label">Distance</span>
+                            <span class="update-value">+32.5 km</span>
                         </div>
+                        <div class="update-item">
+                            <span class="update-label">Catches</span>
+                            <span class="update-value">+415</span>
+                        </div>
+                        <div class="update-item">
+                            <span class="update-label">Pokéstops</span>
+                            <span class="update-value">+221</span>
+                        </div>
+                        <div class="update-item">
+                            <span class="update-label">XP</span>
+                            <span class="update-value">+1,254,789</span>
+                        </div>
+                    </div>
+                    <div class="update-image">
+                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
                     </div>
                 </div>
             </div>
             
-            <!-- Previous update example (would be dynamically generated) -->
             <div class="update-card">
-                <div class="update-header">
-                    <h3>October 29, 2023</h3>
-                </div>
+                <div class="update-date">October 29, 2023</div>
                 <div class="update-content">
-                    <div class="stats-card-image">
-                        <img src="images/profile-placeholder.jpg" alt="Stats Card">
-                    </div>
-                    <div class="weekly-changes">
-                        <h4>Weekly Progress</h4>
-                        <ul>
-                            <li>Distance: +28.7 km</li>
-                            <li>Catches: +382</li>
-                            <li>Pokéstops: +196</li>
-                            <li>XP: +981,329</li>
-                        </ul>
-                        <div class="score-change">
-                            PlayerZero Score: +9 points
+                    <div class="update-details">
+                        <div class="update-item">
+                            <span class="update-label">Distance</span>
+                            <span class="update-value">+28.7 km</span>
                         </div>
+                        <div class="update-item">
+                            <span class="update-label">Catches</span>
+                            <span class="update-value">+382</span>
+                        </div>
+                        <div class="update-item">
+                            <span class="update-label">Pokéstops</span>
+                            <span class="update-value">+196</span>
+                        </div>
+                        <div class="update-item">
+                            <span class="update-label">XP</span>
+                            <span class="update-value">+981,329</span>
+                        </div>
+                    </div>
+                    <div class="update-image">
+                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
                     </div>
                 </div>
             </div>
@@ -143,12 +142,18 @@
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container">
-            <p>&copy; 2023 PlayerZero - The Ultimate Pokémon GO Stat Tracker</p>
+            <p>&copy; 2023 PlayerZero - Pokémon GO Stat Tracking</p>
         </div>
     </footer>
 
     <!-- JavaScript -->
     <script src="js/main.js"></script>
     <script src="js/profile.js"></script>
+    <script>
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text);
+            showNotification('Friend code copied to clipboard!', 'success');
+        }
+    </script>
 </body>
 </html>
