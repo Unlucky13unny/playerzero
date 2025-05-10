@@ -4,61 +4,141 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Trainer Profile | PlayerZero</title>
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="stylesheet" href="css/profile.css">
     <style>
-        /* Inline fixes for critical alignment */
+        /* Root variables */
+        :root {
+            --primary-color: #e30613;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #757575;
+            --instinct-color: #FFDE00;
+            --mystic-color: #0077BE;
+            --valor-color: #FF0000;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Base styles */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header styles */
+        .site-header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 10px 0;
+        }
+
+        .site-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 15px 20px;
+            display: inline-block;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .main-nav a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Profile card styles */
+        .profile-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .trainer-name h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0 0 20px 0;
+        }
+
+        /* Level and team info */
         .level-container {
             display: inline-block;
             width: 60px;
             margin-right: 20px;
-            text-align: center; /* This centers both children */
+            text-align: center;
         }
-        
+
         .level-number {
             font-size: 3rem;
             font-weight: 700;
             line-height: 1;
             display: block;
         }
-        
+
         .level-label {
             font-size: 1.5rem;
             font-weight: 700;
             line-height: 1;
             display: block;
         }
-        
+
         .team-info {
             display: inline-flex;
             align-items: center;
             gap: 10px;
         }
-        
+
         .team-dot {
             width: 18px;
             height: 18px;
             border-radius: 50%;
             display: inline-block;
-            background-color: #FFDE00; /* Instinct color */
+            background-color: var(--instinct-color);
         }
-        
+
         .start-date {
-            color: #757575;
+            color: var(--dark-gray);
         }
-        
+
         .friend-code-row {
             margin-top: 15px;
         }
-        
+
         .code-number {
             font-family: monospace;
             font-size: 1.2rem;
             margin-right: 15px;
         }
-        
+
         .copy-btn {
-            background-color: #e30613;
+            background-color: var(--primary-color);
             color: white;
             border: none;
             padding: 5px 15px;
@@ -67,9 +147,236 @@
             cursor: pointer;
             font-weight: bold;
         }
+
+        /* Stats and chart section */
+        .stats-and-chart {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+            margin: 30px 0;
+        }
+
+        .stats-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .stat-box {
+            background-color: var(--light-gray);
+            padding: 15px 20px;
+        }
+
+        .stat-label {
+            font-size: 1rem;
+            color: var(--dark-gray);
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+
+        .chart-column {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            min-height: 300px;
+        }
+
+        canvas#radarChart {
+            max-width: 100%;
+            height: 300px !important;
+            width: 300px !important;
+        }
+
+        /* Weekly updates */
+        .updates-section {
+            margin: 40px 0;
+        }
+
+        .updates-section h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .update-card {
+            margin-bottom: 20px;
+            border-radius: 8px;
+            overflow: hidden;
+            background-color: var(--light-gray);
+            box-shadow: var(--shadow);
+        }
+
+        .update-card.current {
+            border: 1px solid var(--primary-color);
+            background-color: white;
+        }
+
+        .update-date {
+            padding: 12px 20px;
+            font-weight: 500;
+            color: var(--text-color);
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        .update-card.current .update-date {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .update-content {
+            display: flex;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .update-details {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+
+        .update-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .update-label {
+            font-size: 0.9rem;
+            color: var(--dark-gray);
+        }
+
+        .update-value {
+            font-size: 1.2rem;
+            font-weight: 500;
+            color: var(--primary-color);
+        }
+
+        .update-image {
+            width: 150px;
+            flex-shrink: 0;
+            text-align: center;
+        }
+
+        /* Image thumbnails */
+        .stats-thumbnail {
+            width: 150px;
+            height: auto;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .stats-thumbnail:hover {
+            transform: scale(1.05);
+        }
+
+        /* Modal for full-size images */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            color: #f1f1f1;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .site-footer {
+            margin-top: 60px;
+            padding: 20px 0;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Notification */
+        #notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 10px 15px;
+            border-radius: 4px;
+            background-color: #333;
+            color: white;
+            font-size: 14px;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.3s;
+            max-width: 300px;
+        }
+
+        #notification.success {
+            background-color: #4CAF50;
+        }
+
+        #notification.show {
+            opacity: 1;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .stats-and-chart {
+                grid-template-columns: 1fr;
+            }
+            
+            .update-content {
+                flex-direction: column;
+            }
+            
+            .update-image {
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+
+            canvas#radarChart {
+                width: 100% !important;
+                height: auto !important;
+                max-height: 300px;
+            }
+            
+            .level-container {
+                margin-right: 15px;
+            }
+        }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <script src="js/profile.js" defer></script>
 </head>
 <body>
     <!-- Navigation Header -->
@@ -97,7 +404,7 @@
                 <h1>LumbrJackson</h1>
             </div>
             
-            <!-- SIMPLIFIED STRUCTURE with centered alignment -->
+            <!-- Profile Info with centered alignment -->
             <div>
                 <div>
                     <span class="level-container">
@@ -174,7 +481,7 @@
                         </div>
                     </div>
                     <div class="update-image">
-                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
+                        <img src="images/profilestat1.jpg" alt="Stats Card" class="stats-thumbnail" onclick="openImageModal(this.src)">
                     </div>
                 </div>
             </div>
@@ -201,7 +508,7 @@
                         </div>
                     </div>
                     <div class="update-image">
-                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
+                        <img src="images/profilestat2.jpg" alt="Stats Card" class="stats-thumbnail" onclick="openImageModal(this.src)">
                     </div>
                 </div>
             </div>
@@ -215,7 +522,191 @@
         </div>
     </footer>
 
+    <!-- Image Modal -->
+    <div id="imageModal" class="image-modal">
+        <span class="modal-close" onclick="closeImageModal()">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
     <!-- Notification element for copy alert -->
     <div id="notification"></div>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up radar chart
+            setupRadarChart();
+        });
+
+        // Create radar chart
+        function setupRadarChart() {
+            const ctx = document.getElementById('radarChart');
+            if (!ctx) return;
+            
+            const data = {
+                labels: ['Walker', 'Catcher', 'Explorer', 'Grinder'],
+                datasets: [{
+                    label: 'Play Style',
+                    data: [75, 85, 65, 90],
+                    backgroundColor: 'rgba(227, 6, 19, 0.15)',
+                    borderColor: 'rgba(227, 6, 19, 0.8)',
+                    borderWidth: 2,
+                    pointBackgroundColor: 'rgba(227, 6, 19, 1)',
+                    pointBorderColor: '#fff',
+                    pointHoverBackgroundColor: '#fff',
+                    pointHoverBorderColor: 'rgba(227, 6, 19, 1)',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            };
+            
+            const config = {
+                type: 'radar',
+                data: data,
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        r: {
+                            angleLines: {
+                                color: 'rgba(0, 0, 0, 0.1)',
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.05)',
+                            },
+                            suggestedMin: 0,
+                            suggestedMax: 100,
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 20,
+                                backdropColor: 'transparent',
+                                color: '#757575',
+                                font: {
+                                    size: 10
+                                }
+                            },
+                            pointLabels: {
+                                font: {
+                                    size: 12,
+                                    weight: 'bold'
+                                },
+                                color: '#757575'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                            titleColor: '#333',
+                            bodyColor: '#333',
+                            borderColor: '#e0e0e0',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.raw + '/100';
+                                }
+                            }
+                        }
+                    }
+                }
+            };
+            
+            try {
+                new Chart(ctx, config);
+            } catch (error) {
+                console.error('Failed to create radar chart:', error);
+            }
+        }
+        
+        // Open image modal
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = "block";
+            modalImg.src = src;
+        }
+        
+        // Close image modal
+        function closeImageModal() {
+            document.getElementById('imageModal').style.display = "none";
+        }
+        
+        // Close modal when clicking outside the image
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+        
+        // Copy friend code to clipboard
+        function copyToClipboard(text) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text)
+                    .then(() => {
+                        showNotification('Friend code copied!', 'success');
+                    })
+                    .catch(err => {
+                        console.error('Could not copy text: ', err);
+                        clipboardFallback(text);
+                    });
+            } else {
+                clipboardFallback(text);
+            }
+        }
+        
+        // Fallback method for copying to clipboard
+        function clipboardFallback(text) {
+            const tempInput = document.createElement('input');
+            tempInput.style.position = 'absolute';
+            tempInput.style.left = '-1000px';
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            
+            try {
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showNotification('Friend code copied!', 'success');
+                } else {
+                    showNotification('Failed to copy friend code', 'error');
+                }
+            } catch (err) {
+                console.error('Fallback copying method failed:', err);
+                showNotification('Failed to copy friend code', 'error');
+            }
+            
+            document.body.removeChild(tempInput);
+        }
+        
+        // Show notification
+        function showNotification(message, type = '') {
+            const notification = document.getElementById('notification') || createNotification();
+            notification.textContent = message;
+            notification.className = ''; // Clear existing classes
+            
+            if (type) {
+                notification.classList.add(type);
+            }
+            
+            notification.classList.add('show');
+            
+            // Hide notification after 2 seconds
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 2000);
+        }
+        
+        // Create notification element if it doesn't exist
+        function createNotification() {
+            const notification = document.createElement('div');
+            notification.id = 'notification';
+            document.body.appendChild(notification);
+            return notification;
+        }
+    </script>
 </body>
 </html>
