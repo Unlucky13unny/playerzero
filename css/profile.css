@@ -80,10 +80,12 @@ body {
     margin: 0 0 20px 0;
 }
 
+/* UPDATED: Reduced spacing between level and LVL text */
 .profile-grid {
     display: grid;
     grid-template-columns: auto 1fr;
-    gap: 10px;
+    gap: 0; /* Reduced from 10px */
+    align-items: center;
 }
 
 .level-cell {
@@ -91,6 +93,8 @@ body {
     font-weight: 700;
     grid-column: 1;
     grid-row: 1;
+    margin-bottom: -5px; /* Added negative margin to reduce space */
+    line-height: 1.1; /* Reduced line height */
 }
 
 .level-label-cell {
@@ -98,6 +102,7 @@ body {
     font-weight: 700;
     grid-column: 1;
     grid-row: 2;
+    line-height: 1.1; /* Reduced line height */
 }
 
 .info-cell {
@@ -117,6 +122,18 @@ body {
     height: 18px;
     border-radius: 50%;
     background-color: var(--instinct-color);
+}
+
+.instinct {
+    background-color: var(--instinct-color);
+}
+
+.mystic {
+    background-color: var(--mystic-color);
+}
+
+.valor {
+    background-color: var(--valor-color);
 }
 
 .start-date {
@@ -182,13 +199,22 @@ body {
     color: var(--text-color);
 }
 
+/* UPDATED: Chart styling to ensure it's visible */
 .chart-column {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 20px;
+    min-height: 300px; /* Ensure minimum height for chart */
 }
 
-/* Weekly Updates (kept the same) */
+canvas#radarChart {
+    max-width: 100%;
+    height: 300px !important; /* Force height */
+    width: 300px !important; /* Force width */
+}
+
+/* Weekly Updates */
 .updates-section {
     margin: 40px 0;
 }
@@ -313,5 +339,11 @@ body {
         width: 100%;
         max-width: 300px;
         margin: 0 auto;
+    }
+
+    canvas#radarChart {
+        width: 100% !important;
+        height: auto !important;
+        max-height: 300px;
     }
 }
