@@ -1,0 +1,210 @@
+/* Leaderboard Page Styles */
+
+/* Leaderboard Header */
+.leaderboard-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.leaderboard-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+/* Tab Navigation */
+.main-tabs, .category-tabs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.tab-btn, .category-btn {
+    background-color: var(--dark-color);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.tab-btn:hover, .category-btn:hover {
+    background-color: #333;
+}
+
+.tab-btn.active, .category-btn.active {
+    background-color: var(--primary-color);
+}
+
+/* Filter Controls */
+.filter-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+
+.team-filter, .search-filter {
+    display: flex;
+    align-items: center;
+    margin: 10px;
+}
+
+.team-filter label {
+    margin-right: 10px;
+    font-weight: bold;
+}
+
+.team-filter select, .search-filter input {
+    padding: 8px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+}
+
+.search-filter input {
+    min-width: 200px;
+    margin-right: 10px;
+}
+
+#search-btn, #find-me-btn {
+    background-color: var(--dark-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+#search-btn:hover, #find-me-btn:hover {
+    background-color: var(--primary-color);
+}
+
+/* Leaderboard Content */
+.leaderboard-content {
+    display: none;
+}
+
+.leaderboard-content.active {
+    display: block;
+}
+
+.weekly-header {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Leaderboard Table */
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.leaderboard-table th {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 12px;
+    text-align: left;
+}
+
+.leaderboard-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.leaderboard-table tr:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+}
+
+.leaderboard-table tr:hover {
+    background-color: rgba(227, 6, 19, 0.05);
+}
+
+.rank {
+    font-weight: bold;
+    font-size: 1.2rem;
+    width: 60px;
+}
+
+.player {
+    display: flex;
+    align-items: center;
+}
+
+.player a {
+    display: flex;
+    align-items: center;
+    color: var(--dark-color);
+    text-decoration: none;
+}
+
+.player a:hover {
+    color: var(--primary-color);
+}
+
+.player-thumb {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    margin-right: 10px;
+}
+
+.team-icon {
+    width: 30px;
+    height: 30px;
+}
+
+.verify-btn {
+    background-color: var(--dark-color);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.3s;
+}
+
+.verify-btn:hover {
+    background-color: var(--primary-color);
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.page-btn {
+    background-color: var(--dark-color);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    margin: 0 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.page-btn:hover:not([disabled]) {
+    background-color: var(--primary-color);
+}
+
+.page-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.page-indicator {
+    font-size
