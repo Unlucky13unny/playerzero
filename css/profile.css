@@ -1,0 +1,227 @@
+/* Profile Page Styles */
+
+/* Profile Header */
+.profile-card {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: white;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.profile-image-container {
+    position: relative;
+    width: 150px;
+    height: 150px;
+    margin-right: 30px;
+}
+
+.profile-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid var(--dark-color);
+}
+
+.team-badge {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border: 2px solid var(--dark-color);
+    overflow: hidden;
+}
+
+.team-badge img {
+    width: 80%;
+    height: 80%;
+    object-fit: contain;
+}
+
+.profile-info {
+    flex: 1;
+    min-width: 200px;
+}
+
+.trainer-name {
+    font-size: 2.5rem;
+    margin-bottom: 10px;
+    color: var(--dark-color);
+}
+
+.trainer-details {
+    color: #666;
+    font-size: 1.1rem;
+}
+
+.trainer-level {
+    font-weight: bold;
+    font-size: 1.3rem;
+}
+
+.trainer-level span {
+    color: var(--primary-color);
+}
+
+.playerZero-score-container {
+    text-align: center;
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    min-width: 150px;
+    margin-left: auto;
+}
+
+.score {
+    font-size: 2.5rem;
+    font-weight: bold;
+}
+
+/* Stats Section */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.stat-box {
+    background-color: white;
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+}
+
+.stat-box:hover {
+    transform: translateY(-5px);
+}
+
+.stat-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 10px 0;
+}
+
+.stat-change {
+    font-size: 0.9rem;
+    font-weight: bold;
+}
+
+/* Play Style Chart */
+.chart-container {
+    max-width: 500px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Updates Section */
+.update-card {
+    background-color: white;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.update-header {
+    background-color: var(--dark-color);
+    color: white;
+    padding: 10px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.update-badge {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 3px 10px;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.update-content {
+    display: flex;
+    padding: 20px;
+}
+
+.stats-card-image {
+    width: 250px;
+    margin-right: 30px;
+}
+
+.stats-card-image img {
+    width: 100%;
+    border-radius: 5px;
+    border: 1px solid var(--border-color);
+}
+
+.weekly-changes {
+    flex: 1;
+}
+
+.weekly-changes ul {
+    list-style: none;
+    margin-bottom: 20px;
+}
+
+.weekly-changes li {
+    margin-bottom: 10px;
+    padding-left: 20px;
+    position: relative;
+}
+
+.weekly-changes li:before {
+    content: "►";
+    position: absolute;
+    left: 0;
+    color: var(--primary-color);
+}
+
+.score-change {
+    font-weight: bold;
+    color: var(--primary-color);
+    font-size: 1.2rem;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .profile-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+    
+    .profile-image-container {
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+    
+    .playerZero-score-container {
+        margin: 20px auto 0;
+        width: 100%;
+    }
+    
+    .update-content {
+        flex-direction: column;
+    }
+    
+    .stats-card-image {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 20px;
+    }
+}
