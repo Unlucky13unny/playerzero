@@ -6,7 +6,10 @@
     <title>Trainer Profile | PlayerZero</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/profile.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Ensure Chart.js is loaded before your custom script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Add defer to make sure DOM is loaded before script runs -->
+    <script src="js/profile.js" defer></script>
 </head>
 <body>
     <!-- Navigation Header (without black banner) -->
@@ -49,7 +52,7 @@
                     <div class="start-date">Since 7/10/2016</div>
                 </div>
                 
-                <div class="friend-code-cell" colspan="2">
+                <div class="friend-code-cell">
                     <span class="code-number">205655364353</span>
                     <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
                 </div>
@@ -81,7 +84,7 @@
             </div>
         </section>
 
-        <!-- Weekly Updates (kept as they are) -->
+        <!-- Weekly Updates -->
         <section class="updates-section">
             <h2>Weekly Progress</h2>
             
@@ -125,3 +128,30 @@
                             <span class="update-value">+382</span>
                         </div>
                         <div class="update-item">
+                            <span class="update-label">Pokéstops</span>
+                            <span class="update-value">+198</span>
+                        </div>
+                        <div class="update-item">
+                            <span class="update-label">XP</span>
+                            <span class="update-value">+987,542</span>
+                        </div>
+                    </div>
+                    <div class="update-image">
+                        <img src="images/stats-card.png" alt="Stats Card" class="stats-image">
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>© 2025 PlayerZero Challenge. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Notification element for copy alert -->
+    <div id="notification"></div>
+</body>
+</html>
