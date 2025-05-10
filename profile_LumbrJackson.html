@@ -6,9 +6,7 @@
     <title>Trainer Profile | PlayerZero</title>
     <link rel="stylesheet" href="css/styles.css">
     <link rel="stylesheet" href="css/profile.css">
-    <!-- Ensure Chart.js is loaded before your custom script -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
-    <!-- Add defer to make sure DOM is loaded before script runs -->
     <script src="js/profile.js" defer></script>
 </head>
 <body>
@@ -37,28 +35,26 @@
                 <h1>LumbrJackson</h1>
             </div>
             
-            <!-- Profile Info Table -->
-            <table class="profile-table">
-                <tr>
-                    <td class="level-cell">50</td>
-                    <td class="team-info-cell">
+            <!-- Profile Info - Left-aligned layout -->
+            <div class="profile-info">
+                <div class="level-row">
+                    <span class="level-number">50</span>
+                    <span class="team-info">
                         <span class="team-dot instinct"></span>
                         <span class="team-name">Instinct</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="level-label-cell">LVL</td>
-                    <td class="date-cell">
-                        Start Date: 7/10/2025
-                    </td>
-                </tr>
-                <tr>
-                    <td colspan="2" class="code-cell">
-                        <span class="code-number">205655364353</span>
-                        <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
-                    </td>
-                </tr>
-            </table>
+                    </span>
+                </div>
+                
+                <div class="level-label-row">
+                    <span class="level-label">LVL</span>
+                    <span class="start-date">Start Date: 7/10/2025</span>
+                </div>
+                
+                <div class="friend-code-row">
+                    <span class="code-number">205655364353</span>
+                    <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                </div>
+            </div>
         </section>
 
         <!-- Stats and Chart Section -->
