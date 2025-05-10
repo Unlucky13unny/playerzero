@@ -133,16 +133,17 @@ body {
     padding: 20px 0;
 }
 
+/* Updated stats column to match the image */
 .stats-column {
     display: flex;
     flex-direction: column;
-    gap: 30px;
+    gap: 15px;
 }
 
 .stat-item {
     background-color: var(--light-gray);
     padding: 15px 20px;
-    border-radius: 4px;
+    border-radius: 0;
 }
 
 .stat-label {
@@ -198,6 +199,3 @@ body {
     }
     
     .level-cell {
-        font-size: 2.8rem;
-    }
-}
