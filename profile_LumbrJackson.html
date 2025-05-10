@@ -1,1 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayerZero Profile</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/profile.css">
+    <!-- Chart.js for radar chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="PlayerZero Logo" class="logo">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="profile.html" class="active">Profile</a></li>
+                    <li><a href="leaderboard.html">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Profile Header Section -->
+        <section class="profile-header">
+            <div class="profile-card">
+                <div class="profile-image-container">
+                    <img src="images/profile-placeholder.jpg" alt="Trainer" class="profile-image">
+                    <div class="team-badge instinct">
+                        <img src="images/team-instinct.png" alt="Team Instinct">
+                    </div>
+                </div>
+                <div class="profile-info">
+                    <h1 class="trainer-name">LumbrJackson</h1>
+                    <div class="trainer-details">
+                        <p class="trainer-level">Level <span>50</span></p>
+                        <p class="trainer-since">Playing since: July 10, 2016</p>
+                        <p class="friend-code">Friend Code: 1234 5678 9012</p>
+                    </div>
+                </div>
+                <div class="playerZero-score-container">
+                    <h2>PlayerZero Score</h2>
+                    <div class="score">1785</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Stats Display Section -->
+        <section class="stats-section">
+            <h2>Trainer Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <h3>Distance Walked</h3>
+                    <div class="stat-value">15,019.30 km</div>
+                    <div class="stat-change positive">+32.5 km this week</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Pokémon Caught</h3>
+                    <div class="stat-value">170,216</div>
+                    <div class="stat-change positive">+415 this week</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Pokéstops Visited</h3>
+                    <div class="stat-value">109,998</div>
+                    <div class="stat-change positive">+221 this week</div>
+                </div>
+                <div class="stat-box">
+                    <h3>Total XP</h3>
+                    <div class="stat-value">212,130,283</div>
+                    <div class="stat-change positive">+1,254,789 this week</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Play Style Chart Section -->
+        <section class="playstyle-section">
+            <h2>Play Style Analysis</h2>
+            <div class="chart-container">
+                <canvas id="radarChart"></canvas>
+            </div>
+        </section>
+
+        <!-- Weekly Updates Section -->
+        <section class="updates-section">
+            <h2>Weekly Updates</h2>
+            <div class="update-card">
+                <div class="update-header">
+                    <h3>November 5, 2023</h3>
+                    <span class="update-badge">Latest</span>
+                </div>
+                <div class="update-content">
+                    <div class="stats-card-image">
+                        <img src="images/profile-placeholder.jpg" alt="Stats Card">
+                    </div>
+                    <div class="weekly-changes">
+                        <h4>Weekly Progress</h4>
+                        <ul>
+                            <li>Distance: +32.5 km</li>
+                            <li>Catches: +415</li>
+                            <li>Pokéstops: +221</li>
+                            <li>XP: +1,254,789</li>
+                        </ul>
+                        <div class="score-change">
+                            PlayerZero Score: +12 points
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Previous update example (would be dynamically generated) -->
+            <div class="update-card">
+                <div class="update-header">
+                    <h3>October 29, 2023</h3>
+                </div>
+                <div class="update-content">
+                    <div class="stats-card-image">
+                        <img src="images/profile-placeholder.jpg" alt="Stats Card">
+                    </div>
+                    <div class="weekly-changes">
+                        <h4>Weekly Progress</h4>
+                        <ul>
+                            <li>Distance: +28.7 km</li>
+                            <li>Catches: +382</li>
+                            <li>Pokéstops: +196</li>
+                            <li>XP: +981,329</li>
+                        </ul>
+                        <div class="score-change">
+                            PlayerZero Score: +9 points
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2023 PlayerZero - The Ultimate Pokémon GO Stat Tracker</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/main.js"></script>
+    <script src="js/profile.js"></script>
+</body>
+</html>
