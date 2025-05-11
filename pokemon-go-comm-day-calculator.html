@@ -270,14 +270,14 @@
         .comm-day-card {
             display: none;
             width: 100%;
-            max-width: 380px; /* Adjusted width */
+            max-width: 380px;
             height: auto;
-            aspect-ratio: 5/7; /* Standard Pokémon TCG card aspect ratio */
+            aspect-ratio: 5/7;
             background: white;
             background-image: url('card-bg-image.png');
             background-size: cover;
             background-position: center;
-            border: 2px solid #000; /* Thinner border */
+            border: 2px solid #000;
             border-radius: 30px;
             margin: 2rem auto;
             padding: 1.5rem 1rem;
@@ -285,6 +285,24 @@
             color: #111;
             position: relative;
             overflow: hidden;
+        }
+        
+        /* Use flexbox to control the order of elements */
+        #card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .trainer-name {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #111;
+            text-align: center;
+            width: 100%;
+            position: relative;
+            order: 1;
         }
         
         .card-header {
@@ -299,27 +317,22 @@
             max-width: 250px;
             text-transform: uppercase;
             font-size: 1.1rem;
+            order: 2;
         }
         
         .card-logo {
             max-width: 170px;
             margin: 0 auto 1.2rem;
             display: block;
-        }
-        
-        .trainer-name {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-bottom: 1.5rem;
-            color: #111;
-            text-align: left;
-            padding-left: 1rem;
+            order: 3;
         }
         
         .pokemon-info {
             margin-bottom: 1.5rem;
             text-align: left;
             padding-left: 1rem;
+            width: 100%;
+            order: 4;
         }
         
         .pokemon-info .label {
@@ -342,6 +355,8 @@
             grid-template-rows: repeat(2, auto);
             gap: 1.5rem;
             margin-top: 2rem;
+            order: 5;
+            width: 100%;
         }
         
         .stat-item {
@@ -542,7 +557,7 @@
                     <div class="form-grid">
                         <div class="form-group">
                             <label for="trainerName">Trainer Name</label>
-                            <input type="text" id="trainerName" placeholder="Your trainer name">
+                            <input type="text" id="trainerName" placeholder="Your trainer name" value="pgPlayerZero">
                         </div>
                         
                         <div class="form-group">
@@ -640,9 +655,9 @@
             <!-- RESULTS SECTION -->
             <section class="result-section">
                 <div id="card" class="comm-day-card" style="display: none;">
+                    <div class="trainer-name" id="trainerDisplay">pgPlayerZero</div>
                     <div class="card-header">COMM DAY CARD</div>
                     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
-                    <div class="trainer-name" id="trainerDisplay">Trainer Name</div>
                     
                     <div class="pokemon-info">
                         <div class="label">POKÉMON:</div>
@@ -829,7 +844,7 @@
         
         function calculateStats() {
             // Get values from form
-            var trainerName = document.getElementById('trainerName').value || 'Trainer';
+            var trainerName = document.getElementById('trainerName').value || 'pgPlayerZero';
             var pokemonName = document.getElementById('pokemonName').value || 'POKEMON';
             var hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
             var startSeen = parseInt(document.getElementById('startSeen').value) || 0;
@@ -925,7 +940,7 @@
         document.addEventListener('keydown', function(e) {
             // Press Shift+D to fill demo data
             if (e.shiftKey && e.key === 'D') {
-                document.getElementById('trainerName').value = 'LumbrJackson';
+                document.getElementById('trainerName').value = 'pgPlayerZero';
                 document.getElementById('pokemonName').value = 'Pawmi';
                 document.getElementById('hoursPlayed').value = '3';
                 document.getElementById('startSeen').value = '125';
