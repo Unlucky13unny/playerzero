@@ -599,7 +599,7 @@
             });
         });
         
-        // OCR processing
+        // OCR processing with improved error handling
         async function runOCR() {
             // Get file inputs
             const startFile = document.getElementById('startImage').files[0];
@@ -622,30 +622,51 @@
                     // Initialize Supabase client
                     const supabaseUrl = 'https://smoqfhecjfslcqmebjrw.supabase.co';
                     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtb3FmaGVjamZzbGNxbWVianJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDYyOTMsImV4cCI6MjA2MDUyMjI5M30.-Onsb5CE-LbAOUe9dOtcczsjDFESxgbOUIws3f4jOFo';
-                    const supabase = supabaseClient.createClient(supabaseUrl, supabaseKey);
+                    
+                    // Create Supabase client properly with window object for debugging
+                    window.supabase = window.supabaseClient.createClient(supabaseUrl, supabaseKey);
                     
                     // Get trainer name for the filename
                     const trainerName = document.getElementById('trainerName').value || 'Unknown';
                     const timestamp = Date.now();
                     
-                    // Upload start photo
-                    await supabase.storage
+                    // Upload start photo with improved error handling
+                    const { data: startData, error: startError } = await window.supabase.storage
                         .from('pawmi-commday-screenshots')
-                        .upload(`${trainerName}_start_${timestamp}.jpg`, startFile);
+                        .upload(`${trainerName}_start_${timestamp}.jpg`, startFile, {
+                            contentType: 'image/jpeg',
+                            upsert: true
+                        });
                     
-                    // Upload end photo
-                    await supabase.storage
+                    if (startError) {
+                        console.error('Error uploading start screenshot:', startError);
+                        throw startError;
+                    }
+                    
+                    // Upload end photo with improved error handling
+                    const { data: endData, error: endError } = await window.supabase.storage
                         .from('pawmi-commday-screenshots')
-                        .upload(`${trainerName}_end_${timestamp}.jpg`, endFile);
+                        .upload(`${trainerName}_end_${timestamp}.jpg`, endFile, {
+                            contentType: 'image/jpeg',
+                            upsert: true
+                        });
+                    
+                    if (endError) {
+                        console.error('Error uploading end screenshot:', endError);
+                        throw endError;
+                    }
+                    
+                    console.log("Upload successful - Start image:", startData);
+                    console.log("Upload successful - End image:", endData);
                     
                     // Show success message
                     document.getElementById('ocrFeedback').className = 'feedback success';
                     document.getElementById('ocrFeedback').textContent = 'Your screenshots have been submitted. Please continue below with manual entry of your comm day statistics.';
                     
                 } catch (error) {
-                    console.error('Error uploading screenshots:', error);
+                    console.error('Detailed error uploading screenshots:', error);
                     document.getElementById('ocrFeedback').className = 'feedback error';
-                    document.getElementById('ocrFeedback').textContent = 'Error uploading screenshots. Please try again.';
+                    document.getElementById('ocrFeedback').textContent = 'Error uploading screenshots: ' + (error.message || 'Please try again');
                 }
             } else {
                 // If no consent, just show message to continue with manual entry
