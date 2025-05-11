@@ -5,6 +5,11 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup prize info modal
     setupModal();
+    
+    // Add button event listeners
+    document.getElementById('submitBtn').addEventListener('click', runOCR);
+    document.getElementById('calculateBtn').addEventListener('click', runStats);
+    document.getElementById('downloadBtn').addEventListener('click', downloadCard);
 });
 
 // Set up image preview functionality
@@ -307,7 +312,7 @@ function runStats() {
     }
     
     // Calculate percentages and rates
-    const catchPercent = deltaSeen > 0 ? ((deltaCaught / deltaSeen) * 100).toFixed(1) : '0.0';
+    const catchPercent = deltaSeen > 0 ? Math.round((deltaCaught / deltaSeen) * 100) : 0;
     const caughtPerHour = (deltaCaught / hoursPlayed).toFixed(1);
     
     // Update the card with calculated values
@@ -341,15 +346,48 @@ function downloadCard() {
     downloadBtn.textContent = 'Processing...';
     downloadBtn.disabled = true;
     
-    html2canvas(card).then(canvas => {
+    html2canvas(card, {
+        backgroundColor: null,
+        scale: 2, // Higher quality
+        logging: false,
+        allowTaint: true,
+        useCORS: true
+    }).then(canvas => {
         // Create download link
         const link = document.createElement('a');
-        link.download = 'my-comm-day-card.png';
+        link.download = 'PlayerZero_CommDayCard.png';
         link.href = canvas.toDataURL('image/png');
         link.click();
         
         // Reset button
         downloadBtn.textContent = originalText;
         downloadBtn.disabled = false;
+    }).catch(function(error) {
+        console.error('Error generating image:', error);
+        alert('There was an error generating your image. Please try again.');
+        
+        // Reset button
+        downloadBtn.textContent = originalText;
+        downloadBtn.disabled = false;
     });
 }
+
+// Keyboard shortcuts for testing
+document.addEventListener('keydown', function(e) {
+    // Press Shift+D to fill demo data
+    if (e.shiftKey && e.key === 'D') {
+        document.getElementById('trainerName').value = 'pgPlayerZero';
+        document.getElementById('pokemonName').value = 'Pawmi';
+        document.getElementById('hoursPlayed').value = '3';
+        document.getElementById('startSeen').value = '125';
+        document.getElementById('startCaught').value = '95';
+        document.getElementById('endSeen').value = '135';
+        document.getElementById('endCaught').value = '104';
+        document.getElementById('shinyCount').value = '3';
+    }
+    
+    // Press Shift+C to calculate stats with current values
+    if (e.shiftKey && e.key === 'C') {
+        runStats();
+    }
+});
