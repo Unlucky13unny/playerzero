@@ -18,17 +18,15 @@
     overflow: hidden;
 }
 
-.trainer-name {
-    font-size: 1.6rem;
-    font-weight: bold;
-    margin-bottom: 1rem;
-    color: #111;
-    text-align: center;
-    width: 100%;
-    position: relative;
-    order: 3; /* Changed from 1 to 3 */
+/* Logo should be first */
+.card-logo {
+    max-width: 170px;
+    margin: 0 auto 1.2rem;
+    display: block;
+    order: 1;
 }
 
+/* COMM DAY CARD should be second */
 .card-header {
     background: #e30613;
     color: white;
@@ -42,14 +40,19 @@
     text-transform: uppercase;
     font-size: 1.1rem;
     order: 2;
-    text-align: center; /* Added to center the text */
+    text-align: center; /* Ensure text is centered */
 }
 
-.card-logo {
-    max-width: 170px;
-    margin: 0 auto 1.2rem;
-    display: block;
-    order: 1; /* Changed from 3 to 1 */
+/* Trainer name should be third */
+.trainer-name {
+    font-size: 1.6rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    color: #111;
+    text-align: center;
+    width: 100%;
+    position: relative;
+    order: 3;
 }
 
 .pokemon-info {
