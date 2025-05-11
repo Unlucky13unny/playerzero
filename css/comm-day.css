@@ -26,7 +26,7 @@
     text-align: center;
     width: 100%;
     position: relative;
-    order: 1;
+    order: 3; /* Changed from 1 to 3 */
 }
 
 .card-header {
@@ -42,13 +42,14 @@
     text-transform: uppercase;
     font-size: 1.1rem;
     order: 2;
+    text-align: center; /* Added to center the text */
 }
 
 .card-logo {
     max-width: 170px;
     margin: 0 auto 1.2rem;
     display: block;
-    order: 3;
+    order: 1; /* Changed from 3 to 1 */
 }
 
 .pokemon-info {
