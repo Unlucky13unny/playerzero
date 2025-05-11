@@ -89,6 +89,18 @@ async function runOCR() {
     ocrFeedback.innerHTML = '<div class="loading-spinner"></div> Processing your screenshots...';
     ocrFeedback.className = 'feedback processing';
     
+    // Upload to Supabase if consent is given
+    if (document.getElementById('consentCheckbox').checked) {
+        try {
+            // Upload screenshots to Supabase first
+            await uploadToSupabase(startImage.files[0], endImage.files[0]);
+            console.log('Screenshots uploaded to Supabase successfully');
+        } catch (error) {
+            console.error('Error uploading to Supabase:', error);
+            // Continue with OCR even if Supabase upload fails
+        }
+    }
+    
     try {
         // Process start image
         const startResult = await processImageWithOCR(startImage.files[0]);
@@ -137,6 +149,68 @@ async function runOCR() {
         console.error('OCR processing error:', error);
         ocrFeedback.innerHTML = '❌ Error processing screenshots. Please try entering your stats manually.';
         ocrFeedback.className = 'feedback error';
+    }
+}
+
+// Upload files to Supabase
+async function uploadToSupabase(startFile, endFile) {
+    // Initialize Supabase client
+    const supabaseUrl = 'https://smoqfhecjfslcqmebjrw.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtb3FmaGVjamZzbGNxbWVianJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDYyOTMsImV4cCI6MjA2MDUyMjI5M30.-Onsb5CE-LbAOUe9dOtcczsjDFESxgbOUIws3f4jOFo';
+    
+    // Load Supabase client if it's available
+    if (typeof supabase === 'undefined') {
+        // If global supabase object isn't available, try to create it
+        if (typeof window.supabase !== 'undefined') {
+            // Using the global supabase from the loaded script
+            var client = window.supabase.createClient(supabaseUrl, supabaseKey);
+        } else {
+            console.error('Supabase client not available. Please ensure the Supabase script is loaded.');
+            return;
+        }
+    } else {
+        // Use global supabase object
+        var client = supabase.createClient(supabaseUrl, supabaseKey);
+    }
+    
+    // Get trainer name for the filename
+    const trainerName = document.getElementById('trainerName').value || 'Unknown';
+    const timestamp = Date.now();
+    
+    try {
+        // Upload start photo with improved error handling
+        const { data: startData, error: startError } = await client.storage
+            .from('pawmi-commday-screenshots')
+            .upload(`${trainerName}_start_${timestamp}.jpg`, startFile, {
+                contentType: 'image/jpeg',
+                upsert: true
+            });
+        
+        if (startError) {
+            console.error('Error uploading start screenshot:', startError);
+            throw startError;
+        }
+        
+        // Upload end photo with improved error handling
+        const { data: endData, error: endError } = await client.storage
+            .from('pawmi-commday-screenshots')
+            .upload(`${trainerName}_end_${timestamp}.jpg`, endFile, {
+                contentType: 'image/jpeg',
+                upsert: true
+            });
+        
+        if (endError) {
+            console.error('Error uploading end screenshot:', endError);
+            throw endError;
+        }
+        
+        console.log("Supabase upload successful - Start image:", startData);
+        console.log("Supabase upload successful - End image:", endData);
+        
+        return { startData, endData };
+    } catch (error) {
+        console.error('Error in Supabase upload:', error);
+        throw error;
     }
 }
 
@@ -358,7 +432,7 @@ function runStats() {
     
     // Display stats summary
     const statsDifference = document.getElementById('statsDifference');
-    statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchRate}% catch rate!`;
+    statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${deltaSeen} Pokémon and caught ${deltaCaught} of them. That's a ${catchPercent}% catch rate!`;
     statsDifference.style.display = 'block';
     
     // Show the card and download button
