@@ -18,7 +18,7 @@
     overflow: hidden;
 }
 
-/* Logo should be first */
+/* Card logo (PlayerZero logo with Ø) - now first */
 .card-logo {
     max-width: 170px;
     margin: 0 auto 1.2rem;
@@ -26,7 +26,7 @@
     order: 1;
 }
 
-/* COMM DAY CARD should be second */
+/* COMM DAY CARD - stays second */
 .card-header {
     background: #e30613;
     color: white;
@@ -40,13 +40,10 @@
     text-transform: uppercase;
     font-size: 1.1rem;
     order: 2;
-    text-align: center; /* Center the text */
-    display: flex;      /* Added to ensure text centering */
-    justify-content: center; /* Added to ensure text centering */
-    align-items: center;     /* Added to ensure vertical centering */
+    text-align: center;
 }
 
-/* Trainer name should be third */
+/* Trainer name (pgPlayerZero) - now third */
 .trainer-name {
     font-size: 1.6rem;
     font-weight: bold;
