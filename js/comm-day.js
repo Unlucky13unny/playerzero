@@ -5,7 +5,25 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Setup prize info modal
     setupModal();
+    
+    // Load Supabase script dynamically if not already loaded
+    if (!window.supabase) {
+        loadSupabaseScript();
+    }
 });
+
+// Load Supabase script dynamically
+function loadSupabaseScript() {
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload = function() {
+        console.log('Supabase script loaded successfully');
+    };
+    script.onerror = function() {
+        console.error('Failed to load Supabase script');
+    };
+    document.head.appendChild(script);
+}
 
 // Set up image preview functionality
 function setupImagePreviews() {
@@ -92,9 +110,9 @@ async function runOCR() {
     // Upload to Supabase if consent is given
     if (document.getElementById('consentCheckbox').checked) {
         try {
-            // Upload screenshots to Supabase first
-            await uploadToSupabase(startImage.files[0], endImage.files[0]);
-            console.log('Screenshots uploaded to Supabase successfully');
+            // Manual direct upload to Supabase (no client needed)
+            await uploadFilesToSupabase(startImage.files[0], endImage.files[0]);
+            console.log('Screenshots uploaded successfully');
         } catch (error) {
             console.error('Error uploading to Supabase:', error);
             // Continue with OCR even if Supabase upload fails
@@ -152,65 +170,65 @@ async function runOCR() {
     }
 }
 
-// Upload files to Supabase
-async function uploadToSupabase(startFile, endFile) {
-    // Initialize Supabase client
-    const supabaseUrl = 'https://smoqfhecjfslcqmebjrw.supabase.co';
-    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtb3FmaGVjamZzbGNxbWVianJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDYyOTMsImV4cCI6MjA2MDUyMjI5M30.-Onsb5CE-LbAOUe9dOtcczsjDFESxgbOUIws3f4jOFo';
-    
-    // Load Supabase client if it's available
-    if (typeof supabase === 'undefined') {
-        // If global supabase object isn't available, try to create it
-        if (typeof window.supabase !== 'undefined') {
-            // Using the global supabase from the loaded script
-            var client = window.supabase.createClient(supabaseUrl, supabaseKey);
-        } else {
-            console.error('Supabase client not available. Please ensure the Supabase script is loaded.');
-            return;
-        }
-    } else {
-        // Use global supabase object
-        var client = supabase.createClient(supabaseUrl, supabaseKey);
-    }
-    
-    // Get trainer name for the filename
+// Simple function to upload files to Supabase without using the client library
+async function uploadFilesToSupabase(startFile, endFile) {
     const trainerName = document.getElementById('trainerName').value || 'Unknown';
     const timestamp = Date.now();
     
-    try {
-        // Upload start photo with improved error handling
-        const { data: startData, error: startError } = await client.storage
-            .from('pawmi-commday-screenshots')
-            .upload(`${trainerName}_start_${timestamp}.jpg`, startFile, {
-                contentType: 'image/jpeg',
-                upsert: true
+    // Get the URL for the direct upload endpoint
+    const supabaseUrl = 'https://smoqfhecjfslcqmebjrw.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtb3FmaGVjamZzbGNxbWVianJ3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5NDYyOTMsImV4cCI6MjA2MDUyMjI5M30.-Onsb5CE-LbAOUe9dOtcczsjDFESxgbOUIws3f4jOFo';
+    
+    // Upload start file
+    if (startFile) {
+        const formData = new FormData();
+        formData.append('file', startFile);
+        
+        try {
+            const response = await fetch(`${supabaseUrl}/storage/v1/object/pawmi-commday-screenshots/${trainerName}_start_${timestamp}.jpg`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'x-upsert': 'true'
+                },
+                body: formData
             });
-        
-        if (startError) {
-            console.error('Error uploading start screenshot:', startError);
-            throw startError;
+            
+            if (!response.ok) {
+                throw new Error(`Failed to upload start file: ${response.status} ${response.statusText}`);
+            }
+            
+            console.log('Start file uploaded successfully');
+        } catch (error) {
+            console.error('Error uploading start file:', error);
+            throw error;
         }
+    }
+    
+    // Upload end file
+    if (endFile) {
+        const formData = new FormData();
+        formData.append('file', endFile);
         
-        // Upload end photo with improved error handling
-        const { data: endData, error: endError } = await client.storage
-            .from('pawmi-commday-screenshots')
-            .upload(`${trainerName}_end_${timestamp}.jpg`, endFile, {
-                contentType: 'image/jpeg',
-                upsert: true
+        try {
+            const response = await fetch(`${supabaseUrl}/storage/v1/object/pawmi-commday-screenshots/${trainerName}_end_${timestamp}.jpg`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${supabaseKey}`,
+                    'x-upsert': 'true'
+                },
+                body: formData
             });
-        
-        if (endError) {
-            console.error('Error uploading end screenshot:', endError);
-            throw endError;
+            
+            if (!response.ok) {
+                throw new Error(`Failed to upload end file: ${response.status} ${response.statusText}`);
+            }
+            
+            console.log('End file uploaded successfully');
+        } catch (error) {
+            console.error('Error uploading end file:', error);
+            throw error;
         }
-        
-        console.log("Supabase upload successful - Start image:", startData);
-        console.log("Supabase upload successful - End image:", endData);
-        
-        return { startData, endData };
-    } catch (error) {
-        console.error('Error in Supabase upload:', error);
-        throw error;
     }
 }
 
