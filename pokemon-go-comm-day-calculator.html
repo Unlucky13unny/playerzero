@@ -869,30 +869,8 @@
             }
             
             // Calculate stats
-            var totalSeen = endS
-            function calculateStats() {
-            // Get values from form
-            var trainerName = document.getElementById('trainerName').value || 'pgPlayerZero';
-            var pokemonName = document.getElementById('pokemonName').value || 'POKEMON';
-            var hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
-            var startSeen = parseInt(document.getElementById('startSeen').value) || 0;
-            var endSeen = parseInt(document.getElementById('endSeen').value) || 0;
-            var startCaught = parseInt(document.getElementById('startCaught').value) || 0;
-            var endCaught = parseInt(document.getElementById('endCaught').value) || 0;
-            var shinyCount = parseInt(document.getElementById('shinyCount').value) || 0;
-            
-            // Validate inputs
-            if (!trainerName || !pokemonName || hoursPlayed <= 0) {
-                alert('Please fill in all trainer information fields.');
-                return;
-            }
-            
-            if (startSeen >= endSeen || startCaught >= endCaught) {
-                alert('End values must be greater than start values.');
-                return;
-            }
-            
-            // Calculate stats
+            var totalSeen = endSeen -
+                // Calculate stats
             var totalSeen = endSeen - startSeen;
             var totalCaught = endCaught - startCaught;
             var catchRate = Math.round((totalCaught / totalSeen) * 100);
@@ -974,8 +952,8 @@
                 document.getElementById('startSeen').value = '125';
                 document.getElementById('startCaught').value = '95';
                 document.getElementById('endSeen').value = '135';
-                document.getElementById('endCaught').value = '100';
-                document.getElementById('shinyCount').value = '2';
+                document.getElementById('endCaught').value = '104';
+                document.getElementById('shinyCount').value = '3';
             }
             
             // Press Shift+C to calculate stats with current values
