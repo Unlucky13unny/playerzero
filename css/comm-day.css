@@ -1,10 +1,10 @@
-/* Card styling - Updated proportions */
+/* Card styling - TCG Card proportions */
 .comm-day-card {
   display: none;
   width: 100%;
   max-width: 380px; /* Adjusted width */
   height: auto;
-  aspect-ratio: 4/5; /* Set aspect ratio to match screenshot */
+  aspect-ratio: 5/7; /* Standard Pokémon TCG card aspect ratio */
   background: white;
   background-image: url('card-bg-image.png');
   background-size: cover;
@@ -114,4 +114,8 @@
   margin-top: 10px;
   max-width: 380px; /* Match card width */
   width: 100%;
+}
+
+.btn-primary:hover {
+  background-color: #c30510;
 }
