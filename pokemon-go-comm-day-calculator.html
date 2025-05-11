@@ -294,17 +294,15 @@
             align-items: center;
         }
         
-        .trainer-name {
-            font-size: 1.6rem;
-            font-weight: bold;
-            margin-bottom: 1rem;
-            color: #111;
-            text-align: center;
-            width: 100%;
-            position: relative;
+        /* Card logo (PlayerZero logo with Ø) - now first */
+        .card-logo {
+            max-width: 170px;
+            margin: 0 auto 1.2rem;
+            display: block;
             order: 1;
         }
         
+        /* COMM DAY CARD - stays second */
         .card-header {
             background: #e30613;
             color: white;
@@ -318,12 +316,18 @@
             text-transform: uppercase;
             font-size: 1.1rem;
             order: 2;
+            text-align: center;
         }
         
-        .card-logo {
-            max-width: 170px;
-            margin: 0 auto 1.2rem;
-            display: block;
+        /* Trainer name (pgPlayerZero) - now third */
+        .trainer-name {
+            font-size: 1.6rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #111;
+            text-align: center;
+            width: 100%;
+            position: relative;
             order: 3;
         }
         
@@ -655,9 +659,9 @@
             <!-- RESULTS SECTION -->
             <section class="result-section">
                 <div id="card" class="comm-day-card" style="display: none;">
-                    <div class="trainer-name" id="trainerDisplay">pgPlayerZero</div>
-                    <div class="card-header">COMM DAY CARD</div>
                     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
+                    <div class="card-header">COMM DAY CARD</div>
+                    <div class="trainer-name" id="trainerDisplay">pgPlayerZero</div>
                     
                     <div class="pokemon-info">
                         <div class="label">POKÉMON:</div>
@@ -843,6 +847,30 @@
         }
         
         function calculateStats() {
+            // Get values from form
+            var trainerName = document.getElementById('trainerName').value || 'pgPlayerZero';
+            var pokemonName = document.getElementById('pokemonName').value || 'POKEMON';
+            var hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
+            var startSeen = parseInt(document.getElementById('startSeen').value) || 0;
+            var endSeen = parseInt(document.getElementById('endSeen').value) || 0;
+            var startCaught = parseInt(document.getElementById('startCaught').value) || 0;
+            var endCaught = parseInt(document.getElementById('endCaught').value) || 0;
+            var shinyCount = parseInt(document.getElementById('shinyCount').value) || 0;
+            
+            // Validate inputs
+            if (!trainerName || !pokemonName || hoursPlayed <= 0) {
+                alert('Please fill in all trainer information fields.');
+                return;
+            }
+            
+            if (startSeen >= endSeen || startCaught >= endCaught) {
+                alert('End values must be greater than start values.');
+                return;
+            }
+            
+            // Calculate stats
+            var totalSeen = endS
+            function calculateStats() {
             // Get values from form
             var trainerName = document.getElementById('trainerName').value || 'pgPlayerZero';
             var pokemonName = document.getElementById('pokemonName').value || 'POKEMON';
