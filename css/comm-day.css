@@ -40,7 +40,10 @@
     text-transform: uppercase;
     font-size: 1.1rem;
     order: 2;
-    text-align: center; /* Ensure text is centered */
+    text-align: center; /* Center the text */
+    display: flex;      /* Added to ensure text centering */
+    justify-content: center; /* Added to ensure text centering */
+    align-items: center;     /* Added to ensure vertical centering */
 }
 
 /* Trainer name should be third */
