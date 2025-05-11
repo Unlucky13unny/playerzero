@@ -294,7 +294,6 @@
             align-items: center;
         }
         
-        /* Card logo (PlayerZero logo with Ø) - now first */
         .card-logo {
             max-width: 170px;
             margin: 0 auto 1.2rem;
@@ -302,7 +301,6 @@
             order: 1;
         }
         
-        /* COMM DAY CARD - stays second */
         .card-header {
             background: #e30613;
             color: white;
@@ -319,11 +317,10 @@
             text-align: center;
         }
         
-        /* Trainer name (pgPlayerZero) - now third */
         .trainer-name {
             font-size: 1.6rem;
             font-weight: bold;
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
             color: #111;
             text-align: center;
             width: 100%;
@@ -661,7 +658,7 @@
                 <div id="card" class="comm-day-card" style="display: none;">
                     <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
                     <div class="card-header">COMM DAY CARD</div>
-                    <div class="trainer-name" id="trainerDisplay">pgPlayerZero</div>
+                    <div class="trainer-name" id="trainerDisplay">Trainer Name</div>
                     
                     <div class="pokemon-info">
                         <div class="label">POKÉMON:</div>
@@ -848,7 +845,7 @@
         
         function calculateStats() {
             // Get values from form
-            var trainerName = document.getElementById('trainerName').value || 'pgPlayerZero';
+            var trainerName = document.getElementById('trainerName').value || 'Trainer Name';
             var pokemonName = document.getElementById('pokemonName').value || 'POKEMON';
             var hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
             var startSeen = parseInt(document.getElementById('startSeen').value) || 0;
@@ -869,8 +866,11 @@
             }
             
             // Calculate stats
-            var totalSeen = endSeen -
-                // Calculate stats
+            var totalSeen = endSeen - startSeen;
+            var totalCaught = endCaught - startCaught;
+            var catchRate = Math.round((totalCaught / totalSeen) * 100);
+            var caughtPerHour = (total
+                                 // Calculate stats
             var totalSeen = endSeen - startSeen;
             var totalCaught = endCaught - startCaught;
             var catchRate = Math.round((totalCaught / totalSeen) * 100);
@@ -946,14 +946,14 @@
         document.addEventListener('keydown', function(e) {
             // Press Shift+D to fill demo data
             if (e.shiftKey && e.key === 'D') {
-                document.getElementById('trainerName').value = 'pgPlayerZero';
+                document.getElementById('trainerName').value = 'Trainer Name';
                 document.getElementById('pokemonName').value = 'Pawmi';
                 document.getElementById('hoursPlayed').value = '3';
                 document.getElementById('startSeen').value = '125';
                 document.getElementById('startCaught').value = '95';
                 document.getElementById('endSeen').value = '135';
-                document.getElementById('endCaught').value = '104';
-                document.getElementById('shinyCount').value = '3';
+                document.getElementById('endCaught').value = '100';
+                document.getElementById('shinyCount').value = '2';
             }
             
             // Press Shift+C to calculate stats with current values
