@@ -361,4 +361,389 @@
             </div>
             
             <h1>Community Day Calculator</h1>
-            <p class="intro
+            <p class="intro">Track your Community Day performance! Upload your before and after screenshots or enter stats manually to calculate your results.</p>
+            
+            <!-- SCREENSHOT UPLOAD SECTION -->
+            <section class="upload-section">
+                <h2 class="section-header">Upload Screenshots</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="startImage">Start Screenshot</label>
+                        <input type="file" id="startImage" accept="image/*" class="file-input">
+                        <img id="startPreview" class="img-preview" style="display: none;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="endImage">End Screenshot</label>
+                        <input type="file" id="endImage" accept="image/*" class="file-input">
+                        <img id="endPreview" class="img-preview" style="display: none;">
+                    </div>
+                </div>
+                
+                <!-- Add consent checkbox -->
+                <div class="consent-box">
+                    <input type="checkbox" id="consentCheckbox" checked>
+                    <label for="consentCheckbox">
+                        Help improve our OCR! Allow PlayerZero to securely store these screenshots to enhance future scanning accuracy.
+                    </label>
+                    <div class="consent-info">
+                        <p>During Community Day weekend, we're collecting screenshot samples to improve our recognition system. Your screenshots help us make this tool better for everyone!</p>
+                    </div>
+                </div>
+                
+                <button onclick="runOCR()" id="importButton" class="btn btn-primary">Submit Screenshots</button>
+                <div id="ocrFeedback" class="feedback"></div>
+                <div id="statsDifference" style="display: none;"></div>
+            </section>
+            
+            <!-- MANUAL ENTRY SECTION - REORGANIZED -->
+            <section class="manual-input-section">
+                <h2 class="section-header">Enter Stats Manually</h2>
+                
+                <!-- User Info Section -->
+                <div class="form-section">
+                    <h3>Trainer Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="trainerName">Trainer Name</label>
+                            <input type="text" id="trainerName" placeholder="Your trainer name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="pokemonName">Pokémon Name</label>
+                            <input type="text" id="pokemonName" placeholder="Featured Pokémon">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="hoursPlayed">Comm Day Hours Played</label>
+                            <input type="number" id="hoursPlayed" placeholder="Hours spent playing" step="0.5" value="3">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Before Event Stats -->
+                <div class="form-section">
+                    <h3>Starting Stats (Before Event)</h3>
+                    <p class="clarification-note">Enter the values as shown in your before-event screenshot</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="startSeen">Pokémon Seen</label>
+                            <input type="number" id="startSeen" placeholder="Pokémon seen (before)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="startCaught">Pokémon Caught</label>
+                            <input type="number" id="startCaught" placeholder="Pokémon caught (before)">
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- After Event Stats -->
+                <div class="form-section">
+                    <h3>Ending Stats (After Event)</h3>
+                    <p class="clarification-note">Enter the values as shown in your after-event screenshot</p>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="endSeen">Pokémon Seen</label>
+                            <input type="number" id="endSeen" placeholder="Pokémon seen (after)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endCaught">Pokémon Caught</label>
+                            <input type="number" id="endCaught" placeholder="Pokémon caught (after)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shinyCount">Shiny Count</label>
+                            <input type="number" id="shinyCount" placeholder="Number of shinies caught">
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="runStats()" class="btn btn-primary">Calculate My Stats</button>
+            </section>
+            
+            <!-- RESULTS SECTION -->
+            <section class="result-section">
+                <div id="card" class="card comm-day-card" style="display: none;">
+                    <div class="card-header">COMM DAY CARD</div>
+                    <img src="playerzero-logo.png" alt="PlayerZero Logo" class="card-logo">
+                    <div class="trainer-name" id="trainerDisplay">Trainer Name</div>
+                    
+                    <div class="pokemon-info">
+                        <div class="label">POKÉMON:</div>
+                        <div class="value pokemon-name" id="pokemonDisplay">POKEMON</div>
+                    </div>
+
+                    <div class="stat-grid">
+                        <div class="stat-item">
+                            <div class="label">POKÉMON CAUGHT</div>
+                            <div class="value" id="deltaCaught">0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">CATCH RATE</div>
+                            <div class="value" id="catchPercent">0%</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">CAUGHT PER HOUR</div>
+                            <div class="value" id="caughtPerHour">0.0</div>
+                        </div>
+                        
+                        <div class="stat-item">
+                            <div class="label">SHINY COUNT</div>
+                            <div class="value" id="shinyTotal">0</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <button onclick="downloadCard()" id="downloadBtn" class="btn btn-primary" style="display: none;">Download My Comm Day Card</button>
+            </section>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <div class="footer-content">
+                <p>Share your Comm Day Card on social media with <strong>#PlayerZeroGrind</strong></p>
+                <div class="social-links">
+                    <a href="https://instagram.com/pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/instagram.svg" alt="Instagram">
+                    </a>
+                    <a href="https://tiktok.com/@pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/tiktok.svg" alt="TikTok">
+                    </a>
+                    <a href="https://www.reddit.com/r/pgPlayerZero" target="_blank" class="social-icon">
+                        <img src="https://cdn.jsdelivr.net/gh/simple-icons/simple-icons/icons/reddit.svg" alt="Reddit">
+                    </a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Modal HTML -->
+    <div id="prizeInfoModal" class="modal">
+        <div class="modal-content">
+            <button id="closeModal" class="modal-close">&times;</button>
+            <h2 class="modal-title">Current Prize Pool</h2>
+            <p class="prize-item"><strong>1<sup>st</sup> – <span class="prize-amount">15K Pokécoins</span></strong></p>
+            <p class="prize-item"><strong>2<sup>nd</sup> – <span class="prize-amount">10K Pokécoins</span></strong></p>
+            <p class="prize-item"><strong>3<sup>rd</sup> – <span class="prize-amount">7K Pokécoins</span></strong></p>
+            <p class="prize-details">+ 9 daily and category specific prize opportunities</p>
+            <p class="prize-tagline">The challenge where the prize pool grows with the participants.</p>
+            <p class="prize-focus">More players.<br>More winners.<br>Bigger rewards.</p>
+            <p class="prize-note"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
+        </div>
+    </div>
+    
+    <!-- Supabase Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client (replace with your project URL and anon key)
+        const supabaseUrl = 'https://your-project-url.supabase.co';
+        const supabaseKey = 'your-public-anon-key';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Image upload handling
+        async function uploadScreenshots() {
+            const startImage = document.getElementById('startImage').files[0];
+            const endImage = document.getElementById('endImage').files[0];
+            const shouldStore = document.getElementById('consentCheckbox').checked;
+            
+            if (!shouldStore) return null;
+            
+            // Generate unique ID for this submission
+            const submissionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+            
+            try {
+                // Upload start screenshot if available
+                if (startImage) {
+                    await supabase.storage
+                        .from('commday-screenshots')
+                        .upload(`${submissionId}_start.jpg`, startImage);
+                }
+                
+                // Upload end screenshot if available
+                if (endImage) {
+                    await supabase.storage
+                        .from('commday-screenshots')
+                        .upload(`${submissionId}_end.jpg`, endImage);
+                }
+                
+                return submissionId;
+            } catch (error) {
+                console.error('Error uploading screenshots:', error);
+                return null;
+            }
+        }
+        
+        // Store submission data
+        async function storeSubmissionData(submissionId, formData) {
+            if (!submissionId) return false;
+            
+            try {
+                await supabase
+                    .from('commday_submissions')
+                    .insert({
+                        id: submissionId,
+                        trainer_name: formData.trainerName,
+                        pokemon_name: formData.pokemonName,
+                        hours_played: formData.hoursPlayed,
+                        start_seen: formData.startSeen,
+                        start_caught: formData.startCaught,
+                        end_seen: formData.endSeen,
+                        end_caught: formData.endCaught,
+                        shinies: formData.shinyCount,
+                        created_at: new Date().toISOString()
+                    });
+                
+                return true;
+            } catch (error) {
+                console.error('Error storing submission data:', error);
+                return false;
+            }
+        }
+    </script>
+    
+    <!-- Main JavaScript -->
+    <script>
+        // File input preview
+        document.getElementById('startImage').addEventListener('change', function(e) {
+            const preview = document.getElementById('startPreview');
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        document.getElementById('endImage').addEventListener('change', function(e) {
+            const preview = document.getElementById('endPreview');
+            if (e.target.files && e.target.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                }
+                reader.readAsDataURL(e.target.files[0]);
+            }
+        });
+        
+        // OCR processing
+        async function runOCR() {
+            // Get file inputs
+            const startFile = document.getElementById('startImage').files[0];
+            const endFile = document.getElementById('endImage').files[0];
+            
+            // Validate inputs
+            if (!startFile || !endFile) {
+                document.getElementById('ocrFeedback').className = 'feedback error';
+                document.getElementById('ocrFeedback').textContent = 'Please upload both start and end screenshots.';
+                return;
+            }
+            
+            // Show processing feedback
+            document.getElementById('ocrFeedback').className = 'feedback processing';
+            document.getElementById('ocrFeedback').innerHTML = '<div class="loading-spinner"></div> Processing your screenshots...';
+            
+            // Simulate OCR processing (would be replaced with actual OCR call)
+            setTimeout(function() {
+                // Simulate OCR failures (in real implementation this would be real OCR)
+                document.getElementById('ocrFeedback').className = 'feedback warning';
+                document.getElementById('ocrFeedback').textContent = 'We had trouble processing your screenshots. Please enter your stats manually below.';
+                
+                // Store screenshots if consent given
+                if (document.getElementById('consentCheckbox').checked) {
+                    uploadScreenshots();
+                }
+            }, 2000);
+        }
+        
+        // Manual stats calculation
+        function runStats() {
+            // Get form values
+            const trainerName = document.getElementById('trainerName').value;
+            const pokemonName = document.getElementById('pokemonName').value;
+            const hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
+            const startSeen = parseInt(document.getElementById('startSeen').value) || 0;
+            const endSeen = parseInt(document.getElementById('endSeen').value) || 0;
+            const startCaught = parseInt(document.getElementById('startCaught').value) || 0;
+            const endCaught = parseInt(document.getElementById('endCaught').value) || 0;
+            const shinyCount = parseInt(document.getElementById('shinyCount').value) || 0;
+            
+            // Basic validation
+            if (!trainerName || !pokemonName || hoursPlayed <= 0) {
+                alert('Please fill in all trainer information fields.');
+                return;
+            }
+            
+            if (startSeen >= endSeen || startCaught >= endCaught) {
+                alert('End values must be greater than start values.');
+                return;
+            }
+            
+            // Calculate stats
+            const totalCaught = endCaught - startCaught;
+            const totalSeen = endSeen - startSeen;
+            const catchRate = Math.round((totalCaught / totalSeen) * 100);
+            const caughtPerHour = (totalCaught / hoursPlayed).toFixed(1);
+            
+            // Update card
+            document.getElementById('trainerDisplay').textContent = trainerName;
+            document.getElementById('pokemonDisplay').textContent = pokemonName;
+            document.getElementById('deltaCaught').textContent = totalCaught;
+            document.getElementById('catchPercent').textContent = catchRate + '%';
+            document.getElementById('caughtPerHour').textContent = caughtPerHour;
+            document.getElementById('shinyTotal').textContent = shinyCount;
+            
+            // Show card and download button
+            document.getElementById('card').style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'block';
+            
+            // Store submission data
+            const formData = {
+                trainerName, pokemonName, hoursPlayed,
+                startSeen, startCaught, endSeen, endCaught, shinyCount
+            };
+            
+            const submissionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
+            storeSubmissionData(submissionId, formData);
+            
+            // Scroll to results
+            document.getElementById('card').scrollIntoView({ behavior: 'smooth' });
+        }
+        
+        // Download card as image
+        function downloadCard() {
+            const card = document.getElementById('card');
+            
+            html2canvas(card).then(canvas => {
+                const imageData = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'PlayerZero_CommDayCard.png';
+                link.href = imageData;
+                link.click();
+            });
+        }
+        
+        // Modal functionality
+        document.getElementById('prizeInfoBtn').addEventListener('click', function() {
+            document.getElementById('prizeInfoModal').style.display = 'block';
+        });
+        
+        document.getElementById('closeModal').addEventListener('click', function() {
+            document.getElementById('prizeInfoModal').style.display = 'none';
+        });
+        
+        window.addEventListener('click', function(event) {
+            if (event.target == document.getElementById('prizeInfoModal')) {
+                document.getElementById('prizeInfoModal').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
