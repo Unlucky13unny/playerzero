@@ -1,52 +1,60 @@
-/* Card styling for CommDay Card */
+/* Card styling - White background with border */
 .comm-day-card {
-  background: linear-gradient(135deg, #111 0%, #222 100%);
-  color: white;
-  padding: 2rem;
-  text-align: center;
-  border-radius: 15px;
-  margin: 2rem auto;
+  display: none;
+  width: 100%;
   max-width: 420px;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
-  position: relative;
+  background: white;
+  background-image: url('card-bg-image.png');
+  background-size: cover;
+  background-position: center;
+  border: 4px solid #000;
+  border-radius: 30px;
+  margin: 2rem auto;
+  padding: 1.5rem 1rem;
+  box-shadow: 0 5px 12px rgba(0, 0, 0, 0.1);
+  color: #111;
 }
 
 .card-header {
   background: #e30613;
-  margin: -2rem -2rem 1.5rem -2rem;
-  padding: 1rem;
-  border-radius: 15px 15px 0 0;
+  color: white;
+  padding: 0.75rem;
+  margin: 0 auto 1.5rem;
+  border-radius: 8px;
   font-weight: bold;
   letter-spacing: 1px;
+  width: 80%;
+  max-width: 280px;
   text-transform: uppercase;
 }
 
 .card-logo {
   max-width: 200px;
-  margin: 0 auto 1.5rem;
+  margin: 0 auto 1.2rem;
   display: block;
 }
 
 .trainer-name {
-  font-size: 1.8rem;
+  font-size: 1.5rem;
   font-weight: bold;
-  margin-bottom: 1.5rem;
-  color: white;
+  margin-bottom: 1rem;
+  color: #111;
 }
 
 .pokemon-info {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .pokemon-info .label {
-  font-size: 1rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
+  font-weight: bold;
   margin-bottom: 0.3rem;
-  color: #aaa;
+  color: #333;
 }
 
 .pokemon-name {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: bold;
   color: #e30613;
 }
@@ -54,8 +62,12 @@
 .stat-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 2rem;
-  margin-top: 2rem;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+
+.stat-item {
+  text-align: center;
 }
 
 .stat-item .label {
@@ -63,11 +75,32 @@
   text-transform: uppercase;
   font-weight: bold;
   margin-bottom: 0.5rem;
-  color: #aaa;
+  color: #333;
 }
 
 .stat-item .value {
-  font-size: 2rem;
+  font-size: 1.75rem;
   font-weight: bold;
   color: #e30613;
+}
+
+/* Button styling */
+.btn-primary {
+  background-color: #e30613;
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 5px;
+  font-weight: bold;
+  cursor: pointer;
+  display: inline-block;
+  text-align: center;
+  text-decoration: none;
+  font-size: 1rem;
+  transition: background-color 0.2s;
+  margin-top: 10px;
+}
+
+.btn-primary:hover {
+  background-color: #c30510;
 }
