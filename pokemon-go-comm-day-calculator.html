@@ -25,9 +25,9 @@
     <!-- External Libraries -->
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     
-    <!-- Override styles to fix header layout and improve styling -->
+    <!-- Override styles -->
     <style>
-      /* Override header styles directly in the HTML */
+      /* Header styles */
       .site-header {
         padding: 20px 0;
         text-align: center;
@@ -79,6 +79,17 @@
         background-color: #e30613 !important;
       }
       
+      /* Beta banner */
+      .beta-banner {
+        background-color: #FFEB3B;
+        color: #333;
+        text-align: center;
+        padding: 10px;
+        margin-bottom: 20px;
+        border-radius: 5px;
+        font-weight: bold;
+      }
+      
       /* Form section styling */
       .upload-section,
       .manual-input-section,
@@ -90,9 +101,34 @@
         margin-bottom: 30px;
       }
       
+      /* NEW: Section headers with dividing lines */
+      .section-header {
+        position: relative;
+        margin-bottom: 25px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #ddd;
+        color: #333;
+      }
+      
+      /* NEW: Form sections */
+      .form-section {
+        background: #fff;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        border: 1px solid #eee;
+      }
+      
+      .form-section h3 {
+        margin-top: 0;
+        margin-bottom: 15px;
+        color: #e30613;
+        font-size: 1.1rem;
+      }
+      
       .form-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
         gap: 20px;
         margin-bottom: 20px;
       }
@@ -263,6 +299,34 @@
         font-weight: bold;
         color: #e30613;
       }
+
+      /* Button styling enhancement */
+      .btn-primary {
+        background-color: #e30613;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 5px;
+        font-weight: bold;
+        cursor: pointer;
+        display: inline-block;
+        text-align: center;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: background-color 0.2s;
+        margin-top: 10px;
+      }
+      
+      .btn-primary:hover {
+        background-color: #c30510;
+      }
+      
+      /* Mobile responsiveness improvements */
+      @media (max-width: 768px) {
+        .form-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
 </head>
 <body>
@@ -283,11 +347,17 @@
 
     <main class="main-content">
         <div class="container">
-            <h1>Community Day Calculator</h1>
-            <p class="intro">Track your Community Day performance! Upload your before and after screenshots to automatically calculate your stats.</p>
+            <!-- Beta Banner -->
+            <div class="beta-banner">
+                BETA PROJECT - Help us improve! Your screenshot submissions are invaluable for enhancing our OCR technology.
+            </div>
             
+            <h1>Community Day Calculator</h1>
+            <p class="intro">Track your Community Day performance! Upload your before and after screenshots or enter stats manually to calculate your results.</p>
+            
+            <!-- SCREENSHOT UPLOAD SECTION -->
             <section class="upload-section">
-                <h2>Upload Screenshots</h2>
+                <h2 class="section-header">Upload Screenshots</h2>
                 <div class="form-grid">
                     <div class="form-group">
                         <label for="startImage">Start Screenshot</label>
@@ -318,53 +388,72 @@
                 <div id="statsDifference" style="display: none;"></div>
             </section>
             
+            <!-- MANUAL ENTRY SECTION - REORGANIZED -->
             <section class="manual-input-section">
-                <h2>Or Enter Stats Manually</h2>
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label for="trainerName">Trainer Name</label>
-                        <input type="text" id="trainerName" placeholder="Your trainer name">
+                <h2 class="section-header">Or Enter Stats Manually</h2>
+                
+                <!-- User Info Section -->
+                <div class="form-section">
+                    <h3>Trainer Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="trainerName">Trainer Name</label>
+                            <input type="text" id="trainerName" placeholder="Your trainer name">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="pokemonName">Pokémon Name</label>
+                            <input type="text" id="pokemonName" placeholder="Featured Pokémon">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="hoursPlayed">Hours Played</label>
+                            <input type="number" id="hoursPlayed" placeholder="Hours spent playing" step="0.5" value="3">
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="pokemonName">Pokémon Name</label>
-                        <input type="text" id="pokemonName" placeholder="Featured Pokémon">
+                </div>
+                
+                <!-- Before Event Stats -->
+                <div class="form-section">
+                    <h3>Starting Stats (Before Event)</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="startSeen">Pokémon Seen</label>
+                            <input type="number" id="startSeen" placeholder="Pokémon seen (before)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="startCaught">Pokémon Caught</label>
+                            <input type="number" id="startCaught" placeholder="Pokémon caught (before)">
+                        </div>
                     </div>
-                    
-                    <div class="form-group">
-                        <label for="startSeen">Start Seen</label>
-                        <input type="number" id="startSeen" placeholder="Pokémon seen (before)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="endSeen">End Seen</label>
-                        <input type="number" id="endSeen" placeholder="Pokémon seen (after)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="startCaught">Start Caught</label>
-                        <input type="number" id="startCaught" placeholder="Pokémon caught (before)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="endCaught">End Caught</label>
-                        <input type="number" id="endCaught" placeholder="Pokémon caught (after)">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="shinyCount">Shiny Count</label>
-                        <input type="number" id="shinyCount" placeholder="Number of shinies caught">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="hoursPlayed">Hours Played</label>
-                        <input type="number" id="hoursPlayed" placeholder="Hours spent playing" step="0.5" value="3">
+                </div>
+                
+                <!-- After Event Stats -->
+                <div class="form-section">
+                    <h3>Ending Stats (After Event)</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="endSeen">Pokémon Seen</label>
+                            <input type="number" id="endSeen" placeholder="Pokémon seen (after)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="endCaught">Pokémon Caught</label>
+                            <input type="number" id="endCaught" placeholder="Pokémon caught (after)">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="shinyCount">Shiny Count</label>
+                            <input type="number" id="shinyCount" placeholder="Number of shinies caught">
+                        </div>
                     </div>
                 </div>
                 
                 <button onclick="runStats()" class="btn btn-primary">Calculate My Stats</button>
             </section>
             
+            <!-- RESULTS SECTION -->
             <section class="result-section">
                 <div id="card" class="card comm-day-card" style="display: none;">
                     <div class="card-header">COMM DAY CARD</div>
@@ -437,6 +526,17 @@
             <p class="prize-note"><strong>**PlayerZero countdown goes live once the participant threshold is met.**</strong></p>
         </div>
     </div>
+    
+    <!-- Supabase Integration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize Supabase client (replace with your project URL and anon key)
+        const supabaseUrl = 'https://your-project-url.supabase.co';
+        const supabaseKey = 'your-public-anon-key';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Will be added to main scripts when ready
+    </script>
     
     <!-- JavaScript -->
     <script src="js/main.js"></script>
