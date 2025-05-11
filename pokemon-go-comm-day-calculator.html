@@ -350,6 +350,64 @@
         margin-right: auto;
         display: block;
       }
+
+      /* Modal styling */
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.7);
+        overflow: auto;
+      }
+      
+      .modal-content {
+        background-color: #fff;
+        margin: 10% auto;
+        padding: 25px;
+        border-radius: 10px;
+        max-width: 600px;
+        position: relative;
+      }
+      
+      .modal-close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        font-size: 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+      }
+      
+      .modal-title {
+        color: #e30613;
+        margin-top: 0;
+        margin-bottom: 20px;
+      }
+      
+      .prize-item {
+        margin-bottom: 15px;
+        font-size: 1.1rem;
+      }
+      
+      .prize-amount {
+        color: #e30613;
+      }
+      
+      .prize-details, .prize-tagline, .prize-note {
+        margin-bottom: 15px;
+      }
+      
+      .prize-focus {
+        font-size: 1.2rem;
+        font-weight: bold;
+        margin: 20px 0;
+        line-height: 1.6;
+      }
     </style>
 </head>
 <body>
@@ -429,7 +487,7 @@
                     </div>
                 </div>
                 
-                <button onclick="fakeOCR()" id="importButton" class="btn btn-primary">Submit Screenshots</button>
+                <button id="submitBtn" class="btn btn-primary">Submit Screenshots</button>
                 <div id="ocrFeedback" class="feedback"></div>
                 <div id="statsDifference" style="display: none;"></div>
             </section>
@@ -477,7 +535,7 @@
                     </div>
                 </div>
                 
-                <button onclick="runStats()" class="btn btn-primary">Calculate My Stats</button>
+                <button id="calculateBtn" class="btn btn-primary">Calculate My Stats</button>
             </section>
             
             <!-- RESULTS SECTION -->
@@ -515,7 +573,7 @@
                     </div>
                 </div>
                 
-                <button onclick="downloadCard()" id="downloadBtn" class="btn btn-primary" style="display: none;">Download My Comm Day Card</button>
+                <button id="downloadBtn" class="btn btn-primary" style="display: none;">Download My Comm Day Card</button>
             </section>
         </div>
     </main>
@@ -556,31 +614,208 @@
     
     <!-- Main JavaScript -->
     <script>
-        // File input preview
+        // Wait for the page to fully load
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('startImage').addEventListener('change', function(e) {
-                const preview = document.getElementById('startPreview');
-                if (e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                    }
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            });
+            // File preview functionality
+            setupFilePreviews();
             
-            document.getElementById('endImage').addEventListener('change', function(e) {
-                const preview = document.getElementById('endPreview');
-                if (e.target.files && e.target.files[0]) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        preview.src = e.target.result;
-                        preview.style.display = 'block';
-                    }
-                    reader.readAsDataURL(e.target.files[0]);
-                }
-            });
+            // Set up modal
+            setupModal();
             
-            // Modal functionality
-            document.getElementById('prizeInfoBtn').addEventListener('
+            // Set up button click handlers
+            setupButtonHandlers();
+        });
+        
+        // Setup file preview functionality
+        function setupFilePreviews() {
+            var startImage = document.getElementById('startImage');
+            var endImage = document.getElementById('endImage');
+            var startPreview = document.getElementById('startPreview');
+            var endPreview = document.getElementById('endPreview');
+            
+            if (startImage && startPreview) {
+                startImage.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            startPreview.src = e.target.result;
+                            startPreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+            }
+            
+            if (endImage && endPreview) {
+                endImage.addEventListener('change', function(e) {
+                    if (e.target.files && e.target.files[0]) {
+                        var reader = new FileReader();
+                        reader.onload = function(e) {
+                            endPreview.src = e.target.result;
+                            endPreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(e.target.files[0]);
+                    }
+                });
+            }
+        }
+        
+        // Setup modal functionality
+        function setupModal() {
+            var modal = document.getElementById('prizeInfoModal');
+            var btn = document.getElementById('prizeInfoBtn');
+            var closeBtn = document.getElementById('closeModal');
+            
+            if (btn && modal && closeBtn) {
+                btn.addEventListener('click', function() {
+                    modal.style.display = 'block';
+                });
+                
+                closeBtn.addEventListener('click', function() {
+                    modal.style.display = 'none';
+                });
+                
+                window.addEventListener('click', function(event) {
+                    if (event.target == modal) {
+                        modal.style.display = 'none';
+                    }
+                });
+            }
+        }
+        
+        // Setup button click handlers
+        function setupButtonHandlers() {
+            // Submit screenshots button
+            var submitBtn = document.getElementById('submitBtn');
+            if (submitBtn) {
+                submitBtn.addEventListener('click', handleSubmitScreenshots);
+            }
+            
+            // Calculate stats button
+            var calculateBtn = document.getElementById('calculateBtn');
+            if (calculateBtn) {
+                calculateBtn.addEventListener('click', calculateStats);
+            }
+            
+            // Download card button
+            var downloadBtn = document.getElementById('downloadBtn');
+            if (downloadBtn) {
+                downloadBtn.addEventListener('click', downloadCard);
+            }
+        }
+        
+        // Handle submit screenshots button click
+        function handleSubmitScreenshots() {
+            var feedback = document.getElementById('ocrFeedback');
+            var startFile = document.getElementById('startImage').files;
+            var endFile = document.getElementById('endImage').files;
+            
+            // Validate inputs
+            if (!startFile.length || !endFile.length) {
+                feedback.className = 'feedback error';
+                feedback.textContent = 'Please upload both start and end screenshots.';
+                return;
+            }
+            
+            // Show processing feedback
+            feedback.className = 'feedback processing';
+            feedback.innerHTML = '<div class="loading-spinner"></div> Processing your screenshots...';
+            
+            // Simulate processing with a timeout
+            setTimeout(function() {
+                feedback.className = 'feedback success';
+                feedback.textContent = 'Thank you for contributing your screenshots! Please continue below with manual entry of your comm day statistics.';
+                
+                // Scroll to the manual entry section
+                var sections = document.getElementsByClassName('manual-input-section');
+                if (sections.length > 1) {
+                    sections[1].scrollIntoView({behavior: 'smooth'});
+                }
+            }, 1500);
+        }
+        
+        // Calculate stats based on form inputs
+        function calculateStats() {
+            // Get values from form
+            var trainerName = document.getElementById('trainerName').value;
+            var pokemonName = document.getElementById('pokemonName').value;
+            var hoursPlayed = parseFloat(document.getElementById('hoursPlayed').value) || 0;
+            var startSeen = parseInt(document.getElementById('startSeen').value) || 0;
+            var endSeen = parseInt(document.getElementById('endSeen').value) || 0;
+            var startCaught = parseInt(document.getElementById('startCaught').value) || 0;
+            var endCaught = parseInt(document.getElementById('endCaught').value) || 0;
+            var shinyCount = parseInt(document.getElementById('shinyCount').value) || 0;
+            
+            // Validate inputs
+            if (!trainerName || !pokemonName || hoursPlayed <= 0) {
+                alert('Please fill in all trainer information fields.');
+                return;
+            }
+            
+            if (startSeen >= endSeen || startCaught >= endCaught) {
+                alert('End values must be greater than start values.');
+                return;
+            }
+            
+            // Calculate stats
+            var totalCaught = endCaught - startCaught;
+            var totalSeen = endSeen - startSeen;
+            var catchRate = Math.round((totalCaught / totalSeen) * 100);
+            var caughtPerHour = (totalCaught / hoursPlayed).toFixed(1);
+            
+            // Update card
+            document.getElementById('trainerDisplay').textContent = trainerName;
+            document.getElementById('pokemonDisplay').textContent = pokemonName.toUpperCase();
+            document.getElementById('deltaCaught').textContent = totalCaught;
+            document.getElementById('catchPercent').textContent = catchRate + '%';
+            document.getElementById('caughtPerHour').textContent = caughtPerHour;
+            document.getElementById('shinyTotal').textContent = shinyCount;
+            
+            // Show card and download button
+            document.getElementById('card').style.display = 'block';
+            document.getElementById('downloadBtn').style.display = 'block';
+            
+            // Display stats summary
+            var statsDifference = document.getElementById('statsDifference');
+            if (statsDifference) {
+                statsDifference.innerHTML = `<strong>Session Summary:</strong> You encountered ${totalSeen} Pokémon and caught ${totalCaught} of them. That's a ${catchRate}% catch rate!`;
+                statsDifference.style.display = 'block';
+            }
+            
+            // Scroll to results
+            document.getElementById('card').scrollIntoView({behavior: 'smooth'});
+        }
+        
+        // Download card as image
+        function downloadCard() {
+            var card = document.getElementById('card');
+            var downloadBtn = document.getElementById('downloadBtn');
+            
+            // Show processing state
+            var originalText = downloadBtn.textContent;
+            downloadBtn.textContent = 'Processing...';
+            downloadBtn.disabled = true;
+            
+            // Generate image
+            if (typeof html2canvas !== 'undefined') {
+                html2canvas(card).then(function(canvas) {
+                    // Create download link
+                    var imageData = canvas.toDataURL('image/png');
+                    var link = document.createElement('a');
+                    link.download = 'PlayerZero_CommDayCard.png';
+                    link.href = imageData;
+                    link.click();
+                    
+                    // Reset button
+                    downloadBtn.textContent = originalText;
+                    downloadBtn.disabled = false;
+                });
+            } else {
+                alert('Image generation library not loaded. Please try again later.');
+                downloadBtn.textContent = originalText;
+                downloadBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
