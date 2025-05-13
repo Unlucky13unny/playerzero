@@ -1,100 +1,917 @@
-const closeBtn = document.querySelector('.close-btn');
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PlayerZero Leaderboards</title>
+    <style>
+        /* Root variables */
+        :root {
+            --primary-color: #e30613;
+            --text-color: #333;
+            --light-gray: #f5f5f5;
+            --medium-gray: #e0e0e0;
+            --dark-gray: #757575;
+            --instinct-color: #FFDE00;
+            --mystic-color: #0077BE;
+            --valor-color: #FF0000;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Base styles */
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: #fff;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Header styles */
+        .site-header {
+            background-color: white;
+            box-shadow: var(--shadow);
+            padding: 10px 0;
+        }
+
+        .site-header .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            padding: 15px 20px;
+            display: inline-block;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .main-nav a.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Leaderboard header */
+        .leaderboard-header {
+            margin-bottom: 30px;
+        }
+
+        .leaderboard-header h1 {
+            text-align: center;
+            margin: 30px 0;
+            color: var(--primary-color);
+            font-size: 2.2rem;
+            font-weight: 600;
+        }
+
+        /* Main tabs */
+        .main-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            background-color: var(--light-gray);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            min-width: 150px;
+            text-align: center;
+            border-radius: 4px;
+        }
+
+        .tab-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Category tabs */
+        .category-tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .category-btn {
+            padding: 8px 18px;
+            background-color: var(--light-gray);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .category-btn.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* Filter controls */
+        .filter-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--light-gray);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .team-filter {
+            display: flex;
+            align-items: center;
+        }
+
+        .team-filter label {
+            margin-right: 10px;
+            font-weight: 500;
+        }
+
+        #team-select {
+            padding: 8px 12px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            background-color: white;
+            min-width: 120px;
+        }
+
+        .search-filter {
+            display: flex;
+            align-items: center;
+        }
+
+        #player-search {
+            padding: 8px 12px;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px 0 0 4px;
+            min-width: 250px;
+        }
+
+        #search-btn {
+            padding: 8px 15px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 0 4px 4px 0;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        #find-me-btn {
+            padding: 8px 15px;
+            background-color: var(--dark-gray);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* Leaderboard content */
+        .leaderboard-content {
+            display: none;
+        }
+
+        .leaderboard-content.active {
+            display: block;
+        }
+
+        /* Weekly header */
+        .weekly-header {
+            background-color: var(--light-gray);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .weekly-header h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--dark-gray);
+        }
+
+        /* Leaderboard table */
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+        }
+
+        .leaderboard-table thead tr {
+            background-color: var(--medium-gray);
+        }
+
+        .leaderboard-table th {
+            color: var(--text-color);
+            font-weight: 600;
+            text-align: left;
+            padding: 15px;
+        }
+
+        .leaderboard-table tbody tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+
+        .leaderboard-table tbody tr:nth-child(odd) {
+            background-color: white;
+        }
+
+        .leaderboard-table td {
+            padding: 15px;
+            vertical-align: middle;
+        }
+
+        .rank {
+            font-weight: 700;
+            font-size: 1.2rem;
+            width: 50px;
+            text-align: center;
+        }
+
+        .player {
+            font-weight: 500;
+        }
+
+        .player a {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .player-thumb {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .team-icon {
+            width: 24px;
+            height: 24px;
+        }
+
+        .score, .gain {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .verify-btn {
+            color: var(--primary-color);
+            background: none;
+            border: none;
+            text-decoration: underline;
+            cursor: pointer;
+            font-weight: 500;
+            padding: 0;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            align-items: center;
+        }
+
+        .page-btn {
+            padding: 8px 15px;
+            background-color: var(--light-gray);
+            border: none;
+            margin: 0 5px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            margin: 0 15px;
+            color: var(--dark-gray);
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+            position: relative;
+            background-color: white;
+            margin: 10% auto;
+            padding: 25px;
+            width: 80%;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 20px;
+            top: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            color: var(--dark-gray);
+        }
+
+        .verification-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .current-stats, .previous-stats {
+            flex: 1;
+            min-width: 300px;
+        }
+
+        .current-stats h3, .previous-stats h3, .verification-data h3 {
+            background-color: var(--light-gray);
+            padding: 10px 15px;
+            margin: 0 0 15px 0;
+            font-size: 1rem;
+        }
+
+        .current-stats img, .previous-stats img {
+            width: 100%;
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+        }
+
+        #verification-stats {
+            list-style-type: disc;
+            padding-left: 20px;
+            margin: 15px 0;
+        }
+
+        #verification-stats li {
+            margin-bottom: 8px;
+        }
+
+        .report-section {
+            margin-top: 25px;
+            text-align: right;
+        }
+
+        #report-btn {
+            padding: 8px 15px;
+            background-color: var(--light-gray);
+            border: 1px solid var(--medium-gray);
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        /* Footer */
+        .site-footer {
+            margin-top: 60px;
+            padding: 20px 0;
+            background-color: var(--light-gray);
+            color: var(--dark-gray);
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .filter-controls {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+            
+            .search-filter {
+                width: 100%;
+            }
+            
+            #player-search {
+                flex-grow: 1;
+            }
+            
+            .category-tabs {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .category-btn {
+                width: 100%;
+                margin-bottom: 5px;
+            }
+            
+            .leaderboard-table th:nth-child(3),
+            .leaderboard-table td:nth-child(3) {
+                display: none;
+            }
+
+            .verification-images {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Header -->
+    <header class="site-header">
+        <div class="container">
+            <div class="logo-container">
+                <img src="images/logo.png" alt="PlayerZero Logo" class="logo">
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="profile.html">Profile</a></li>
+                    <li><a href="leaderboard.html" class="active">Leaderboard</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Leaderboard Header -->
+        <section class="leaderboard-header">
+            <h1>PlayerZero Leaderboards</h1>
+            
+            <!-- Main Tabs: All-Time vs Weekly vs Monthly -->
+            <div class="main-tabs">
+                <button class="tab-btn active" data-tab="all-time">All-Time</button>
+                <button class="tab-btn" data-tab="weekly">Weekly</button>
+                <button class="tab-btn" data-tab="monthly">Monthly</button>
+            </div>
+            
+            <!-- Category Tabs for sorting -->
+            <div class="category-tabs">
+                <button class="category-btn" data-category="xp">Total XP</button>
+                <button class="category-btn active" data-category="catches">Pokémon Caught</button>
+                <button class="category-btn" data-category="distance">Distance Walked</button>
+                <button class="category-btn" data-category="pokestops">Pokéstops Visited</button>
+            </div>
+            
+            <!-- Filters -->
+            <div class="filter-controls">
+                <div class="team-filter">
+                    <label for="team-select">Team:</label>
+                    <select id="team-select">
+                        <option value="all">All Teams</option>
+                        <option value="instinct">Instinct</option>
+                        <option value="mystic">Mystic</option>
+                        <option value="valor">Valor</option>
+                    </select>
+                </div>
+                
+                <div class="search-filter">
+                    <input type="text" id="player-search" placeholder="Search player name...">
+                    <button id="search-btn">Search</button>
+                </div>
+                
+                <button id="find-me-btn">Find My Rank</button>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Content - All-Time Tab -->
+        <section id="all-time-tab" class="leaderboard-content active">
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Level</th>
+                        <th>Score</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example rows - would be generated dynamically -->
+                    <tr>
+                        <td class="rank">1</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                LumbrJackson
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-instinct.png" alt="Team Instinct" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">170,216</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="LumbrJackson">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">2</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                PokeGrinder42
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">168,553</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="PokeGrinder42">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">3</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                ProfessorWillow
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-mystic.png" alt="Team Mystic" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">162,498</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="ProfessorWillow">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">4</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                PokeMaster99
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-instinct.png" alt="Team Instinct" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">159,732</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="PokeMaster99">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">5</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                Ashantics
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">157,148</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="Ashantics">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">6</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                JohtoChamp
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-mystic.png" alt="Team Mystic" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">155,642</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="JohtoChamp">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">7</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                RaiderDex
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">153,891</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="RaiderDex">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">8</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                PikaPrep
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-instinct.png" alt="Team Instinct" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">152,315</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="PikaPrep">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">9</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                GottaCatch
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-mystic.png" alt="Team Mystic" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">150,728</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="GottaCatch">View Proof</button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="rank">10</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                PokeRunner
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">50</td>
+                        <td class="score">149,462</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="PokeRunner">View Proof</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev" disabled>Previous</button>
+                <span class="page-indicator">Page 1 of 10</span>
+                <button class="page-btn next">Next</button>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Content - Weekly Tab (hidden initially) -->
+        <section id="weekly-tab" class="leaderboard-content">
+            <div class="weekly-header">
+                <h2>Week of October 30 - November 5, 2023</h2>
+            </div>
+            
+            <!-- Weekly table would go here -->
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Level</th>
+                        <th>Weekly Gain</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example weekly data rows -->
+                    <tr>
+                        <td class="rank">1</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                XPHunter99
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-mystic.png" alt="Team Mystic" class="team-icon">
+                        </td>
+                        <td class="level">48</td>
+                        <td class="gain">+528</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="XPHunter99">View Proof</button>
+                        </td>
+                    </tr>
+                    <!-- More weekly rows would be added -->
+                </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev" disabled>Previous</button>
+                <span class="page-indicator">Page 1 of 5</span>
+                <button class="page-btn next">Next</button>
+            </div>
+        </section>
+        
+        <!-- Leaderboard Content - Monthly Tab (hidden initially) -->
+        <section id="monthly-tab" class="leaderboard-content">
+            <div class="weekly-header">
+                <h2>Month of October 2023</h2>
+            </div>
+            
+            <!-- Monthly table would go here -->
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th>Rank</th>
+                        <th>Player</th>
+                        <th>Team</th>
+                        <th>Level</th>
+                        <th>Monthly Gain</th>
+                        <th>Verify</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Example monthly data rows -->
+                    <tr>
+                        <td class="rank">1</td>
+                        <td class="player">
+                            <a href="profile.html">
+                                <img src="images/profile-placeholder.jpg" class="player-thumb">
+                                ShinyHunter
+                            </a>
+                        </td>
+                        <td class="team">
+                            <img src="images/team-valor.png" alt="Team Valor" class="team-icon">
+                        </td>
+                        <td class="level">49</td>
+                        <td class="gain">+2,154</td>
+                        <td class="verify">
+                            <button class="verify-btn" data-player="ShinyHunter">View Proof</button>
+                        </td>
+                    </tr>
+                    <!-- More monthly rows would be added -->
+                </tbody>
+            </table>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn prev" disabled>Previous</button>
+                <span class="page-indicator">Page 1 of 5</span>
+                <button class="page-btn next">Next</button>
+            </div>
+        </section>
+        
+        <!-- Verification Modal (hidden by default) -->
+        <div id="verification-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-btn">&times;</span>
+                <h2>Verification: <span id="modal-player-name">Player Name</span></h2>
+                
+                <div class="verification-images">
+                    <div class="current-stats">
+                        <h3>Current Stats (Nov 5, 2023)</h3>
+                        <img src="images/profile-placeholder.jpg" alt="Current Stats" id="current-stats-img">
+                    </div>
+                    
+                    <div class="previous-stats">
+                        <h3>Previous Stats (Oct 29, 2023)</h3>
+                        <img src="images/profile-placeholder.jpg" alt="Previous Stats" id="previous-stats-img">
+                    </div>
+                </div>
+                
+                <div class="verification-data">
+                    <h3>Weekly Changes</h3>
+                    <ul id="verification-stats">
+                        <li>Distance: +32.5 km</li>
+                        <li>Catches: +415</li>
+                        <li>Pokéstops: +221</li>
+                        <li>XP: +1,254,789</li>
+                        <li>PlayerZero Score: +12</li>
+                    </ul>
+                </div>
+                
+                <div class="report-section">
+                    <button id="report-btn">Report Suspicious Data</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="container">
+            <p>&copy; 2025 PlayerZero - The Ultimate Pokémon GO Stat Tracker</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Tab switching
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.leaderboard-content');
+            
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabBtns.forEach(tab => tab.classList.remove('active'));
+                    tabContents.forEach(content => content.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Show corresponding content
+                    const tabId = this.getAttribute('data-tab') + '-tab';
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+            
+            // Category switching
+            const categoryBtns = document.querySelectorAll('.category-btn');
+            
+            categoryBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    // Remove active class from all category buttons
+                    categoryBtns.forEach(cat => cat.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // In a real implementation, this would reload the data with the new category
+                    const category = this.getAttribute('data-category');
+                    
+                    // Update the table header to match the selected category
+                    const scoreHeaders = document.querySelectorAll('th:nth-child(5)');
+                    
+                    scoreHeaders.forEach(header => {
+                        if (category === 'xp') {
+                            header.textContent = 'Total XP';
+                        } else if (category === 'catches') {
+                            header.textContent = 'Pokémon Caught';
+                        } else if (category === 'distance') {
+                            header.textContent = 'Distance Walked';
+                        } else if (category === 'pokestops') {
+                            header.textContent = 'Pokéstops Visited';
+                        }
+                    });
+                });
+            });
+            
+            // Verification modal functionality
+            const modal = document.getElementById('verification-modal');
+            const verifyBtns = document.querySelectorAll('.verify-btn');
+            const closeBtn = document.querySelector('.close-btn');
             const modalPlayerName = document.getElementById('modal-player-name');
             
-            verifyBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    const playerName = this.getAttribute('data-player');
-                    modalPlayerName.textContent = playerName;
-                    
-                    // In a real implementation, you would load player-specific verification data here
-                    // For now, we'll just show the modal with the sample data
-                    modal.style.display = 'block';
-                    
-                    // Add scroll lock to body
-                    document.body.style.overflow = 'hidden';
-                });
-            });
-            
-            // Close modal when X is clicked
-            closeBtn.addEventListener('click', function() {
-                modal.style.display = 'none';
-                document.body.style.overflow = 'auto';
-            });
-            
-            // Close modal when clicking outside of modal content
-            window.addEventListener('click', function(event) {
-                if (event.target === modal) {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }
-            });
-            
-            // Team filter functionality
-            const teamSelect = document.getElementById('team-select');
-            teamSelect.addEventListener('change', function() {
-                const selectedTeam = this.value;
-                // In a real implementation, this would filter the table data
-                console.log('Filtering by team:', selectedTeam);
-            });
-            
-            // Search functionality
-            const searchBtn = document.getElementById('search-btn');
-            const searchInput = document.getElementById('player-search');
-            
-            searchBtn.addEventListener('click', function() {
-                const searchTerm = searchInput.value.trim();
-                if (searchTerm.length > 0) {
-                    // In a real implementation, this would search for players
-                    console.log('Searching for:', searchTerm);
-                }
-            });
-            
-            // Enter key for search
-            searchInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    searchBtn.click();
-                }
-            });
-            
-            // Find My Rank button
-            const findMeBtn = document.getElementById('find-me-btn');
-            findMeBtn.addEventListener('click', function() {
-                // In a real implementation, this would locate the current user in the rankings
-                alert('This would find your position in the leaderboard if you were logged in.');
-            });
-            
-            // Pagination functionality
-            const prevBtns = document.querySelectorAll('.prev');
-            const nextBtns = document.querySelectorAll('.next');
-            
-            prevBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    if (!this.disabled) {
-                        // In a real implementation, this would load the previous page
-                        console.log('Go to previous page');
-                    }
-                });
-            });
-            
-            nextBtns.forEach(btn => {
-                btn.addEventListener('click', function() {
-                    // In a real implementation, this would load the next page
-                    console.log('Go to next page');
-                });
-            });
-            
-            // Report button functionality
-            const reportBtn = document.getElementById('report-btn');
-            reportBtn.addEventListener('click', function() {
-                // In a real implementation, this would open a report form
-                alert('This would open a form to report suspicious data for this player.');
-            });
-        });
-    </script>
-</body>
-</html>
-            
-            verifyBtns.forEach(btn => {
+            verifyBtns.forEach
+                    verifyBtns.forEach(btn => {
                 btn.addEventListener('click', function() {
                     const playerName = this.getAttribute('data-player');
                     modalPlayerName.textContent = playerName;
