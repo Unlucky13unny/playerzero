@@ -148,6 +148,75 @@
             font-weight: bold;
         }
 
+        /* Grind Statistics */
+        .grind-stats-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            margin: 30px 0;
+            overflow: hidden;
+        }
+
+        .stats-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--medium-gray);
+        }
+
+        .stats-tab {
+            padding: 10px 15px;
+            background: var(--light-gray);
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .stats-tab.active {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .stats-header {
+            background-color: black;
+            padding: 12px 20px;
+        }
+
+        .stats-header h2 {
+            color: white;
+            margin: 0;
+            font-size: 1.4rem;
+            font-weight: 500;
+        }
+
+        .daily-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            padding: 15px;
+            background-color: var(--light-gray);
+        }
+
+        .daily-stat-item {
+            padding: 10px;
+            text-align: center;
+        }
+
+        .daily-stat-item .stat-label {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+            margin-bottom: 5px;
+        }
+
+        .daily-stat-item .stat-value {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 2px;
+        }
+
+        .daily-stat-item .stat-percentile {
+            font-size: 0.8rem;
+            color: var(--dark-gray);
+        }
+
         /* Stats and chart section */
         .stats-and-chart {
             background-color: white;
@@ -374,6 +443,11 @@
             .level-container {
                 margin-right: 15px;
             }
+            
+            .daily-stats {
+                grid-template-columns: 1fr 1fr;
+                gap: 10px;
+            }
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
@@ -426,6 +500,40 @@
                 <div class="friend-code-row">
                     <span class="code-number">205655364353</span>
                     <button class="copy-btn" onclick="copyToClipboard('205655364353')">Copy</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Grind Statistics Section -->
+        <section class="grind-stats-card">
+            <div class="stats-tabs">
+                <button class="stats-tab active">All-Time</button>
+                <button class="stats-tab">Week</button>
+                <button class="stats-tab">Month</button>
+            </div>
+            <div class="stats-header">
+                <h2>Grind Statistics</h2>
+            </div>
+            <div class="daily-stats">
+                <div class="daily-stat-item">
+                    <div class="stat-label">KM/DAY</div>
+                    <div class="stat-value">4.66</div>
+                    <div class="stat-percentile">40%</div>
+                </div>
+                <div class="daily-stat-item">
+                    <div class="stat-label">CAUGHT/DAY</div>
+                    <div class="stat-value">52.40</div>
+                    <div class="stat-percentile">60%</div>
+                </div>
+                <div class="daily-stat-item">
+                    <div class="stat-label">STOPS/DAY</div>
+                    <div class="stat-value">33.86</div>
+                    <div class="stat-percentile">20%</div>
+                </div>
+                <div class="daily-stat-item">
+                    <div class="stat-label">XP/DAY</div>
+                    <div class="stat-value">65,561.84</div>
+                    <div class="stat-percentile">33rd</div>
                 </div>
             </div>
         </section>
@@ -536,6 +644,9 @@
         document.addEventListener('DOMContentLoaded', function() {
             // Set up radar chart
             setupRadarChart();
+            
+            // Set up tab switching
+            setupTabSwitching();
         });
 
         // Create radar chart
@@ -545,19 +656,34 @@
             
             const data = {
                 labels: ['Walker', 'Catcher', 'Explorer', 'Grinder'],
-                datasets: [{
-                    label: 'Play Style',
-                    data: [75, 85, 65, 90],
-                    backgroundColor: 'rgba(227, 6, 19, 0.15)',
-                    borderColor: 'rgba(227, 6, 19, 0.8)',
-                    borderWidth: 2,
-                    pointBackgroundColor: 'rgba(227, 6, 19, 1)',
-                    pointBorderColor: '#fff',
-                    pointHoverBackgroundColor: '#fff',
-                    pointHoverBorderColor: 'rgba(227, 6, 19, 1)',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
-                }]
+                datasets: [
+                    {
+                        label: 'Your Play Style',
+                        data: [75, 85, 65, 70],
+                        backgroundColor: 'rgba(227, 6, 19, 0.15)',
+                        borderColor: 'rgba(227, 6, 19, 0.8)',
+                        borderWidth: 2,
+                        pointBackgroundColor: 'rgba(227, 6, 19, 1)',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: 'rgba(227, 6, 19, 1)',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: 'Average Player',
+                        data: [70, 60, 80, 65],
+                        backgroundColor: 'rgba(0, 0, 0, 0)', // Transparent fill
+                        borderColor: 'rgba(0, 0, 0, 0.8)',
+                        borderWidth: 2,
+                        pointBackgroundColor: '#000',
+                        pointBorderColor: '#fff',
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: '#000',
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
             };
             
             const config = {
@@ -596,7 +722,14 @@
                     },
                     plugins: {
                         legend: {
-                            display: false
+                            display: true,
+                            position: 'bottom',
+                            labels: {
+                                font: {
+                                    size: 12
+                                },
+                                padding: 20
+                            }
                         },
                         tooltip: {
                             backgroundColor: 'rgba(255, 255, 255, 0.9)',
@@ -606,7 +739,7 @@
                             borderWidth: 1,
                             callbacks: {
                                 label: function(context) {
-                                    return context.raw + '/100';
+                                    return context.dataset.label + ': ' + context.raw + '/100';
                                 }
                             }
                         }
@@ -619,6 +752,26 @@
             } catch (error) {
                 console.error('Failed to create radar chart:', error);
             }
+        }
+        
+        // Setup tab switching
+        function setupTabSwitching() {
+            const tabs = document.querySelectorAll('.stats-tab');
+            if (!tabs.length) return;
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    this.classList.add('active');
+                    
+                    // Here you would normally update the stats data based on the selected time range
+                    // For this mock-up, we'll just show a notification
+                    showNotification('Switched to ' + this.textContent + ' statistics');
+                });
+            });
         }
         
         // Open image modal
