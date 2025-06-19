@@ -14,6 +14,10 @@ import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ProfileGuard } from './components/auth/ProfileGuard'
 import { Layout } from './components/layout/Layout'
 import { PublicProfile } from './components/profile/PublicProfile'
+import { AdminLogin } from './components/auth/AdminLogin'
+import { AdminProtectedRoute } from './components/auth/AdminProtectedRoute'
+import { AdminLayout } from './components/admin/AdminLayout'
+import { AdminDashboard } from './components/admin/AdminDashboard'
 
 // Import CSS
 import './index.css'
@@ -91,6 +95,41 @@ function App() {
             } 
           />
           
+          {/* Admin routes */}
+          <Route path="/admin/login" element={<AdminLogin />} />
+          
+          <Route path="/admin/dashboard" element={
+            <AdminLayout>
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            </AdminLayout>
+          } />
+          
+          <Route path="/admin/users" element={
+            <AdminLayout>
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            </AdminLayout>
+          } />
+          
+          <Route path="/admin/analytics" element={
+            <AdminLayout>
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            </AdminLayout>
+          } />
+          
+          <Route path="/admin/*" element={
+            <AdminLayout>
+              <AdminProtectedRoute>
+                <AdminDashboard />
+              </AdminProtectedRoute>
+            </AdminLayout>
+          } />
+
           {/* Fallback route */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
