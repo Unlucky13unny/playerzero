@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { Logo } from '../common/Logo'
+import { profileService } from '../../services/profileService'
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('')
@@ -25,8 +26,26 @@ export const LoginForm = () => {
       if (error) {
         setError(error.message)
       } else {
-        // Redirect to dashboard or intended destination on successful login
-        navigate(from, { replace: true })
+        // After successful login, check if user has completed profile
+        try {
+          const { hasProfile, error: profileError } = await profileService.hasProfile()
+          
+          if (profileError && profileError.message !== 'User not authenticated') {
+            console.warn('Error checking profile:', profileError)
+          }
+          
+          // If profile exists, redirect to dashboard or intended destination
+          if (hasProfile) {
+            navigate(from, { replace: true })
+          } else {
+            // If no profile exists, redirect to profile setup
+            navigate('/profile-setup', { replace: true })
+          }
+        } catch (profileErr) {
+          console.warn('Error checking profile existence:', profileErr)
+          // If there's an error checking profile, default to intended destination
+          navigate(from, { replace: true })
+        }
       }
     } catch (err) {
       setError('An unexpected error occurred')

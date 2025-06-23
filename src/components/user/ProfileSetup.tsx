@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData } from '../../services/profileService'
@@ -26,6 +26,7 @@ export const ProfileSetup = () => {
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [checkingProfile, setCheckingProfile] = useState(true)
   
   const [profileData, setProfileData] = useState<ProfileData>({
     trainer_name: '',
@@ -50,6 +51,31 @@ export const ProfileSetup = () => {
   })
 
   const [profileScreenshot, setProfileScreenshot] = useState<File | null>(null)
+
+  // Check if user already has a profile when component mounts
+  useEffect(() => {
+    const checkExistingProfile = async () => {
+      try {
+        const { hasProfile, error } = await profileService.hasProfile()
+        
+        if (error) {
+          console.warn('Error checking existing profile:', error)
+        }
+        
+        // If user already has a profile, redirect to dashboard
+        if (hasProfile) {
+          navigate('/', { replace: true })
+          return
+        }
+      } catch (err) {
+        console.warn('Error checking profile existence:', err)
+      } finally {
+        setCheckingProfile(false)
+      }
+    }
+
+    checkExistingProfile()
+  }, [navigate])
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     setProfileData(prev => ({ ...prev, [field]: value }))
@@ -414,6 +440,22 @@ export const ProfileSetup = () => {
       </div>
     </div>
   )
+
+  // Show loading while checking if profile already exists
+  if (checkingProfile) {
+    return (
+      <div className="profile-setup-container">
+        <div className="profile-setup-wrapper">
+          <div className="profile-setup-card">
+            <div className="loading-container">
+              <div className="loading-spinner"></div>
+              <p>Checking profile status...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="profile-setup-container">

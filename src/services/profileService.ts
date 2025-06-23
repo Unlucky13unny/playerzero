@@ -340,5 +340,30 @@ export const profileService = {
     } catch (error) {
       return { data: null, error }
     }
+  },
+
+  // Check if current user has a profile (lightweight check)
+  async hasProfile(): Promise<{ hasProfile: boolean; error: any }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      
+      if (!user) {
+        return { hasProfile: false, error: new Error('User not authenticated') }
+      }
+
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle()
+
+      if (error) {
+        return { hasProfile: false, error }
+      }
+
+      return { hasProfile: !!data, error: null }
+    } catch (error) {
+      return { hasProfile: false, error }
+    }
   }
 } 
