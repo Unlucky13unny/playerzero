@@ -15,8 +15,10 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    loadLeaderboard()
-  }, [period, sortBy])
+    if (isPaidUser) {
+      loadLeaderboard()
+    }
+  }, [period, sortBy, isPaidUser])
 
   const loadLeaderboard = async () => {
     setLoading(true)
@@ -36,6 +38,10 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const handleTrainerClick = (entry: LeaderboardEntry) => {
     // Navigate to public profile using profile ID
     navigate(`/profile/${entry.profile_id}`)
+  }
+
+  const handleUpgradeClick = () => {
+    navigate('/upgrade')
   }
 
   const getTeamColor = (teamColor: string) => {
@@ -82,17 +88,47 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     }
   }
 
+  if (!isPaidUser) {
+    return (
+      <div className="locked-content">
+        <div className="locked-icon">🏆</div>
+        <h3 className="locked-title">Premium Feature</h3>
+        <p className="locked-description">
+          Upgrade to Premium to view community leaderboards and compete with other trainers!
+        </p>
+        <div className="upgrade-features">
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Weekly, monthly & all-time rankings</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Compare stats with other trainers</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>View detailed trainer profiles</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Track your ranking progress</span>
+          </div>
+        </div>
+        <button 
+          className="upgrade-button"
+          onClick={handleUpgradeClick}
+        >
+          Upgrade to Premium
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div className="leaderboards-container">
       <div className="leaderboards-header">
         <h2>🏆 Community Leaderboards</h2>
         <p>See how the top trainers are performing</p>
-        {!isPaidUser && (
-          <div className="leaderboard-notice">
-            <span className="notice-icon">ℹ️</span>
-            <span>Only premium members appear in leaderboards. <strong>Upgrade to compete!</strong></span>
-          </div>
-        )}
       </div>
 
       {/* Filters */}
@@ -155,11 +191,12 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                 <div className="empty-icon">📊</div>
                 <h3>No Premium Members Yet</h3>
                 <p>Be the first to upgrade and claim the top spot!</p>
-                {!isPaidUser && (
-                  <button className="upgrade-cta">
-                    ✨ Upgrade to Premium
-                  </button>
-                )}
+                <button 
+                  className="upgrade-cta"
+                  onClick={handleUpgradeClick}
+                >
+                  ✨ Upgrade to Premium
+                </button>
               </div>
             ) : (
               <>
@@ -247,18 +284,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                     </div>
                   </div>
                 ))}
-                
-                {!isPaidUser && leaderboard.length > 0 && (
-                  <div className="leaderboard-upgrade-prompt">
-                    <div className="upgrade-content">
-                      <h3>🚀 Want to compete?</h3>
-                      <p>Upgrade to Premium to appear in leaderboards and unlock exclusive features!</p>
-                      <button className="upgrade-button">
-                        ✨ Upgrade Now
-                      </button>
-                    </div>
-                  </div>
-                )}
               </>
             )}
           </div>

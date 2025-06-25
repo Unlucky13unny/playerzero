@@ -6,13 +6,12 @@ import { RadarChart } from '../dashboard/RadarChart'
 
 export const PostProfileTutorial = () => {
   const [currentSlide, setCurrentSlide] = useState(1)
-  const { userMetadata, upgradeToFull } = useAuth()
-  const [upgrading, setUpgrading] = useState(false)
+  const { userMetadata } = useAuth()
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
-  const isPaid = userMetadata?.role === 'paid'
+  const isPaid = profile?.is_paid_user === true
   const totalSlides = 5
 
   useEffect(() => {
@@ -51,16 +50,7 @@ export const PostProfileTutorial = () => {
   }
 
   const handleUpgrade = async () => {
-    setUpgrading(true)
-    try {
-      await upgradeToFull()
-      // After upgrade, continue to next slide or finish
-      nextSlide()
-    } catch (err) {
-      console.error('Upgrade failed:', err)
-    } finally {
-      setUpgrading(false)
-    }
+    navigate('/upgrade')
   }
 
   const renderSlide1 = () => (
@@ -336,22 +326,12 @@ export const PostProfileTutorial = () => {
         <div className="upgrade-action">
           <button
             onClick={handleUpgrade}
-            disabled={upgrading}
             className="nav-button primary upgrade-button"
           >
-            {upgrading ? (
-              <>
-                <div className="loading-spinner"></div>
-                Upgrading...
-              </>
-            ) : (
-              <>
-                Upgrade Now
-                <svg className="nav-button-icon right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-              </>
-            )}
+            Upgrade Now
+            <svg className="nav-button-icon right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            </svg>
           </button>
         </div>
       )}
@@ -416,7 +396,6 @@ export const PostProfileTutorial = () => {
               <button
                 onClick={nextSlide}
                 className="nav-button primary"
-                disabled={currentSlide === 5 && !isPaid && upgrading}
               >
                 {currentSlide === totalSlides ? 'Get Started' : 'Next'}
                 <svg className="nav-button-icon right" fill="none" stroke="currentColor" viewBox="0 0 24 24">

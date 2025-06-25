@@ -10,6 +10,7 @@ interface StatUpdaterProps {
 export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
   const { user } = useAuth();
   const [currentProfile, setCurrentProfile] = useState<ProfileWithMetadata | null>(null);
+  const [currentStats, setCurrentStats] = useState<any>(null);
   const [updates, setUpdates] = useState<StatUpdate>({});
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -25,6 +26,14 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
     try {
       const { data: profile } = await profileService.getProfile();
       setCurrentProfile(profile);
+      
+      // Get the most recent stat entry for this user
+      const { data: latestStatEntry } = await dashboardService.getUserStatEntries();
+      const mostRecentStats = latestStatEntry && latestStatEntry.length > 0 
+        ? latestStatEntry[latestStatEntry.length - 1] 
+        : profile;
+      
+      setCurrentStats(mostRecentStats);
     } catch (error) {
       console.error('Error loading profile:', error);
     }
@@ -62,7 +71,7 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
         setMessage({ type: 'success', text: response.message });
         setUpdates({}); // Clear form
         
-        // Reload current profile to show updated values
+        // Reload current profile and stats to show updated values
         await loadCurrentProfile();
         
         // Notify parent component
@@ -88,7 +97,7 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
     return num.toLocaleString();
   };
 
-  if (!currentProfile) {
+  if (!currentProfile || !currentStats) {
     return (
       <div className="stat-updater-container">
         <div className="loading-message">Loading your profile...</div>
@@ -102,7 +111,7 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
         <div className="header-content">
           <div className="header-info">
             <h3>📊 Update Your Stats</h3>
-            <p>Keep your progress up to date • Last updated: {new Date(currentProfile.updated_at).toLocaleDateString()}</p>
+            <p>Keep your progress up to date • Last entry: {new Date(currentStats.entry_date || currentStats.updated_at).toLocaleDateString()}</p>
           </div>
           <button
             type="button"
@@ -122,27 +131,27 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
               <div className="stats-grid">
                 <div className="stat-display">
                   <span className="stat-label">Total XP</span>
-                  <span className="stat-value">{formatNumber(currentProfile.total_xp)}</span>
+                  <span className="stat-value">{formatNumber(currentStats.total_xp)}</span>
                 </div>
                 <div className="stat-display">
                   <span className="stat-label">Pokémon Caught</span>
-                  <span className="stat-value">{formatNumber(currentProfile.pokemon_caught)}</span>
+                  <span className="stat-value">{formatNumber(currentStats.pokemon_caught)}</span>
                 </div>
                 <div className="stat-display">
                   <span className="stat-label">Distance (km)</span>
-                  <span className="stat-value">{formatNumber(currentProfile.distance_walked)}</span>
+                  <span className="stat-value">{formatNumber(currentStats.distance_walked)}</span>
                 </div>
                 <div className="stat-display">
                   <span className="stat-label">PokéStops</span>
-                  <span className="stat-value">{formatNumber(currentProfile.pokestops_visited)}</span>
+                  <span className="stat-value">{formatNumber(currentStats.pokestops_visited)}</span>
                 </div>
                 <div className="stat-display">
                   <span className="stat-label">Pokédex</span>
-                  <span className="stat-value">{formatNumber(currentProfile.unique_pokedex_entries)}</span>
+                  <span className="stat-value">{formatNumber(currentStats.unique_pokedex_entries)}</span>
                 </div>
                 <div className="stat-display">
                   <span className="stat-label">Level</span>
-                  <span className="stat-value">{currentProfile.trainer_level}</span>
+                  <span className="stat-value">{currentStats.trainer_level}</span>
                 </div>
               </div>
             </div>
@@ -155,10 +164,10 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                   <input
                     id="total_xp"
                     type="number"
-                    min={currentProfile.total_xp}
+                    min={currentStats.total_xp}
                     value={updates.total_xp || ''}
                     onChange={(e) => handleInputChange('total_xp', e.target.value)}
-                    placeholder={`Current: ${formatNumber(currentProfile.total_xp)}`}
+                    placeholder={`Current: ${formatNumber(currentStats.total_xp)}`}
                     className="stat-input"
                   />
                 </div>
@@ -168,10 +177,10 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                   <input
                     id="pokemon_caught"
                     type="number"
-                    min={currentProfile.pokemon_caught}
+                    min={currentStats.pokemon_caught}
                     value={updates.pokemon_caught || ''}
                     onChange={(e) => handleInputChange('pokemon_caught', e.target.value)}
-                    placeholder={`Current: ${formatNumber(currentProfile.pokemon_caught)}`}
+                    placeholder={`Current: ${formatNumber(currentStats.pokemon_caught)}`}
                     className="stat-input"
                   />
                 </div>
@@ -182,10 +191,10 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                     id="distance_walked"
                     type="number"
                     step="0.01"
-                    min={currentProfile.distance_walked}
+                    min={currentStats.distance_walked}
                     value={updates.distance_walked || ''}
                     onChange={(e) => handleInputChange('distance_walked', e.target.value)}
-                    placeholder={`Current: ${formatNumber(currentProfile.distance_walked)}`}
+                    placeholder={`Current: ${formatNumber(currentStats.distance_walked)}`}
                     className="stat-input"
                   />
                 </div>
@@ -195,10 +204,10 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                   <input
                     id="pokestops_visited"
                     type="number"
-                    min={currentProfile.pokestops_visited}
+                    min={currentStats.pokestops_visited}
                     value={updates.pokestops_visited || ''}
                     onChange={(e) => handleInputChange('pokestops_visited', e.target.value)}
-                    placeholder={`Current: ${formatNumber(currentProfile.pokestops_visited)}`}
+                    placeholder={`Current: ${formatNumber(currentStats.pokestops_visited)}`}
                     className="stat-input"
                   />
                 </div>
@@ -208,11 +217,11 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                   <input
                     id="unique_pokedex_entries"
                     type="number"
-                    min={currentProfile.unique_pokedex_entries}
+                    min={currentStats.unique_pokedex_entries}
                     max={1000}
                     value={updates.unique_pokedex_entries || ''}
                     onChange={(e) => handleInputChange('unique_pokedex_entries', e.target.value)}
-                    placeholder={`Current: ${formatNumber(currentProfile.unique_pokedex_entries)}`}
+                    placeholder={`Current: ${formatNumber(currentStats.unique_pokedex_entries)}`}
                     className="stat-input"
                   />
                 </div>
@@ -222,11 +231,11 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
                   <input
                     id="trainer_level"
                     type="number"
-                    min={currentProfile.trainer_level}
+                    min={currentStats.trainer_level}
                     max={50}
                     value={updates.trainer_level || ''}
                     onChange={(e) => handleInputChange('trainer_level', e.target.value)}
-                    placeholder={`Current: ${currentProfile.trainer_level}`}
+                    placeholder={`Current: ${currentStats.trainer_level}`}
                     className="stat-input"
                   />
                 </div>

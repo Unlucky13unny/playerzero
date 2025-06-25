@@ -1,41 +1,87 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
+import { loadStripe } from '@stripe/stripe-js'
 import { useAuth } from '../../contexts/AuthContext'
+import { supabase } from '../../supabaseClient'
 import { profileService } from '../../services/profileService'
 
+// Initialize Stripe
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
+
 export const UpgradePage = () => {
-  const { upgradeToFull } = useAuth()
+  const { user } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showCancelMessage, setShowCancelMessage] = useState(false)
+
+  useEffect(() => {
+    checkUpgradeStatus()
+  }, [])
+
+  const checkUpgradeStatus = () => {
+    const upgradeStatus = searchParams.get('upgrade')
+    if (upgradeStatus === 'cancelled') {
+      setShowCancelMessage(true)
+      // Remove the parameter from URL
+      searchParams.delete('upgrade')
+      setSearchParams(searchParams)
+      // Auto-hide after 8 seconds
+      setTimeout(() => setShowCancelMessage(false), 8000)
+    }
+  }
 
   const handleUpgrade = async () => {
     setLoading(true)
     setError(null)
     
     try {
-      // Update auth metadata to paid
-      const { error: authError } = await upgradeToFull()
-      if (authError) {
-        setError(authError.message || 'Failed to update user status. Please try again.')
+      // Get current user
+      const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
+      
+      if (userError || !currentUser) {
+        setError('Please log in to upgrade your account.')
         return
       }
 
-      // Update database profile to paid with lifetime subscription
-      const subscriptionData = {
-        is_paid_user: true,
-        subscription_type: 'lifetime',
-        subscription_expires_at: undefined // Lifetime subscription never expires
+      // Create checkout session
+      const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: import.meta.env.VITE_STRIPE_PRICE_ID, // from Stripe dashboard
+          email: currentUser.email,
+          userId: currentUser.id
+        })
+      })
+
+      if (!res.ok) {
+        const errorData = await res.text()
+        throw new Error(`Failed to create checkout session: ${errorData}`)
       }
 
-      const { error: dbError } = await profileService.updateSubscription(subscriptionData)
-      if (dbError) {
-        console.error('Database update error:', dbError)
-        setError('Upgrade successful but there was an issue updating your profile. Please refresh the page.')
-        return
+      const data = await res.json()
+      
+      if (!data.sessionId) {
+        throw new Error('No session ID returned from checkout creation')
       }
 
-      // Success! User is now premium
-      // The page will automatically update due to auth state changes
-      console.log('Upgrade successful! User is now premium.')
+      // Redirect to Stripe checkout
+      const stripe = await stripePromise
+      if (!stripe) {
+        throw new Error('Stripe failed to load')
+      }
+
+      const { error: stripeError } = await stripe.redirectToCheckout({ 
+        sessionId: data.sessionId 
+      })
+
+      if (stripeError) {
+        throw new Error(stripeError.message || 'Failed to redirect to checkout')
+      }
       
     } catch (err: any) {
       console.error('Upgrade error:', err)
@@ -47,6 +93,25 @@ export const UpgradePage = () => {
 
   return (
     <div className="upgrade-page-container">
+      {/* Cancel Message */}
+      {showCancelMessage && (
+        <div className="cancel-banner">
+          <div className="cancel-content">
+            <span className="cancel-icon">💳</span>
+            <div className="cancel-text">
+              <h3>Payment Cancelled</h3>
+              <p>No worries! Your payment was cancelled and no charges were made. You can try again when you're ready.</p>
+            </div>
+            <button 
+              className="cancel-close"
+              onClick={() => setShowCancelMessage(false)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Header Section */}
       <div className="upgrade-header">
         <div className="upgrade-hero">
