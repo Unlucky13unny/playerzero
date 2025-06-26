@@ -177,7 +177,7 @@ export const dashboardService = {
   // Calculate stats between two dates
   async calculateStatDelta(startDate: string, endDate: string, userId?: string): Promise<StatCalculationResult> {
     const { data: entries } = await this.getUserStatEntries(userId)
-    
+    console.log(entries);
     if (!entries || entries.length < 2) {
       throw new Error('Insufficient data for calculation')
     }
@@ -210,6 +210,7 @@ export const dashboardService = {
   // Get community day stats (single date or date range)
   async getCommunityDayStats(date: string, endDate?: string, userId?: string): Promise<StatCalculationResult> {
     const actualEndDate = endDate || date
+    console.log(date, actualEndDate);
     return this.calculateStatDelta(date, actualEndDate, userId)
   },
 
@@ -222,7 +223,7 @@ export const dashboardService = {
     if (error) {
       throw error
     }
-
+    console.log(data);
     if (!data || data.length === 0) {
       return {
         total_xp: 0,
@@ -282,22 +283,34 @@ export const dashboardService = {
         return { success: false, message: 'Profile not found' };
       }
 
-      // Validate that new stats are not lower than current stats (prevent cheating)
+      // Get the most recent stat entry to use for validation
+      const { data: latestStatEntry } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('entry_date', { ascending: false })
+        .limit(1)
+        .single();
+
+      // Use the latest stat entry for validation if available, otherwise use profile
+      const referenceStats = latestStatEntry || currentProfile;
+
+      // Validate that new stats are not lower than most recent stats (prevent cheating)
       const validationErrors: string[] = [];
       
-      if (updates.total_xp !== undefined && updates.total_xp < currentProfile.total_xp) {
+      if (updates.total_xp !== undefined && updates.total_xp < referenceStats.total_xp) {
         validationErrors.push('Total XP cannot be lower than current value');
       }
-      if (updates.pokemon_caught !== undefined && updates.pokemon_caught < currentProfile.pokemon_caught) {
+      if (updates.pokemon_caught !== undefined && updates.pokemon_caught < referenceStats.pokemon_caught) {
         validationErrors.push('Pokémon caught cannot be lower than current value');
       }
-      if (updates.distance_walked !== undefined && updates.distance_walked < currentProfile.distance_walked) {
+      if (updates.distance_walked !== undefined && updates.distance_walked < referenceStats.distance_walked) {
         validationErrors.push('Distance walked cannot be lower than current value');
       }
-      if (updates.pokestops_visited !== undefined && updates.pokestops_visited < currentProfile.pokestops_visited) {
+      if (updates.pokestops_visited !== undefined && updates.pokestops_visited < referenceStats.pokestops_visited) {
         validationErrors.push('PokéStops visited cannot be lower than current value');
       }
-      if (updates.unique_pokedex_entries !== undefined && updates.unique_pokedex_entries < currentProfile.unique_pokedex_entries) {
+      if (updates.unique_pokedex_entries !== undefined && updates.unique_pokedex_entries < referenceStats.unique_pokedex_entries) {
         validationErrors.push('Pokédex entries cannot be lower than current value');
       }
 
@@ -305,11 +318,70 @@ export const dashboardService = {
         return { success: false, message: validationErrors.join(', ') };
       }
 
-      // Update profile with new stats
+      // Create the new stat entry data
+      const today = new Date().toISOString().split('T')[0];
+      const newStatEntry = {
+        user_id: user.id,
+        profile_id: currentProfile.id,
+        distance_walked: updates.distance_walked ?? referenceStats.distance_walked,
+        pokemon_caught: updates.pokemon_caught ?? referenceStats.pokemon_caught,
+        pokestops_visited: updates.pokestops_visited ?? referenceStats.pokestops_visited,
+        total_xp: updates.total_xp ?? referenceStats.total_xp,
+        unique_pokedex_entries: updates.unique_pokedex_entries ?? referenceStats.unique_pokedex_entries,
+        trainer_level: updates.trainer_level ?? referenceStats.trainer_level,
+        entry_date: today
+      };
+
+      // Check if there's already an entry for today
+      const { data: existingTodayEntry } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('entry_date', today)
+        .single();
+
+      let statEntryResult;
+      let isUpdate = false;
+
+      if (existingTodayEntry) {
+        // Update today's entry
+        const { data, error } = await supabase
+          .from('stat_entries')
+          .update(newStatEntry)
+          .eq('user_id', user.id)
+          .eq('entry_date', today)
+          .select('*')
+          .single();
+        
+        statEntryResult = { data, error };
+        isUpdate = true;
+      } else {
+        // Create new entry for today
+        const { data, error } = await supabase
+          .from('stat_entries')
+          .insert(newStatEntry)
+          .select('*')
+          .single();
+        
+        statEntryResult = { data, error };
+        isUpdate = false;
+      }
+
+      if (statEntryResult.error) {
+        console.error('Error creating/updating stat entry:', statEntryResult.error);
+        return { success: false, message: 'Failed to update stats' };
+      }
+
+      // Update the profile with the latest stats to keep it current
       const { data: updatedProfile, error: updateError } = await supabase
         .from('profiles')
         .update({
-          ...updates,
+          distance_walked: newStatEntry.distance_walked,
+          pokemon_caught: newStatEntry.pokemon_caught,
+          pokestops_visited: newStatEntry.pokestops_visited,
+          total_xp: newStatEntry.total_xp,
+          unique_pokedex_entries: newStatEntry.unique_pokedex_entries,
+          trainer_level: newStatEntry.trainer_level,
           updated_at: new Date().toISOString()
         })
         .eq('user_id', user.id)
@@ -318,34 +390,16 @@ export const dashboardService = {
 
       if (updateError) {
         console.error('Error updating profile:', updateError);
-        return { success: false, message: 'Failed to update stats' };
+        return { success: false, message: 'Failed to update profile' };
       }
 
-      // The trigger will automatically create a stat_entry, but let's also manually ensure it
-      // This provides redundancy in case the trigger fails
-      try {
-        await supabase
-          .from('stat_entries')
-          .upsert({
-            user_id: user.id,
-            profile_id: updatedProfile.id,
-            distance_walked: updatedProfile.distance_walked,
-            pokemon_caught: updatedProfile.pokemon_caught,
-            pokestops_visited: updatedProfile.pokestops_visited,
-            total_xp: updatedProfile.total_xp,
-            unique_pokedex_entries: updatedProfile.unique_pokedex_entries,
-            trainer_level: updatedProfile.trainer_level,
-            entry_date: new Date().toISOString().split('T')[0] // Today's date
-          }, {
-            onConflict: 'user_id,entry_date'
-          });
-      } catch (entryError) {
-        console.warn('Stat entry creation failed, but profile updated successfully:', entryError);
-      }
+      const message = isUpdate 
+        ? "Today's stats updated successfully!" 
+        : 'New stat entry created successfully!';
 
       return { 
         success: true, 
-        message: 'Stats updated successfully!',
+        message,
         updatedProfile: updatedProfile as PublicProfile
       };
 

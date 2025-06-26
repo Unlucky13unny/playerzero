@@ -78,7 +78,7 @@ export const PublicProfile = () => {
     }
   }
 
-  const isPaid = userMetadata?.role === 'paid'
+  const isPaid = profile?.is_paid_user === true
 
   if (loading) {
     return (

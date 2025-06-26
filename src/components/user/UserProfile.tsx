@@ -21,7 +21,7 @@ const COUNTRIES = [
 ]
 
 export const UserProfile = () => {
-  const { user, userMetadata, signOut, startFreeTrial, isInTrial, trialDaysLeft, upgradeToFull } = useAuth()
+  const { user, userMetadata, signOut, startFreeTrial, isInTrial, trialDaysLeft } = useAuth()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -84,19 +84,7 @@ export const UserProfile = () => {
   }
   
   const handleUpgrade = async () => {
-    setError(null)
-    setLoading(true)
-    try {
-      const { error } = await upgradeToFull()
-      if (error) {
-        setError(error.message)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
+    navigate('/upgrade')
   }
 
   const handleEdit = () => {
@@ -164,7 +152,7 @@ export const UserProfile = () => {
     }
   }
   
-  const isPaid = userMetadata?.role === 'paid'
+  const isPaid = profile?.is_paid_user === true
   const inTrial = isInTrial()
   const daysLeft = trialDaysLeft()
 

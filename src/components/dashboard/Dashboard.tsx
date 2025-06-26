@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { StatCalculators } from './StatCalculators'
@@ -11,16 +12,31 @@ type DashboardTab = 'calculators' | 'leaderboards' | 'export' | 'performance' | 
 
 export const Dashboard = () => {
   const { user, userMetadata } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('calculators')
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isPaidUser, setIsPaidUser] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   useEffect(() => {
     loadProfile()
     checkPaidStatus()
+    checkUpgradeSuccess()
   }, [userMetadata])
+
+  const checkUpgradeSuccess = () => {
+    const upgradeStatus = searchParams.get('upgrade')
+    if (upgradeStatus === 'success') {
+      setShowSuccessMessage(true)
+      // Remove the parameter from URL
+      searchParams.delete('upgrade')
+      setSearchParams(searchParams)
+      // Auto-hide after 10 seconds
+      setTimeout(() => setShowSuccessMessage(false), 10000)
+    }
+  }
 
   const loadProfile = async () => {
     try {
@@ -37,21 +53,13 @@ export const Dashboard = () => {
 
   const checkPaidStatus = async () => {
     try {
-      // Check auth metadata first
-      const authIsPaid = userMetadata?.role === 'paid'
+      const { isPaid } = await profileService.isPaidUser()
+      setIsPaidUser(isPaid)
       
-      // Check database profile for subscription status
-      const { isPaid: dbIsPaid } = await profileService.isPaidUser()
-      
-      // User is paid if either auth metadata OR database says they are
-      const finalIsPaid = authIsPaid || dbIsPaid
-      setIsPaidUser(finalIsPaid)
-      
-      console.log('Paid status check:', { authIsPaid, dbIsPaid, finalIsPaid })
+      console.log('Paid status check:', { isPaid })
     } catch (error) {
       console.error('Error checking paid status:', error)
-      // Default to auth metadata if database check fails
-      setIsPaidUser(userMetadata?.role === 'paid')
+      setIsPaidUser(false)
     }
   }
 
@@ -115,6 +123,25 @@ export const Dashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Success Message */}
+      {showSuccessMessage && (
+        <div className="success-banner">
+          <div className="success-content">
+            <span className="success-icon">🎉</span>
+            <div className="success-text">
+              <h3>Payment Successful!</h3>
+              <p>Welcome to Premium! You now have access to all features including leaderboards, unlimited exports, and more.</p>
+            </div>
+            <button 
+              className="success-close"
+              onClick={() => setShowSuccessMessage(false)}
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="dashboard-header">
         <h1>PlayerZERO Dashboard</h1>
         <p>Track your progress, compete with others, and level up your game</p>

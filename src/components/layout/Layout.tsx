@@ -1,7 +1,8 @@
-import { type ReactNode, useState } from 'react'
+import { type ReactNode, useState, useEffect } from 'react'
 import { Logo } from '../common/Logo'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { profileService } from '../../services/profileService'
 
 type LayoutProps = {
   children: ReactNode
@@ -11,14 +12,36 @@ export const Layout = ({ children }: LayoutProps) => {
   const { user, userMetadata, signOut } = useAuth()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isPaidUser, setIsPaidUser] = useState(false)
+  const [profileLoading, setProfileLoading] = useState(true)
+  
+  useEffect(() => {
+    if (user) {
+      checkPaidStatus()
+    } else {
+      setIsPaidUser(false)
+      setProfileLoading(false)
+    }
+  }, [user])
+
+  const checkPaidStatus = async () => {
+    try {
+      setProfileLoading(true)
+      const { isPaid } = await profileService.isPaidUser()
+      setIsPaidUser(isPaid)
+    } catch (error) {
+      console.error('Error checking paid status:', error)
+      setIsPaidUser(false)
+    } finally {
+      setProfileLoading(false)
+    }
+  }
   
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
     setMobileMenuOpen(false)
   }
-  
-  const isPaid = userMetadata?.role === 'paid'
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen)
@@ -51,12 +74,14 @@ export const Layout = ({ children }: LayoutProps) => {
         <div className={`nav-actions ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
           {user ? (
             <>
-              {isPaid ? (
-                <span className="badge">PRO</span>
-              ) : (
-                <Link to="/upgrade" className="nav-link highlight" onClick={() => setMobileMenuOpen(false)}>
-                  Upgrade
-                </Link>
+              {!profileLoading && (
+                isPaidUser ? (
+                  <span className="badge">PRO</span>
+                ) : (
+                  <Link to="/upgrade" className="nav-link highlight" onClick={() => setMobileMenuOpen(false)}>
+                    Upgrade
+                  </Link>
+                )
               )}
               
               <div className="avatar">

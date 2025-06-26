@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -28,6 +29,7 @@ interface RadarChartProps {
 }
 
 export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChartProps) => {
+  const navigate = useNavigate()
   const [communityAverages, setCommunityAverages] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -48,6 +50,10 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
     loadAverages()
   }, [])
 
+  const handleUpgradeClick = () => {
+    navigate('/upgrade')
+  }
+
   if (!isPaidUser) {
     return (
       <div className="locked-content">
@@ -56,7 +62,10 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
         <p className="locked-description">
           Upgrade to Premium to see how your stats compare to other trainers!
         </p>
-        <button className="upgrade-button">
+        <button 
+          className="upgrade-button"
+          onClick={handleUpgradeClick}
+        >
           Upgrade to Premium
         </button>
       </div>
