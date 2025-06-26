@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { profileService, type PublicProfileData } from '../../services/profileService'
 import { RadarChart } from '../dashboard/RadarChart'
 import { useAuth } from '../../contexts/AuthContext'
@@ -25,37 +26,49 @@ const TEAM_COLORS: TeamColor[] = [
 export const PublicProfile = () => {
   const { profileId } = useParams<{ profileId: string }>()
   const navigate = useNavigate()
+  const { user } = useAuth()
+  const trialStatus = useTrialStatus()
   const [profile, setProfile] = useState<PublicProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const { userMetadata } = useAuth()
+  const [isPaid, setIsPaid] = useState(false)
 
   useEffect(() => {
     if (profileId) {
       loadProfile()
+      checkPaidStatus()
     }
   }, [profileId])
 
   const loadProfile = async () => {
     if (!profileId) return
-
-    setLoading(true)
-    setError(null)
     
     try {
-      const { data, error } = await profileService.getPublicProfile(profileId)
-      if (error) {
-        throw new Error(error.message)
-      }
+      setLoading(true)
+      setError(null)
+      const { data } = await profileService.getPublicProfile(profileId)
       setProfile(data)
     } catch (err: any) {
+      console.error('Profile loading error:', err)
       setError(err.message || 'Failed to load profile')
     } finally {
       setLoading(false)
     }
   }
 
-  const selectedTeam = profile ? TEAM_COLORS.find(team => team.value === profile.team_color) : null
+  const checkPaidStatus = async () => {
+    try {
+      const { isPaid } = await profileService.isPaidUser()
+      setIsPaid(isPaid)
+    } catch (error) {
+      console.error('Error checking paid status:', error)
+      setIsPaid(false)
+    }
+  }
+
+  const selectedTeam = profile?.team_color 
+    ? TEAM_COLORS.find(team => team.value === profile.team_color)
+    : null
 
   const getSocialLink = (platform: string, value: string) => {
     if (!value) return null
@@ -78,15 +91,13 @@ export const PublicProfile = () => {
     }
   }
 
-  const isPaid = profile?.is_paid_user === true
-
   if (loading) {
     return (
       <div className="profile-container">
         <div className="profile-card">
           <div className="profile-content">
             <div style={{ textAlign: 'center', padding: '1.5rem' }}>
-              <div className="loading-spinner" style={{ margin: '0 auto 0.75rem' }}></div>
+              <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
               <p>Loading profile...</p>
             </div>
           </div>
@@ -121,83 +132,48 @@ export const PublicProfile = () => {
     <div className="profile-setup-container">
       <div className="profile-setup-wrapper">
         <div className="profile-setup-card" style={{ maxWidth: '800px' }}>
-          <div className="profile-setup-content" style={{ padding: '1.5rem' }}>
-            
-            {/* Compact Header */}
-            <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              marginBottom: '2rem',
-              padding: '1.5rem 0 1.25rem 0',
-              borderBottom: '1px solid rgba(255,255,255,0.1)',
-              gap: '2rem',
-              position: 'relative',
+          
+          {/* Header */}
+          <div style={{ 
+            textAlign: 'center', 
+            marginBottom: '2rem',
+            padding: '1.5rem 0',
+            borderBottom: '1px solid rgba(255,255,255,0.1)'
+          }}>
+            <h1 style={{ 
+              fontSize: '2rem', 
+              margin: '0 0 0.5rem 0',
+              color: selectedTeam?.color || '#dc267f'
             }}>
-              <div style={{ minWidth: 100, display: 'flex', justifyContent: 'flex-start' }}>
-                <button
-                  onClick={() => navigate(-1)}
-                  className="back-button"
-                  style={{ 
-                    background: 'rgba(139, 0, 0, 0.2)',
-                    border: '1px solid rgba(139, 0, 0, 0.4)',
-                    borderRadius: '0.375rem',
-                    padding: '0.5rem 1.25rem',
-                    color: '#fff',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem',
-                    fontSize: '0.95rem',
-                    fontWeight: 500
-                  }}
-                >
-                  <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Back
-                </button>
-              </div>
-              <div style={{ textAlign: 'center', flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  <h1 style={{ 
-                    fontSize: '2rem', 
-                    fontWeight: 'bold', 
-                    margin: 0,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem'
-                  }}>
-                    {profile.trainer_name}
-                  </h1>
-                </div>
-                <p style={{ 
-                  color: '#888', 
-                  margin: '0.25rem 0 0 0',
-                  fontSize: '1rem'
-                }}>
-                  Level {profile.trainer_level} • {profile.country || 'Unknown Location'}
-                </p>
-              </div>
-              <div style={{ minWidth: 100, display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-                {profile.is_paid_user && (
-                  <span style={{ 
-                    fontSize: '0.95rem',
-                    background: 'linear-gradient(135deg, #fbbf24, #f59e0b)',
-                    color: '#000',
-                    padding: '0.3rem 0.7rem',
-                    borderRadius: '0.375rem',
-                    fontWeight: 'bold',
-                    letterSpacing: '0.5px',
-                    display: 'inline-block'
-                  }}>
-                    👑 PREMIUM
-                  </span>
-                )}
-              </div>
+              {profile.trainer_name}
+            </h1>
+            <div style={{ 
+              fontSize: '1rem', 
+              color: '#888',
+              marginBottom: '1rem'
+            }}>
+              Level {profile.trainer_level} Trainer
             </div>
+            
+            {/* Restricted Access Notice for Trainer Code */}
+            {!trialStatus.canShowTrainerCode && (
+              <div style={{
+                background: 'rgba(220, 38, 127, 0.1)',
+                border: '1px solid rgba(220, 38, 127, 0.3)',
+                borderRadius: '0.5rem',
+                padding: '0.75rem',
+                display: 'inline-block',
+                marginTop: '0.5rem'
+              }}>
+                <div style={{ fontSize: '0.875rem', color: '#dc267f' }}>
+                  🔒 Full profile details visible to Premium members only
+                </div>
+              </div>
+            )}
+          </div>
 
-            {/* Compact Main Content Grid */}
+          {/* Stats Content */}
+          <div style={{ padding: '0 1.5rem 1.5rem' }}>
             <div style={{ 
               display: 'grid', 
               gridTemplateColumns: profile.profile_screenshot_url ? '1fr 200px' : '1fr',
@@ -299,82 +275,84 @@ export const PublicProfile = () => {
                   />
                 </div>
 
-                {/* Compact Social Media */}
-                <div style={{ 
-                  padding: '1rem',
-                  background: 'rgba(0,0,0,0.2)',
-                  borderRadius: '0.75rem',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <h4 style={{ 
-                    margin: '0 0 0.75rem 0', 
-                    fontSize: '0.875rem', 
-                    color: '#888',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.5rem'
-                  }}>
-                    🌐 Social Media
-                  </h4>
+                {/* Social Media - Only visible to paid users */}
+                {trialStatus.canShowSocialLinks ? (
                   <div style={{ 
-                    display: 'grid', 
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                    gap: '0.5rem'
+                    padding: '1rem',
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '0.75rem',
+                    border: '1px solid rgba(255,255,255,0.1)'
                   }}>
-                    {[
-                      { key: 'instagram', label: 'Instagram', icon: '📷' },
-                      { key: 'tiktok', label: 'TikTok', icon: '🎵' },
-                      { key: 'twitter', label: 'Twitter', icon: '🐦' },
-                      { key: 'youtube', label: 'YouTube', icon: '📺' },
-                      { key: 'twitch', label: 'Twitch', icon: '🎮' },
-                      { key: 'reddit', label: 'Reddit', icon: '🤖' }
-                    ].map((social) => {
-                      const value = profile[social.key as keyof PublicProfileData] as string
-                      const link = getSocialLink(social.key, value)
-                      
-                      if (!value) return null
-                      
-                      return (
-                        <div key={social.key} style={{
-                          padding: '0.5rem',
-                          background: 'rgba(255,255,255,0.05)',
-                          borderRadius: '0.375rem',
-                          fontSize: '0.75rem'
-                        }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.25rem' }}>
-                            <span>{social.icon}</span>
-                            <span style={{ color: '#888' }}>{social.label}</span>
+                    <h4 style={{ 
+                      margin: '0 0 0.75rem 0', 
+                      fontSize: '0.875rem', 
+                      color: '#888',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem'
+                    }}>
+                      🌐 Social Media
+                    </h4>
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                      gap: '0.5rem'
+                    }}>
+                      {[
+                        { key: 'instagram_handle', label: 'Instagram', icon: '📷', prefix: '@' },
+                        { key: 'twitter_handle', label: 'Twitter', icon: '🐦', prefix: '@' },
+                        { key: 'youtube_handle', label: 'YouTube', icon: '📺', prefix: '@' },
+                        { key: 'discord_handle', label: 'Discord', icon: '💬', prefix: '' }
+                      ].map((social) => {
+                        const value = profile[social.key as keyof PublicProfileData] as string
+                        return value ? (
+                          <div key={social.key} style={{
+                            padding: '0.5rem',
+                            background: 'rgba(255,255,255,0.05)',
+                            borderRadius: '0.25rem',
+                            fontSize: '0.75rem'
+                          }}>
+                            <div style={{ color: '#888', marginBottom: '0.25rem' }}>
+                              {social.icon} {social.label}
+                            </div>
+                            <div style={{ color: '#fff', fontSize: '0.8rem' }}>
+                              {social.prefix}{value}
+                            </div>
                           </div>
-                          {link ? (
-                            <a 
-                              href={link} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
-                              style={{ 
-                                color: '#00d4aa', 
-                                textDecoration: 'none',
-                                fontSize: '0.75rem'
-                              }}
-                            >
-                              {value}
-                            </a>
-                          ) : (
-                            <span style={{ fontSize: '0.75rem' }}>{value}</span>
-                          )}
-                        </div>
-                      )
-                    }).filter(Boolean)}
-                  </div>
-                  {![
-                    'instagram', 'tiktok', 'twitter', 'youtube', 'twitch', 'reddit'
-                  ].some(key => profile[key as keyof PublicProfileData]) && (
-                    <div style={{ color: '#666', fontSize: '0.75rem', textAlign: 'center' }}>
-                      No social media links available
+                        ) : null
+                      }).filter(Boolean)}
                     </div>
-                  )}
-                </div>
+                  </div>
+                ) : (
+                  <div style={{ 
+                    padding: '1rem',
+                    background: 'rgba(220, 38, 127, 0.1)',
+                    borderRadius: '0.75rem',
+                    border: '1px solid rgba(220, 38, 127, 0.3)',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{ fontSize: '0.875rem', color: '#dc267f' }}>
+                      🔒 Social media links visible to Premium members only
+                    </div>
+                    <button
+                      onClick={() => navigate('/upgrade')}
+                      style={{
+                        marginTop: '0.5rem',
+                        background: '#dc267f',
+                        color: '#fff',
+                        border: 'none',
+                        padding: '0.5rem 1rem',
+                        borderRadius: '0.25rem',
+                        fontSize: '0.75rem',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Upgrade to Premium
+                    </button>
+                  </div>
+                )}
 
-                {/* Profile Dates */}
+                {/* Member Info */}
                 <div style={{ 
                   display: 'grid', 
                   gridTemplateColumns: '1fr 1fr',
@@ -420,19 +398,32 @@ export const PublicProfile = () => {
 
             {/* Compact Navigation */}
             <div style={{ 
+              marginTop: '2rem', 
               display: 'flex', 
               justifyContent: 'center',
-              gap: '0.75rem',
-              marginTop: '1.5rem',
               paddingTop: '1rem',
               borderTop: '1px solid rgba(255,255,255,0.1)'
             }}>
               <button
                 onClick={() => navigate('/dashboard')}
-                className="nav-button primary"
-                style={{ fontSize: '0.875rem', padding: '0.5rem 1rem' }}
+                style={{
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  color: '#fff',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '0.5rem',
+                  cursor: 'pointer',
+                  fontSize: '0.875rem',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.2)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
+                }}
               >
-                Dashboard
+                ← Back to Dashboard
               </button>
             </div>
           </div>

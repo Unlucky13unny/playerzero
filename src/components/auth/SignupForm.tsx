@@ -5,16 +5,12 @@ import { Logo } from '../common/Logo'
 
 type UserMetadata = {
   role: 'free' | 'paid'
-  trial_enabled: boolean
-  trial_start?: string
-  trial_end?: string
 }
 
 export const SignupForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
-  const [enableTrial, setEnableTrial] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const { signUp } = useAuth()
@@ -33,18 +29,7 @@ export const SignupForm = () => {
     
     try {
       const metadata: UserMetadata = {
-        role: 'free',
-        trial_enabled: enableTrial
-      }
-      
-      // If trial is enabled, set the start and end dates
-      if (enableTrial) {
-        const now = new Date()
-        const trialEnd = new Date(now)
-        trialEnd.setDate(trialEnd.getDate() + 30)
-        
-        metadata.trial_start = now.toISOString()
-        metadata.trial_end = trialEnd.toISOString()
+        role: 'free'
       }
       
       const { error } = await signUp(email, password, metadata)
@@ -130,29 +115,6 @@ export const SignupForm = () => {
                 placeholder="••••••••"
                 required
               />
-            </div>
-            
-            <div className="form-group">
-              <div style={{ display: 'flex', alignItems: 'center' }}>
-                <input
-                  id="enableTrial"
-                  type="checkbox"
-                  checked={enableTrial}
-                  onChange={(e) => setEnableTrial(e.target.checked)}
-                  style={{ 
-                    width: '1rem', 
-                    height: '1rem', 
-                    backgroundColor: 'transparent',
-                    border: '1px solid var(--red-bright)',
-                    marginRight: '0.5rem',
-                    borderRadius: '0.25rem',
-                    accentColor: 'var(--red-bright)'
-                  }}
-                />
-                <label htmlFor="enableTrial" style={{ color: 'var(--white-muted)', fontSize: 'var(--font-sm)' }}>
-                  Start 30-day free trial
-                </label>
-              </div>
             </div>
             
             <div style={{ marginTop: '1.5rem' }}>

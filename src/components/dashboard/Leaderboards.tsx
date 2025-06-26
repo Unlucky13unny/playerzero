@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { dashboardService, type LeaderboardEntry } from '../../services/dashboardService'
 
 interface LeaderboardsProps {
@@ -8,6 +9,7 @@ interface LeaderboardsProps {
 
 export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const navigate = useNavigate()
+  const trialStatus = useTrialStatus()
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all-time'>('weekly')
   const [sortBy, setSortBy] = useState<'xp' | 'catches' | 'distance' | 'pokestops'>('xp')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
@@ -15,10 +17,9 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (isPaidUser) {
-      loadLeaderboard()
-    }
-  }, [period, sortBy, isPaidUser])
+    // Always load leaderboard for browse access
+    loadLeaderboard()
+  }, [period, sortBy])
 
   const loadLeaderboard = async () => {
     setLoading(true)
@@ -36,6 +37,11 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   }
 
   const handleTrainerClick = (entry: LeaderboardEntry) => {
+    if (!trialStatus.canClickIntoProfiles) {
+      // Show upgrade prompt instead of navigating
+      navigate('/upgrade')
+      return
+    }
     // Navigate to public profile using profile ID
     navigate(`/profile/${entry.profile_id}`)
   }
@@ -58,70 +64,29 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     return colors[teamColor] || '#666666'
   }
 
-  const formatSortValue = (entry: LeaderboardEntry, sortField: string) => {
-    if (period === 'all-time') {
-      switch (sortField) {
+  const formatSortValue = (entry: LeaderboardEntry, sortBy: string) => {
+    const getValue = () => {
+      switch (sortBy) {
         case 'xp':
-          return `${(entry.total_xp || 0).toLocaleString()} XP`
+          return period === 'all-time' ? entry.total_xp : entry.xp_delta
         case 'catches':
-          return `${(entry.pokemon_caught || 0).toLocaleString()} caught`
+          return period === 'all-time' ? entry.pokemon_caught : entry.catches_delta
         case 'distance':
-          return `${(entry.distance_walked || 0).toFixed(1)} km`
+          return period === 'all-time' ? entry.distance_walked : entry.distance_delta
         case 'pokestops':
-          return `${(entry.pokestops_visited || 0).toLocaleString()} stops`
+          return period === 'all-time' ? entry.pokestops_visited : entry.pokestops_delta
         default:
-          return '0'
-      }
-    } else {
-      switch (sortField) {
-        case 'xp':
-          return `+${(entry.xp_delta || 0).toLocaleString()} XP`
-        case 'catches':
-          return `+${(entry.catches_delta || 0).toLocaleString()} caught`
-        case 'distance':
-          return `+${(entry.distance_delta || 0).toFixed(1)} km`
-        case 'pokestops':
-          return `+${(entry.pokestops_delta || 0).toLocaleString()} stops`
-        default:
-          return '0'
+          return 0
       }
     }
-  }
 
-  if (!isPaidUser) {
-    return (
-      <div className="locked-content">
-        <div className="locked-icon">🏆</div>
-        <h3 className="locked-title">Premium Feature</h3>
-        <p className="locked-description">
-          Upgrade to Premium to view community leaderboards and compete with other trainers!
-        </p>
-        <div className="upgrade-features">
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Weekly, monthly & all-time rankings</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Compare stats with other trainers</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>View detailed trainer profiles</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Track your ranking progress</span>
-          </div>
-        </div>
-        <button 
-          className="upgrade-button"
-          onClick={handleUpgradeClick}
-        >
-          Upgrade to Premium
-        </button>
-      </div>
-    )
+    const value = getValue() || 0
+    
+    if (sortBy === 'distance') {
+      return `${value.toFixed(1)} km`
+    }
+    
+    return value.toLocaleString()
   }
 
   return (
@@ -129,6 +94,13 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
       <div className="leaderboards-header">
         <h2>🏆 Community Leaderboards</h2>
         <p>See how the top trainers are performing</p>
+        {!trialStatus.isPaidUser && (
+          <div className="browse-notice">
+            <span className="browse-badge">
+              👀 Browse Only {!trialStatus.canClickIntoProfiles && '• Upgrade to view profiles'}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Filters */}
@@ -227,26 +199,31 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                     <div className="trainer-section">
                       <div className="trainer-info">
                         <span 
-                          className="trainer-name clickable" 
+                          className={`trainer-name ${trialStatus.canClickIntoProfiles ? 'clickable' : 'browse-only'}`}
                           onClick={() => handleTrainerClick(entry)}
                           style={{
-                            cursor: 'pointer',
-                            color: '#00d4aa',
+                            cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
+                            color: trialStatus.canClickIntoProfiles ? '#00d4aa' : '#888',
                             textDecoration: 'none',
                             transition: 'color 0.2s ease',
                             fontWeight: 'bold'
                           }}
                           onMouseEnter={(e) => {
-                            e.currentTarget.style.color = '#00b894'
-                            e.currentTarget.style.textDecoration = 'underline'
+                            if (trialStatus.canClickIntoProfiles) {
+                              e.currentTarget.style.color = '#00b894'
+                              e.currentTarget.style.textDecoration = 'underline'
+                            }
                           }}
                           onMouseLeave={(e) => {
-                            e.currentTarget.style.color = '#00d4aa'
-                            e.currentTarget.style.textDecoration = 'none'
+                            if (trialStatus.canClickIntoProfiles) {
+                              e.currentTarget.style.color = '#00d4aa'
+                              e.currentTarget.style.textDecoration = 'none'
+                            }
                           }}
-                          title={`View ${entry.trainer_name}'s profile`}
+                          title={trialStatus.canClickIntoProfiles ? `View ${entry.trainer_name}'s profile` : 'Upgrade to view profiles'}
                         >
                           {entry.trainer_name}
+                          {!trialStatus.canClickIntoProfiles && <span className="locked-indicator">🔒</span>}
                         </span>
                         <div className="trainer-meta">
                           <span 
@@ -275,6 +252,11 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                           src={entry.profile_screenshot_url}
                           alt={`${entry.trainer_name}'s profile`}
                           className="trainer-avatar"
+                          style={{
+                            cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
+                            opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
+                          }}
+                          onClick={() => handleTrainerClick(entry)}
                         />
                       ) : (
                         <div className="avatar-placeholder">
@@ -289,6 +271,28 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
           </div>
         )}
       </div>
+      
+      {!trialStatus.isPaidUser && (
+        <div className="leaderboard-upgrade-prompt">
+          <div className="upgrade-prompt-content">
+            <h3>🚀 Want to do more?</h3>
+            <p>
+              {trialStatus.isInTrial 
+                ? `You have ${trialStatus.timeRemaining.days > 0 
+                    ? `${trialStatus.timeRemaining.days} day${trialStatus.timeRemaining.days !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}` 
+                    : trialStatus.timeRemaining.hours > 0 
+                    ? `${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''} and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
+                    : `${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
+                  } left in your trial. Upgrade now to continue accessing premium features!`
+                : 'Upgrade to Premium to view detailed profiles, appear on leaderboards, and unlock all features!'
+              }
+            </p>
+            <button className="upgrade-button" onClick={handleUpgradeClick}>
+              Upgrade to Premium
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

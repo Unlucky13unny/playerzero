@@ -2,40 +2,17 @@ import { type ReactNode, useState, useEffect } from 'react'
 import { Logo } from '../common/Logo'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
-import { profileService } from '../../services/profileService'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 type LayoutProps = {
   children: ReactNode
 }
 
 export const Layout = ({ children }: LayoutProps) => {
-  const { user, userMetadata, signOut } = useAuth()
+  const { user, signOut } = useAuth()
+  const trialStatus = useTrialStatus()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isPaidUser, setIsPaidUser] = useState(false)
-  const [profileLoading, setProfileLoading] = useState(true)
-  
-  useEffect(() => {
-    if (user) {
-      checkPaidStatus()
-    } else {
-      setIsPaidUser(false)
-      setProfileLoading(false)
-    }
-  }, [user])
-
-  const checkPaidStatus = async () => {
-    try {
-      setProfileLoading(true)
-      const { isPaid } = await profileService.isPaidUser()
-      setIsPaidUser(isPaid)
-    } catch (error) {
-      console.error('Error checking paid status:', error)
-      setIsPaidUser(false)
-    } finally {
-      setProfileLoading(false)
-    }
-  }
   
   const handleSignOut = async () => {
     await signOut()
@@ -47,6 +24,19 @@ export const Layout = ({ children }: LayoutProps) => {
     setMobileMenuOpen(!mobileMenuOpen)
   }
 
+  const formatTrialTime = () => {
+    const { timeRemaining } = trialStatus
+    if (timeRemaining.days > 0) {
+      return `${timeRemaining.days}d ${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`
+    } else if (timeRemaining.hours > 0) {
+      return `${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`
+    } else if (timeRemaining.minutes > 0) {
+      return `${timeRemaining.minutes}m ${timeRemaining.seconds}s`
+    } else {
+      return `${timeRemaining.seconds}s`
+    }
+  }
+
   return (
     <div className="app-container">
       {/* Header */}
@@ -54,6 +44,14 @@ export const Layout = ({ children }: LayoutProps) => {
         <Link to="/" className="logo">
           <Logo style={{ color: 'var(--white-pure)' }} />
         </Link>
+        
+        {/* Trial Countdown in Navbar - Only for trial users */}
+        {user && !trialStatus.isPaidUser && trialStatus.isInTrial && !trialStatus.loading && (
+          <div className="trial-countdown-navbar">
+            <span className="trial-countdown-icon">⏱️</span>
+            <span className="trial-countdown-text">Trial: {formatTrialTime()}</span>
+          </div>
+        )}
         
         {/* Mobile menu button */}
         <button 
@@ -74,8 +72,8 @@ export const Layout = ({ children }: LayoutProps) => {
         <div className={`nav-actions ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
           {user ? (
             <>
-              {!profileLoading && (
-                isPaidUser ? (
+              {!trialStatus.loading && (
+                trialStatus.isPaidUser ? (
                   <span className="badge">PRO</span>
                 ) : (
                   <Link to="/upgrade" className="nav-link highlight" onClick={() => setMobileMenuOpen(false)}>

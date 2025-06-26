@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { StatCalculators } from './StatCalculators'
 import { Leaderboards } from './Leaderboards'
@@ -11,20 +12,19 @@ import { StatUpdater } from './StatUpdater'
 type DashboardTab = 'calculators' | 'leaderboards' | 'export' | 'performance' | 'update'
 
 export const Dashboard = () => {
-  const { user, userMetadata } = useAuth()
+  const { user } = useAuth()
+  const trialStatus = useTrialStatus()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('calculators')
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isPaidUser, setIsPaidUser] = useState(false)
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   useEffect(() => {
     loadProfile()
-    checkPaidStatus()
     checkUpgradeSuccess()
-  }, [userMetadata])
+  }, [user])
 
   const checkUpgradeSuccess = () => {
     const upgradeStatus = searchParams.get('upgrade')
@@ -48,18 +48,6 @@ export const Dashboard = () => {
       setError(err.message || 'Failed to load profile')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const checkPaidStatus = async () => {
-    try {
-      const { isPaid } = await profileService.isPaidUser()
-      setIsPaidUser(isPaid)
-      
-      console.log('Paid status check:', { isPaid })
-    } catch (error) {
-      console.error('Error checking paid status:', error)
-      setIsPaidUser(false)
     }
   }
 
@@ -93,11 +81,11 @@ export const Dashboard = () => {
       case 'calculators':
         return <StatCalculators />
       case 'leaderboards':
-        return <Leaderboards isPaidUser={isPaidUser} />
+        return <Leaderboards isPaidUser={trialStatus.isPaidUser} />
       case 'export':
-        return <VisualExport profile={profile} isPaidUser={isPaidUser} />
+        return <VisualExport profile={profile} isPaidUser={trialStatus.isPaidUser} />
       case 'performance':
-        return <RadarChart profile={profile} isPaidUser={isPaidUser} />
+        return <RadarChart profile={profile} isPaidUser={trialStatus.isPaidUser} />
       case 'update':
         return <StatUpdater onStatsUpdated={handleStatsUpdated} />
       default:
@@ -137,6 +125,44 @@ export const Dashboard = () => {
               onClick={() => setShowSuccessMessage(false)}
             >
               ✕
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Trial Status Banner for Free Users */}
+      {!trialStatus.isPaidUser && !trialStatus.loading && (
+        <div className={`trial-banner ${trialStatus.isInTrial ? 'trial-active' : 'trial-expired'}`}>
+          <div className="trial-content">
+            <span className="trial-icon">{trialStatus.isInTrial ? '⏱️' : '🔒'}</span>
+            <div className="trial-text">
+              {trialStatus.isInTrial ? (
+                <>
+                  <h3>Free Trial Active</h3>
+                  <p>
+                    {trialStatus.timeRemaining.days > 0 ? (
+                      `${trialStatus.timeRemaining.days} day${trialStatus.timeRemaining.days !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
+                    ) : trialStatus.timeRemaining.hours > 0 ? (
+                      `${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
+                    ) : trialStatus.timeRemaining.minutes > 0 ? (
+                      `${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''} and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
+                    ) : (
+                      `${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
+                    )} to enjoy premium features like All-Time Cards and Grind Card sharing!
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h3>Free Trial Expired</h3>
+                  <p>Upgrade to Premium to unlock All-Time Cards, Weekly/Monthly Cards, Leaderboard participation, and more!</p>
+                </>
+              )}
+            </div>
+            <button 
+              className="trial-upgrade-btn"
+              onClick={() => window.location.href = '/upgrade'}
+            >
+              {trialStatus.isInTrial ? 'Upgrade Now' : 'Get Premium'}
             </button>
           </div>
         </div>

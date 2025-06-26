@@ -1,10 +1,11 @@
 import { useState, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import html2canvas from 'html2canvas'
-import { type ProfileWithMetadata } from '../../services/profileService'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
+import type { ProfileWithMetadata } from '../../services/profileService'
 
 interface VisualExportProps {
-  profile: ProfileWithMetadata | null
+  profile: ProfileWithMetadata
   isPaidUser: boolean
 }
 
@@ -21,8 +22,10 @@ const TEAM_COLORS = [
 
 export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const navigate = useNavigate()
+  const trialStatus = useTrialStatus()
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
+  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
 
   const exportCard = async () => {
@@ -41,7 +44,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
       // Download the image
       const link = document.createElement('a')
-      link.download = `playerzero-stats-card.png`
+      link.download = `playerzero-${cardType}-card.png`
       link.href = canvas.toDataURL()
       link.click()
 
@@ -60,54 +63,76 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     navigate('/upgrade')
   }
 
-  const copyToClipboard = async () => {
-    if (!cardRef.current || !profile) return
-
-    setExporting(true)
-    setDownloadMessage(null)
-
-    try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#1a1a1a',
-        scale: 2,
-        useCORS: true,
-        allowTaint: true
-      })
-
-      canvas.toBlob(async (blob) => {
-        if (blob) {
-          try {
-            await navigator.clipboard.write([
-              new ClipboardItem({
-                'image/png': blob
-              })
-            ])
-            setDownloadMessage('Card copied to clipboard!')
-            setTimeout(() => setDownloadMessage(null), 3000)
-          } catch (err) {
-            console.error('Clipboard error:', err)
-            setDownloadMessage('Clipboard not supported. Use download instead.')
-            setTimeout(() => setDownloadMessage(null), 3000)
-          }
-        }
-        setExporting(false)
-      })
-    } catch (error) {
-      console.error('Export failed:', error)
-      setDownloadMessage('Export failed. Please try again.')
-      setTimeout(() => setDownloadMessage(null), 3000)
-      setExporting(false)
+  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind') => {
+    switch (type) {
+      case 'all-time':
+        return trialStatus.canGenerateAllTimeCard
+      case 'grind':
+        return trialStatus.canShareGrindCard
+      case 'weekly':
+      case 'monthly':
+        return trialStatus.canViewWeeklyMonthlyCards
+      default:
+        return false
     }
   }
 
-  if (!isPaidUser) {
+  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind') => {
+    const timeLeft = trialStatus.timeRemaining.days > 0 
+      ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+      : trialStatus.timeRemaining.hours > 0 
+      ? `${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+      : trialStatus.timeRemaining.minutes > 0
+      ? `${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+      : `${trialStatus.timeRemaining.seconds}s left`
+
+    switch (type) {
+      case 'all-time':
+        return trialStatus.isInTrial 
+          ? `Available during trial (${timeLeft})`
+          : 'Available during 30-day trial only'
+      case 'grind':
+        return trialStatus.isInTrial 
+          ? `Available during trial (${timeLeft})`
+          : 'Available during 30-day trial only'
+      case 'weekly':
+      case 'monthly':
+        return 'Premium feature only'
+      default:
+        return 'Restricted'
+    }
+  }
+
+  const selectedTeam = TEAM_COLORS.find(team => team.value === profile.team_color) || TEAM_COLORS[0]
+  const accentColor = selectedTeam.color
+  const textColor = selectedTeam.value === 'yellow' ? '#333333' : '#ffffff'
+
+  if (!isPaidUser && !trialStatus.isInTrial) {
     return (
       <div className="locked-content">
-        <div className="locked-icon">🔒</div>
-        <h3 className="locked-title">Premium Feature</h3>
+        <div className="locked-icon">📤</div>
+        <h3 className="locked-title">Visual Export - Trial Expired</h3>
         <p className="locked-description">
-          Upgrade to Premium to create and share beautiful stat cards with your community!
+          Your 30-day trial has ended. Upgrade to Premium to continue generating and sharing visual cards!
         </p>
+        <div className="upgrade-features">
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>All-Time Performance Cards</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Weekly & Monthly Progress Cards</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Grind Session Cards</span>
+          </div>
+          <div className="upgrade-feature">
+            <span className="feature-check">✓</span>
+            <span>Custom Card Themes</span>
+          </div>
+        </div>
         <button 
           className="upgrade-button"
           onClick={handleUpgradeClick}
@@ -118,58 +143,99 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     )
   }
 
-  if (!profile) {
     return (
-      <div className="visual-export-loading">
-        <p>Loading profile data...</p>
-      </div>
-    )
-  }
-
-  // Get the selected team color and info
-  const selectedTeam = TEAM_COLORS.find(team => team.value === profile.team_color) || TEAM_COLORS[5] // Default to orange
-  
-  // Determine text color based on team color for better contrast
-  const getTextColor = (teamValue: string) => {
-    switch (teamValue) {
-      case 'yellow':
-        return '#000000' // Black text for yellow background
-      case 'black':
-        return '#ffffff' // White text for black background
-      default:
-        return '#ffffff' // White text for other colors
-    }
-  }
-  
-  const textColor = getTextColor(selectedTeam.value)
-  const accentColor = selectedTeam.color
-
-  return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      width: '100%',
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '32px 16px'
-    }}>
-      <div style={{
-        textAlign: 'center',
-        marginBottom: '40px'
-      }}>
-        <h2 style={{
-          fontSize: '28px',
-          fontWeight: 'bold',
-          marginBottom: '8px',
-          color: '#dc267f'
-        }}>Visual Stat Export</h2>
-        <p style={{
-          fontSize: '16px',
-          color: '#888888'
-        }}>Create beautiful shareable cards from your stats</p>
+    <div className="visual-export-container">
+      <div className="visual-export-header">
+        <h2>📤 Visual Export</h2>
+        <p>Generate beautiful cards to share your progress</p>
+        {!trialStatus.isPaidUser && trialStatus.isInTrial && (
+          <div className="trial-notice">
+            <span className="trial-badge">
+              Trial: {trialStatus.timeRemaining.days > 0 
+                ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+                : trialStatus.timeRemaining.hours > 0 
+                ? `${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+                : trialStatus.timeRemaining.minutes > 0
+                ? `${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
+                : `${trialStatus.timeRemaining.seconds}s left`
+              }
+            </span>
+          </div>
+        )}
       </div>
 
+      {/* Card Type Selector */}
+      <div className="card-selector">
+        <button
+          className={`card-type-tab ${cardType === 'all-time' ? 'active' : ''} ${!isCardTypeAllowed('all-time') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('all-time') && setCardType('all-time')}
+          disabled={!isCardTypeAllowed('all-time')}
+          title={!isCardTypeAllowed('all-time') ? getRestrictedMessage('all-time') : ''}
+        >
+          🌟 All-Time
+          {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'grind' ? 'active' : ''} ${!isCardTypeAllowed('grind') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('grind') && setCardType('grind')}
+          disabled={!isCardTypeAllowed('grind')}
+          title={!isCardTypeAllowed('grind') ? getRestrictedMessage('grind') : ''}
+        >
+          🔥 Grind
+          {!isCardTypeAllowed('grind') && <span className="restriction-badge">🔒</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'weekly' ? 'active' : ''} ${!isCardTypeAllowed('weekly') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('weekly') && setCardType('weekly')}
+          disabled={!isCardTypeAllowed('weekly')}
+          title={!isCardTypeAllowed('weekly') ? getRestrictedMessage('weekly') : ''}
+        >
+          📅 Weekly
+          {!isCardTypeAllowed('weekly') && <span className="restriction-badge">👑</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'monthly' ? 'active' : ''} ${!isCardTypeAllowed('monthly') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('monthly') && setCardType('monthly')}
+          disabled={!isCardTypeAllowed('monthly')}
+          title={!isCardTypeAllowed('monthly') ? getRestrictedMessage('monthly') : ''}
+        >
+          📊 Monthly
+          {!isCardTypeAllowed('monthly') && <span className="restriction-badge">👑</span>}
+        </button>
+      </div>
+
+      {/* Export Controls */}
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem', alignItems: 'center' }}>
+        <button
+          onClick={exportCard}
+          disabled={exporting || !isCardTypeAllowed(cardType)}
+          className="export-button"
+          style={{
+            opacity: (!isCardTypeAllowed(cardType)) ? 0.5 : 1,
+            cursor: (!isCardTypeAllowed(cardType)) ? 'not-allowed' : 'pointer'
+          }}
+        >
+          {exporting ? (
+            <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div className="loading-spinner" style={{ width: '1rem', height: '1rem' }}></div>
+              Generating...
+            </span>
+          ) : (
+            `📤 Export ${cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card`
+          )}
+        </button>
+        
+        {downloadMessage && (
+          <span style={{ 
+            color: downloadMessage.includes('failed') ? '#ef4444' : '#22c55e',
+            fontSize: '0.875rem'
+          }}>
+            {downloadMessage}
+          </span>
+        )}
+      </div>
+
+      {/* Card Preview */}
       <div style={{
         width: '100%',
         display: 'flex',
@@ -214,182 +280,127 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             }}>
               Level {profile.trainer_level} • {profile.country || 'Unknown Location'}
             </div>
-            <div>
-              <span style={{
-                background: selectedTeam.value === 'yellow' ? '#000000' : selectedTeam.color,
-                padding: '8px 16px',
-                borderRadius: '20px',
-                color: selectedTeam.value === 'yellow' ? selectedTeam.color : '#ffffff',
-                fontSize: '14px',
-                fontWeight: '600',
-                boxShadow: `0 4px 12px ${accentColor}40`,
-                border: selectedTeam.value === 'yellow' ? `2px solid ${selectedTeam.color}` : 'none',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px'
-              }}>
-                {selectedTeam.team}
-              </span>
-            </div>
           </div>
 
           {/* Stats Grid */}
           <div style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: '16px',
-            marginTop: 'auto'
+            gridTemplateColumns: 'repeat(2, 1fr)',
+            gap: '20px',
+            flex: 1
           }}>
-            <div style={{
-              background: selectedTeam.value === 'yellow' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-              padding: '20px',
-              borderRadius: '16px',
-              textAlign: 'center',
-              backdropFilter: 'blur(8px)',
-              border: `1px solid ${accentColor}30`
-            }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚡</div>
               <div style={{ 
                 fontSize: '24px', 
-                color: selectedTeam.value === 'yellow' ? '#000000' : textColor,
-                marginBottom: '4px',
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '700'
+                fontWeight: 'bold', 
+                color: textColor,
+                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
+                marginBottom: '4px' 
               }}>
                 {(profile.total_xp || 0).toLocaleString()}
               </div>
               <div style={{ 
                 fontSize: '14px', 
-                color: selectedTeam.value === 'yellow' ? accentColor : textColor,
-                opacity: 0.9,
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '500'
-              }}>Total XP</div>
+                color: textColor, 
+                opacity: 0.8,
+                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
+              }}>
+                Total XP
+              </div>
             </div>
-            <div style={{
-              background: selectedTeam.value === 'yellow' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-              padding: '20px',
-              borderRadius: '16px',
-              textAlign: 'center',
-              backdropFilter: 'blur(8px)',
-              border: `1px solid ${accentColor}30`
-            }}>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔴</div>
               <div style={{ 
                 fontSize: '24px', 
-                color: selectedTeam.value === 'yellow' ? '#000000' : textColor,
-                marginBottom: '4px',
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '700'
+                fontWeight: 'bold', 
+                color: textColor,
+                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
+                marginBottom: '4px' 
               }}>
                 {(profile.pokemon_caught || 0).toLocaleString()}
               </div>
               <div style={{ 
                 fontSize: '14px', 
-                color: selectedTeam.value === 'yellow' ? accentColor : textColor,
-                opacity: 0.9,
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '500'
-              }}>Pokémon Caught</div>
+                color: textColor, 
+                opacity: 0.8,
+                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
+              }}>
+                Pokémon Caught
+              </div>
             </div>
-            <div style={{
-              background: selectedTeam.value === 'yellow' ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.8)',
-              padding: '20px',
-              borderRadius: '16px',
-              textAlign: 'center',
-              backdropFilter: 'blur(8px)',
-              border: `1px solid ${accentColor}30`
-            }}>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🚶</div>
               <div style={{ 
                 fontSize: '24px', 
-                color: selectedTeam.value === 'yellow' ? '#000000' : textColor,
-                marginBottom: '4px',
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '700'
+                fontWeight: 'bold', 
+                color: textColor,
+                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
+                marginBottom: '4px' 
               }}>
-                {(profile.distance_walked || 0).toFixed(1)}
+                {(profile.distance_walked || 0).toLocaleString()} km
+            </div>
+            <div style={{
+                fontSize: '14px', 
+                color: textColor, 
+                opacity: 0.8,
+                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
+              }}>
+                Distance Walked
+              </div>
+            </div>
+
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📍</div>
+              <div style={{ 
+                fontSize: '24px', 
+                fontWeight: 'bold', 
+                color: textColor,
+                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
+                marginBottom: '4px' 
+              }}>
+                {(profile.pokestops_visited || 0).toLocaleString()}
               </div>
               <div style={{ 
                 fontSize: '14px', 
-                color: selectedTeam.value === 'yellow' ? accentColor : textColor,
-                opacity: 0.9,
-                textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-                fontWeight: '500'
-              }}>km</div>
+                color: textColor, 
+                opacity: 0.8,
+                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
+              }}>
+                PokéStops Visited
+              </div>
             </div>
           </div>
 
           {/* Footer */}
           <div style={{
-            marginTop: '16px',
-            textAlign: 'left'
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            paddingTop: '20px',
+            borderTop: `1px solid ${textColor}30`
           }}>
             <div style={{
-              color: selectedTeam.value === 'yellow' ? '#000000' : '#dc267f',
-              fontSize: '20px',
+              fontSize: '16px', 
               fontWeight: 'bold',
-              textShadow: selectedTeam.value === 'yellow' ? 'none' : '1px 1px 2px rgba(0,0,0,0.8)',
-              letterSpacing: '1px'
+              color: textColor,
+              textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}60` : `1px 1px 2px rgba(0,0,0,0.8)`
             }}>
               PlayerZERO
+            </div>
+            <div style={{ 
+              fontSize: '14px', 
+              color: textColor, 
+              opacity: 0.8,
+              textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)`
+            }}>
+              {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Stats • {new Date().toLocaleDateString()}
             </div>
           </div>
         </div>
       </div>
-
-      <div style={{
-        display: 'flex',
-        gap: '16px',
-        justifyContent: 'center',
-        marginTop: '32px'
-      }}>
-        <button
-          onClick={exportCard}
-          disabled={exporting}
-          style={{
-            background: '#dc267f',
-            color: '#ffffff',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          📥 {exporting ? 'Downloading...' : 'Download Image'}
-        </button>
-        <button
-          onClick={copyToClipboard}
-          disabled={exporting}
-          style={{
-            background: '#2a2a2a',
-            color: '#ffffff',
-            border: 'none',
-            padding: '12px 24px',
-            borderRadius: '8px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
-          }}
-        >
-          📋 {exporting ? 'Copying...' : 'Copy to Clipboard'}
-        </button>
-      </div>
-
-      {downloadMessage && (
-        <div style={{
-          marginTop: '16px',
-          textAlign: 'center',
-          color: '#22c55e',
-          fontSize: '14px'
-        }}>
-          ✓ {downloadMessage}
-        </div>
-      )}
     </div>
   )
 } 
