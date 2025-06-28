@@ -25,7 +25,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const trialStatus = useTrialStatus()
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
-  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind'>('all-time')
+  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
 
   const exportCard = async () => {
@@ -35,23 +35,55 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     setDownloadMessage(null)
 
     try {
-      const canvas = await html2canvas(cardRef.current, {
-        backgroundColor: '#1a1a1a',
+      // Find the actual card template element inside the container
+      const cardElement = cardRef.current.querySelector('.card-template') as HTMLElement
+      if (!cardElement) {
+        throw new Error('Card template not found')
+      }
+
+      // Add export class to disable problematic styles temporarily
+      cardElement.classList.add('exporting')
+      
+      // Ensure the card is fully visible in viewport during capture
+      cardElement.scrollIntoView({ behavior: 'instant', block: 'center' })
+      
+      // Wait for styles to apply and scroll to complete
+      await new Promise(resolve => setTimeout(resolve, 200))
+
+      const canvas = await html2canvas(cardElement, {
+        backgroundColor: null,
         scale: 2,
         useCORS: true,
-        allowTaint: true
+        allowTaint: true,
+        logging: false,
+        width: 400,
+        height: 600,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: window.innerWidth,
+        windowHeight: window.innerHeight
       })
 
-      // Download the image
+      // Remove export class from card element
+      cardElement.classList.remove('exporting')
+
+      // Create high-quality PNG
       const link = document.createElement('a')
-      link.download = `playerzero-${cardType}-card.png`
-      link.href = canvas.toDataURL()
+      link.download = `playerzero-${profile.trainer_name}-${cardType}-card.png`
+      link.href = canvas.toDataURL('image/png', 1.0)
       link.click()
 
       setDownloadMessage('Card downloaded successfully!')
       setTimeout(() => setDownloadMessage(null), 3000)
     } catch (error) {
       console.error('Export failed:', error)
+      // Make sure to remove export class if error occurs
+      if (cardRef.current) {
+        const cardElement = cardRef.current.querySelector('.card-template') as HTMLElement
+        if (cardElement) {
+          cardElement.classList.remove('exporting')
+        }
+      }
       setDownloadMessage('Export failed. Please try again.')
       setTimeout(() => setDownloadMessage(null), 3000)
     } finally {
@@ -63,12 +95,14 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     navigate('/upgrade')
   }
 
-  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind') => {
+  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement') => {
     switch (type) {
       case 'all-time':
         return trialStatus.canGenerateAllTimeCard
       case 'grind':
         return trialStatus.canShareGrindCard
+      case 'achievement':
+        return trialStatus.canGenerateAllTimeCard // Achievement cards follow same rules as all-time
       case 'weekly':
       case 'monthly':
         return trialStatus.canViewWeeklyMonthlyCards
@@ -77,7 +111,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     }
   }
 
-  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind') => {
+  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement') => {
     const timeLeft = trialStatus.timeRemaining.days > 0 
       ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
       : trialStatus.timeRemaining.hours > 0 
@@ -88,6 +122,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
     switch (type) {
       case 'all-time':
+      case 'achievement':
         return trialStatus.isInTrial 
           ? `Available during trial (${timeLeft})`
           : 'Available during 30-day trial only'
@@ -104,8 +139,27 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   }
 
   const selectedTeam = TEAM_COLORS.find(team => team.value === profile.team_color) || TEAM_COLORS[0]
-  const accentColor = selectedTeam.color
-  const textColor = selectedTeam.value === 'yellow' ? '#333333' : '#ffffff'
+
+  // Calculate projected dates and achievements
+  const currentXP = profile.total_xp || 0
+  const startDate = profile.start_date ? new Date(profile.start_date) : new Date()
+  const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+  const dailyXPRate = currentXP / daysSinceStart
+  
+  // XP requirements for each level (simplified - Level 50 = 176M XP)
+  const targetXP = profile.trainer_level >= 50 ? 176000000 : 176000000
+  const daysToTarget = currentXP >= targetXP ? 0 : Math.ceil((targetXP - currentXP) / Math.max(dailyXPRate, 1))
+  const projectedDate = new Date()
+  projectedDate.setDate(projectedDate.getDate() + daysToTarget)
+
+  // Calculate estimated catch rate based on pokestops vs pokemon ratio
+  const estimatedCatchRate = Math.min(99.9, (profile.pokemon_caught || 0) / Math.max(1, (profile.pokestops_visited || 1)) * 100)
+  
+  // Estimate shinies based on average shiny rate (1/500)
+  const estimatedShinies = Math.floor((profile.pokemon_caught || 0) / 500)
+  
+  // Calculate hourly catch rate based on daily XP (rough estimate)
+  const estimatedHourlyCatchRate = (dailyXPRate / 24 / 100)
 
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
@@ -130,7 +184,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           </div>
           <div className="upgrade-feature">
             <span className="feature-check">✓</span>
-            <span>Custom Card Themes</span>
+            <span>Achievement Cards</span>
           </div>
         </div>
         <button 
@@ -143,7 +197,232 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     )
   }
 
-    return (
+  const renderCard = () => {
+    const startDate = profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
+    }) : new Date().toLocaleDateString('en-US', { 
+      month: '2-digit', 
+      day: '2-digit', 
+      year: 'numeric' 
+    })
+
+    switch (cardType) {
+      case 'all-time':
+        return (
+          <div className="card-template all-time-card">
+            {/* Start Date - Top Right */}
+            <div className="start-date-top">Start Date:</div>
+            <div className="start-date-value">{startDate}</div>
+            
+            {/* Trainer Name - Top Left */}
+            <div className="trainer-name-header">{profile.trainer_name}</div>
+            
+            {/* Central Laptop Image */}
+            <div className="laptop-container">
+              <div className="laptop-screen">
+                <div className="screen-text">GRIND REPORT</div>
+                <div className="screen-stats">
+                  <div className="stat-item">
+                    <div className="stat-label">Daily XP</div>
+                    <div className="stat-number">{(dailyXPRate / 1000).toFixed(2)}K</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-label">Pokemon</div>
+                    <div className="stat-number">{((profile.pokemon_caught || 0) / 1000).toFixed(1)}K</div>
+                  </div>
+                  <div className="stat-item">
+                    <div className="stat-label">Catch Rate</div>
+                    <div className="stat-number">{estimatedCatchRate.toFixed(1)}%</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* All-time Label - Bottom Right */}
+            <div className="all-time-label">All-time</div>
+            
+            {/* Pokemon Caught - Bottom Left */}
+            <div className="pokemon-caught-section">
+              <div className="stat-title">Pokemon Caught</div>
+              <div className="stat-number">{(profile.pokemon_caught || 0).toLocaleString()}</div>
+              <div className="stat-daily">{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+            </div>
+
+            {/* Distance Walked - Bottom Center Left */}
+            <div className="distance-walked-section">
+              <div className="stat-title">Distance Walked</div>
+              <div className="stat-number">{(profile.distance_walked || 0).toLocaleString()}</div>
+                             <div className="stat-daily">{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+             </div>
+
+             {/* Pokestops Visited - Bottom Left Lower */}
+             <div className="pokestops-section">
+               <div className="stat-title">Pokestops Visited</div>
+               <div className="stat-number">{(profile.pokestops_visited || 0).toLocaleString()}</div>
+               <div className="stat-daily">{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+            </div>
+
+            {/* Total XP - Bottom Right */}
+            <div className="total-xp-section">
+              <div className="xp-title">Total XP</div>
+              <div className="xp-number">{(profile.total_xp || 0).toLocaleString()}</div>
+              <div className="xp-daily">{(dailyXPRate).toFixed(2)} /Day</div>
+            </div>
+            
+            {/* PlayerZERO Logo - Bottom Right */}
+            <div className="playerzero-logo">PlayerZERØ</div>
+          </div>
+        )
+
+      case 'achievement':
+        return (
+          <div className="card-template achievement-card">
+            {/* Start Date - Top Right */}
+            <div className="start-date-top">Start Date:</div>
+            <div className="start-date-value">{startDate}</div>
+            
+            {/* Trainer Name - Top Left */}
+            <div className="trainer-name-header">{profile.trainer_name}</div>
+            
+            {/* Achievement Stamp - Rotated */}
+            <div className="achievement-stamp">ACHIEVED</div>
+            
+            {/* Central Silhouette Figure */}
+            <div className="achievement-figure">
+              <div className="celebration-silhouette"></div>
+            </div>
+            
+            {/* XP - Bottom Left */}
+            <div className="achievement-xp">
+              <div className="xp-label">XP</div>
+              <div className="xp-value">{(profile.total_xp || 0).toLocaleString()}</div>
+            </div>
+            
+            {/* Level Badge - Bottom Right */}
+            <div className="level-badge">
+              <div className="level-number">({profile.trainer_level || 50})</div>
+              <div className="level-text">Summit</div>
+            </div>
+            
+            {/* PlayerZERO Logo - Bottom Right */}
+            <div className="playerzero-logo">PlayerZERØ</div>
+          </div>
+        )
+
+      case 'grind':
+        return (
+          <div className="card-template grind-card">
+            {/* Trainer Name - Top Left */}
+            <div className="trainer-name-header">{profile.trainer_name}</div>
+            
+            {/* Location - Top Left under name */}
+            <div className="grind-location">{profile.country || 'Unknown'}</div>
+            
+            {/* Central Trainer Silhouette */}
+            <div className="trainer-silhouette">
+              <div className="walking-figure"></div>
+            </div>
+            
+            {/* Pokemon Caught - Left */}
+            <div className="pokemon-caught-stat">
+              <div className="stat-label">Pokemon Caught</div>
+              <div className="stat-value">{(profile.pokemon_caught || 0).toLocaleString()}</div>
+            </div>
+            
+            {/* Caught Per Hr - Left */}
+            <div className="caught-per-hr-stat">
+              <div className="stat-label">Caught Per Hr</div>
+              <div className="stat-value">{estimatedHourlyCatchRate.toFixed(1)}</div>
+            </div>
+            
+            {/* Shinies - Left */}
+            <div className="shinies-stat">
+              <div className="stat-label">Shinies</div>
+              <div className="stat-value">{estimatedShinies}</div>
+            </div>
+            
+            {/* Catch Rate - Right */}
+            <div className="catch-rate-section">
+              <div className="catch-rate-label">Catch Rate</div>
+              <div className="catch-rate-value">{estimatedCatchRate.toFixed(1)}%</div>
+            </div>
+            
+            {/* Community Day Badge - Bottom */}
+            <div className="community-day-badge">
+              <div className="badge-text">Community</div>
+              <div className="badge-text-large">Day</div>
+            </div>
+            
+            {/* PlayerZERO Logo - Bottom Right */}
+            <div className="playerzero-logo">PlayerZERØ</div>
+          </div>
+        )
+
+      case 'weekly':
+      case 'monthly':
+        return (
+          <div className="card-template projection-card">
+            {/* Start Date - Top Right */}
+            <div className="start-date-top">Start Date:</div>
+            <div className="start-date-value">{startDate}</div>
+            
+            {/* Trainer Name - Top Left */}
+            <div className="trainer-name-header">{profile.trainer_name}</div>
+            
+            {/* Projected Date Section - Center */}
+            <div className="projected-section">
+              <div className="projected-label">Projected Date:</div>
+              <div className="projected-date">{projectedDate.toLocaleDateString('en-US', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                year: 'numeric' 
+              })}</div>
+            </div>
+            
+            {/* Progress Bars - Left */}
+            <div className="progress-bars">
+              {Array.from({ length: 12 }, (_, i) => {
+                // Calculate progress based on actual XP progression
+                const monthlyProgress = ((profile.total_xp || 0) / targetXP) * 100
+                const barHeight = Math.max(5, Math.min(25, (monthlyProgress / 12) * (i + 1) + (i * 2)))
+                return (
+                  <div 
+                    key={i} 
+                    className="progress-bar"
+                    style={{ 
+                      opacity: i < Math.floor(monthlyProgress / 10) ? 1 : 0.3,
+                      height: `${barHeight}px`
+                    }}
+                  ></div>
+                )
+              })}
+            </div>
+            
+            {/* XP Section - Bottom Center */}
+            <div className="xp-section">
+              <div className="xp-label">XP</div>
+              <div className="xp-value">{Math.floor(targetXP - currentXP).toLocaleString()}</div>
+            </div>
+            
+            {/* Level Badge - Bottom Right */}
+            <div className="level-badge">
+              <div className="level-number">({profile.trainer_level || 50})</div>
+              <div className="level-text">Summit</div>
+            </div>
+            
+            {/* PlayerZERO Logo - Bottom Right */}
+            <div className="playerzero-logo">PlayerZERØ</div>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
+  return (
     <div className="visual-export-container">
       <div className="visual-export-header">
         <h2>📤 Visual Export</h2>
@@ -172,8 +451,17 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           disabled={!isCardTypeAllowed('all-time')}
           title={!isCardTypeAllowed('all-time') ? getRestrictedMessage('all-time') : ''}
         >
-          🌟 All-Time
+          📊 All-Time
           {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'achievement' ? 'active' : ''} ${!isCardTypeAllowed('achievement') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('achievement') && setCardType('achievement')}
+          disabled={!isCardTypeAllowed('achievement')}
+          title={!isCardTypeAllowed('achievement') ? getRestrictedMessage('achievement') : ''}
+        >
+          🏆 Achievement
+          {!isCardTypeAllowed('achievement') && <span className="restriction-badge">🔒</span>}
         </button>
         <button
           className={`card-type-tab ${cardType === 'grind' ? 'active' : ''} ${!isCardTypeAllowed('grind') ? 'restricted' : ''}`}
@@ -236,169 +524,9 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       </div>
 
       {/* Card Preview */}
-      <div style={{
-        width: '100%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '40px 0'
-      }}>
-        <div ref={cardRef} style={{
-          background: `linear-gradient(135deg, ${accentColor}60, ${accentColor}30, ${selectedTeam.value === 'black' ? '#000000' : '#1a1a1a'})`,
-          borderRadius: '24px',
-          width: '500px',
-          aspectRatio: '1/1',
-          position: 'relative',
-          display: 'flex',
-          flexDirection: 'column',
-          padding: '32px',
-          gap: '24px',
-          border: `3px solid ${accentColor}`,
-          boxShadow: `0 8px 32px ${accentColor}40, inset 0 1px 0 rgba(255,255,255,0.1)`
-        }}>
-          {/* Header */}
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '8px'
-          }}>
-            <h2 style={{
-              fontSize: '32px',
-              fontWeight: 'bold',
-              margin: '0',
-              color: textColor,
-              textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}80` : `2px 2px 4px rgba(0,0,0,0.8)`,
-              letterSpacing: '1px'
-            }}>
-              {profile.trainer_name}
-            </h2>
-            <div style={{
-              fontSize: '16px',
-              color: textColor,
-              textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}60` : `1px 1px 2px rgba(0,0,0,0.8)`,
-              opacity: 0.9
-            }}>
-              Level {profile.trainer_level} • {profile.country || 'Unknown Location'}
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(2, 1fr)',
-            gap: '20px',
-            flex: 1
-          }}>
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚡</div>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: textColor,
-                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
-                marginBottom: '4px' 
-              }}>
-                {(profile.total_xp || 0).toLocaleString()}
-              </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: textColor, 
-                opacity: 0.8,
-                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
-              }}>
-                Total XP
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🔴</div>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: textColor,
-                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
-                marginBottom: '4px' 
-              }}>
-                {(profile.pokemon_caught || 0).toLocaleString()}
-              </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: textColor, 
-                opacity: 0.8,
-                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
-              }}>
-                Pokémon Caught
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>🚶</div>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: textColor,
-                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
-                marginBottom: '4px' 
-              }}>
-                {(profile.distance_walked || 0).toLocaleString()} km
-            </div>
-            <div style={{
-                fontSize: '14px', 
-                color: textColor, 
-                opacity: 0.8,
-                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
-              }}>
-                Distance Walked
-              </div>
-            </div>
-
-            <div style={{ textAlign: 'center' }}>
-              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📍</div>
-              <div style={{ 
-                fontSize: '24px', 
-                fontWeight: 'bold', 
-                color: textColor,
-                textShadow: selectedTeam.value === 'yellow' ? `2px 2px 4px ${accentColor}60` : `2px 2px 4px rgba(0,0,0,0.8)`,
-                marginBottom: '4px' 
-              }}>
-                {(profile.pokestops_visited || 0).toLocaleString()}
-              </div>
-              <div style={{ 
-                fontSize: '14px', 
-                color: textColor, 
-                opacity: 0.8,
-                textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)` 
-              }}>
-                PokéStops Visited
-              </div>
-            </div>
-          </div>
-
-          {/* Footer */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            paddingTop: '20px',
-            borderTop: `1px solid ${textColor}30`
-          }}>
-            <div style={{
-              fontSize: '16px', 
-              fontWeight: 'bold',
-              color: textColor,
-              textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}60` : `1px 1px 2px rgba(0,0,0,0.8)`
-            }}>
-              PlayerZERO
-            </div>
-            <div style={{ 
-              fontSize: '14px', 
-              color: textColor, 
-              opacity: 0.8,
-              textShadow: selectedTeam.value === 'yellow' ? `1px 1px 2px ${accentColor}40` : `1px 1px 2px rgba(0,0,0,0.6)`
-            }}>
-              {cardType.charAt(0).toUpperCase() + cardType.slice(1)} Stats • {new Date().toLocaleDateString()}
-            </div>
-          </div>
+      <div className="card-preview-container">
+        <div ref={cardRef} className="card-container">
+          {renderCard()}
         </div>
       </div>
     </div>

@@ -42,10 +42,10 @@ export const PublicProfile = () => {
 
   const loadProfile = async () => {
     if (!profileId) return
-    
+
     try {
-      setLoading(true)
-      setError(null)
+    setLoading(true)
+    setError(null)
       const { data } = await profileService.getPublicProfile(profileId)
       setProfile(data)
     } catch (err: any) {
@@ -132,21 +132,21 @@ export const PublicProfile = () => {
     <div className="profile-setup-container">
       <div className="profile-setup-wrapper">
         <div className="profile-setup-card" style={{ maxWidth: '800px' }}>
-          
+            
           {/* Header */}
-          <div style={{ 
+            <div style={{ 
             textAlign: 'center', 
-            marginBottom: '2rem',
+              marginBottom: '2rem',
             padding: '1.5rem 0',
             borderBottom: '1px solid rgba(255,255,255,0.1)'
           }}>
-            <h1 style={{ 
-              fontSize: '2rem', 
+                  <h1 style={{ 
+                    fontSize: '2rem', 
               margin: '0 0 0.5rem 0',
               color: selectedTeam?.color || '#dc267f'
-            }}>
-              {profile.trainer_name}
-            </h1>
+                  }}>
+                    {profile.trainer_name}
+                  </h1>
             <div style={{ 
               fontSize: '1rem', 
               color: '#888',
@@ -169,8 +169,8 @@ export const PublicProfile = () => {
                   🔒 Full profile details visible to Premium members only
                 </div>
               </div>
-            )}
-          </div>
+                )}
+            </div>
 
           {/* Stats Content */}
           <div style={{ padding: '0 1.5rem 1.5rem' }}>
@@ -277,41 +277,41 @@ export const PublicProfile = () => {
 
                 {/* Social Media - Only visible to paid users */}
                 {trialStatus.canShowSocialLinks ? (
-                  <div style={{ 
-                    padding: '1rem',
-                    background: 'rgba(0,0,0,0.2)',
-                    borderRadius: '0.75rem',
-                    border: '1px solid rgba(255,255,255,0.1)'
+                <div style={{ 
+                  padding: '1rem',
+                  background: 'rgba(0,0,0,0.2)',
+                  borderRadius: '0.75rem',
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                  <h4 style={{ 
+                    margin: '0 0 0.75rem 0', 
+                    fontSize: '0.875rem', 
+                    color: '#888',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem'
                   }}>
-                    <h4 style={{ 
-                      margin: '0 0 0.75rem 0', 
-                      fontSize: '0.875rem', 
-                      color: '#888',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem'
-                    }}>
-                      🌐 Social Media
-                    </h4>
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-                      gap: '0.5rem'
-                    }}>
-                      {[
+                    🌐 Social Media
+                  </h4>
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: '0.5rem'
+                  }}>
+                    {[
                         { key: 'instagram_handle', label: 'Instagram', icon: '📷', prefix: '@' },
                         { key: 'twitter_handle', label: 'Twitter', icon: '🐦', prefix: '@' },
                         { key: 'youtube_handle', label: 'YouTube', icon: '📺', prefix: '@' },
                         { key: 'discord_handle', label: 'Discord', icon: '💬', prefix: '' }
-                      ].map((social) => {
-                        const value = profile[social.key as keyof PublicProfileData] as string
+                    ].map((social) => {
+                      const value = profile[social.key as keyof PublicProfileData] as string
                         return value ? (
-                          <div key={social.key} style={{
-                            padding: '0.5rem',
-                            background: 'rgba(255,255,255,0.05)',
+                        <div key={social.key} style={{
+                          padding: '0.5rem',
+                          background: 'rgba(255,255,255,0.05)',
                             borderRadius: '0.25rem',
-                            fontSize: '0.75rem'
-                          }}>
+                          fontSize: '0.75rem'
+                        }}>
                             <div style={{ color: '#888', marginBottom: '0.25rem' }}>
                               {social.icon} {social.label}
                             </div>
@@ -321,7 +321,7 @@ export const PublicProfile = () => {
                           </div>
                         ) : null
                       }).filter(Boolean)}
-                    </div>
+                        </div>
                   </div>
                 ) : (
                   <div style={{ 
@@ -349,8 +349,8 @@ export const PublicProfile = () => {
                     >
                       Upgrade to Premium
                     </button>
-                  </div>
-                )}
+                    </div>
+                  )}
 
                 {/* Member Info */}
                 <div style={{ 
