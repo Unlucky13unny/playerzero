@@ -23,7 +23,7 @@
     }
 
     .logo {
-      max-width: clamp(200px, 20vw + 200px, 600px);
+      max-width: clamp(200px, 70vw, 400px);
       height: auto;
       margin-bottom: clamp(15px, 4vw, 40px);
       opacity: 0;
@@ -31,7 +31,7 @@
     }
 
     .teaser {
-      font-size: clamp(1rem, 1.5vw + 0.8rem, 1.5rem);
+      font-size: 1rem;
       line-height: 1.4;
       opacity: 0;
       animation: fadeIn 2s 1.5s forwards;
@@ -40,21 +40,32 @@
 
     .coming-soon {
       margin-top: clamp(12px, 2.5vw, 25px);
-      font-size: clamp(0.9rem, 1.5vw + 0.5rem, 1.2rem);
+      font-size: 1rem;
       color: #ccc;
       opacity: 0;
       animation: fadeIn 2s 3s forwards;
     }
 
-    @media (max-width: 768px) {
-      .teaser {
-        font-size: 1rem;
-      }
-    }
-
     @keyframes fadeIn {
       to {
         opacity: 1;
+      }
+    }
+
+    /* DESKTOP overrides only */
+    @media (min-width: 769px) {
+      .logo {
+        max-width: 600px;
+        margin-bottom: 50px;
+      }
+
+      .teaser {
+        font-size: 2rem;
+        line-height: 1.4;
+      }
+
+      .coming-soon {
+        font-size: 1.5rem;
       }
     }
   </style>
