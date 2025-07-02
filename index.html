@@ -23,23 +23,24 @@
     }
 
     .logo {
-      max-width: 60%;
+      max-width: clamp(150px, 40vw, 400px);
       height: auto;
-      margin-bottom: 50px;
+      margin-bottom: clamp(20px, 5vw, 50px);
       opacity: 0;
       animation: fadeIn 2s forwards;
     }
 
     .teaser {
-      font-size: 2rem;
+      font-size: clamp(1.2rem, 3vw + 1rem, 2rem);
       line-height: 1.4;
       opacity: 0;
       animation: fadeIn 2s 1.5s forwards;
+      margin: 0 clamp(10px, 5vw, 40px);
     }
 
     .coming-soon {
-      margin-top: 30px;
-      font-size: 1.2rem;
+      margin-top: clamp(15px, 3vw, 30px);
+      font-size: clamp(0.9rem, 2vw + 0.5rem, 1.2rem);
       color: #aaa;
       opacity: 0;
       animation: fadeIn 2s 3s forwards;
