@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>PlayerZero</title>
-  <meta name="description" content="PlayerZero Teaser Page">
-
   <link rel="icon" type="image/png" href="favicon.png" />
 
   <style>
@@ -17,17 +15,54 @@
       display: flex;
       justify-content: center;
       align-items: center;
+      flex-direction: column;
+      text-align: center;
       overflow: hidden;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: #fff;
     }
 
     .logo {
-      max-width: 80%;
+      max-width: 60%;
       height: auto;
+      margin-bottom: 50px;
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+
+    .teaser {
+      font-size: 2rem;
+      line-height: 1.4;
+      opacity: 0;
+      animation: fadeIn 2s 1.5s forwards;
+    }
+
+    .coming-soon {
+      margin-top: 30px;
+      font-size: 1.2rem;
+      color: #aaa;
+      opacity: 0;
+      animation: fadeIn 2s 3s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
     }
   </style>
 </head>
 
 <body>
   <img src="images/A6-PlayerZero.png" alt="PlayerZero Logo" class="logo" />
+
+  <div class="teaser">
+    It’s not what you’ve already accomplished…<br>
+    It’s what you’re about to…
+  </div>
+
+  <div class="coming-soon">
+    Coming soon...
+  </div>
 </body>
 </html>
