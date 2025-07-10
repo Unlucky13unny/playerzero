@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
-import { supabase } from '../supabaseClient'
+import { supabase, supabaseAdmin } from '../supabaseClient'
 
 type UserMetadata = {
   role?: 'free' | 'paid'
-  trial_start?: string
-  trial_end?: string
-  trial_enabled?: boolean
+  private_mode_start?: string
+  private_mode_end?: string
+  private_mode_enabled?: boolean
   profile_complete?: boolean
   trainer_name?: string
   trainer_level?: number
@@ -19,7 +19,7 @@ type AuthContextType = {
   session: Session | null
   userMetadata: UserMetadata | null
   loading: boolean
-  signUp: (email: string, password: string, metadata?: UserMetadata) => Promise<{ error: any | null }>
+  signUp: (email: string, password: string, metadata?: UserMetadata, username?: string) => Promise<{ error: any | null }>
   signIn: (email: string, password: string) => Promise<{ error: any | null }>
   signOut: () => Promise<{ error: any | null }>
   resetPassword: (email: string) => Promise<{ error: any | null }>
@@ -30,6 +30,7 @@ type AuthContextType = {
   trialDaysLeft: () => number | null
   upgradeToFull: () => Promise<{ error: any | null }>
   isProfileComplete: () => boolean
+  needsProfileSetup: () => Promise<boolean>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -60,11 +61,25 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return () => subscription.unsubscribe()
   }, [])
 
-  const signUp = async (email: string, password: string, metadata: UserMetadata = { role: 'free' }) => {
+  const signUp = async (email: string, password: string, metadata: UserMetadata = { role: 'free' }, username?: string) => {
     // Get the current URL's origin (hostname including protocol)
     const currentOrigin = window.location.origin
+
+    // If username is provided, check if it's available first
+    if (username) {
+      const { data: existingUser } = await supabaseAdmin
+        .from('profiles')
+        .select('username')
+        .eq('username', username)
+        .maybeSingle()
+
+      if (existingUser) {
+        return { error: { message: 'Username already taken', code: '23505' } }
+      }
+    }
     
-    const { error } = await supabase.auth.signUp({ 
+    // Only proceed with signup if username is available or not provided
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
       email, 
       password,
       options: {
@@ -72,7 +87,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         emailRedirectTo: `${currentOrigin}/signup-success`
       }
     })
-    return { error }
+
+    if (signUpError) {
+      return { error: signUpError }
+    }
+
+    // If username is provided and signup succeeded, create the profile
+    if (username && signUpData.user) {
+      const { error: profileError } = await supabaseAdmin
+        .from('profiles')
+        .insert([
+          { 
+            user_id: signUpData.user.id,
+            username: username,
+            trainer_name: 'PENDING',
+            trainer_code: 'PENDING',
+            trainer_level: 1,
+            is_profile_setup: false
+          }
+        ])
+
+      if (profileError) {
+        // If profile creation fails, sign out the user
+        await supabase.auth.signOut()
+        return { error: profileError }
+      }
+    }
+
+    return { error: null }
   }
 
   const signIn = async (email: string, password: string) => {
@@ -124,23 +166,23 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     if (!user) return { error: new Error('User not logged in') }
     
     const now = new Date()
-    const trialEnd = new Date(now)
-    trialEnd.setDate(trialEnd.getDate() + 30)
+    const privateEnd = new Date(now)
+    privateEnd.setDate(privateEnd.getDate() + 7)
     
     const { error } = await supabase.auth.updateUser({
       data: {
-        trial_enabled: true,
-        trial_start: now.toISOString(),
-        trial_end: trialEnd.toISOString()
+        private_mode_enabled: true,
+        private_mode_start: now.toISOString(),
+        private_mode_end: privateEnd.toISOString()
       }
     })
     
     if (!error) {
       setUserMetadata({
         ...userMetadata,
-        trial_enabled: true,
-        trial_start: now.toISOString(),
-        trial_end: trialEnd.toISOString()
+        private_mode_enabled: true,
+        private_mode_start: now.toISOString(),
+        private_mode_end: privateEnd.toISOString()
       })
     }
     
@@ -148,19 +190,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const isInTrial = () => {
-    if (!userMetadata?.trial_enabled || !userMetadata?.trial_end) return false
+    if (!userMetadata?.private_mode_enabled || !userMetadata?.private_mode_end) return false
     
     const now = new Date()
-    const trialEnd = new Date(userMetadata.trial_end)
-    return now < trialEnd
+    const privateEnd = new Date(userMetadata.private_mode_end)
+    return now < privateEnd
   }
 
   const trialDaysLeft = () => {
-    if (!isInTrial() || !userMetadata?.trial_end) return null
+    if (!isInTrial() || !userMetadata?.private_mode_end) return null
     
     const now = new Date()
-    const trialEnd = new Date(userMetadata.trial_end)
-    const diffTime = Math.abs(trialEnd.getTime() - now.getTime())
+    const privateEnd = new Date(userMetadata.private_mode_end)
+    const diffTime = Math.abs(privateEnd.getTime() - now.getTime())
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
@@ -187,6 +229,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return userMetadata?.profile_complete === true
   }
 
+  const needsProfileSetup = async () => {
+    if (!user) return false
+
+    const { data } = await supabase
+      .from('profiles')
+      .select('is_profile_setup')
+      .eq('user_id', user.id)
+      .single()
+
+    return data ? !data.is_profile_setup : false
+  }
+
   const value = {
     user,
     session,
@@ -202,7 +256,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     isInTrial,
     trialDaysLeft,
     upgradeToFull,
-    isProfileComplete
+    isProfileComplete,
+    needsProfileSetup
   }
   
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

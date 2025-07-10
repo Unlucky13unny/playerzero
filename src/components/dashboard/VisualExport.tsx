@@ -10,14 +10,14 @@ interface VisualExportProps {
 }
 
 const TEAM_COLORS = [
-  { value: 'blue', label: 'Mystic', color: '#0074D9', team: 'Team Mystic' },
-  { value: 'red', label: 'Valor', color: '#FF4136', team: 'Team Valor' },
-  { value: 'yellow', label: 'Instinct', color: '#FFDC00', team: 'Team Instinct' },
-  { value: 'black', label: 'Black', color: '#111111', team: 'Black' },
-  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Green' },
-  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Orange' },
-  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Purple' },
-  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Pink' }
+  { value: 'blue', label: 'Blue', color: '#0074D9', team: 'Team Blue' },
+  { value: 'red', label: 'Red', color: '#FF4136', team: 'Team Red' },
+  { value: 'yellow', label: 'Yellow', color: '#FFDC00', team: 'Team Yellow' },
+  { value: 'black', label: 'Black', color: '#111111', team: 'Team Black' },
+  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Team Green' },
+  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Team Orange' },
+  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Team Purple' },
+  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Team Pink' }
 ]
 
 export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
@@ -124,12 +124,12 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       case 'all-time':
       case 'achievement':
         return trialStatus.isInTrial 
-          ? `Available during trial (${timeLeft})`
-          : 'Available during 30-day trial only'
+          ? `Available in private mode (${timeLeft})`
+          : 'Available in private mode only'
       case 'grind':
         return trialStatus.isInTrial 
-          ? `Available during trial (${timeLeft})`
-          : 'Available during 30-day trial only'
+          ? `Available in private mode (${timeLeft})`
+          : 'Available in private mode only'
       case 'weekly':
       case 'monthly':
         return 'Premium feature only'
@@ -164,34 +164,16 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
       <div className="locked-content">
-        <div className="locked-icon">📤</div>
-        <h3 className="locked-title">Visual Export - Trial Expired</h3>
+        <div className="locked-icon">🔒</div>
+        <h3 className="locked-title">Private Mode Ended</h3>
         <p className="locked-description">
-          Your 30-day trial has ended. Upgrade to Premium to continue generating and sharing visual cards!
+          To keep tracking your grind and unlock your leaderboard placement, upgrade for $5.99.
         </p>
-        <div className="upgrade-features">
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>All-Time Performance Cards</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Weekly & Monthly Progress Cards</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Grind Session Cards</span>
-          </div>
-          <div className="upgrade-feature">
-            <span className="feature-check">✓</span>
-            <span>Achievement Cards</span>
-          </div>
-        </div>
         <button 
           className="upgrade-button"
           onClick={handleUpgradeClick}
         >
-          Upgrade to Premium
+          Upgrade Now
         </button>
       </div>
     )
@@ -430,7 +412,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         {!trialStatus.isPaidUser && trialStatus.isInTrial && (
           <div className="trial-notice">
             <span className="trial-badge">
-              Trial: {trialStatus.timeRemaining.days > 0 
+              Private Mode: {trialStatus.timeRemaining.days > 0 
                 ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
                 : trialStatus.timeRemaining.hours > 0 
                 ? `${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`

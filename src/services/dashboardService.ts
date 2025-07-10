@@ -47,15 +47,18 @@ export interface PublicProfile {
   updated_at: string
 }
 
-export interface StatCalculationResult {
-  start_date: string
-  end_date: string
-  xp_delta: number
-  catches_delta: number
-  distance_delta: number
-  pokestops_delta: number
-  pokedex_delta: number
-  level_delta: number
+export type StatCalculationResult = {
+  totalXP: number
+  pokemonCaught: number
+  distanceWalked: number
+  pokestopsVisited: number
+  uniquePokedexEntries: number
+  xpPerDay: number
+  catchesPerDay: number
+  distancePerDay: number
+  stopsPerDay: number
+  startDate: string
+  endDate: string
 }
 
 export interface StatUpdate {
@@ -73,9 +76,16 @@ export interface StatUpdateResponse {
   updatedProfile?: PublicProfile;
 }
 
+export interface LeaderboardParams {
+  period: 'weekly' | 'monthly' | 'all-time';
+  sortBy: 'xp' | 'catches' | 'distance' | 'pokestops';
+  view: 'all' | 'country' | 'team' | 'search';
+  filterValue?: string; // country code, team color, or search query when view is filtered
+}
+
 export const dashboardService = {
   // Get leaderboard data
-  async getLeaderboard(period: 'weekly' | 'monthly' | 'all-time', sortBy: 'xp' | 'catches' | 'distance' | 'pokestops' = 'xp') {
+  async getLeaderboard(params: LeaderboardParams) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       throw new Error('User not authenticated')
@@ -83,38 +93,46 @@ export const dashboardService = {
 
     let query: string
     
-    if (period === 'weekly') {
+    if (params.period === 'weekly') {
       query = 'weekly_leaderboard'
-    } else if (period === 'monthly') {
+    } else if (params.period === 'monthly') {
       query = 'monthly_leaderboard'
     } else {
       query = 'all_time_leaderboard'
     }
 
-    const { data, error } = await supabase
-      .from(query)
-      .select('*')
-      .limit(100)
+    let dbQuery = supabase.from(query).select('*')
+
+    // Apply view filters
+    if (params.view === 'country' && params.filterValue) {
+      dbQuery = dbQuery.eq('country', params.filterValue)
+    } else if (params.view === 'team' && params.filterValue) {
+      dbQuery = dbQuery.eq('team_color', params.filterValue)
+    } else if (params.view === 'search' && params.filterValue) {
+      dbQuery = dbQuery.ilike('trainer_name', `%${params.filterValue}%`)
+    }
+
+    const { data, error } = await dbQuery.limit(100)
 
     if (error) {
       console.error('Leaderboard query error:', error)
       throw error
     }
 
-    // The views already filter for paid users, so we just need to sort
+    // Sort the data
     if (data && data.length > 0) {
-      if (period !== 'all-time') {
+      if (params.period !== 'all-time') {
         // For weekly/monthly, sort by delta values
-        const sortField = sortBy === 'xp' ? 'xp_delta' : 
-                         sortBy === 'catches' ? 'catches_delta' : 
-                         sortBy === 'distance' ? 'distance_delta' : 'pokestops_delta'
+        const sortField = params.sortBy === 'xp' ? 'xp_delta' : 
+                         params.sortBy === 'catches' ? 'catches_delta' : 
+                         params.sortBy === 'distance' ? 'distance_delta' : 'pokestops_delta'
         
         data.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
       } else {
         // For all-time, sort by total values
-        const sortField = sortBy === 'xp' ? 'total_xp' : 
-                         sortBy === 'catches' ? 'pokemon_caught' : 
-                         sortBy === 'distance' ? 'distance_walked' : 'pokestops_visited'
+        const sortField = params.sortBy === 'xp' ? 'total_xp' : 
+                         params.sortBy === 'catches' ? 'pokemon_caught' : 
+                         params.sortBy === 'distance' ? 'distance_walked' : 'pokestops_visited'
         
         data.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
       }
@@ -174,44 +192,104 @@ export const dashboardService = {
     return { data: data as StatEntry[], error: null }
   },
 
-  // Calculate stats between two dates
-  async calculateStatDelta(startDate: string, endDate: string, userId?: string): Promise<StatCalculationResult> {
-    const { data: entries } = await this.getUserStatEntries(userId)
-    console.log(entries);
-    if (!entries || entries.length < 2) {
-      throw new Error('Insufficient data for calculation')
-    }
+  // Calculate stat changes between two dates
+  async calculateStatDelta(startDate: string, endDate: string): Promise<StatCalculationResult> {
+    try {
+      const { data, error } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .gte('entry_date', startDate)
+        .lte('entry_date', endDate)
+        .order('entry_date', { ascending: true })
 
-    // Find closest entries to the specified dates
-    const startEntry = entries.reduce((closest, current) => {
-      const currentDiff = Math.abs(new Date(current.entry_date).getTime() - new Date(startDate).getTime())
-      const closestDiff = Math.abs(new Date(closest.entry_date).getTime() - new Date(startDate).getTime())
-      return currentDiff < closestDiff ? current : closest
-    })
+      if (error) {
+        throw new Error('Failed to fetch stat entries')
+      }
 
-    const endEntry = entries.reduce((closest, current) => {
-      const currentDiff = Math.abs(new Date(current.entry_date).getTime() - new Date(endDate).getTime())
-      const closestDiff = Math.abs(new Date(closest.entry_date).getTime() - new Date(endDate).getTime())
-      return currentDiff < closestDiff ? current : closest
-    })
+      if (!data || data.length < 2) {
+        throw new Error('Not enough data points for the selected date range')
+      }
 
-    return {
-      start_date: startEntry.entry_date,
-      end_date: endEntry.entry_date,
-      xp_delta: endEntry.total_xp - startEntry.total_xp,
-      catches_delta: endEntry.pokemon_caught - startEntry.pokemon_caught,
-      distance_delta: endEntry.distance_walked - startEntry.distance_walked,
-      pokestops_delta: endEntry.pokestops_visited - startEntry.pokestops_visited,
-      pokedex_delta: endEntry.unique_pokedex_entries - startEntry.unique_pokedex_entries,
-      level_delta: endEntry.trainer_level - startEntry.trainer_level
+      const firstEntry = data[0]
+      const lastEntry = data[data.length - 1]
+      const daysDiff = getDaysDifference(startDate, endDate)
+
+      const totalXP = lastEntry.total_xp - firstEntry.total_xp
+      const pokemonCaught = lastEntry.pokemon_caught - firstEntry.pokemon_caught
+      const distanceWalked = lastEntry.distance_walked - firstEntry.distance_walked
+      const pokestopsVisited = lastEntry.pokestops_visited - firstEntry.pokestops_visited
+      const uniquePokedexEntries = lastEntry.unique_pokedex_entries - firstEntry.unique_pokedex_entries
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / daysDiff),
+        catchesPerDay: Math.round(pokemonCaught / daysDiff),
+        distancePerDay: Math.round(distanceWalked / daysDiff),
+        stopsPerDay: Math.round(pokestopsVisited / daysDiff),
+        startDate,
+        endDate
+      }
+    } catch (error) {
+      throw error
     }
   },
 
-  // Get community day stats (single date or date range)
-  async getCommunityDayStats(date: string, endDate?: string, userId?: string): Promise<StatCalculationResult> {
-    const actualEndDate = endDate || date
-    console.log(date, actualEndDate);
-    return this.calculateStatDelta(date, actualEndDate, userId)
+  // Get Community Day stats for a specific date
+  async getCommunityDayStats(date: string): Promise<StatCalculationResult> {
+    try {
+      const startOfDay = new Date(date)
+      startOfDay.setHours(0, 0, 0, 0)
+      
+      const endOfDay = new Date(date)
+      endOfDay.setHours(23, 59, 59, 999)
+
+      const { data, error } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .gte('entry_date', startOfDay.toISOString())
+        .lte('entry_date', endOfDay.toISOString())
+        .order('entry_date', { ascending: true })
+
+      if (error) {
+        throw new Error('Failed to fetch Community Day stats')
+      }
+
+      if (!data || data.length < 2) {
+        throw new Error('Not enough data points for the selected Community Day')
+      }
+
+      const firstEntry = data[0]
+      const lastEntry = data[data.length - 1]
+
+      const totalXP = lastEntry.total_xp - firstEntry.total_xp
+      const pokemonCaught = lastEntry.pokemon_caught - firstEntry.pokemon_caught
+      const distanceWalked = lastEntry.distance_walked - firstEntry.distance_walked
+      const pokestopsVisited = lastEntry.pokestops_visited - firstEntry.pokestops_visited
+      const uniquePokedexEntries = lastEntry.unique_pokedex_entries - firstEntry.unique_pokedex_entries
+
+      // For Community Day, we calculate hourly rates instead of daily
+      const hoursDiff = 3 // Standard Community Day duration
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / hoursDiff),
+        catchesPerDay: Math.round(pokemonCaught / hoursDiff),
+        distancePerDay: Math.round(distanceWalked / hoursDiff),
+        stopsPerDay: Math.round(pokestopsVisited / hoursDiff),
+        startDate: startOfDay.toISOString(),
+        endDate: endOfDay.toISOString()
+      }
+    } catch (error) {
+      throw error
+    }
   },
 
   // Get average stats for radar chart comparison
@@ -223,7 +301,7 @@ export const dashboardService = {
     if (error) {
       throw error
     }
-    console.log(data);
+
     if (!data || data.length === 0) {
       return {
         total_xp: 0,
@@ -432,4 +510,11 @@ export const dashboardService = {
       return [];
     }
   }
+} 
+
+function getDaysDifference(start: string, end: string): number {
+  const startDate = new Date(start)
+  const endDate = new Date(end)
+  const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
 } 

@@ -9,15 +9,18 @@ import { UserProfile } from './components/user/UserProfile'
 import { ProfileSetup } from './components/user/ProfileSetup'
 import { PostProfileTutorial } from './components/user/PostProfileTutorial'
 import { Dashboard } from './components/dashboard/Dashboard'
+import { UserHome } from './components/dashboard/UserHome'
 import { UpgradePage } from './components/upgrade/UpgradePage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ProfileGuard } from './components/auth/ProfileGuard'
+import { ProfileSetupGuard } from './components/auth/ProfileSetupGuard'
 import { Layout } from './components/layout/Layout'
 import { PublicProfile } from './components/profile/PublicProfile'
 import { AdminLogin } from './components/auth/AdminLogin'
 import { AdminProtectedRoute } from './components/auth/AdminProtectedRoute'
 import { AdminLayout } from './components/admin/AdminLayout'
 import { AdminDashboard } from './components/admin/AdminDashboard'
+import { LandingPage } from './components/LandingPage'
 
 // Import CSS
 import './index.css'
@@ -34,7 +37,15 @@ function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/signup-success" element={<SignupSuccess />} />
           
-          {/* Profile setup route - protected with layout */}
+          {/* Landing Page - Public but redirects if authenticated */}
+          <Route path="/" element={
+            <ProtectedRoute>
+              <Navigate to="/home" replace />
+            </ProtectedRoute>
+          } />
+          <Route path="/landing" element={<LandingPage />} />
+          
+          {/* Profile setup route - protected but no setup guard */}
           <Route path="/profile-setup" element={
             <Layout>
               <ProtectedRoute>
@@ -47,18 +58,35 @@ function App() {
           <Route path="/tutorial" element={
             <Layout>
               <ProtectedRoute>
-                <PostProfileTutorial />
+                <ProfileSetupGuard>
+                  <PostProfileTutorial />
+                </ProfileSetupGuard>
               </ProtectedRoute>
             </Layout>
           } />
           
-          {/* Protected routes with profile guard */}
-          <Route path="/" element={
+          {/* User Home - Protected */}
+          <Route path="/home" element={
             <Layout>
               <ProtectedRoute>
-                <ProfileGuard>
-                  <Dashboard />
-                </ProfileGuard>
+                <ProfileSetupGuard>
+                  <ProfileGuard>
+                    <UserHome />
+                  </ProfileGuard>
+                </ProfileSetupGuard>
+              </ProtectedRoute>
+            </Layout>
+          } />
+          
+          {/* Other protected routes */}
+          <Route path="/dashboard" element={
+            <Layout>
+              <ProtectedRoute>
+                <ProfileSetupGuard>
+                  <ProfileGuard>
+                    <Dashboard />
+                  </ProfileGuard>
+                </ProfileSetupGuard>
               </ProtectedRoute>
             </Layout>
           } />
@@ -66,9 +94,11 @@ function App() {
           <Route path="/profile" element={
             <Layout>
               <ProtectedRoute>
-                <ProfileGuard>
-                  <UserProfile />
-                </ProfileGuard>
+                <ProfileSetupGuard>
+                  <ProfileGuard>
+                    <UserProfile />
+                  </ProfileGuard>
+                </ProfileSetupGuard>
               </ProtectedRoute>
             </Layout>
           } />
@@ -76,9 +106,11 @@ function App() {
           <Route path="/upgrade" element={
             <Layout>
               <ProtectedRoute>
-                <ProfileGuard>
-                  <UpgradePage />
-                </ProfileGuard>
+                <ProfileSetupGuard>
+                  <ProfileGuard>
+                    <UpgradePage />
+                  </ProfileGuard>
+                </ProfileSetupGuard>
               </ProtectedRoute>
             </Layout>
           } />
@@ -89,7 +121,9 @@ function App() {
             element={
               <Layout>
                 <ProtectedRoute>
-                  <PublicProfile />
+                  <ProfileSetupGuard>
+                    <PublicProfile />
+                  </ProfileSetupGuard>
                 </ProtectedRoute>
               </Layout>
             } 

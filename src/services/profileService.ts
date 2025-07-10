@@ -16,22 +16,22 @@ export type ProfileData = {
   subscription_expires_at?: string
   
   // Core Statistics
-  distance_walked: number
-  pokemon_caught: number
-  pokestops_visited: number
-  total_xp: number
-  unique_pokedex_entries: number
+  distance_walked?: number
+  pokemon_caught?: number
+  pokestops_visited?: number
+  total_xp?: number
+  unique_pokedex_entries?: number
   
   // Profile Screenshot
-  profile_screenshot_url?: string
+  profile_screenshot_url: string
   
   // Social Media (optional)
-  instagram: string
-  tiktok: string
-  twitter: string
-  youtube: string
-  twitch: string
-  reddit: string
+  instagram?: string
+  tiktok?: string
+  twitter?: string
+  youtube?: string
+  twitch?: string
+  reddit?: string
 }
 
 export interface ProfileWithMetadata extends ProfileData {
@@ -41,7 +41,7 @@ export interface ProfileWithMetadata extends ProfileData {
   updated_at: string
 }
 
-// Public profile data (excludes private fields like trainer_code)
+// Public profile data (excludes private fields)
 export interface PublicProfileData {
   id: string
   trainer_name: string
@@ -64,6 +64,7 @@ export interface PublicProfileData {
   created_at: string
   updated_at: string
   is_paid_user: boolean
+  trainer_code?: string // Optional trainer code, only shown for paid users
 }
 
 export const profileService = {
@@ -198,16 +199,40 @@ export const profileService = {
         return { data: null, error: new Error('User not authenticated') }
       }
 
-      const { data, error } = await supabase
+      // First check if profile exists
+      const { data: existingProfile } = await supabase
         .from('profiles')
-        .upsert({
-          user_id: user.id,
-          ...profileData
-        })
-        .select()
+        .select('id')
+        .eq('user_id', user.id)
         .single()
 
-      return { data, error }
+      let result;
+      if (existingProfile) {
+        // Update existing profile
+        result = await supabase
+          .from('profiles')
+          .update({
+            ...profileData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id)
+          .select()
+          .single()
+      } else {
+        // Insert new profile
+        result = await supabase
+          .from('profiles')
+          .insert({
+            user_id: user.id,
+            ...profileData,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .select()
+          .single()
+      }
+
+      return { data: result.data, error: result.error }
     } catch (error) {
       return { data: null, error }
     }
@@ -294,7 +319,8 @@ export const profileService = {
           reddit,
           created_at,
           updated_at,
-          is_paid_user
+          is_paid_user,
+          trainer_code
         `)
         .eq('id', profileId)
         .maybeSingle()
@@ -331,7 +357,8 @@ export const profileService = {
           reddit,
           created_at,
           updated_at,
-          is_paid_user
+          is_paid_user,
+          trainer_code
         `)
         .eq('trainer_name', trainerName)
         .maybeSingle()
@@ -342,7 +369,7 @@ export const profileService = {
     }
   },
 
-  // Check if current user has a profile (lightweight check)
+  // Check if user has a profile
   async hasProfile(): Promise<{ hasProfile: boolean; error: any }> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
@@ -353,17 +380,41 @@ export const profileService = {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('id')
+        .select('is_profile_setup')
         .eq('user_id', user.id)
-        .maybeSingle()
+        .single()
 
       if (error) {
         return { hasProfile: false, error }
       }
 
-      return { hasProfile: !!data, error: null }
+      return { hasProfile: data?.is_profile_setup ?? false, error: null }
     } catch (error) {
       return { hasProfile: false, error }
     }
-  }
-} 
+  },
+
+  getQuickProfileView: async (profileId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          username,
+          team_color,
+          trainer_level,
+          country,
+          total_xp,
+          pokemon_caught,
+          distance_walked,
+          pokestops_visited,
+          profile_screenshot_url
+        `)
+        .eq('id', profileId)
+        .single();
+
+      return { data, error };
+    } catch (error) {
+      return { data: null, error };
+    }
+  },
+}; 

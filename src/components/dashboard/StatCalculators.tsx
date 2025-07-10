@@ -1,15 +1,38 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { dashboardService, type StatCalculationResult } from '../../services/dashboardService'
+import StatCard from './StatCard'
 
-export const StatCalculators = () => {
-  const [calculatorType, setCalculatorType] = useState<'grind' | 'community'>('grind')
+const TEAM_COLORS = {
+  blue: { name: 'Blue', color: '#0074D9' },
+  red: { name: 'Red', color: '#FF4136' },
+  yellow: { name: 'Yellow', color: '#FFDC00' },
+  black: { name: 'Black', color: '#111111' },
+  green: { name: 'Green', color: '#2ECC40' },
+  orange: { name: 'Orange', color: '#FF851B' },
+  purple: { name: 'Purple', color: '#B10DC9' },
+  pink: { name: 'Pink', color: '#F012BE' }
+}
+
+type CalculatorType = 'grind' | 'community'
+
+interface StatCalculatorsProps {
+  initialCalculator?: CalculatorType
+}
+
+export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculatorsProps) => {
+  const [calculatorType, setCalculatorType] = useState<CalculatorType>(initialCalculator)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [singleDate, setSingleDate] = useState('')
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState<StatCalculationResult | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [downloading, setDownloading] = useState(false)
+
+  // Update calculator type when initialCalculator prop changes
+  useEffect(() => {
+    setCalculatorType(initialCalculator)
+  }, [initialCalculator])
 
   const handleGrindCalculation = async () => {
     if (!startDate || !endDate) {
@@ -67,7 +90,7 @@ export const StatCalculators = () => {
   const clearResults = () => {
     setResult(null)
     setError(null)
-    setCopied(false)
+    setDownloading(false)
   }
 
   const getDaysDifference = (start: string, end: string) => {
@@ -77,12 +100,21 @@ export const StatCalculators = () => {
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
   }
 
+  const handleDownload = () => {
+    if (!result) return
+    setDownloading(true)
+  }
+
+  const handleDownloadComplete = () => {
+    setDownloading(false)
+  }
+
   return (
     <div className="calculators-container">
       <div className="calculators-header">
         <div className="calculators-hero">
-          <h2>Stat Calculators</h2>
-          <p>Track your progress and analyze your journey with powerful calculation tools</p>
+          <h2>Performance Analytics</h2>
+          <p>Track your progress and generate shareable stat cards</p>
         </div>
       </div>
 
@@ -97,9 +129,7 @@ export const StatCalculators = () => {
         >
           <span className="calc-icon">📈</span>
           <div className="calc-tab-content">
-            <span className="calc-tab-title">Grind Calculator</span>
-            <span className="calc-tab-subtitle">Date range analysis</span>
-          </div>
+            <span className="calc-tab-title">Grind Stats</span>          </div>
         </button>
         <button
           className={`calc-tab ${calculatorType === 'community' ? 'active' : ''}`}
@@ -111,7 +141,6 @@ export const StatCalculators = () => {
           <span className="calc-icon">🎉</span>
           <div className="calc-tab-content">
             <span className="calc-tab-title">Community Day</span>
-            <span className="calc-tab-subtitle">Event performance</span>
           </div>
         </button>
       </div>
@@ -123,8 +152,8 @@ export const StatCalculators = () => {
               <div className="calc-card-header">
                 <div className="calc-card-icon">📈</div>
                 <div className="calc-card-info">
-                  <h3>Grind Calculator</h3>
-                  <p>Compare your stats between any two dates to see your progression</p>
+                  <h3>Grind Stats</h3>
+                  <p>Compare your stats between any two dates and generate a shareable card</p>
                 </div>
               </div>
 
@@ -181,11 +210,88 @@ export const StatCalculators = () => {
                 ) : (
                   <>
                     <span className="button-icon">🚀</span>
-                    <span>Calculate Progress</span>
+                    <span>Generate Stats</span>
                   </>
                 )}
               </button>
             </div>
+
+            {/* Results Section */}
+            {result && (
+              <div className="results-section">
+                <div className="results-preview">
+                  <div className="preview-header">
+                    <h3>Performance Summary</h3>
+                    <button 
+                      className="download-button"
+                      onClick={handleDownload}
+                      disabled={downloading}
+                    >
+                      {downloading ? (
+                        <>
+                          <span className="button-icon">⏳</span>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="button-icon">⬇️</span>
+                          <span>Download Card</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+
+                  <div className="stats-grid">
+                    <div className="stat-item">
+                      <div className="stat-label">Total XP</div>
+                      <div className="stat-value">{formatNumber(result.totalXP)}</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Pokemon Caught</div>
+                      <div className="stat-value">{formatNumber(result.pokemonCaught)}</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Distance Walked</div>
+                      <div className="stat-value">{formatNumber(result.distanceWalked)}km</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Pokestops Visited</div>
+                      <div className="stat-value">{formatNumber(result.pokestopsVisited)}</div>
+                    </div>
+                  </div>
+
+                  <div className="daily-averages">
+                    <h4>Daily Averages</h4>
+                    <div className="averages-grid">
+                      <div className="average-item">
+                        <div className="average-label">XP per Day</div>
+                        <div className="average-value">{formatNumber(result.xpPerDay)}</div>
+                      </div>
+                      <div className="average-item">
+                        <div className="average-label">Catches per Day</div>
+                        <div className="average-value">{formatNumber(result.catchesPerDay)}</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hidden StatCard component for image generation */}
+                {downloading && (
+                  <StatCard
+                    result={result}
+                    onDownloadComplete={handleDownloadComplete}
+                    cardType={calculatorType}
+                  />
+                )}
+              </div>
+            )}
+
+            {error && (
+              <div className="error-message">
+                <span className="error-icon">⚠️</span>
+                {error}
+              </div>
+            )}
           </div>
         )}
 
@@ -195,8 +301,8 @@ export const StatCalculators = () => {
               <div className="calc-card-header">
                 <div className="calc-card-icon">🎉</div>
                 <div className="calc-card-info">
-                  <h3>Community Day Calculator</h3>
-                  <p>Track your performance during special Community Day events</p>
+                  <h3>Community Day Stats</h3>
+                  <p>Track your performance and generate a shareable card for Community Day events</p>
                 </div>
               </div>
 
@@ -231,178 +337,80 @@ export const StatCalculators = () => {
                   </>
                 ) : (
                   <>
-                    <span className="button-icon">🎯</span>
-                    <span>Calculate Event Stats</span>
+                    <span className="button-icon">🚀</span>
+                    <span>Generate Stats</span>
                   </>
                 )}
               </button>
             </div>
-          </div>
-        )}
 
-        {error && (
-          <div className="calc-error">
-            <div className="error-content">
-              <span className="error-icon">⚠️</span>
-              <div className="error-text">
-                <span className="error-title">Calculation Error</span>
-                <span className="error-message">{error}</span>
-              </div>
-            </div>
-            <button
-              className="error-dismiss"
-              onClick={() => setError(null)}
-              aria-label="Dismiss error"
-            >
-              ✕
-            </button>
-          </div>
-        )}
+            {/* Results Section */}
+            {result && (
+              <div className="results-section">
+                <div className="results-preview">
+                  <div className="preview-header">
+                    <h3>Event Performance</h3>
+                    <button 
+                      className="download-button"
+                      onClick={handleDownload}
+                      disabled={downloading}
+                    >
+                      {downloading ? (
+                        <>
+                          <span className="button-icon">⏳</span>
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="button-icon">⬇️</span>
+                          <span>Download Card</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
 
-        {result && (
-          <div className="calc-results">
-            <div className="results-header">
-              <div className="results-title">
-                <span className="results-icon">📊</span>
-                <h3>Your Progress Results</h3>
-              </div>
-              <div className="results-meta">
-                <span className="results-period">
-                  {new Date(result.start_date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })} → {new Date(result.end_date).toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric'
-                  })}
-                </span>
-                {calculatorType === 'grind' && (
-                  <span className="results-duration">
-                    {getDaysDifference(result.start_date, result.end_date)} days
-                  </span>
+                  <div className="stats-grid">
+                    <div className="stat-item">
+                      <div className="stat-label">Total XP</div>
+                      <div className="stat-value">{formatNumber(result.totalXP)}</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Pokemon Caught</div>
+                      <div className="stat-value">{formatNumber(result.pokemonCaught)}</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Distance Walked</div>
+                      <div className="stat-value">{formatNumber(result.distanceWalked)}km</div>
+                    </div>
+                    <div className="stat-item">
+                      <div className="stat-label">Pokestops Visited</div>
+                      <div className="stat-value">{formatNumber(result.pokestopsVisited)}</div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Hidden StatCard component for image generation */}
+                {downloading && (
+                  <StatCard
+                    result={result}
+                    onDownloadComplete={handleDownloadComplete}
+                    cardType={calculatorType}
+                  />
                 )}
               </div>
-            </div>
+            )}
 
-            <div className="results-grid">
-              <div className="result-card highlight">
-                <div className="result-header">
-                  <div className="result-icon">⚡</div>
-                  <div className="result-badge">Primary</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{formatNumber(result.xp_delta)}</div>
-                  <div className="result-label">XP Gained</div>
-                  {calculatorType === 'grind' && (
-                    <div className="result-rate">
-                      {Math.round(result.xp_delta / getDaysDifference(result.start_date, result.end_date)).toLocaleString()} XP/day
-                    </div>
-                  )}
-                </div>
+            {error && (
+              <div className="error-message">
+                <span className="error-icon">⚠️</span>
+                {error}
               </div>
-
-              <div className="result-card">
-                <div className="result-header">
-                  <div className="result-icon">🔴</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{formatNumber(result.catches_delta)}</div>
-                  <div className="result-label">Pokémon Caught</div>
-                  {calculatorType === 'grind' && (
-                    <div className="result-rate">
-                      {Math.round(result.catches_delta / getDaysDifference(result.start_date, result.end_date))} catches/day
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="result-card">
-                <div className="result-header">
-                  <div className="result-icon">🚶</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{result.distance_delta.toFixed(1)} km</div>
-                  <div className="result-label">Distance Walked</div>
-                  {calculatorType === 'grind' && (
-                    <div className="result-rate">
-                      {(result.distance_delta / getDaysDifference(result.start_date, result.end_date)).toFixed(1)} km/day
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="result-card">
-                <div className="result-header">
-                  <div className="result-icon">📍</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{formatNumber(result.pokestops_delta)}</div>
-                  <div className="result-label">PokéStops Visited</div>
-                  {calculatorType === 'grind' && (
-                    <div className="result-rate">
-                      {Math.round(result.pokestops_delta / getDaysDifference(result.start_date, result.end_date))} stops/day
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              <div className="result-card">
-                <div className="result-header">
-                  <div className="result-icon">📖</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{result.pokedex_delta}</div>
-                  <div className="result-label">Pokédex Entries</div>
-                </div>
-              </div>
-
-              <div className="result-card">
-                <div className="result-header">
-                  <div className="result-icon">⬆️</div>
-                </div>
-                <div className="result-content">
-                  <div className="result-value">+{result.level_delta}</div>
-                  <div className="result-label">Levels Gained</div>
-                </div>
-              </div>
-            </div>
-
-            <div className="results-actions">
-              <button
-                className="action-button secondary"
-                onClick={clearResults}
-              >
-                <span className="button-icon">🔄</span>
-                Calculate Again
-              </button>
-              <button
-                className={`action-button ${copied ? 'success' : 'primary'}`}
-                onClick={async () => {
-                  try {
-                    const copyText = `My Pokémon GO Progress (${new Date(result.start_date).toLocaleDateString()} → ${new Date(result.end_date).toLocaleDateString()}):
-📈 +${formatNumber(result.xp_delta)} XP
-🔴 +${formatNumber(result.catches_delta)} Pokémon caught
-🚶 +${result.distance_delta.toFixed(1)} km walked
-📍 +${formatNumber(result.pokestops_delta)} PokéStops visited
-📖 +${result.pokedex_delta} Pokédex entries
-⬆️ +${result.level_delta} levels gained`
-                    await navigator.clipboard.writeText(copyText)
-                    setCopied(true)
-                    setTimeout(() => setCopied(false), 2000)
-                  } catch (err) {
-                    setError('Failed to copy results to clipboard')
-                  }
-                }}
-              >
-                <span className="button-icon">{copied ? '✅' : '📤'}</span>
-                {copied ? 'Copied!' : 'Copy Results'}
-              </button>
-            </div>
+            )}
           </div>
         )}
       </div>
     </div>
   )
-} 
+}
+
+export default StatCalculators 

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { profileService } from '../services/profileService'
 
-export interface TrialTimeRemaining {
+export interface PrivateModeTimeRemaining {
   days: number
   hours: number
   minutes: number
@@ -12,10 +12,10 @@ export interface TrialTimeRemaining {
   totalSeconds: number
 }
 
-export interface TrialStatus {
+export interface PrivateModeStatus {
   isInTrial: boolean
   daysRemaining: number
-  timeRemaining: TrialTimeRemaining
+  timeRemaining: PrivateModeTimeRemaining
   isPaidUser: boolean
   canGenerateAllTimeCard: boolean
   canShareGrindCard: boolean
@@ -28,7 +28,7 @@ export interface TrialStatus {
   loading: boolean
 }
 
-export const useTrialStatus = (): TrialStatus => {
+export const useTrialStatus = (): PrivateModeStatus => {
   const { user } = useAuth()
   const [isPaidUser, setIsPaidUser] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -65,7 +65,7 @@ export const useTrialStatus = (): TrialStatus => {
     }
   }
 
-  const calculateTrialStatus = (): TrialStatus => {
+  const calculatePrivateModeStatus = (): PrivateModeStatus => {
     // Default values for logged out users or while loading
     if (!user || loading) {
       return {
@@ -85,16 +85,16 @@ export const useTrialStatus = (): TrialStatus => {
       }
     }
     
-    // Calculate trial status based on created_at timestamp (signup date)
+    // Calculate private mode status based on created_at timestamp (signup date)
     const createdAt = new Date(user.created_at)
-    const trialEndDate = new Date(createdAt.getTime() + (30 * 24 * 60 * 60 * 1000)) // 30 days from signup
+    const privateEndDate = new Date(createdAt.getTime() + (7 * 24 * 60 * 60 * 1000)) // 7 days from signup
     const now = currentTime
     
-    const isInTrial = now < trialEndDate
-    const timeLeftMs = Math.max(0, trialEndDate.getTime() - now.getTime())
+    const isInTrial = now < privateEndDate
+    const timeLeftMs = Math.max(0, privateEndDate.getTime() - now.getTime())
     
     // Calculate detailed time remaining including seconds
-    const timeRemaining: TrialTimeRemaining = {
+    const timeRemaining: PrivateModeTimeRemaining = {
       days: Math.floor(timeLeftMs / (1000 * 60 * 60 * 24)),
       hours: Math.floor((timeLeftMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)),
       minutes: Math.floor((timeLeftMs % (1000 * 60 * 60)) / (1000 * 60)),
@@ -113,35 +113,35 @@ export const useTrialStatus = (): TrialStatus => {
         daysRemaining,
         timeRemaining,
         isPaidUser: true,
-        canGenerateAllTimeCard: true, // Premium: Full access
-        canShareGrindCard: true, // Premium: Full access
-        canViewWeeklyMonthlyCards: true, // Premium: Full access
-        canAppearOnLeaderboard: true, // Premium: Full access
-        canViewLeaderboard: true, // Premium: Full access
-        canClickIntoProfiles: true, // Premium: Full access
-        canShowTrainerCode: true, // Premium: Full access
-        canShowSocialLinks: true, // Premium: Full access
+        canGenerateAllTimeCard: true,
+        canShareGrindCard: true,
+        canViewWeeklyMonthlyCards: true,
+        canAppearOnLeaderboard: true,
+        canViewLeaderboard: true,
+        canClickIntoProfiles: true,
+        canShowTrainerCode: true,
+        canShowSocialLinks: true,
         loading: false
       }
     }
 
-    // Free users: Trial-based restrictions (based on signup date)
+    // Free users in private mode: Limited access based on private mode rules
     return {
       isInTrial,
       daysRemaining,
       timeRemaining,
       isPaidUser: false,
-      canGenerateAllTimeCard: isInTrial, // Trial only (30 days from signup)
-      canShareGrindCard: isInTrial, // Trial only (30 days from signup)
-      canViewWeeklyMonthlyCards: false, // Never for free users
-      canAppearOnLeaderboard: false, // Never for free users
-      canViewLeaderboard: true, // Browse only (always allowed)
-      canClickIntoProfiles: false, // Never for free users
-      canShowTrainerCode: false, // Never for free users
-      canShowSocialLinks: false, // Never for free users
+      canGenerateAllTimeCard: isInTrial, // Can generate cards during private mode
+      canShareGrindCard: isInTrial, // Can share cards during private mode
+      canViewWeeklyMonthlyCards: isInTrial, // Can view their own stats during private mode
+      canAppearOnLeaderboard: false, // Never appear on leaderboard (even during private mode)
+      canViewLeaderboard: true, // Can always browse leaderboard
+      canClickIntoProfiles: false, // Can't view other profiles' details
+      canShowTrainerCode: false, // Trainer code remains private
+      canShowSocialLinks: false, // Social links remain private
       loading: false
     }
   }
 
-  return calculateTrialStatus()
+  return calculatePrivateModeStatus()
 } 

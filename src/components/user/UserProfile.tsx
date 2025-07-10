@@ -2,22 +2,34 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { useValuePropModal } from '../../hooks/useValuePropModal'
+import { ValuePropModal } from '../upgrade/ValuePropModal'
 
 const TEAM_COLORS = [
-  { value: 'blue', label: 'Mystic', color: '#0074D9', team: 'Team Mystic' },
-  { value: 'red', label: 'Valor', color: '#FF4136', team: 'Team Valor' },
-  { value: 'yellow', label: 'Instinct', color: '#FFDC00', team: 'Team Instinct' },
-  { value: 'black', label: 'Black', color: '#111111', team: 'Black' },
-  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Green' },
-  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Orange' },
-  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Purple' },
-  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Pink' }
+  { value: 'blue', label: 'Blue', color: '#0074D9' },
+  { value: 'red', label: 'Red', color: '#FF4136' },
+  { value: 'yellow', label: 'Yellow', color: '#FFDC00' },
+  { value: 'black', label: 'Black', color: '#111111' },
+  { value: 'green', label: 'Green', color: '#2ECC40' },
+  { value: 'orange', label: 'Orange', color: '#FF851B' },
+  { value: 'purple', label: 'Purple', color: '#B10DC9' },
+  { value: 'pink', label: 'Pink', color: '#F012BE' }
 ]
 
 const COUNTRIES = [
   'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 
   'Japan', 'South Korea', 'Brazil', 'Mexico', 'Italy', 'Spain', 'Netherlands',
   'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
+]
+
+const SOCIAL_MEDIA = [
+  { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: '@username' },
+  { key: 'tiktok', label: 'TikTok', icon: '🎵', placeholder: '@username' },
+  { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: '@username' },
+  { key: 'youtube', label: 'YouTube', icon: '🎥', placeholder: 'Channel URL' },
+  { key: 'twitch', label: 'Twitch', icon: '🎮', placeholder: 'username' },
+  { key: 'reddit', label: 'Reddit', icon: '👽', placeholder: 'u/username' }
 ]
 
 export const UserProfile = () => {
@@ -31,6 +43,8 @@ export const UserProfile = () => {
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const [newScreenshot, setNewScreenshot] = useState<File | null>(null)
   const navigate = useNavigate()
+  const trialStatus = useTrialStatus()
+  const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
 
   useEffect(() => {
     loadProfile()
@@ -84,7 +98,7 @@ export const UserProfile = () => {
   }
   
   const handleUpgrade = async () => {
-    navigate('/upgrade')
+    showValueProp('profile')
   }
 
   const handleEdit = () => {
@@ -156,6 +170,134 @@ export const UserProfile = () => {
   const inTrial = isInTrial()
   const daysLeft = trialDaysLeft()
 
+  const renderSocialSection = () => {
+    if (!profile) return null;
+
+    const showPrivateNotice = !isPaid;
+
+    const handleSocialUpgrade = () => {
+      showValueProp('social');
+    };
+
+    return (
+      <div className="form-section">
+        <h3 className="form-section-header">
+          <span className="form-section-icon" style={{background: '#2563eb'}}>
+            🌐
+          </span>
+          Social Media Links
+          {showPrivateNotice && (
+            <span className="private-badge">Private</span>
+          )}
+        </h3>
+        
+        {showPrivateNotice && isEditing && (
+          <div className="premium-upgrade-notice">
+            <div className="premium-upgrade-content">
+              <div className="premium-upgrade-icon">
+                <span>✨</span>
+              </div>
+              <div className="premium-upgrade-text">
+                <h4>Unlock Social Media Features</h4>
+                <p>Upgrade to edit and share your social media profiles with the Pokémon GO community</p>
+              </div>
+            </div>
+            <button onClick={handleSocialUpgrade} className="premium-upgrade-button">
+              <span>Upgrade to Premium</span>
+              <svg className="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+              </svg>
+            </button>
+          </div>
+        )}
+        
+        <div className="form-grid form-grid-2">
+          {SOCIAL_MEDIA.map(platform => (
+            <div key={platform.key} className="form-group">
+              <label className="form-label">
+                <span className="social-icon">{platform.icon}</span>
+                {platform.label}
+              </label>
+              {isEditing ? (
+                <div className="input-group-with-notice">
+                  <input
+                    type="text"
+                    value={editData?.[platform.key as keyof ProfileData] as string || ''}
+                    onChange={(e) => handleInputChange(platform.key as keyof ProfileData, e.target.value)}
+                    className={`form-input ${!isPaid ? 'disabled' : ''}`}
+                    placeholder={platform.placeholder}
+                    disabled={!isPaid}
+                  />
+                  {!isPaid && (
+                    <div className="private-notice-inline">
+                      Private field
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                  {profile[platform.key as keyof ProfileData] || 'Not set'}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTrainerCodeSection = () => {
+    if (!profile) return null;
+
+    const showPrivateNotice = !isPaid;
+
+    return (
+      <div className="form-group" style={{marginTop: '1rem'}}>
+        <label className="form-label">
+          Trainer Code
+          {showPrivateNotice && (
+            <span className="private-badge">Private</span>
+          )}
+        </label>
+        {isEditing ? (
+          <div className="input-group-with-notice">
+            <input
+              type="text"
+              value={editData?.trainer_code || ''}
+              onChange={(e) => handleInputChange('trainer_code', e.target.value)}
+              className={`form-input ${!isPaid ? 'disabled' : ''}`}
+              placeholder="1234 5678 9012"
+              disabled={!isPaid}
+            />
+            {!isPaid && (
+              <div className="private-notice-inline">
+                Private field
+              </div>
+            )}
+            {isPaid && (
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="trainer_code_private_edit"
+                  checked={editData?.trainer_code_private || false}
+                  onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
+                  className="checkbox-input"
+                />
+                <label htmlFor="trainer_code_private_edit" className="checkbox-label">
+                  Keep trainer code private
+                </label>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+            {profile.trainer_code_private ? '******* (Private)' : profile.trainer_code || 'Not set'}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (loading && !profile) {
     return (
       <div className="profile-container">
@@ -197,6 +339,11 @@ export const UserProfile = () => {
 
   return (
     <div className="profile-setup-container">
+      <ValuePropModal 
+        isOpen={isOpen} 
+        onClose={closeValueProp} 
+        daysRemaining={daysRemaining} 
+      />
       <div className="profile-setup-wrapper">
         <div className="profile-setup-card">
           <div className="profile-setup-content">
@@ -303,36 +450,7 @@ export const UserProfile = () => {
                 </div>
               </div>
               
-              <div className="form-group" style={{marginTop: '1rem'}}>
-                <label className="form-label">Trainer Code</label>
-                {isEditing ? (
-                  <>
-                    <input
-                      type="text"
-                      value={editData?.trainer_code || ''}
-                      onChange={(e) => handleInputChange('trainer_code', e.target.value)}
-                      className="form-input"
-                      placeholder="1234 5678 9012"
-                    />
-                    <div className="checkbox-group">
-                      <input
-                        type="checkbox"
-                        id="trainer_code_private_edit"
-                        checked={editData?.trainer_code_private || false}
-                        onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
-                        className="checkbox-input"
-                      />
-                      <label htmlFor="trainer_code_private_edit" className="checkbox-label">
-                        Keep trainer code private
-                      </label>
-                    </div>
-                  </>
-                ) : (
-                  <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                    {profile.trainer_code_private ? '******* (Private)' : profile.trainer_code}
-                  </div>
-                )}
-              </div>
+              {renderTrainerCodeSection()}
 
               <div className="form-grid form-grid-2" style={{marginTop: '1rem'}}>
                 <div className="form-group">
@@ -523,108 +641,7 @@ export const UserProfile = () => {
             </div>
 
             {/* Social Media */}
-            <div className="form-section">
-              <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#f59e0b'}}>
-                  🌐
-                </span>
-                Social Media
-              </h3>
-              <div className="social-grid">
-                {[
-                  { key: 'instagram', label: 'Instagram', icon: '📷', color: 'linear-gradient(135deg, #e91e63, #9c27b0)', placeholder: '@username' },
-                  { key: 'tiktok', label: 'TikTok', icon: '🎵', color: 'linear-gradient(135deg, #111827, #1f2937)', placeholder: '@username' },
-                  { key: 'twitter', label: 'X / Twitter', icon: '🐦', color: 'linear-gradient(135deg, #3b82f6, #2563eb)', placeholder: '@username' },
-                  { key: 'youtube', label: 'YouTube', icon: '📺', color: 'linear-gradient(135deg, #dc2626, #b91c1c)', placeholder: 'Channel URL or @username' },
-                  { key: 'twitch', label: 'Twitch', icon: '🎮', color: 'linear-gradient(135deg, #7c3aed, #6d28d9)', placeholder: 'username' },
-                  { key: 'reddit', label: 'Reddit', icon: '🤖', color: 'linear-gradient(135deg, #f97316, #ea580c)', placeholder: 'u/username' }
-                ].map((social) => (
-                  <div key={social.key} className="social-card">
-                    <div className="social-icon" style={{background: social.color}}>
-                      <span>{social.icon}</span>
-                    </div>
-                    <div className="social-content">
-                      <label className="form-label">{social.label}</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editData?.[social.key as keyof ProfileData] as string || ''}
-                          onChange={(e) => handleInputChange(social.key as keyof ProfileData, e.target.value)}
-                          className="form-input"
-                          placeholder={social.placeholder}
-                        />
-                      ) : (
-                        <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                          {profile[social.key as keyof ProfileData] as string || 'Not set'}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Trial Status (if applicable) */}
-            {!isPaid && (
-              <div className="form-section">
-                <h3 className="form-section-header">
-                  <span className="form-section-icon" style={{background: '#10b981'}}>
-                    ⭐
-                  </span>
-                  Trial Status
-                </h3>
-                
-                {inTrial ? (
-                  <div className="info-box blue">
-                    <div className="info-icon">⏰</div>
-                    <div className="info-content">
-                      <h4>Free Trial Active</h4>
-                      <p>Your trial ends in <strong>{daysLeft} days</strong>. Upgrade to continue accessing premium features.</p>
-                      <button
-                        onClick={handleUpgrade}
-                        disabled={loading}
-                        className="nav-button primary"
-                        style={{ marginTop: '1rem' }}
-                      >
-                        {loading ? 'Processing...' : 'Upgrade Now'}
-                      </button>
-                    </div>
-                  </div>
-                ) : userMetadata?.trial_enabled ? (
-                  <div className="info-box red">
-                    <div className="info-icon">⚠️</div>
-                    <div className="info-content">
-                      <h4>Trial Expired</h4>
-                      <p>Your free trial has expired. Upgrade to access premium features.</p>
-                      <button
-                        onClick={handleUpgrade}
-                        disabled={loading}
-                        className="nav-button primary"
-                        style={{ marginTop: '1rem' }}
-                      >
-                        {loading ? 'Processing...' : 'Upgrade Now'}
-                      </button>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="info-box blue">
-                    <div className="info-icon">🎁</div>
-                    <div className="info-content">
-                      <h4>Start Your Free Trial</h4>
-                      <p>You haven't started your 30-day free trial yet. Try all premium features for free!</p>
-                      <button
-                        onClick={handleStartTrial}
-                        disabled={loading}
-                        className="nav-button primary"
-                        style={{ marginTop: '1rem' }}
-                      >
-                        {loading ? 'Starting...' : 'Start Free Trial'}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+            {renderSocialSection()}
 
             {/* Navigation */}
             <div className="navigation">

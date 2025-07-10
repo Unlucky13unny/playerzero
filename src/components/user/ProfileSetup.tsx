@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData } from '../../services/profileService'
+import { adminService } from '../../services/adminService'
+import './ProfileSetup.css'
 
 const TEAM_COLORS = [
-  { value: 'blue', label: 'Mystic', color: '#0074D9', team: 'Team Mystic' },
-  { value: 'red', label: 'Valor', color: '#FF4136', team: 'Team Valor' },
-  { value: 'yellow', label: 'Instinct', color: '#FFDC00', team: 'Team Instinct' },
-  { value: 'black', label: 'Black', color: '#111111', team: 'Black' },
-  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Green' },
-  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Orange' },
-  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Purple' },
-  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Pink' }
+  { value: 'blue', label: 'Blue', color: '#0074D9', team: 'Team Blue' },
+  { value: 'red', label: 'Red', color: '#FF4136', team: 'Team Red' },
+  { value: 'yellow', label: 'Yellow', color: '#FFDC00', team: 'Team Yellow' },
+  { value: 'black', label: 'Black', color: '#111111', team: 'Team Black' },
+  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Team Green' },
+  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Team Orange' },
+  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Team Purple' },
+  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Team Pink' }
 ]
 
 const COUNTRIES = [
@@ -20,27 +22,37 @@ const COUNTRIES = [
   'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
 ]
 
+const SOCIAL_MEDIA = [
+  { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: '@username' },
+  { key: 'tiktok', label: 'TikTok', icon: '🎵', placeholder: '@username' },
+  { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: '@username' },
+  { key: 'youtube', label: 'YouTube', icon: '🎥', placeholder: 'channel name or URL' },
+  { key: 'twitch', label: 'Twitch', icon: '🎮', placeholder: 'username' },
+  { key: 'reddit', label: 'Reddit', icon: '🤖', placeholder: 'u/username' }
+]
+
 export const ProfileSetup = () => {
-  const { updateProfile } = useAuth()
+  const { updateProfile, userMetadata } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [checkingProfile, setCheckingProfile] = useState(true)
+  const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000)
   
   const [profileData, setProfileData] = useState<ProfileData>({
     trainer_name: '',
     trainer_code: '',
-    trainer_code_private: false,
+    trainer_code_private: true,
     trainer_level: 1,
     start_date: '',
     country: '',
     team_color: '',
-    distance_walked: 0,
-    pokemon_caught: 0,
-    pokestops_visited: 0,
-    total_xp: 0,
-    unique_pokedex_entries: 0,
+    distance_walked: undefined,
+    pokemon_caught: undefined,
+    pokestops_visited: undefined,
+    total_xp: undefined,
+    unique_pokedex_entries: undefined,
     profile_screenshot_url: '',
     instagram: '',
     tiktok: '',
@@ -77,6 +89,17 @@ export const ProfileSetup = () => {
     checkExistingProfile()
   }, [navigate])
 
+  // Fetch max Pokédex entries on mount
+  useEffect(() => {
+    const fetchMaxEntries = async () => {
+      const { value, error } = await adminService.getMaxPokedexEntries();
+      if (!error) {
+        setMaxPokedexEntries(value);
+      }
+    };
+    fetchMaxEntries();
+  }, []);
+
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     setProfileData(prev => ({ ...prev, [field]: value }))
   }
@@ -86,6 +109,39 @@ export const ProfileSetup = () => {
     setProfileScreenshot(file)
   }
 
+  const handleStatChange = (key: keyof ProfileData, value: string) => {
+    // Handle empty value
+    if (!value.trim()) {
+      setProfileData(prev => ({ ...prev, [key]: undefined }));
+      return;
+    }
+
+    // Remove leading zeros
+    const cleanValue = value.replace(/^0+/, '');
+    
+    // Convert to appropriate type
+    let parsedValue: number | undefined;
+    if (key === 'distance_walked') {
+      // Allow decimal for distance
+      parsedValue = cleanValue ? parseFloat(cleanValue) : undefined;
+    } else {
+      // Integer for other stats
+      parsedValue = cleanValue ? parseInt(cleanValue) : undefined;
+    }
+
+    // Validate value
+    if (parsedValue !== undefined) {
+      if (key === 'unique_pokedex_entries' && parsedValue > maxPokedexEntries) {
+        return; // Don't update if exceeds max
+      }
+      if (parsedValue < 0) {
+        return; // Don't update if negative
+      }
+    }
+
+    setProfileData(prev => ({ ...prev, [key]: parsedValue }));
+  };
+
   const validateStep = (step: number): boolean => {
     switch (step) {
       case 1:
@@ -93,15 +149,21 @@ export const ProfileSetup = () => {
                  profileData.trainer_level && profileData.start_date && 
                  profileData.country && profileData.team_color)
       case 2:
-        return !!(profileData.distance_walked >= 0 && profileData.pokemon_caught >= 0 && 
-                 profileData.pokestops_visited >= 0 && profileData.total_xp >= 0 && 
-                 profileData.unique_pokedex_entries >= 0)
+        return validateStats()
       case 3:
         return true // Screenshot is optional
       default:
         return true
     }
   }
+
+  const validateStats = () => {
+    const stats = ['distance_walked', 'pokemon_caught', 'pokestops_visited', 'total_xp', 'unique_pokedex_entries'];
+    return stats.every(stat => {
+      const value = profileData[stat as keyof ProfileData];
+      return value === undefined || (typeof value === 'number' && value >= 0);
+    });
+  };
 
   const nextStep = () => {
     if (validateStep(currentStep)) {
@@ -136,7 +198,8 @@ export const ProfileSetup = () => {
       // Prepare profile data for database
       const profileDataToSave = {
         ...profileData,
-        profile_screenshot_url: screenshotUrl
+        profile_screenshot_url: screenshotUrl,
+        is_profile_setup: true
       }
       
       // Save to database
@@ -169,6 +232,18 @@ export const ProfileSetup = () => {
     }
   }
 
+  const renderPrivacyToggle = (fieldName: string) => (
+    <div className="privacy-toggle" title="This field is private until you upgrade">
+      <div className="privacy-status">
+        <span className="privacy-icon">🔒</span>
+        <span className="privacy-label">Private</span>
+      </div>
+      <div className="upgrade-overlay">
+        <span className="upgrade-text">Upgrade to show publicly</span>
+      </div>
+    </div>
+  )
+
   const renderStep1 = () => (
     <div className="step-content">
       <div>
@@ -194,6 +269,7 @@ export const ProfileSetup = () => {
                 onChange={(e) => handleInputChange('trainer_name', e.target.value)}
                 className="form-input"
                 placeholder="Enter your trainer name"
+                required
               />
             </div>
             <div className="form-group">
@@ -210,25 +286,21 @@ export const ProfileSetup = () => {
           </div>
           
           <div className="form-group" style={{marginTop: '1rem'}}>
-            <label className="form-label">Trainer Code</label>
-            <input
-              type="text"
-              value={profileData.trainer_code}
-              onChange={(e) => handleInputChange('trainer_code', e.target.value)}
-              className="form-input"
-              placeholder="1234 5678 9012"
-            />
-            <div className="checkbox-group">
+            <label className="form-label">
+              Trainer Code
+              <span className="help-text">(Enter now, share later when you upgrade)</span>
+            </label>
+            <div className="input-group">
               <input
-                type="checkbox"
-                id="trainer_code_private"
-                checked={profileData.trainer_code_private}
-                onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
-                className="checkbox-input"
+                type="text"
+                value={profileData.trainer_code}
+                onChange={(e) => handleInputChange('trainer_code', e.target.value)}
+                className="form-input"
+                placeholder="Enter your 12-digit trainer code"
+                pattern="\d{4}\s?\d{4}\s?\d{4}"
+                title="Enter your 12-digit trainer code"
               />
-              <label htmlFor="trainer_code_private" className="checkbox-label">
-                Keep trainer code private
-              </label>
+              {renderPrivacyToggle('trainer_code')}
             </div>
           </div>
         </div>
@@ -292,6 +364,51 @@ export const ProfileSetup = () => {
             ))}
           </div>
         </div>
+
+        {/* Social Media Section */}
+        <div className="form-section">
+          <h3 className="form-section-header">
+            <span className="form-section-icon" style={{background: '#2563eb'}}>
+              🌐
+            </span>
+            Social Media
+            <span className="optional-tag">(Optional)</span>
+          </h3>
+          <div className="section-description">
+            <p>Add your social media handles now to complete your profile. They'll remain private until you upgrade.</p>
+            <p className="upgrade-info">✨ Upgrade to connect with other trainers and share your handles publicly!</p>
+          </div>
+          <div className="form-grid form-grid-2">
+            {SOCIAL_MEDIA.map(platform => (
+              <div key={platform.key} className="form-group">
+                <label className="form-label">
+                  {platform.icon} {platform.label}
+                </label>
+                <div className="input-group">
+                  <input
+                    type="text"
+                    value={profileData[platform.key as keyof ProfileData] as string}
+                    onChange={(e) => handleInputChange(platform.key as keyof ProfileData, e.target.value)}
+                    className="form-input"
+                    placeholder={platform.placeholder}
+                  />
+                  {renderPrivacyToggle(platform.key)}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="step-actions">
+        <button
+          type="button"
+          onClick={nextStep}
+          disabled={!validateStep(1)}
+          className="btn btn-primary"
+        >
+          Next Step
+        </button>
       </div>
     </div>
   )
@@ -303,37 +420,31 @@ export const ProfileSetup = () => {
         <p className="step-description">Enter your current Pokémon GO game statistics</p>
       </div>
       
-      <div className="stat-cards">
+      <div className="stats-section">
         {[
           { key: 'distance_walked', label: 'Distance Walked', icon: '🚶', unit: 'km' },
           { key: 'pokemon_caught', label: 'Pokémon Caught', icon: '⚡' },
           { key: 'pokestops_visited', label: 'PokéStops Visited', icon: '📍' },
           { key: 'total_xp', label: 'Total XP', icon: '🎯' },
-          { key: 'unique_pokedex_entries', label: 'Pokédex Entries', icon: '📖', max: 1000 }
-        ].map((stat) => (
+          { key: 'unique_pokedex_entries', label: 'Pokédex Entries', icon: '📖', max: maxPokedexEntries }
+        ].map(stat => (
           <div key={stat.key} className={`stat-card ${stat.key === 'unique_pokedex_entries' ? 'full-width' : ''}`}>
-            <div className="stat-icon">
-              <span>{stat.icon}</span>
-            </div>
-            <div className="stat-content">
-              <label className="form-label">{stat.label}</label>
-              <div className="stat-input-group">
-                <input
-                  type="number"
-                  min="0"
-                  max={stat.max}
-                  step={stat.key === 'distance_walked' ? '0.1' : '1'}
-                  value={profileData[stat.key as keyof ProfileData] as number}
-                  onChange={(e) => handleInputChange(stat.key as keyof ProfileData, 
-                    stat.key === 'distance_walked' ? parseFloat(e.target.value) || 0 : parseInt(e.target.value) || 0)}
-                  className="form-input"
-                />
-                {stat.unit && (
-                  <div className="stat-unit">{stat.unit}</div>
-                )}
-              </div>
+            <label htmlFor={stat.key}>
+              {stat.icon} {stat.label}
+            </label>
+            <div className="input-wrapper">
+              <input
+                type="text"
+                id={stat.key}
+                value={profileData[stat.key as keyof ProfileData]?.toString() || ''}
+                onChange={(e) => handleStatChange(stat.key as keyof ProfileData, e.target.value)}
+                placeholder="Enter value"
+                pattern={stat.key === 'distance_walked' ? "[0-9]*[.]?[0-9]*" : "[0-9]*"}
+                className="form-input"
+              />
+              {stat.unit && <span className="unit">{stat.unit}</span>}
               {stat.max && (
-                <p className="stat-help">Maximum {stat.max} entries</p>
+                <span className="max-value">Max: {stat.max.toLocaleString()}</span>
               )}
             </div>
           </div>

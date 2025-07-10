@@ -9,13 +9,26 @@ import { VisualExport } from './VisualExport'
 import { RadarChart } from './RadarChart'
 import { StatUpdater } from './StatUpdater'
 
-type DashboardTab = 'calculators' | 'leaderboards' | 'export' | 'performance' | 'update'
+type DashboardTab = 'calculators' | 'leaderboards' | 'analytics' | 'update'
+type AnalyticsTab = 'performance' | 'export'
+
+const TEAM_COLORS = {
+  blue: { name: 'Blue', color: '#0074D9' },
+  red: { name: 'Red', color: '#FF4136' },
+  yellow: { name: 'Yellow', color: '#FFDC00' },
+  black: { name: 'Black', color: '#111111' },
+  green: { name: 'Green', color: '#2ECC40' },
+  orange: { name: 'Orange', color: '#FF851B' },
+  purple: { name: 'Purple', color: '#B10DC9' },
+  pink: { name: 'Pink', color: '#F012BE' }
+}
 
 export const Dashboard = () => {
   const { user } = useAuth()
   const trialStatus = useTrialStatus()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('calculators')
+  const [activeAnalyticsTab, setActiveAnalyticsTab] = useState<AnalyticsTab>('performance')
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -25,6 +38,26 @@ export const Dashboard = () => {
     loadProfile()
     checkUpgradeSuccess()
   }, [user])
+
+  // Handle tab from URL parameter
+  useEffect(() => {
+    const tabParam = searchParams.get('tab')
+    if (tabParam && isValidTab(tabParam)) {
+      setActiveTab(tabParam as DashboardTab)
+    }
+    const analyticsTabParam = searchParams.get('analyticsTab')
+    if (analyticsTabParam && isValidAnalyticsTab(analyticsTabParam)) {
+      setActiveAnalyticsTab(analyticsTabParam as AnalyticsTab)
+    }
+  }, [searchParams])
+
+  const isValidTab = (tab: string): tab is DashboardTab => {
+    return ['calculators', 'leaderboards', 'analytics', 'update'].includes(tab)
+  }
+
+  const isValidAnalyticsTab = (tab: string): tab is AnalyticsTab => {
+    return ['performance', 'export'].includes(tab)
+  }
 
   const checkUpgradeSuccess = () => {
     const upgradeStatus = searchParams.get('upgrade')
@@ -49,6 +82,51 @@ export const Dashboard = () => {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleTabChange = (tab: DashboardTab) => {
+    setActiveTab(tab)
+    searchParams.set('tab', tab)
+    setSearchParams(searchParams)
+  }
+
+  const handleAnalyticsTabChange = (tab: AnalyticsTab) => {
+    setActiveAnalyticsTab(tab)
+    searchParams.set('analyticsTab', tab)
+    setSearchParams(searchParams)
+  }
+
+  const renderAnalyticsContent = () => {
+    if (!profile) return null;
+    
+    return (
+      <div className="analytics-section">
+        <div className="analytics-tabs">
+          <button
+            className={`analytics-tab ${activeAnalyticsTab === 'performance' ? 'active' : ''}`}
+            onClick={() => handleAnalyticsTabChange('performance')}
+          >
+            <span className="tab-icon">📈</span>
+            Performance
+          </button>
+          <button
+            className={`analytics-tab ${activeAnalyticsTab === 'export' ? 'active' : ''}`}
+            onClick={() => handleAnalyticsTabChange('export')}
+          >
+            <span className="tab-icon">📤</span>
+            Visual Export
+          </button>
+        </div>
+
+        <div className="analytics-content">
+          {activeAnalyticsTab === 'performance' ? (
+            <RadarChart profile={profile} isPaidUser={trialStatus.isPaidUser} />
+          ) : (
+            <VisualExport profile={profile} isPaidUser={trialStatus.isPaidUser} />
+          )}
+        </div>
+      </div>
+    )
   }
 
   const renderTabContent = () => {
@@ -79,17 +157,15 @@ export const Dashboard = () => {
 
     switch (activeTab) {
       case 'calculators':
-        return <StatCalculators />
+        return <StatCalculators initialCalculator={searchParams.get('calc') === 'community' ? 'community' : 'grind'} />
       case 'leaderboards':
         return <Leaderboards isPaidUser={trialStatus.isPaidUser} />
-      case 'export':
-        return <VisualExport profile={profile} isPaidUser={trialStatus.isPaidUser} />
-      case 'performance':
-        return <RadarChart profile={profile} isPaidUser={trialStatus.isPaidUser} />
+      case 'analytics':
+        return renderAnalyticsContent()
       case 'update':
         return <StatUpdater onStatsUpdated={handleStatsUpdated} />
       default:
-        return <StatCalculators />
+        return <StatCalculators initialCalculator="grind" />
     }
   }
 
@@ -130,40 +206,25 @@ export const Dashboard = () => {
         </div>
       )}
 
-      {/* Trial Status Banner for Free Users */}
+      {/* Private Mode Status Banner for Free Users */}
       {!trialStatus.isPaidUser && !trialStatus.loading && (
-        <div className={`trial-banner ${trialStatus.isInTrial ? 'trial-active' : 'trial-expired'}`}>
-          <div className="trial-content">
-            <span className="trial-icon">{trialStatus.isInTrial ? '⏱️' : '🔒'}</span>
-            <div className="trial-text">
-              {trialStatus.isInTrial ? (
-                <>
-                  <h3>Free Trial Active</h3>
-                  <p>
-                    {trialStatus.timeRemaining.days > 0 ? (
-                      `${trialStatus.timeRemaining.days} day${trialStatus.timeRemaining.days !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
-                    ) : trialStatus.timeRemaining.hours > 0 ? (
-                      `${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
-                    ) : trialStatus.timeRemaining.minutes > 0 ? (
-                      `${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''} and ${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
-                    ) : (
-                      `${trialStatus.timeRemaining.seconds} second${trialStatus.timeRemaining.seconds !== 1 ? 's' : ''} remaining`
-                    )} to enjoy premium features like All-Time Cards and Grind Card sharing!
-                  </p>
-                </>
-              ) : (
-                <>
-                  <h3>Free Trial Expired</h3>
-                  <p>Upgrade to Premium to unlock All-Time Cards, Weekly/Monthly Cards, Leaderboard participation, and more!</p>
-                </>
-              )}
-            </div>
-            <button 
-              className="trial-upgrade-btn"
-              onClick={() => window.location.href = '/upgrade'}
-            >
-              {trialStatus.isInTrial ? 'Upgrade Now' : 'Get Premium'}
-            </button>
+        <div className={`private-mode-banner ${trialStatus.isInTrial ? 'active' : 'expired'}`}>
+          <div className="private-mode-content">
+            {trialStatus.isInTrial ? (
+              <p className="private-mode-status">
+                Private Mode: {trialStatus.timeRemaining.days} day{trialStatus.timeRemaining.days !== 1 ? 's' : ''} remaining
+              </p>
+            ) : (
+              <p className="private-mode-status">
+                Private Mode Ended - To keep tracking your grind and unlock your leaderboard placement, upgrade for $5.99.
+                <button 
+                  className="upgrade-button"
+                  onClick={() => window.location.href = '/upgrade'}
+                >
+                  Upgrade Now
+                </button>
+              </p>
+            )}
           </div>
         </div>
       )}
@@ -176,33 +237,27 @@ export const Dashboard = () => {
       <div className="dashboard-tabs">
         <button
           className={`dashboard-tab ${activeTab === 'calculators' ? 'active' : ''}`}
-          onClick={() => setActiveTab('calculators')}
+          onClick={() => handleTabChange('calculators')}
         >
           🧮 Calculators
         </button>
         <button
           className={`dashboard-tab ${activeTab === 'update' ? 'active' : ''}`}
-          onClick={() => setActiveTab('update')}
+          onClick={() => handleTabChange('update')}
         >
           📊 Update Stats
         </button>
         <button
           className={`dashboard-tab ${activeTab === 'leaderboards' ? 'active' : ''}`}
-          onClick={() => setActiveTab('leaderboards')}
+          onClick={() => handleTabChange('leaderboards')}
         >
           🏆 Leaderboards
         </button>
         <button
-          className={`dashboard-tab ${activeTab === 'export' ? 'active' : ''}`}
-          onClick={() => setActiveTab('export')}
+          className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => handleTabChange('analytics')}
         >
-          📤 Visual Export
-        </button>
-        <button
-          className={`dashboard-tab ${activeTab === 'performance' ? 'active' : ''}`}
-          onClick={() => setActiveTab('performance')}
-        >
-          📈 Performance
+          📈 Analytics
         </button>
       </div>
 

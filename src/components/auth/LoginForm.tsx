@@ -12,9 +12,6 @@ export const LoginForm = () => {
   const { signIn } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
-  
-  // Get the intended destination from location state, or default to dashboard
-  const from = location.state?.from?.pathname || '/'
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,7 +23,7 @@ export const LoginForm = () => {
       if (error) {
         setError(error.message)
       } else {
-        // After successful login, check if user has completed profile
+        // After successful login, check if user has completed profile setup
         try {
           const { hasProfile, error: profileError } = await profileService.hasProfile()
           
@@ -34,17 +31,17 @@ export const LoginForm = () => {
             console.warn('Error checking profile:', profileError)
           }
           
-          // If profile exists, redirect to dashboard or intended destination
+          // If profile is set up, redirect to home
           if (hasProfile) {
-            navigate(from, { replace: true })
+            navigate('/home', { replace: true })
           } else {
-            // If no profile exists, redirect to profile setup
+            // If profile is not set up, redirect to profile setup
             navigate('/profile-setup', { replace: true })
           }
         } catch (profileErr) {
           console.warn('Error checking profile existence:', profileErr)
-          // If there's an error checking profile, default to intended destination
-          navigate(from, { replace: true })
+          // If there's an error checking profile, default to home
+          navigate('/home', { replace: true })
         }
       }
     } catch (err) {
@@ -133,7 +130,7 @@ export const LoginForm = () => {
             <p>
               Don't have an account?{' '}
               <Link to="/signup" className="form-link">
-                Sign up for a free trial!
+                Sign up
               </Link>
             </p>
           </div>

@@ -797,5 +797,48 @@ export const adminService = {
       console.error('❌ Error in deleteScreenshot:', error)
       return { error }
     }
+  },
+
+  // Get system setting
+  async getSystemSetting(key: string): Promise<{ value: string | null; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', key)
+        .single();
+
+      return { value: data?.value || null, error };
+    } catch (error) {
+      return { value: null, error };
+    }
+  },
+
+  // Update system setting (admin only)
+  async updateSystemSetting(key: string, value: string): Promise<{ error: any }> {
+    try {
+      const { error } = await supabase
+        .from('system_settings')
+        .upsert({ key, value, updated_at: new Date().toISOString() });
+
+      return { error };
+    } catch (error) {
+      return { error };
+    }
+  },
+
+  // Get max Pokédex entries
+  async getMaxPokedexEntries(): Promise<{ value: number; error: any }> {
+    try {
+      const { value, error } = await this.getSystemSetting('max_pokedex_entries');
+      return { value: parseInt(value || '1000'), error };
+    } catch (error) {
+      return { value: 1000, error }; // Default fallback
+    }
+  },
+
+  // Update max Pokédex entries (admin only)
+  async updateMaxPokedexEntries(maxEntries: number): Promise<{ error: any }> {
+    return await this.updateSystemSetting('max_pokedex_entries', maxEntries.toString());
   }
 } 

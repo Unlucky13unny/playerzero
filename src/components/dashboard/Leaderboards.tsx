@@ -1,7 +1,30 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { useValuePropModal } from '../../hooks/useValuePropModal'
+import { ValuePropModal } from '../upgrade/ValuePropModal'
+import { QuickProfileView } from '../profile/QuickProfileView'
 import { dashboardService, type LeaderboardEntry } from '../../services/dashboardService'
+import { FaMedal, FaGlobe, FaUsers, FaShieldAlt, FaSearch } from 'react-icons/fa'
+
+// Import country list from profile setup
+const COUNTRIES = [
+  'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 
+  'Japan', 'South Korea', 'Brazil', 'Mexico', 'Italy', 'Spain', 'Netherlands',
+  'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
+]
+
+// Import team colors from profile setup
+const TEAM_COLORS = [
+  { value: 'blue', label: 'Blue', color: '#0074D9', team: 'Team Blue' },
+  { value: 'red', label: 'Red', color: '#FF4136', team: 'Team Red' },
+  { value: 'yellow', label: 'Yellow', color: '#FFDC00', team: 'Team Yellow' },
+  { value: 'black', label: 'Black', color: '#111111', team: 'Team Black' },
+  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Team Green' },
+  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Team Orange' },
+  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Team Purple' },
+  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Team Pink' }
+]
 
 interface LeaderboardsProps {
   isPaidUser: boolean
@@ -9,24 +32,42 @@ interface LeaderboardsProps {
 
 export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const trialStatus = useTrialStatus()
+  const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all-time'>('weekly')
   const [sortBy, setSortBy] = useState<'xp' | 'catches' | 'distance' | 'pokestops'>('xp')
+  const [view, setView] = useState<'all' | 'country' | 'team' | 'search'>(
+    (searchParams.get('view') as 'all' | 'country' | 'team' | 'search') || 'all'
+  )
+  const [filterValue, setFilterValue] = useState<string>('')
+  const [searchQuery, setSearchQuery] = useState<string>('')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
+  const [quickViewAnchor, setQuickViewAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
-    // Always load leaderboard for browse access
+    // Update view when URL parameter changes
+    const viewParam = searchParams.get('view') as 'all' | 'country' | 'team' | 'search'
+    if (viewParam && ['all', 'country', 'team', 'search'].includes(viewParam)) {
+      setView(viewParam)
+    }
     loadLeaderboard()
-  }, [period, sortBy])
+  }, [period, sortBy, view, filterValue, searchQuery])
 
   const loadLeaderboard = async () => {
     setLoading(true)
     setError(null)
     
     try {
-      const { data } = await dashboardService.getLeaderboard(period, sortBy)
+      const { data } = await dashboardService.getLeaderboard({
+        period,
+        sortBy,
+        view,
+        filterValue: view === 'search' ? searchQuery : filterValue
+      })
       setLeaderboard(data || [])
     } catch (err: any) {
       console.error('Leaderboard error:', err)
@@ -36,32 +77,24 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     }
   }
 
-  const handleTrainerClick = (entry: LeaderboardEntry) => {
-    if (!trialStatus.canClickIntoProfiles) {
-      // Show upgrade prompt instead of navigating
-      navigate('/upgrade')
-      return
-    }
-    // Navigate to public profile using profile ID
-    navigate(`/profile/${entry.profile_id}`)
-  }
+  const handleTrainerClick = (entry: LeaderboardEntry, event: React.MouseEvent<HTMLElement>) => {
+    event.preventDefault();
+    setSelectedProfile(entry.profile_id);
+    setQuickViewAnchor(event.currentTarget);
+  };
+
+  const handleCloseQuickView = () => {
+    setSelectedProfile(null);
+    setQuickViewAnchor(null);
+  };
 
   const handleUpgradeClick = () => {
     navigate('/upgrade')
   }
 
   const getTeamColor = (teamColor: string) => {
-    const colors: { [key: string]: string } = {
-      'red': '#FF4136',
-      'blue': '#0074D9',
-      'yellow': '#FFDC00',
-      'black': '#111111',
-      'green': '#2ECC40',
-      'orange': '#FF851B',
-      'purple': '#B10DC9',
-      'pink': '#F012BE'
-    }
-    return colors[teamColor] || '#666666'
+    const team = TEAM_COLORS.find(t => t.value === teamColor)
+    return team?.color || '#666666'
   }
 
   const formatSortValue = (entry: LeaderboardEntry, sortBy: string) => {
@@ -89,8 +122,28 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     return value.toLocaleString()
   }
 
+  const getRankIcon = (rank: number) => {
+    if (rank === 0) return <FaMedal className="rank-icon gold" />
+    if (rank === 1) return <FaMedal className="rank-icon silver" />
+    if (rank === 2) return <FaMedal className="rank-icon bronze" />
+    return <span className="rank-number">{rank + 1}</span>
+  }
+
   return (
     <div className="leaderboards-container">
+      <ValuePropModal 
+        isOpen={isOpen} 
+        onClose={closeValueProp} 
+        daysRemaining={daysRemaining} 
+      />
+      
+      <QuickProfileView
+        profileId={selectedProfile || ''}
+        isOpen={!!selectedProfile}
+        onClose={handleCloseQuickView}
+        anchorEl={quickViewAnchor}
+      />
+
       <div className="leaderboards-header">
         <h2>🏆 Community Leaderboards</h2>
         <p>See how the top trainers are performing</p>
@@ -103,43 +156,129 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
         )}
       </div>
 
-      {/* Filters */}
+      {/* View Filters */}
+      <div className="view-filters">
+        <button
+          className={`view-tab ${view === 'all' ? 'active' : ''}`}
+          onClick={() => {
+            setView('all')
+            setFilterValue('')
+            setSearchQuery('')
+          }}
+        >
+          <FaUsers className="view-icon" /> All Trainers
+        </button>
+        <button
+          className={`view-tab ${view === 'country' ? 'active' : ''}`}
+          onClick={() => {
+            setView('country')
+            setSearchQuery('')
+          }}
+        >
+          <FaGlobe className="view-icon" /> By Country
+        </button>
+        <button
+          className={`view-tab ${view === 'team' ? 'active' : ''}`}
+          onClick={() => {
+            setView('team')
+            setSearchQuery('')
+          }}
+        >
+          <FaShieldAlt className="view-icon" /> By Team
+        </button>
+        <button
+          className={`view-tab ${view === 'search' ? 'active' : ''}`}
+          onClick={() => {
+            setView('search')
+            setFilterValue('')
+          }}
+        >
+          <FaSearch className="view-icon" /> Search
+        </button>
+      </div>
+
+      {/* Secondary Filters */}
+      <div className="secondary-filters">
+        {view === 'country' && (
+          <select
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Select Country</option>
+            {COUNTRIES.map((country) => (
+              <option key={country} value={country}>
+                {country}
+              </option>
+            ))}
+          </select>
+        )}
+        {view === 'team' && (
+          <select
+            value={filterValue}
+            onChange={(e) => setFilterValue(e.target.value)}
+            className="filter-select"
+          >
+            <option value="">Select Team</option>
+            {TEAM_COLORS.map((team) => (
+              <option 
+                key={team.value} 
+                value={team.value}
+                style={{ color: team.color }}
+              >
+                {team.team}
+              </option>
+            ))}
+          </select>
+        )}
+        {view === 'search' && (
+          <div className="search-container">
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search by trainer name..."
+              className="search-input"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Time Period Filters */}
       <div className="leaderboard-filters">
         <div className="filter-group">
-          <label>Time Period</label>
           <div className="period-tabs">
             <button
               className={`period-tab ${period === 'weekly' ? 'active' : ''}`}
               onClick={() => setPeriod('weekly')}
             >
-              📅 Weekly
+              Weekly
             </button>
             <button
               className={`period-tab ${period === 'monthly' ? 'active' : ''}`}
               onClick={() => setPeriod('monthly')}
             >
-              📊 Monthly
+              Monthly
             </button>
             <button
               className={`period-tab ${period === 'all-time' ? 'active' : ''}`}
               onClick={() => setPeriod('all-time')}
             >
-              🌟 All-Time
+              All-Time
             </button>
           </div>
         </div>
 
         <div className="filter-group">
-          <label>Sort By</label>
           <select
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value as any)}
             className="sort-select"
           >
-            <option value="xp">⚡ XP {period === 'all-time' ? 'Total' : 'Gained'}</option>
-            <option value="catches">🔴 Pokémon {period === 'all-time' ? 'Total' : 'Caught'}</option>
-            <option value="distance">🚶 Distance {period === 'all-time' ? 'Total' : 'Walked'}</option>
-            <option value="pokestops">📍 PokéStops {period === 'all-time' ? 'Total' : 'Visited'}</option>
+            <option value="xp">XP {period === 'all-time' ? 'Total' : 'Gained'}</option>
+            <option value="catches">Pokémon {period === 'all-time' ? 'Total' : 'Caught'}</option>
+            <option value="distance">Distance {period === 'all-time' ? 'Total' : 'Walked'}</option>
+            <option value="pokestops">PokéStops {period === 'all-time' ? 'Total' : 'Visited'}</option>
           </select>
         </div>
       </div>
@@ -161,14 +300,35 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
             {leaderboard.length === 0 ? (
               <div className="empty-leaderboard">
                 <div className="empty-icon">📊</div>
-                <h3>No Premium Members Yet</h3>
-                <p>Be the first to upgrade and claim the top spot!</p>
-                <button 
-                  className="upgrade-cta"
-                  onClick={handleUpgradeClick}
-                >
-                  ✨ Upgrade to Premium
-                </button>
+                {view === 'search' ? (
+                  <>
+                    <h3>No Trainers Found</h3>
+                    {isPaidUser ? (
+                      <p>Try adjusting your search terms or check back later.</p>
+                    ) : (
+                      <>
+                        <p>Upgrade to Premium to unlock full search capabilities!</p>
+                        <button 
+                          className="upgrade-cta"
+                          onClick={handleUpgradeClick}
+                        >
+                          ✨ Upgrade to Premium
+                        </button>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <h3>No Premium Members Yet</h3>
+                    <p>Be the first to upgrade and claim the top spot!</p>
+                    <button 
+                      className="upgrade-cta"
+                      onClick={handleUpgradeClick}
+                    >
+                      ✨ Upgrade to Premium
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               <>
@@ -191,16 +351,14 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                     className={`leaderboard-entry ${index < 3 ? 'top-3' : ''}`}
                   >
                     <div className="rank-section">
-                      <span className={`rank rank-${index + 1}`}>
-                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}
-                      </span>
+                      {getRankIcon(index)}
                     </div>
 
                     <div className="trainer-section">
                       <div className="trainer-info">
                         <span 
                           className={`trainer-name ${trialStatus.canClickIntoProfiles ? 'clickable' : 'browse-only'}`}
-                          onClick={() => handleTrainerClick(entry)}
+                          onClick={(e) => handleTrainerClick(entry, e)}
                           style={{
                             cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
                             color: trialStatus.canClickIntoProfiles ? '#00d4aa' : '#888',
@@ -231,8 +389,9 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                             style={{ backgroundColor: getTeamColor(entry.team_color) }}
                             title={`Team ${entry.team_color}`}
                           ></span>
-                          <span className="country">{entry.country}</span>
-                          <span className="premium-badge">👑 Premium</span>
+                          <span className="country">
+                            {entry.country}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -256,7 +415,7 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                             cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
                             opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
                           }}
-                          onClick={() => handleTrainerClick(entry)}
+                          onClick={(e) => handleTrainerClick(entry, e)}
                         />
                       ) : (
                         <div className="avatar-placeholder">
@@ -272,23 +431,31 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
         )}
       </div>
       
-      {!trialStatus.isPaidUser && (
+      {!trialStatus.isPaidUser && !trialStatus.isInTrial && (
         <div className="leaderboard-upgrade-prompt">
           <div className="upgrade-prompt-content">
-            <h3>🚀 Want to do more?</h3>
+            <h3>Private Mode Ended</h3>
+            <p>To keep tracking your grind and unlock your leaderboard placement, upgrade for $5.99.</p>
+            <button className="upgrade-button" onClick={handleUpgradeClick}>
+              Upgrade Now
+            </button>
+          </div>
+        </div>
+      )}
+      {!trialStatus.isPaidUser && trialStatus.isInTrial && (
+        <div className="leaderboard-upgrade-prompt">
+          <div className="upgrade-prompt-content">
+            <h3>🔒 Private Mode Active</h3>
             <p>
-              {trialStatus.isInTrial 
-                ? `You have ${trialStatus.timeRemaining.days > 0 
-                    ? `${trialStatus.timeRemaining.days} day${trialStatus.timeRemaining.days !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}` 
-                    : trialStatus.timeRemaining.hours > 0 
-                    ? `${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''} and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
-                    : `${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
-                  } left in your trial. Upgrade now to continue accessing premium features!`
-                : 'Upgrade to Premium to view detailed profiles, appear on leaderboards, and unlock all features!'
-              }
+              You have {trialStatus.timeRemaining.days > 0 
+                ? `${trialStatus.timeRemaining.days} day${trialStatus.timeRemaining.days !== 1 ? 's' : ''}, ${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''}, and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}` 
+                : trialStatus.timeRemaining.hours > 0 
+                ? `${trialStatus.timeRemaining.hours} hour${trialStatus.timeRemaining.hours !== 1 ? 's' : ''} and ${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
+                : `${trialStatus.timeRemaining.minutes} minute${trialStatus.timeRemaining.minutes !== 1 ? 's' : ''}`
+              } left in private mode. Upgrade now to continue accessing premium features!
             </p>
             <button className="upgrade-button" onClick={handleUpgradeClick}>
-              Upgrade to Premium
+              Upgrade Now
             </button>
           </div>
         </div>

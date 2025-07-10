@@ -7,21 +7,44 @@ type UserMetadata = {
   role: 'free' | 'paid'
 }
 
+type ErrorState = {
+  message: string;
+}
+
 export const SignupForm = () => {
   const [email, setEmail] = useState('')
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [error, setError] = useState<ErrorState | null>(null)
   const { signUp } = useAuth()
   const navigate = useNavigate()
+
+  const validateInputs = (): boolean => {
+    if (password !== confirmPassword) {
+      setError({ message: 'Passwords do not match' })
+      return false
+    }
+
+    if (username.length < 3) {
+      setError({ message: 'Username must be at least 3 characters long' })
+      return false
+    }
+
+    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+      setError({ message: 'Username can only contain letters, numbers, underscores, and hyphens' })
+      return false
+    }
+
+    return true
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     
-    if (password !== confirmPassword) {
-      setError('Passwords do not match')
+    if (!validateInputs()) {
       return
     }
     
@@ -32,16 +55,20 @@ export const SignupForm = () => {
         role: 'free'
       }
       
-      const { error } = await signUp(email, password, metadata)
+      const { error: signUpError } = await signUp(email, password, metadata, username)
       
-      if (error) {
-        setError(error.message)
+      if (signUpError) {
+        if (signUpError.code === '23505') {
+          setError({ message: 'Username already taken' })
+        } else {
+          setError({ message: signUpError.message })
+        }
       } else {
-        // Redirect to confirmation page
+        // Only navigate on success
         navigate('/signup-success')
       }
-    } catch (err) {
-      setError('An unexpected error occurred')
+    } catch (err: any) {
+      setError({ message: 'An unexpected error occurred' })
       console.error(err)
     } finally {
       setLoading(false)
@@ -62,11 +89,32 @@ export const SignupForm = () => {
           
           {error && (
             <div className="error-message">
-              {error}
+              <p>{error.message}</p>
             </div>
           )}
           
           <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="username">
+                Username
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value.toLowerCase())} // Convert to lowercase
+                className="form-input"
+                placeholder="your_username"
+                required
+                autoFocus
+                minLength={3}
+                pattern="[a-zA-Z0-9_-]+"
+              />
+              <p style={{ fontSize: 'var(--font-xs)', color: 'var(--gray-light)', marginTop: '0.25rem' }}>
+                Username must be at least 3 characters and can only contain letters, numbers, underscores, and hyphens
+              </p>
+            </div>
+
             <div className="form-group">
               <label htmlFor="email">
                 Email
@@ -79,7 +127,6 @@ export const SignupForm = () => {
                 className="form-input"
                 placeholder="you@example.com"
                 required
-                autoFocus
               />
             </div>
             
