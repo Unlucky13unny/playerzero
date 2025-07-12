@@ -10,4 +10,83 @@
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
+
+
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      background: linear-gradient(to bottom, #000000, #333333);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      text-align: center;
+      overflow: hidden;
+      font-family: 'Helvetica Neue', sans-serif;
+      color: #fff;
+    }
+
+    /* LOGO - 25% larger on both mobile & desktop */
+    .logo {
+      width: clamp(250px, 62.5vw, 500px);
+      height: auto;
+      margin-bottom: clamp(20px, 5vw, 40px);
+      opacity: 0;
+      animation: fadeIn 2s forwards;
+    }
+
+    .teaser {
+      font-size: clamp(1rem, 4vw, 1.5rem);
+      line-height: 1.4;
+      opacity: 0;
+      animation: fadeIn 2s 1.5s forwards;
+      margin: 0 clamp(10px, 5vw, 30px);
+    }
+
+    .coming-soon {
+      margin-top: clamp(12px, 3vw, 25px);
+      font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+      color: #ccc;
+      opacity: 0;
+      animation: fadeIn 2s 3s forwards;
+    }
+
+    @keyframes fadeIn {
+      to {
+        opacity: 1;
+      }
+    }
+
+    /* Desktop bump */
+    @media (min-width: 1024px) {
+      .logo {
+        width: clamp(500px, 37.5vw, 875px);
+        margin-bottom: clamp(40px, 5vw, 60px);
+      }
+
+      .teaser {
+        font-size: clamp(1.5rem, 3vw, 2.5rem);
+      }
+
+      .coming-soon {
+        font-size: clamp(1.2rem, 2vw, 1.8rem);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <img src="images/A6-PlayerZero.png" alt="PlayerZero Logo" class="logo" />
+
+  <div class="teaser">
+    It’s not what you’ve already accomplished…<br>
+    It’s what you’re about to…
+  </div>
+
+  <div class="coming-soon">
+    Coming soon...
+  </div>
+</body>
 </html>
