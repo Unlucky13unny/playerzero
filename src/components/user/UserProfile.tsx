@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
-import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 
@@ -33,7 +32,7 @@ const SOCIAL_MEDIA = [
 ]
 
 export const UserProfile = () => {
-  const { user, userMetadata, signOut, startFreeTrial, isInTrial, trialDaysLeft } = useAuth()
+  const { user, signOut } = useAuth()
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -43,7 +42,6 @@ export const UserProfile = () => {
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const [newScreenshot, setNewScreenshot] = useState<File | null>(null)
   const navigate = useNavigate()
-  const trialStatus = useTrialStatus()
   const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
 
   useEffect(() => {
@@ -81,26 +79,6 @@ export const UserProfile = () => {
     }
   }
   
-  const handleStartTrial = async () => {
-    setError(null)
-    setLoading(true)
-    try {
-      const { error } = await startFreeTrial()
-      if (error) {
-        setError(error.message)
-      }
-    } catch (err) {
-      setError('An unexpected error occurred')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-  
-  const handleUpgrade = async () => {
-    showValueProp('profile')
-  }
-
   const handleEdit = () => {
     setIsEditing(true)
     setError(null)
@@ -167,8 +145,6 @@ export const UserProfile = () => {
   }
   
   const isPaid = profile?.is_paid_user === true
-  const inTrial = isInTrial()
-  const daysLeft = trialDaysLeft()
 
   const renderSocialSection = () => {
     if (!profile) return null;

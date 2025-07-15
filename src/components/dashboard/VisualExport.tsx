@@ -9,17 +9,6 @@ interface VisualExportProps {
   isPaidUser: boolean
 }
 
-const TEAM_COLORS = [
-  { value: 'blue', label: 'Blue', color: '#0074D9', team: 'Team Blue' },
-  { value: 'red', label: 'Red', color: '#FF4136', team: 'Team Red' },
-  { value: 'yellow', label: 'Yellow', color: '#FFDC00', team: 'Team Yellow' },
-  { value: 'black', label: 'Black', color: '#111111', team: 'Team Black' },
-  { value: 'green', label: 'Green', color: '#2ECC40', team: 'Team Green' },
-  { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Team Orange' },
-  { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Team Purple' },
-  { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Team Pink' }
-]
-
 export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const navigate = useNavigate()
   const trialStatus = useTrialStatus()
@@ -137,8 +126,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         return 'Restricted'
     }
   }
-
-  const selectedTeam = TEAM_COLORS.find(team => team.value === profile.team_color) || TEAM_COLORS[0]
 
   // Calculate projected dates and achievements
   const currentXP = profile.total_xp || 0

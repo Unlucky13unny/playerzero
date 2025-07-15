@@ -32,7 +32,7 @@ const SOCIAL_MEDIA = [
 ]
 
 export const ProfileSetup = () => {
-  const { updateProfile, userMetadata } = useAuth()
+  const { updateProfile } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -203,7 +203,7 @@ export const ProfileSetup = () => {
       }
       
       // Save to database
-      const { data, error: dbError } = await profileService.upsertProfile(profileDataToSave)
+      const { error: dbError } = await profileService.upsertProfile(profileDataToSave)
       
       if (dbError) {
         throw new Error('Failed to save profile: ' + dbError.message)
@@ -232,7 +232,7 @@ export const ProfileSetup = () => {
     }
   }
 
-  const renderPrivacyToggle = (fieldName: string) => (
+  const renderPrivacyToggle = () => (
     <div className="privacy-toggle" title="This field is private until you upgrade">
       <div className="privacy-status">
         <span className="privacy-icon">🔒</span>
@@ -300,7 +300,7 @@ export const ProfileSetup = () => {
                 pattern="\d{4}\s?\d{4}\s?\d{4}"
                 title="Enter your 12-digit trainer code"
               />
-              {renderPrivacyToggle('trainer_code')}
+              {renderPrivacyToggle()}
             </div>
           </div>
         </div>
@@ -392,7 +392,7 @@ export const ProfileSetup = () => {
                     className="form-input"
                     placeholder={platform.placeholder}
                   />
-                  {renderPrivacyToggle(platform.key)}
+                  {renderPrivacyToggle()}
                 </div>
               </div>
             ))}

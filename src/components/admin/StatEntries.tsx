@@ -103,8 +103,6 @@ export const StatEntries = () => {
   }
 
   // Calculate stats
-  const totalXP = statEntries.reduce((sum, entry) => sum + entry.total_xp, 0)
-  const totalPokemon = statEntries.reduce((sum, entry) => sum + entry.pokemon_caught, 0)
   const avgLevel = statEntries.length > 0 ? Math.round(statEntries.reduce((sum, entry) => sum + entry.trainer_level, 0) / statEntries.length) : 0
 
   if (loading) {

@@ -12,17 +12,6 @@ import { StatUpdater } from './StatUpdater'
 type DashboardTab = 'calculators' | 'leaderboards' | 'analytics' | 'update'
 type AnalyticsTab = 'performance' | 'export'
 
-const TEAM_COLORS = {
-  blue: { name: 'Blue', color: '#0074D9' },
-  red: { name: 'Red', color: '#FF4136' },
-  yellow: { name: 'Yellow', color: '#FFDC00' },
-  black: { name: 'Black', color: '#111111' },
-  green: { name: 'Green', color: '#2ECC40' },
-  orange: { name: 'Orange', color: '#FF851B' },
-  purple: { name: 'Purple', color: '#B10DC9' },
-  pink: { name: 'Pink', color: '#F012BE' }
-}
-
 export const Dashboard = () => {
   const { user } = useAuth()
   const trialStatus = useTrialStatus()
@@ -169,8 +158,7 @@ export const Dashboard = () => {
     }
   }
 
-  const handleStatsUpdated = (updatedProfile: any) => {
-    // Refresh the profile data
+  const handleStatsUpdated = () => {
     loadProfile()
   }
 

@@ -22,10 +22,6 @@ export const Layout = ({ children }: LayoutProps) => {
     setMobileMenuOpen(false)
   }
 
-  const toggleMobileMenu = () => {
-    setMobileMenuOpen(!mobileMenuOpen)
-  }
-
   const toggleFeaturesDropdown = () => {
     setFeaturesDropdownOpen(!featuresDropdownOpen)
   }

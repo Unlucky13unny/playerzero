@@ -1,12 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { dashboardService, type StatUpdate, type StatUpdateResponse } from '../../services/dashboardService';
-import { profileService, type ProfileWithMetadata } from '../../services/profileService';
-import { adminService } from '../../services/adminService';
-
-interface StatUpdaterProps {
-  onStatsUpdated?: (profile: ProfileWithMetadata) => void;
-}
+import { useState, useEffect } from 'react'
+import { dashboardService } from '../../services/dashboardService'
+import { profileService, type ProfileWithMetadata } from '../../services/profileService'
+import { adminService } from '../../services/adminService'
 
 type Stats = {
   total_xp?: number
@@ -14,33 +9,28 @@ type Stats = {
   distance_walked?: number
   pokestops_visited?: number
   unique_pokedex_entries?: number
-  entry_date?: string
+  trainer_level?: number
   updated_at?: string
 }
 
-export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
-  const { user } = useAuth();
-  const [currentProfile, setCurrentProfile] = useState<ProfileWithMetadata | null>(null);
-  const [currentStats, setCurrentStats] = useState<Stats>({});
-  const [updates, setUpdates] = useState<Stats>({});
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000);
-  const [isExpanded, setIsExpanded] = useState(false);
+export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: ProfileWithMetadata) => void }) => {
+  const [currentStats, setCurrentStats] = useState<Stats>({})
+  const [updates, setUpdates] = useState<Stats>({})
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000)
 
   useEffect(() => {
-    loadStats();
-    loadMaxPokedexEntries();
-  }, []);
+    loadStats()
+    loadMaxPokedexEntries()
+  }, [])
 
   const loadStats = async () => {
-    setLoading(true);
-    setError(null);
     try {
-      const { data, error } = await profileService.getProfile();
-      if (error) throw error;
+      const { data, error } = await profileService.getProfile()
+      if (error) throw error
       if (data) {
         const stats: Stats = {
           total_xp: data.total_xp,
@@ -48,110 +38,86 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
           distance_walked: data.distance_walked,
           pokestops_visited: data.pokestops_visited,
           unique_pokedex_entries: data.unique_pokedex_entries,
-          entry_date: data.entry_date,
+          trainer_level: data.trainer_level,
           updated_at: data.updated_at
-        };
-        setCurrentStats(stats);
-        setCurrentProfile(data);
+        }
+        setCurrentStats(stats)
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load stats');
-    } finally {
-      setLoading(false);
+      setError(err.message || 'Failed to load stats')
     }
-  };
+  }
 
   const loadMaxPokedexEntries = async () => {
-    const { value, error } = await adminService.getMaxPokedexEntries();
+    const { value, error } = await adminService.getMaxPokedexEntries()
     if (!error) {
-      setMaxPokedexEntries(value);
+      setMaxPokedexEntries(value)
     }
-  };
+  }
 
   const handleInputChange = (field: keyof Stats, value: string) => {
-    // Handle empty value
     if (!value.trim()) {
-      setUpdates(prev => ({ ...prev, [field]: undefined }));
-      return;
+      setUpdates(prev => ({ ...prev, [field]: undefined }))
+      return
     }
 
-    // Remove leading zeros
-    const cleanValue = value.replace(/^0+/, '');
-    
-    // Convert to appropriate type
-    let parsedValue: number | undefined;
+    const cleanValue = value.replace(/^0+/, '')
+    let parsedValue: number | undefined
+
     if (field === 'distance_walked') {
-      // Allow decimal for distance
-      parsedValue = cleanValue ? parseFloat(cleanValue) : undefined;
+      parsedValue = cleanValue ? parseFloat(cleanValue) : undefined
     } else {
-      // Integer for other stats
-      parsedValue = cleanValue ? parseInt(cleanValue) : undefined;
+      parsedValue = cleanValue ? parseInt(cleanValue) : undefined
     }
 
-    // Validate value
     if (parsedValue !== undefined) {
-      const currentValue = currentStats[field];
-      if (currentValue !== undefined && parsedValue < currentValue) {
-        return; // Don't allow values less than current
+      const currentValue = currentStats[field]
+      if (currentValue !== undefined && typeof parsedValue === 'number' && typeof currentValue === 'number' && parsedValue < currentValue) {
+        return
       }
       if (field === 'unique_pokedex_entries' && parsedValue > maxPokedexEntries) {
-        return; // Don't allow exceeding max Pokédex entries
+        return
       }
     }
 
-    setUpdates(prev => ({ ...prev, [field]: parsedValue }));
-  };
+    setUpdates(prev => ({ ...prev, [field]: parsedValue }))
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSaving(true);
-    setError(null);
-    setSuccess(null);
+    e.preventDefault()
+    setSaving(true)
+    setError(null)
+    setSuccess(null)
 
     try {
-      // Only include fields that have been updated and are different from current
-      const updates_to_save = Object.entries(updates).reduce((acc, [key, value]) => {
-        if (value !== undefined && value !== currentStats[key as keyof Stats]) {
-          acc[key as keyof Stats] = value;
-        }
-        return acc;
-      }, {} as Stats);
-
-      if (Object.keys(updates_to_save).length === 0) {
-        setError('No changes to save');
-        return;
-      }
-
-      const response: StatUpdateResponse = await dashboardService.updateUserStats(updates_to_save);
+      const response = await dashboardService.updateUserStats(updates)
       
       if (response.success) {
-        setSuccess('Stats updated successfully!');
-        await loadStats();
-        setUpdates({}); // Clear updates
+        setSuccess('Stats updated successfully!')
+        await loadStats()
+        setUpdates({})
         
-        // Notify parent component
-        if (response.updatedProfile && onStatsUpdated) {
-          onStatsUpdated(response.updatedProfile as ProfileWithMetadata);
+        if (response.updatedProfile) {
+          onStatsUpdated(response.updatedProfile as ProfileWithMetadata)
         }
         
-        // Auto-collapse after successful update
-        setTimeout(() => setIsExpanded(false), 2000);
+        setTimeout(() => setIsExpanded(false), 2000)
       } else {
-        setError(response.message || 'Failed to update stats');
+        setError(response.message || 'Failed to update stats')
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to update stats');
+      setError(err.message || 'Failed to update stats')
     } finally {
-      setSaving(false);
+      setSaving(false)
     }
-  };
+  }
 
   const formatNumber = (num: number | undefined): string => {
     if (num === undefined) return '0';
     return num.toLocaleString();
   };
 
-  if (!currentProfile || !currentStats) {
+  if (!currentStats) {
     return (
       <div className="stat-updater-container">
         <div className="loading-message">Loading your profile...</div>
@@ -165,7 +131,7 @@ export const StatUpdater: React.FC<StatUpdaterProps> = ({ onStatsUpdated }) => {
         <div className="header-content">
           <div className="header-info">
             <h3>📊 Update Your Stats</h3>
-            <p>Keep your progress up to date • Last entry: {new Date(currentStats.entry_date || currentStats.updated_at).toLocaleDateString()}</p>
+            <p>Keep your progress up to date • Last entry: {new Date(currentStats.updated_at || '').toLocaleDateString()}</p>
           </div>
           <button
             type="button"

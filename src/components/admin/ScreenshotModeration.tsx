@@ -146,68 +146,6 @@ export const ScreenshotModeration = () => {
     return matchesFilter && matchesSearch
   })
 
-  const FlagModal = ({ imageId, onFlag, onClose }: { imageId: string, onFlag: (reason: string) => void, onClose: () => void }) => {
-    const [reason, setReason] = useState('')
-    const [customReason, setCustomReason] = useState('')
-
-    const predefinedReasons = [
-      'Inappropriate content',
-      'Fake/manipulated screenshot',
-      'Contains personal information',
-      'Spam/advertising',
-      'Not a Pokemon GO screenshot',
-      'Other'
-    ]
-
-    const handleSubmit = () => {
-      const finalReason = reason === 'Other' ? customReason : reason
-      if (finalReason.trim()) {
-        onFlag(finalReason)
-        onClose()
-      }
-    }
-
-    return (
-      <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <h3>Flag Screenshot</h3>
-          <div className="flag-reasons">
-            {predefinedReasons.map(r => (
-              <label key={r} className="reason-option">
-                <input
-                  type="radio"
-                  name="reason"
-                  value={r}
-                  checked={reason === r}
-                  onChange={(e) => setReason(e.target.value)}
-                />
-                {r}
-              </label>
-            ))}
-          </div>
-          {reason === 'Other' && (
-            <textarea
-              placeholder="Enter custom reason..."
-              value={customReason}
-              onChange={(e) => setCustomReason(e.target.value)}
-              className="custom-reason-input"
-            />
-          )}
-          <div className="modal-actions">
-            <button onClick={onClose} className="btn btn-secondary">Cancel</button>
-            <button 
-              onClick={handleSubmit} 
-              className="btn btn-danger"
-              disabled={!reason || (reason === 'Other' && !customReason.trim())}
-            >
-              Flag Screenshot
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   if (loading) {
     return <div className="loading">Loading screenshots...</div>
   }

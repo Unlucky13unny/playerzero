@@ -157,8 +157,10 @@ export const profileService = {
 
       if (error) {
         return { data: null, error }
+      } else {
+        console.log(data);
       }
-
+      
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
         .from('profile-screenshots')

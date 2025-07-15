@@ -36,18 +36,6 @@ interface QuickProfileData {
   profile_screenshot_url?: string;
 }
 
-interface DatabaseProfileData {
-  username: string;
-  team_color: string;
-  trainer_level: number;
-  country: string;
-  total_xp: number;
-  pokemon_caught: number;
-  distance_walked: number;
-  pokestops_visited: number;
-  profile_screenshot_url?: string;
-}
-
 export const QuickProfileView = ({ 
   profileId, 
   isOpen, 

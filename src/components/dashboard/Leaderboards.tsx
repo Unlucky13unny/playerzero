@@ -34,7 +34,7 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const trialStatus = useTrialStatus()
-  const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
+  const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all-time'>('weekly')
   const [sortBy, setSortBy] = useState<'xp' | 'catches' | 'distance' | 'pokestops'>('xp')
   const [view, setView] = useState<'all' | 'country' | 'team' | 'search'>(

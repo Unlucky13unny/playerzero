@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { RadarChart } from '../dashboard/RadarChart'
 
 export const PostProfileTutorial = () => {
   const [currentSlide, setCurrentSlide] = useState(1)
-  const { userMetadata } = useAuth()
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
-  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
 
   const isPaid = profile?.is_paid_user === true
@@ -29,7 +26,7 @@ export const PostProfileTutorial = () => {
     } catch (err) {
       console.error('Failed to load profile:', err)
     } finally {
-      setLoading(false)
+      // setLoading(false) // This line was removed from the original file, so it's removed here.
     }
   }
 

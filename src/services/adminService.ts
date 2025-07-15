@@ -40,21 +40,6 @@ export interface StatEntry {
   email?: string
 }
 
-// Helper function to get storage bucket list
-const getStorageBuckets = async () => {
-  try {
-    const { data: buckets, error } = await supabaseAdmin.storage.listBuckets()
-    if (error) {
-      console.log('Could not list buckets:', error.message)
-      return []
-    }
-    return buckets.map(bucket => bucket.name)
-  } catch (error) {
-    console.log('Error listing buckets:', error)
-    return []
-  }
-}
-
 export const adminService = {
   // Get all users with their profile data
   async getAllUsers(): Promise<{ data: AdminUserData[] | null; error: any }> {
@@ -424,7 +409,7 @@ export const adminService = {
         console.error('❌ Error fetching profile for flagging:', fetchError)
         
         // Try to see what profiles exist
-        const { data: allProfiles, error: listError } = await adminClientForFlag
+        const { data: allProfiles } = await adminClientForFlag
           .from('profiles')
           .select('id, trainer_name')
           .not('profile_screenshot_url', 'is', null)
@@ -514,7 +499,7 @@ export const adminService = {
         console.error('❌ Error fetching profile for unflagging:', fetchError)
         
         // Try to see what profiles exist
-        const { data: allProfiles, error: listError } = await adminClientForUnflag
+        const { data: allProfiles } = await adminClientForUnflag
           .from('profiles')
           .select('id, trainer_name, is_flagged')
           .not('profile_screenshot_url', 'is', null)
@@ -607,7 +592,7 @@ export const adminService = {
         console.error('❌ Error fetching profile for deletion:', fetchError)
         
         // Let's try to see what profiles actually exist
-        const { data: allProfiles, error: listError } = await adminClientForDelete
+        const { data: allProfiles } = await adminClientForDelete
           .from('profiles')
           .select('id, trainer_name, profile_screenshot_url')
           .not('profile_screenshot_url', 'is', null)

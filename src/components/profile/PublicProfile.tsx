@@ -1,10 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { profileService, type PublicProfileData } from '../../services/profileService'
 import { RadarChart } from '../dashboard/RadarChart'
-import { useAuth } from '../../contexts/AuthContext'
-
 interface TeamColor {
   value: string
   label: string
@@ -24,54 +21,41 @@ const TEAM_COLORS: TeamColor[] = [
 ]
 
 export const PublicProfile = () => {
-  const { profileId } = useParams<{ profileId: string }>()
+  const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const trialStatus = useTrialStatus()
   const [profile, setProfile] = useState<PublicProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isPaid, setIsPaid] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<TeamColor | null>(null)
 
   useEffect(() => {
-    if (profileId) {
-      loadProfile()
-      checkPaidStatus()
-    }
-  }, [profileId])
+    loadProfile()
+  }, [id])
 
   const loadProfile = async () => {
-    if (!profileId) return
-
-    try {
+    if (!id) return
     setLoading(true)
     setError(null)
-      const { data } = await profileService.getPublicProfile(profileId)
+
+    try {
+      const { data, error } = await profileService.getPublicProfile(id)
+      if (error) throw error
+
       setProfile(data)
+      if (data?.team_color) {
+        const team = TEAM_COLORS.find(t => t.value === data.team_color)
+        setSelectedTeam(team || null)
+      }
     } catch (err: any) {
-      console.error('Profile loading error:', err)
+      console.error('Error loading profile:', err)
       setError(err.message || 'Failed to load profile')
     } finally {
       setLoading(false)
     }
   }
 
-  const checkPaidStatus = async () => {
-    try {
-      const { isPaid } = await profileService.isPaidUser()
-      setIsPaid(isPaid)
-    } catch (error) {
-      console.error('Error checking paid status:', error)
-      setIsPaid(false)
-    }
-  }
-
-  const selectedTeam = profile?.team_color 
-    ? TEAM_COLORS.find(team => team.value === profile.team_color)
-    : null
-
-  const getSocialLink = (platform: string, value: string) => {
-    if (!value) return null
+  const getSocialLink = (platform: string, value: string): string | undefined => {
+    if (!value) return undefined
     
     switch (platform) {
       case 'instagram':
@@ -90,51 +74,6 @@ export const PublicProfile = () => {
         return value
     }
   }
-
-  const renderSocialLinks = () => {
-    if (!profile || !profile.is_paid_user) {
-      return (
-        <div className="profile-section">
-          <h3>Social Links</h3>
-          <p className="private-notice">This user's social links are private</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="profile-section">
-        <h3>Social Links</h3>
-        <div className="social-links">
-          {profile.instagram && (
-            <a href={`https://instagram.com/${profile.instagram}`} target="_blank" rel="noopener noreferrer">
-              <span className="social-icon">📸</span> {profile.instagram}
-            </a>
-          )}
-          {/* Add other social links similarly */}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTrainerCode = () => {
-    if (!profile || !profile.is_paid_user) {
-      return (
-        <div className="profile-section">
-          <h3>Trainer Code</h3>
-          <p className="private-notice">This user's trainer code is private</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="profile-section">
-        <h3>Trainer Code</h3>
-        <div className="trainer-code">
-          <span className="code">{profile.trainer_code}</span>
-        </div>
-      </div>
-    );
-  };
 
   if (loading) {
     return (
