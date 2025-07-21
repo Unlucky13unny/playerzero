@@ -1,0 +1,34 @@
+name: Complete Weekly/Monthly Periods
+
+on:
+  # Automatic: Run daily at 1:00 AM UTC
+  schedule:
+    - cron: '0 1 * * *'
+  
+  # Manual: Allow manual triggering for testing
+  workflow_dispatch:
+
+jobs:
+  complete-periods:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Complete Periods
+        run: |
+          response=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+            '${{ secrets.SUPABASE_URL }}/functions/v1/period-completion' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json')
+          
+          if [ "$response" -eq 200 ]; then
+            echo "✅ Period completion successful"
+          else
+            echo "❌ Period completion failed with HTTP $response"
+            exit 1
+          fi
+
+      - name: Verify Leaderboard Data
+        run: |
+          echo "🏆 Period completion triggered"
+          echo "📅 Weekly and monthly leaderboards should now be updated"
+          echo "🎯 Check your app's Weekly Final and Monthly Final tabs" 
