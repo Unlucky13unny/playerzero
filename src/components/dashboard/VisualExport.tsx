@@ -180,68 +180,109 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     switch (cardType) {
       case 'all-time':
         return (
-          <div className="card-template all-time-card">
-            {/* Start Date - Top Right */}
-            <div className="start-date-top">Start Date:</div>
-            <div className="start-date-value">{startDate}</div>
+          <div className="card-template all-time-card" style={{ 
+            backgroundImage: 'url(/public/images/grind.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            minWidth: '400px',
+            minHeight: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
+            {/* Text Overlays */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '20px',
+              color: 'black',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {profile.trainer_name}
+            </div>
             
-            {/* Trainer Name - Top Left */}
-            <div className="trainer-name-header">{profile.trainer_name}</div>
-            
-            {/* Central Laptop Image */}
-            <div className="laptop-container">
-              <div className="laptop-screen">
-                <div className="screen-text">GRIND REPORT</div>
-                <div className="screen-stats">
-                  <div className="stat-item">
-                    <div className="stat-label">Daily XP</div>
-                    <div className="stat-number">{(dailyXPRate / 1000).toFixed(2)}K</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-label">Pokemon</div>
-                    <div className="stat-number">{((profile.pokemon_caught || 0) / 1000).toFixed(1)}K</div>
-                  </div>
-                  <div className="stat-item">
-                    <div className="stat-label">Catch Rate</div>
-                    <div className="stat-number">{estimatedCatchRate.toFixed(1)}%</div>
-                  </div>
-                </div>
-              </div>
+            <div style={{ 
+              position: 'absolute',
+              top: '55px',
+              right: '30px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
             </div>
 
-            {/* All-time Label - Bottom Right */}
-            <div className="all-time-label">All-time</div>
-            
-            {/* Pokemon Caught - Bottom Left */}
-            <div className="pokemon-caught-section">
-              <div className="stat-title">Pokemon Caught</div>
-              <div className="stat-number">{(profile.pokemon_caught || 0).toLocaleString()}</div>
-              <div className="stat-daily">{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
-            </div>
-
-            {/* Distance Walked - Bottom Center Left */}
-            <div className="distance-walked-section">
-              <div className="stat-title">Distance Walked</div>
-              <div className="stat-number">{(profile.distance_walked || 0).toLocaleString()}</div>
-                             <div className="stat-daily">{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+            {/* Bottom Left Stats */}
+             <div style={{ 
+               position: 'absolute',
+               top: '340px',
+               bottom: '90px',
+               left: '30px',
+               fontSize: '12px'
+             }}>
+               <div style={{ marginBottom: '15px' }}>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Pokemon Caught</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokemon_caught || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
+               <div style={{ marginBottom: '15px' }}>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Distance Walked</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.distance_walked || 0).toLocaleString()} km</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
+               <div>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Pokestops Visited</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokestops_visited || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
              </div>
 
-             {/* Pokestops Visited - Bottom Left Lower */}
-             <div className="pokestops-section">
-               <div className="stat-title">Pokestops Visited</div>
-               <div className="stat-number">{(profile.pokestops_visited || 0).toLocaleString()}</div>
-               <div className="stat-daily">{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
-            </div>
-
-            {/* Total XP - Bottom Right */}
-            <div className="total-xp-section">
-              <div className="xp-title">Total XP</div>
-              <div className="xp-number">{(profile.total_xp || 0).toLocaleString()}</div>
-              <div className="xp-daily">{(dailyXPRate).toFixed(2)} /Day</div>
-            </div>
+                         {/* Bottom Right Stats */}
+             <div style={{ 
+               position: 'absolute',
+               top: '400px',
+               bottom: '80px',
+               right: '60px',
+               fontSize: '30px',
+               textAlign: 'right'
+             }}>
+               <div style={{ 
+                 color: 'black', 
+                 textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+               }}>Total XP</div>
+               <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.total_xp || 0).toLocaleString()}</div>
+               <div style={{ fontSize: '12px', color: 'red'}}>{(dailyXPRate).toFixed(2)} /Day</div>
+             </div>
             
-            {/* PlayerZERO Logo - Bottom Right */}
-            <div className="playerzero-logo">PlayerZERØ</div>
+            {/* All-time Label */}
+            <div style={{ 
+              position: 'absolute',
+              top: '325px',
+              bottom: '45px',
+              right: '35px',
+              color: 'white',
+              fontSize: '20px',
+              fontWeight: 'bold',
+            }}>
+              All-time
+            </div>
           </div>
         )
 
