@@ -17,7 +17,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const trialStatus = useTrialStatus()
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
-  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit'>('all-time')
+  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
 
   const exportCard = async () => {
@@ -87,16 +87,13 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     navigate('/upgrade')
   }
 
-  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit') => {
+  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit') => {
     switch (type) {
       case 'all-time':
         return trialStatus.canGenerateAllTimeCard
-      case 'grind':
-        return trialStatus.canShareGrindCard
       case 'achievement':
-        // Achievement cards require summit achievement (level 50) AND private mode access
-        const hasSummitAchievement = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
-        return trialStatus.canGenerateAllTimeCard && hasSummitAchievement
+        // Achievement cards are available to everyone with private mode access
+        return trialStatus.canGenerateAllTimeCard
       case 'summit':
         // Summit cards are available to everyone with private mode access
         return trialStatus.canGenerateAllTimeCard
@@ -108,7 +105,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     }
   }
 
-  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit') => {
+  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit') => {
     const timeLeft = trialStatus.timeRemaining.days > 0 
       ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
       : trialStatus.timeRemaining.hours > 0 
@@ -123,18 +120,10 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           ? `Available in private mode (${timeLeft})`
           : 'Available in private mode only'
       case 'achievement':
-        const hasSummitAchievement = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
-        if (!hasSummitAchievement) {
-          return 'Unlock at Level 50 Summit'
-        }
         return trialStatus.isInTrial 
           ? `Available in private mode (${timeLeft})`
           : 'Available in private mode only'
       case 'summit':
-        return trialStatus.isInTrial 
-          ? `Available in private mode (${timeLeft})`
-          : 'Available in private mode only'
-      case 'grind':
         return trialStatus.isInTrial 
           ? `Available in private mode (${timeLeft})`
           : 'Available in private mode only'
@@ -160,12 +149,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
   // Calculate estimated catch rate based on pokestops vs pokemon ratio
   const estimatedCatchRate = Math.min(99.9, (profile.pokemon_caught || 0) / Math.max(1, (profile.pokestops_visited || 1)) * 100)
-  
-  // Estimate shinies based on average shiny rate (1/500)
-  const estimatedShinies = Math.floor((profile.pokemon_caught || 0) / 500)
-  
-  // Calculate hourly catch rate based on daily XP (rough estimate)
-  const estimatedHourlyCatchRate = (dailyXPRate / 24 / 100)
 
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
@@ -307,36 +290,58 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
       case 'achievement':
         return (
-          <div className="card-template achievement-card">
-            {/* Start Date - Top Right */}
-            <div className="start-date-top">Start Date:</div>
-            <div className="start-date-value">{startDate}</div>
-            
+          <div className="card-template achievement-card" style={{ 
+            backgroundImage: 'url(/public/images/achieved.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            minWidth: '400px',
+            minHeight: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
             {/* Trainer Name - Top Left */}
-            <div className="trainer-name-header">{profile.trainer_name}</div>
-            
-            {/* Achievement Stamp - Rotated */}
-            <div className="achievement-stamp">ACHIEVED</div>
-            
-            {/* Central Silhouette Figure */}
-            <div className="achievement-figure">
-              <div className="celebration-silhouette"></div>
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '30px',
+              color: 'black',
+              fontWeight: 'bold',
+              fontSize: '20px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {profile.trainer_name}
             </div>
             
-            {/* XP - Bottom Left */}
-            <div className="achievement-xp">
-              <div className="xp-label">XP</div>
-              <div className="xp-value">{(profile.total_xp || 0).toLocaleString()}</div>
+            {/* Start Date - Top Right */}
+            <div style={{ 
+              position: 'absolute',
+              top: '55px',
+              right: '30px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
             </div>
-            
-            {/* Level Badge - Bottom Right */}
-            <div className="level-badge">
-              <div className="level-number">({profile.trainer_level || 50})</div>
-              <div className="level-text">Summit</div>
+
+            {/* Total XP - Bottom Left */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '90px',
+              left: '25px',
+              color: 'red',
+              fontSize: '12px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
             </div>
-            
-            {/* PlayerZERO Logo - Bottom Right */}
-            <div className="playerzero-logo">PlayerZERØ</div>
           </div>
         )
 
@@ -408,55 +413,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             }}>
               <div style={{ fontSize: '30px', fontWeight: 'bold', color: 'white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
             </div>
-          </div>
-        )
-
-      case 'grind':
-        return (
-          <div className="card-template grind-card">
-            {/* Trainer Name - Top Left */}
-            <div className="trainer-name-header">{profile.trainer_name}</div>
-            
-            {/* Location - Top Left under name */}
-            <div className="grind-location">{profile.country || 'Unknown'}</div>
-            
-            {/* Central Trainer Silhouette */}
-            <div className="trainer-silhouette">
-              <div className="walking-figure"></div>
-            </div>
-            
-            {/* Pokemon Caught - Left */}
-            <div className="pokemon-caught-stat">
-              <div className="stat-label">Pokemon Caught</div>
-              <div className="stat-value">{(profile.pokemon_caught || 0).toLocaleString()}</div>
-            </div>
-            
-            {/* Caught Per Hr - Left */}
-            <div className="caught-per-hr-stat">
-              <div className="stat-label">Caught Per Hr</div>
-              <div className="stat-value">{estimatedHourlyCatchRate.toFixed(1)}</div>
-            </div>
-            
-            {/* Shinies - Left */}
-            <div className="shinies-stat">
-              <div className="stat-label">Shinies</div>
-              <div className="stat-value">{estimatedShinies}</div>
-            </div>
-            
-            {/* Catch Rate - Right */}
-            <div className="catch-rate-section">
-              <div className="catch-rate-label">Catch Rate</div>
-              <div className="catch-rate-value">{estimatedCatchRate.toFixed(1)}%</div>
-            </div>
-            
-            {/* Community Day Badge - Bottom */}
-            <div className="community-day-badge">
-              <div className="badge-text">Community</div>
-              <div className="badge-text-large">Day</div>
-            </div>
-            
-            {/* PlayerZERO Logo - Bottom Right */}
-            <div className="playerzero-logo">PlayerZERØ</div>
           </div>
         )
 
@@ -555,33 +511,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
         </button>
         <button
-          className={`card-type-tab ${cardType === 'achievement' ? 'active' : ''} ${!isCardTypeAllowed('achievement') ? 'restricted' : ''}`}
-          onClick={() => isCardTypeAllowed('achievement') && setCardType('achievement')}
-          disabled={!isCardTypeAllowed('achievement')}
-          title={!isCardTypeAllowed('achievement') ? getRestrictedMessage('achievement') : ''}
-        >
-          🏆 Achievement
-          {!isCardTypeAllowed('achievement') && <span className="restriction-badge">🔒</span>}
-        </button>
-        <button
-          className={`card-type-tab ${cardType === 'summit' ? 'active' : ''} ${!isCardTypeAllowed('summit') ? 'restricted' : ''}`}
-          onClick={() => isCardTypeAllowed('summit') && setCardType('summit')}
-          disabled={!isCardTypeAllowed('summit')}
-          title={!isCardTypeAllowed('summit') ? getRestrictedMessage('summit') : ''}
-        >
-          🏔️ Summit
-          {!isCardTypeAllowed('summit') && <span className="restriction-badge">🔒</span>}
-        </button>
-        <button
-          className={`card-type-tab ${cardType === 'grind' ? 'active' : ''} ${!isCardTypeAllowed('grind') ? 'restricted' : ''}`}
-          onClick={() => isCardTypeAllowed('grind') && setCardType('grind')}
-          disabled={!isCardTypeAllowed('grind')}
-          title={!isCardTypeAllowed('grind') ? getRestrictedMessage('grind') : ''}
-        >
-          🔥 Grind
-          {!isCardTypeAllowed('grind') && <span className="restriction-badge">🔒</span>}
-        </button>
-        <button
           className={`card-type-tab ${cardType === 'weekly' ? 'active' : ''} ${!isCardTypeAllowed('weekly') ? 'restricted' : ''}`}
           onClick={() => isCardTypeAllowed('weekly') && setCardType('weekly')}
           disabled={!isCardTypeAllowed('weekly')}
@@ -598,6 +527,24 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         >
           📊 Monthly
           {!isCardTypeAllowed('monthly') && <span className="restriction-badge">👑</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'summit' ? 'active' : ''} ${!isCardTypeAllowed('summit') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('summit') && setCardType('summit')}
+          disabled={!isCardTypeAllowed('summit')}
+          title={!isCardTypeAllowed('summit') ? getRestrictedMessage('summit') : ''}
+        >
+          🏔️ Summit
+          {!isCardTypeAllowed('summit') && <span className="restriction-badge">🔒</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'achievement' ? 'active' : ''} ${!isCardTypeAllowed('achievement') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('achievement') && setCardType('achievement')}
+          disabled={!isCardTypeAllowed('achievement')}
+          title={!isCardTypeAllowed('achievement') ? getRestrictedMessage('achievement') : ''}
+        >
+          🏆 Achievement
+          {!isCardTypeAllowed('achievement') && <span className="restriction-badge">🔒</span>}
         </button>
       </div>
 
