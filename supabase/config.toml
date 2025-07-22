@@ -1,22 +1,60 @@
 
-[functions.create-checkout]
+[project_id]
+# your_project_id
+
+[api]
 enabled = true
+# port = 54321
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[auth]
+enabled = true
+# port = 54324
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["https://localhost:3000"]
+jwt_expiry = 3600
+enable_signup = true
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+
+[db]
+# port = 54322
+
+[studio]
+enabled = true
+# port = 54323
+
+[inbucket]
+enabled = true
+# port = 54324
+
+[storage]
+enabled = true
+# port = 54325
+
+[edge_runtime]
+enabled = true
+# port = 54326
+
+[analytics]
+enabled = false
+# port = 54327
+
+# Edge Functions Configuration
+[functions.create-checkout]
 verify_jwt = true
-import_map = "./functions/create-checkout/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/create-checkout/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/create-checkout/*.html" ]
 
 [functions.stripe-webhook]
-enabled = true
 verify_jwt = false
-import_map = "./functions/stripe-webhook/deno.json"
-# Uncomment to specify a custom file path to the entrypoint.
-# Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
-entrypoint = "./functions/stripe-webhook/index.ts"
-# Specifies static files to be bundled with the function. Supports glob patterns.
-# For example, if you want to serve static HTML pages in your function:
-# static_files = [ "./functions/stripe-webhook/*.html" ]
+
+[functions.period-completion]
+verify_jwt = false
+
+# Daily notifications function
+[functions.daily-notifications]
+verify_jwt = false

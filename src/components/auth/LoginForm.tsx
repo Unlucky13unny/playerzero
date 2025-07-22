@@ -32,7 +32,7 @@ export const LoginForm = () => {
           
           // If profile is set up, redirect to home
           if (hasProfile) {
-            navigate('/home', { replace: true })
+            navigate('/UserProfile', { replace: true })
           } else {
             // If profile is not set up, redirect to profile setup
             navigate('/profile-setup', { replace: true })
@@ -40,7 +40,7 @@ export const LoginForm = () => {
         } catch (profileErr) {
           console.warn('Error checking profile existence:', profileErr)
           // If there's an error checking profile, default to home
-          navigate('/home', { replace: true })
+          navigate('/UserProfile', { replace: true })
         }
       }
     } catch (err) {

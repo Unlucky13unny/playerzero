@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { RadarChart } from './RadarChart';
-import { type ProfileWithMetadata } from '../../services/profileService';
+import { VisualExport } from './VisualExport';
+import { type ProfileWithMetadata, calculateSummitDate } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 
 const TEAM_COLORS = {
@@ -123,6 +124,40 @@ export const UserHome = () => {
                 <span className="country-name">{stats.country}</span>
               </div>
             )}
+            {stats?.start_date && (
+              <div className="start-date-badge">
+                <span className="start-icon">📅</span>
+                <span className="start-date">
+                  Started: {new Date(stats.start_date).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+            )}
+            <div className="summit-badge">
+              <span className="summit-icon">🏔️</span>
+              <span className="summit-date">
+                Summit: {stats ? calculateSummitDate(stats.total_xp || 0, stats.average_daily_xp || 0) : 'Loading...'}
+              </span>
+            </div>
+            {stats?.trainer_code && !stats?.trainer_code_private && (
+              <div className="trainer-code-badge">
+                <span className="code-icon">🎮</span>
+                <span className="code-value">{stats.trainer_code}</span>
+                <button 
+                  className="copy-button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(stats.trainer_code);
+                    // You could add a toast notification here
+                  }}
+                  title="Copy trainer code"
+                >
+                  📋
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -157,13 +192,6 @@ export const UserHome = () => {
             <div className="stat-value">{formatNumber(stats?.total_xp)}</div>
           </div>
         </div>
-        <div className="stat-card full-width">
-          <div className="stat-icon">📖</div>
-          <div className="stat-content">
-            <h3>Pokédex Entries</h3>
-            <div className="stat-value">{formatNumber(stats?.unique_pokedex_entries)}</div>
-          </div>
-        </div>
       </div>
 
       {/* Radar Chart */}
@@ -172,11 +200,24 @@ export const UserHome = () => {
         <div className="radar-chart-container">
           <RadarChart
             profile={stats}
-            isPaidUser={!!stats?.is_paid_user}
+            isPaidUser={trialStatus.isPaidUser}
             showHeader={false}
           />
         </div>
       </div>
+
+      {/* Visual Export */}
+      {stats && (
+        <div className="visual-export-section">
+          <h2>Visual Export</h2>
+          <div className="visual-export-container">
+            <VisualExport
+              profile={stats}
+              isPaidUser={!!stats?.is_paid_user}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

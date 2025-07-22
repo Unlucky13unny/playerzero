@@ -812,6 +812,403 @@ export const adminService = {
     }
   },
 
+  // Get verification screenshots for moderation
+  async getAllVerificationScreenshots(): Promise<{ data: any[] | null; error: any }> {
+    try {      
+      // Get stat verification screenshots with associated stat entry and profile data
+      const { data: verificationScreenshots, error: screenshotError } = await supabaseAdmin
+        .from('stat_verification_screenshots')
+        .select(`
+          id,
+          user_id,
+          stat_entry_id,
+          screenshot_url,
+          entry_date,
+          created_at,
+          is_flagged,
+          flagged_reason,
+          flagged_at,
+          stat_entries!inner (
+            id,
+            entry_date,
+            total_xp,
+            pokemon_caught,
+            distance_walked,
+            pokestops_visited,
+            unique_pokedex_entries,
+            trainer_level,
+            profile_id,
+            profiles!inner (
+              id,
+              trainer_name
+            )
+          )
+        `)
+        .order('created_at', { ascending: false })
+
+      if (screenshotError) {
+        console.error('Error fetching verification screenshots:', screenshotError)
+        return { data: null, error: screenshotError }
+      }
+
+      if (!verificationScreenshots || verificationScreenshots.length === 0) {
+        console.log('No verification screenshots found')
+        return { data: [], error: null }
+      }
+
+      console.log(`✅ Found ${verificationScreenshots.length} verification screenshots`)
+
+      // Get user emails from auth table
+      const { data: authResponse, error: authError } = await supabaseAdmin.auth.admin.listUsers()
+      
+      if (authError) {
+        console.error('Error fetching auth users:', authError)
+        return { data: null, error: authError }
+      }
+
+      const authUsers = authResponse.users
+
+      // Create a map of user_id to email for quick lookup
+      const emailMap = new Map(authUsers.map(user => [user.id, user.email || 'No email']))
+
+             // Transform the data to match expected structure
+       const transformedData = verificationScreenshots.map((screenshot: any) => {
+         const statEntry = screenshot.stat_entries
+         const profile = statEntry.profiles
+         
+         return {
+           id: screenshot.id,
+           user_id: screenshot.user_id,
+           trainer_name: profile.trainer_name,
+           email: emailMap.get(screenshot.user_id) || 'Email not found',
+           screenshot_url: screenshot.screenshot_url,
+           created_at: screenshot.created_at,
+           entry_date: screenshot.entry_date,
+           type: 'verification',
+           // Add stat context
+           stat_data: {
+             total_xp: statEntry.total_xp,
+             pokemon_caught: statEntry.pokemon_caught,
+             distance_walked: statEntry.distance_walked,
+             pokestops_visited: statEntry.pokestops_visited,
+             unique_pokedex_entries: statEntry.unique_pokedex_entries,
+             trainer_level: statEntry.trainer_level
+           },
+           // Add flagging support
+           is_flagged: screenshot.is_flagged || false,
+           flagged_reason: screenshot.flagged_reason || null,
+           flagged_at: screenshot.flagged_at || null
+         }
+       })
+      
+      return { data: transformedData, error: null }
+    } catch (error) {
+      console.error('Error in getAllVerificationScreenshots:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Get all screenshots (both profile and verification)
+  async getAllScreenshotsForModeration(): Promise<{ data: any[] | null; error: any }> {
+    try {
+      // Get both types of screenshots
+      const [profileScreenshots, verificationScreenshots] = await Promise.all([
+        this.getAllScreenshots(),
+        this.getAllVerificationScreenshots()
+      ])
+
+      if (profileScreenshots.error) {
+        console.error('Error fetching profile screenshots:', profileScreenshots.error)
+        return { data: null, error: profileScreenshots.error }
+      }
+
+      if (verificationScreenshots.error) {
+        console.error('Error fetching verification screenshots:', verificationScreenshots.error)
+        return { data: null, error: verificationScreenshots.error }
+      }
+
+      // Transform profile screenshots to match expected structure
+      const transformedProfileScreenshots = (profileScreenshots.data || []).map(screenshot => ({
+        ...screenshot,
+        screenshot_url: screenshot.profile_screenshot_url,
+        type: 'profile',
+        stat_data: null
+      }))
+
+      // Combine and sort by creation date
+      const allScreenshots = [
+        ...transformedProfileScreenshots,
+        ...(verificationScreenshots.data || [])
+      ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+
+      return { data: allScreenshots, error: null }
+    } catch (error) {
+      console.error('Error in getAllScreenshotsForModeration:', error)
+      return { data: null, error }
+    }
+  },
+
+  // Flag verification screenshot
+  async flagVerificationScreenshot(screenshotId: string, reason: string): Promise<{ error: any }> {
+    try {
+      console.log('🚩 Flagging verification screenshot:', { screenshotId, screenshotIdType: typeof screenshotId, reason })
+      
+      // Create admin client for consistent permissions
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+      const supabaseUrlForFlag = import.meta.env.VITE_SUPABASE_URL
+      const supabaseServiceRoleKeyForFlag = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+      
+      const adminClientForFlag = createSupabaseClient(supabaseUrlForFlag, supabaseServiceRoleKeyForFlag, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      
+      // First verify the verification screenshot exists
+      const { data: existingScreenshot, error: fetchError } = await adminClientForFlag
+        .from('stat_verification_screenshots')
+        .select('id, user_id, screenshot_url, is_flagged')
+        .eq('id', screenshotId)
+        .single()
+      
+      console.log('🔍 Verification screenshot lookup result:', { existingScreenshot, fetchError })
+      
+      if (fetchError) {
+        console.error('❌ Error fetching verification screenshot for flagging:', fetchError)
+        
+        // Try to see what verification screenshots exist
+        const { data: allScreenshots } = await adminClientForFlag
+          .from('stat_verification_screenshots')
+          .select('id, user_id')
+          .limit(5)
+        
+        console.log('🔍 Sample of existing verification screenshots:', allScreenshots)
+        return { error: fetchError }
+      }
+
+      if (!existingScreenshot) {
+        console.log('⚠️ Verification screenshot not found with ID:', screenshotId)
+        return { error: new Error('Verification screenshot not found') }
+      }
+
+      console.log('📋 Found verification screenshot to flag:', existingScreenshot)
+      
+      const updateData = {
+        is_flagged: true,
+        flagged_reason: reason,
+        flagged_at: new Date().toISOString()
+      }
+      
+      console.log('📝 Update data:', updateData)
+
+      const { data, error, count } = await adminClientForFlag
+        .from('stat_verification_screenshots')
+        .update(updateData)
+        .eq('id', screenshotId)
+        .select('id, user_id, is_flagged, flagged_reason, flagged_at')
+
+      console.log('📊 Flag update result:', { data, error, count, dataLength: data?.length })
+
+      if (error) {
+        console.error('❌ Error flagging verification screenshot in database:', error)
+        return { error }
+      }
+
+      if (!data || data.length === 0) {
+        console.error('❌ No verification screenshot was updated during flagging')
+        
+        // Verify screenshot still exists
+        const { data: checkScreenshot, error: checkError } = await adminClientForFlag
+          .from('stat_verification_screenshots')
+          .select('id, user_id')
+          .eq('id', screenshotId)
+          .single()
+        
+        console.log('🔍 Verification screenshot existence check after failed update:', { checkScreenshot, checkError })
+        
+        return { error: new Error('Verification screenshot not found or update failed') }
+      }
+
+      console.log('✅ Successfully flagged verification screenshot in database:', data[0])
+      return { error: null }
+    } catch (error) {
+      console.error('❌ Error in flagVerificationScreenshot:', error)
+      return { error }
+    }
+  },
+
+  // Unflag verification screenshot
+  async unflagVerificationScreenshot(screenshotId: string): Promise<{ error: any }> {
+    try {
+      console.log('✅ Unflagging verification screenshot:', { screenshotId, screenshotIdType: typeof screenshotId })
+      
+      // Create admin client for consistent permissions
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+      const supabaseUrlForUnflag = import.meta.env.VITE_SUPABASE_URL
+      const supabaseServiceRoleKeyForUnflag = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+      
+      const adminClientForUnflag = createSupabaseClient(supabaseUrlForUnflag, supabaseServiceRoleKeyForUnflag, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      
+      // First verify the verification screenshot exists and is currently flagged
+      const { data: existingScreenshot, error: fetchError } = await adminClientForUnflag
+        .from('stat_verification_screenshots')
+        .select('id, user_id, is_flagged, flagged_reason, flagged_at, screenshot_url')
+        .eq('id', screenshotId)
+        .single()
+      
+      console.log('🔍 Verification screenshot lookup result for unflagging:', { existingScreenshot, fetchError })
+      
+      if (fetchError) {
+        console.error('❌ Error fetching verification screenshot for unflagging:', fetchError)
+        
+        // Try to see what verification screenshots exist
+        const { data: allScreenshots } = await adminClientForUnflag
+          .from('stat_verification_screenshots')
+          .select('id, user_id, is_flagged')
+          .limit(5)
+        
+        console.log('🔍 Sample of existing verification screenshots:', allScreenshots)
+        return { error: fetchError }
+      }
+
+      if (!existingScreenshot) {
+        console.log('⚠️ Verification screenshot not found with ID:', screenshotId)
+        return { error: new Error('Verification screenshot not found') }
+      }
+      
+      const updateData = {
+        is_flagged: false,
+        flagged_reason: null,
+        flagged_at: null
+      }
+      
+      console.log('📝 Unflag update data:', updateData)
+
+      const { data, error, count } = await adminClientForUnflag
+        .from('stat_verification_screenshots')
+        .update(updateData)
+        .eq('id', screenshotId)
+        .select('id, user_id, is_flagged, flagged_reason, flagged_at')
+
+      console.log('📊 Unflag update result:', { data, error, count, dataLength: data?.length })
+
+      if (error) {
+        console.error('❌ Error unflagging verification screenshot in database:', error)
+        return { error }
+      }
+
+      if (!data || data.length === 0) {
+        console.error('❌ No verification screenshot was updated during unflagging')
+        
+        // Verify screenshot still exists
+        const { data: checkScreenshot, error: checkError } = await adminClientForUnflag
+          .from('stat_verification_screenshots')
+          .select('id, user_id, is_flagged')
+          .eq('id', screenshotId)
+          .single()
+        
+        console.log('🔍 Verification screenshot existence check after failed unflag update:', { checkScreenshot, checkError })
+        
+        return { error: new Error('Verification screenshot not found or update failed') }
+      }
+
+      console.log('✅ Successfully unflagged verification screenshot in database:', data[0])
+      console.log('✅ Confirmed unflag status:', {
+        is_flagged: data[0].is_flagged,
+        flagged_reason: data[0].flagged_reason,
+        flagged_at: data[0].flagged_at
+      })
+      return { error: null }
+    } catch (error) {
+      console.error('❌ Error in unflagVerificationScreenshot:', error)
+      return { error }
+    }
+  },
+
+  // Delete verification screenshot
+  async deleteVerificationScreenshot(screenshotId: string): Promise<{ error: any }> {
+    try {
+      console.log('🗑️ Deleting verification screenshot:', { screenshotId })
+      
+      // Create admin client
+      const { createClient } = await import('@supabase/supabase-js')
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
+      const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+      
+      const adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false
+        }
+      })
+      
+      // First, get the screenshot URL to delete from storage
+      const { data: screenshot, error: fetchError } = await adminClient
+        .from('stat_verification_screenshots')
+        .select('screenshot_url')
+        .eq('id', screenshotId)
+        .single()
+      
+      if (fetchError) {
+        console.error('❌ Error fetching verification screenshot for deletion:', fetchError)
+        return { error: fetchError }
+      }
+
+      if (!screenshot?.screenshot_url) {
+        console.log('⚠️ No screenshot URL found')
+        return { error: new Error('Screenshot not found') }
+      }
+
+      // Extract file path from URL and delete from storage
+      let filePath = ''
+      try {
+        const url = new URL(screenshot.screenshot_url)
+        const pathParts = url.pathname.split('/').filter(part => part.length > 0)
+        const bucketIndex = pathParts.indexOf('stat-verification-screenshots')
+        if (bucketIndex >= 0 && bucketIndex < pathParts.length - 1) {
+          filePath = pathParts.slice(bucketIndex + 1).join('/')
+        }
+      } catch (urlError) {
+        console.error('❌ Error parsing screenshot URL:', urlError)
+        filePath = screenshot.screenshot_url.split('/').pop() || ''
+      }
+
+      // Delete from storage
+      if (filePath) {
+        const { error: storageError } = await adminClient.storage
+          .from('stat-verification-screenshots')
+          .remove([filePath])
+
+        if (storageError) {
+          console.log('⚠️ Storage deletion failed, continuing with database deletion:', storageError)
+        }
+      }
+
+      // Delete from database
+      const { error: deleteError } = await adminClient
+        .from('stat_verification_screenshots')
+        .delete()
+        .eq('id', screenshotId)
+
+      if (deleteError) {
+        console.error('❌ Error deleting verification screenshot from database:', deleteError)
+        return { error: deleteError }
+      }
+
+      console.log('✅ Successfully deleted verification screenshot')
+      return { error: null }
+    } catch (error) {
+      console.error('❌ Error in deleteVerificationScreenshot:', error)
+      return { error }
+    }
+  },
+
   // Get max Pokédex entries
   async getMaxPokedexEntries(): Promise<{ value: number; error: any }> {
     try {

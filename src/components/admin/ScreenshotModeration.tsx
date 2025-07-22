@@ -7,11 +7,22 @@ interface ScreenshotData {
   user_id: string
   trainer_name: string
   email: string
-  profile_screenshot_url: string
+  screenshot_url: string
+  profile_screenshot_url?: string // Legacy field for profile screenshots
   created_at: string
   is_flagged: boolean
   flagged_reason?: string
   flagged_at?: string
+  type: 'profile' | 'verification'
+  entry_date?: string // For verification screenshots
+  stat_data?: {
+    total_xp: number
+    pokemon_caught: number
+    distance_walked: number
+    pokestops_visited: number
+    unique_pokedex_entries: number
+    trainer_level: number
+  } | null
 }
 
 export const ScreenshotModeration = () => {
@@ -20,6 +31,7 @@ export const ScreenshotModeration = () => {
   const [error, setError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
   const [filterType, setFilterType] = useState<'all' | 'flagged' | 'unflagged'>('all')
+  const [screenshotTypeFilter, setScreenshotTypeFilter] = useState<'all' | 'profile' | 'verification'>('all')
   const [searchTerm, setSearchTerm] = useState('')
 
   useEffect(() => {
@@ -30,7 +42,7 @@ export const ScreenshotModeration = () => {
     try {
       setLoading(true)
       setError(null)
-      const { data, error } = await adminService.getAllScreenshots()
+      const { data, error } = await adminService.getAllScreenshotsForModeration()
       
       if (error) {
         setError('Failed to load screenshots')
@@ -47,10 +59,18 @@ export const ScreenshotModeration = () => {
     }
   }
 
-  const handleFlagImage = async (screenshotId: string, reason: string) => {
+  const handleFlagImage = async (screenshotId: string, reason: string, screenshotType: 'profile' | 'verification') => {
     try {
-      console.log('🚩 Attempting to flag screenshot:', { screenshotId, reason })
-      const { error } = await adminService.flagScreenshot(screenshotId, reason)
+      console.log('🚩 Attempting to flag screenshot:', { screenshotId, reason, screenshotType })
+      
+      let error
+      if (screenshotType === 'profile') {
+        const result = await adminService.flagScreenshot(screenshotId, reason)
+        error = result.error
+      } else {
+        const result = await adminService.flagVerificationScreenshot(screenshotId, reason)
+        error = result.error
+      }
       
       if (error) {
         console.error('❌ Error flagging screenshot:', error)
@@ -74,10 +94,18 @@ export const ScreenshotModeration = () => {
     }
   }
 
-  const handleUnflagImage = async (screenshotId: string) => {
+  const handleUnflagImage = async (screenshotId: string, screenshotType: 'profile' | 'verification') => {
     try {
-      console.log('✅ Attempting to unflag screenshot:', { screenshotId })
-      const { error } = await adminService.unflagScreenshot(screenshotId)
+      console.log('✅ Attempting to unflag screenshot:', { screenshotId, screenshotType })
+      
+      let error
+      if (screenshotType === 'profile') {
+        const result = await adminService.unflagScreenshot(screenshotId)
+        error = result.error
+             } else {
+         const result = await adminService.unflagVerificationScreenshot(screenshotId)
+         error = result.error
+       }
       
       if (error) {
         console.error('❌ Error unflagging screenshot:', error)
@@ -101,14 +129,22 @@ export const ScreenshotModeration = () => {
     }
   }
 
-  const handleDeleteImage = async (screenshotId: string) => {
+  const handleDeleteImage = async (screenshotId: string, screenshotType: 'profile' | 'verification') => {
     if (!confirm('Are you sure you want to delete this screenshot? This will remove the image from storage and cannot be undone.')) {
       return
     }
 
     try {
-      console.log('🗑️ Attempting to delete screenshot:', { screenshotId })
-      const { error } = await adminService.deleteScreenshot(screenshotId)
+      console.log('🗑️ Attempting to delete screenshot:', { screenshotId, screenshotType })
+      
+      let error
+      if (screenshotType === 'profile') {
+        const result = await adminService.deleteScreenshot(screenshotId)
+        error = result.error
+      } else {
+        const result = await adminService.deleteVerificationScreenshot(screenshotId)
+        error = result.error
+      }
       
       if (error) {
         console.error('❌ Error deleting screenshot:', error)
@@ -134,6 +170,11 @@ export const ScreenshotModeration = () => {
     if (filterType === 'flagged') matchesFilter = screenshot.is_flagged
     if (filterType === 'unflagged') matchesFilter = !screenshot.is_flagged
     
+    // Filter by screenshot type
+    let matchesType = true
+    if (screenshotTypeFilter === 'profile') matchesType = screenshot.type === 'profile'
+    if (screenshotTypeFilter === 'verification') matchesType = screenshot.type === 'verification'
+    
     // Filter by search term
     let matchesSearch = true
     if (searchTerm.trim()) {
@@ -143,7 +184,7 @@ export const ScreenshotModeration = () => {
                       (screenshot.flagged_reason?.toLowerCase().includes(search) || false)
     }
     
-    return matchesFilter && matchesSearch
+    return matchesFilter && matchesType && matchesSearch
   })
 
   if (loading) {
@@ -170,7 +211,6 @@ export const ScreenshotModeration = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="search-input"
             />
-            <span className="search-icon">🔍</span>
           </div>
         </div>
 
@@ -195,6 +235,27 @@ export const ScreenshotModeration = () => {
           </button>
         </div>
 
+        <div className="type-filter-buttons">
+          <button 
+            onClick={() => setScreenshotTypeFilter('all')}
+            className={`filter-btn ${screenshotTypeFilter === 'all' ? 'active' : ''}`}
+          >
+            All Types ({screenshots.length})
+          </button>
+          <button 
+            onClick={() => setScreenshotTypeFilter('profile')}
+            className={`filter-btn ${screenshotTypeFilter === 'profile' ? 'active' : ''}`}
+          >
+            👤 Profile ({screenshots.filter(s => s.type === 'profile').length})
+          </button>
+          <button 
+            onClick={() => setScreenshotTypeFilter('verification')}
+            className={`filter-btn ${screenshotTypeFilter === 'verification' ? 'active' : ''}`}
+          >
+            📊 Verification ({screenshots.filter(s => s.type === 'verification').length})
+          </button>
+        </div>
+
         <button onClick={loadScreenshots} className="btn btn-secondary refresh-btn">
           🔄 Refresh
         </button>
@@ -207,24 +268,46 @@ export const ScreenshotModeration = () => {
           </div>
         ) : (
           filteredScreenshots.map(screenshot => (
-            <div key={screenshot.id} className={`screenshot-card ${screenshot.is_flagged ? 'flagged' : ''}`}>
+            <div key={screenshot.id} className={`screenshot-card ${screenshot.is_flagged ? 'flagged' : ''} ${screenshot.type}`}>
+              <div className="screenshot-type-badge">
+                {screenshot.type === 'profile' ? '👤 Profile' : '📊 Verification'}
+              </div>
+              
               <div className="screenshot-image">
                 <img 
-                  src={screenshot.profile_screenshot_url} 
+                  src={screenshot.screenshot_url} 
                   alt={`${screenshot.trainer_name}'s screenshot`}
-                  onClick={() => setSelectedImage(screenshot.profile_screenshot_url)}
+                  onClick={() => setSelectedImage(screenshot.screenshot_url)}
                 />
                 {screenshot.is_flagged && (
                   <div className="flag-indicator">🚩 Flagged</div>
                 )}
               </div>
               
-                             <div className="screenshot-info">
-                 <h4>{screenshot.trainer_name}</h4>
-                 <p className="user-email">{screenshot.email}</p>
-                 <p className="upload-date">
-                   Uploaded: {new Date(screenshot.created_at).toLocaleDateString()}
-                 </p>
+              <div className="screenshot-info">
+                <h4>{screenshot.trainer_name}</h4>
+                <p className="user-email">{screenshot.email}</p>
+                <p className="upload-date">
+                  Uploaded: {new Date(screenshot.created_at).toLocaleDateString()}
+                </p>
+                
+                {screenshot.type === 'verification' && screenshot.entry_date && (
+                  <p className="entry-date">
+                    Entry Date: {new Date(screenshot.entry_date).toLocaleDateString()}
+                  </p>
+                )}
+                
+                {screenshot.type === 'verification' && screenshot.stat_data && (
+                  <div className="verification-stats">
+                    <h5>📊 Stats Submitted:</h5>
+                    <div className="stats-grid">
+                      <span>XP: {screenshot.stat_data.total_xp?.toLocaleString()}</span>
+                      <span>Caught: {screenshot.stat_data.pokemon_caught?.toLocaleString()}</span>
+                      <span>Distance: {screenshot.stat_data.distance_walked?.toFixed(1)}km</span>
+                      <span>Stops: {screenshot.stat_data.pokestops_visited?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                )}
                 {screenshot.is_flagged && (
                   <div className="flag-info">
                     <p className="flag-reason">Reason: {screenshot.flagged_reason}</p>
@@ -245,7 +328,7 @@ export const ScreenshotModeration = () => {
                       
                       const handleFlag = (reason: string) => {
                         console.log('🚩 Submitting flag with reason:', reason)
-                        handleFlagImage(screenshot.id, reason)
+                        handleFlagImage(screenshot.id, reason, screenshot.type)
                         document.body.removeChild(modal)
                       }
                       
@@ -321,7 +404,7 @@ export const ScreenshotModeration = () => {
                         flaggedAt: screenshot.flagged_at,
                         fullScreenshot: screenshot
                       })
-                      handleUnflagImage(screenshot.id)
+                      handleUnflagImage(screenshot.id, screenshot.type)
                     }}
                     className="btn btn-success"
                   >
@@ -337,7 +420,7 @@ export const ScreenshotModeration = () => {
                        email: screenshot.email,
                        fullScreenshot: screenshot
                      })
-                     handleDeleteImage(screenshot.id)
+                     handleDeleteImage(screenshot.id, screenshot.type)
                    }}
                    className="btn btn-danger"
                  >

@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { RadarChart } from '../dashboard/RadarChart'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 export const PostProfileTutorial = () => {
   const [currentSlide, setCurrentSlide] = useState(1)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const navigate = useNavigate()
+  const trialStatus = useTrialStatus()
 
   const isPaid = profile?.is_paid_user === true
   const totalSlides = 5
@@ -108,7 +110,7 @@ export const PostProfileTutorial = () => {
         <div style={{ marginBottom: '2rem' }}>
           <RadarChart 
             profile={profile} 
-            isPaidUser={isPaid} 
+            isPaidUser={trialStatus.isPaidUser} 
             showHeader={false}
           />
         </div>

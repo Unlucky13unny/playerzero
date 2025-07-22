@@ -3,6 +3,7 @@ import { Logo } from '../common/Logo'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { NotificationBell } from '../common/NotificationBell'
 
 type LayoutProps = {
   children: ReactNode
@@ -55,7 +56,7 @@ export const Layout = ({ children }: LayoutProps) => {
     <div className="app-container">
       {/* Header */}
       <header className="header">
-        <Link to="/home" className="logo">
+        <Link to="/UserProfile" className="logo">
           <Logo style={{ color: 'var(--white-pure)' }} />
         </Link>
         
@@ -70,41 +71,31 @@ export const Layout = ({ children }: LayoutProps) => {
         {user && (
           <nav className="nav-links">
             <Link 
-              to="/home" 
-              className={`nav-button ${isActiveRoute('/home') ? 'active' : ''}`}
+              to="/UserProfile" 
+              className={`nav-button ml-auto ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
               onClick={() => setMobileMenuOpen(false)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-              Home
-            </Link>
-
-            <Link 
-              to="/dashboard" 
-              className={`nav-button ${isActiveRoute('/dashboard') ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="7" height="7"></rect>
-                <rect x="14" y="3" width="7" height="7"></rect>
-                <rect x="14" y="14" width="7" height="7"></rect>
-                <rect x="3" y="14" width="7" height="7"></rect>
-              </svg>
-              Dashboard
-            </Link>
-            <Link 
-              to="/profile" 
-              className={`nav-button ${isActiveRoute('/profile') ? 'active' : ''}`}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
+                <circle cx="12" cy="7" r="4" />
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               </svg>
               Profile
             </Link>
+            <Link 
+              to="/leaderboards" 
+              className={`nav-button ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="2" width="8" height="8" />
+                <rect x="14" y="2" width="8" height="8" />
+                <rect x="2" y="14" width="8" height="8" />
+                <rect x="14" y="14" width="8" height="8" />
+              </svg>
+              Leaderboard
+            </Link>
+            
+            <NotificationBell />
           </nav>
         )}
         
@@ -119,72 +110,40 @@ export const Layout = ({ children }: LayoutProps) => {
                   onClick={toggleFeaturesDropdown}
                   title="Features"
                 >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 3v18M3 12h18M3 6h18M3 18h18"></path>
-                  </svg>
-                  <svg 
-                    width="12" 
-                    height="12" 
-                    viewBox="0 0 24 24" 
-                    fill="none" 
-                    stroke="currentColor" 
-                    strokeWidth="2"
-                    className={`dropdown-arrow ${featuresDropdownOpen ? 'open' : ''}`}
-                  >
-                    <path d="M6 9l6 6 6-6"></path>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                    <path d="M3 6h18M3 12h18M3 18h18"></path>
                   </svg>
                 </button>
                 
                 {featuresDropdownOpen && (
                   <div className="features-dropdown-menu">
                     <Link 
-                      to="/dashboard?tab=calculators" 
+                      to="/profile?edit=true" 
                       className="dropdown-item"
                       onClick={() => setFeaturesDropdownOpen(false)}
                     >
-                      🧮 Grind Calculator
+                      ✏️ Edit Profile
                     </Link>
                     <Link 
-                      to="/dashboard?tab=calculators&calc=community" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      🎉 Community Day Calculator
-                    </Link>
-                    <Link 
-                      to="/dashboard?tab=leaderboards" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      🏆 Leaderboards
-                    </Link>
-                    <Link 
-                      to="/dashboard?tab=leaderboards&view=search" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      🔍 Search Users
-                    </Link>
-                    <Link 
-                      to="/dashboard?tab=analytics&analyticsTab=performance" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      📈 Performance Analytics
-                    </Link>
-                    <Link 
-                      to="/dashboard?tab=analytics&analyticsTab=export" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      📤 Visual Export
-                    </Link>
-                    <Link 
-                      to="/dashboard?tab=update" 
+                      to="/update-stats" 
                       className="dropdown-item"
                       onClick={() => setFeaturesDropdownOpen(false)}
                     >
                       📊 Update Stats
+                    </Link>
+                    <Link 
+                      to="/calculators" 
+                      className="dropdown-item"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                    >
+                      🧮 Calculators
+                    </Link>
+                    <Link 
+                      to="/search" 
+                      className="dropdown-item"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                    >
+                      🔍 Search Users
                     </Link>
                   </div>
                 )}

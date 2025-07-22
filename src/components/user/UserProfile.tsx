@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
+import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 
 const TEAM_COLORS = [
   { value: 'blue', label: 'Blue', color: '#0074D9' },
@@ -22,15 +23,6 @@ const COUNTRIES = [
   'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
 ]
 
-const SOCIAL_MEDIA = [
-  { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: '@username' },
-  { key: 'tiktok', label: 'TikTok', icon: '🎵', placeholder: '@username' },
-  { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: '@username' },
-  { key: 'youtube', label: 'YouTube', icon: '🎥', placeholder: 'Channel URL' },
-  { key: 'twitch', label: 'Twitch', icon: '🎮', placeholder: 'username' },
-  { key: 'reddit', label: 'Reddit', icon: '👽', placeholder: 'u/username' }
-]
-
 export const UserProfile = () => {
   const { user, signOut } = useAuth()
   const [loading, setLoading] = useState(false)
@@ -42,11 +34,20 @@ export const UserProfile = () => {
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const [newScreenshot, setNewScreenshot] = useState<File | null>(null)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
+  const [daysUntilNameChange, setDaysUntilNameChange] = useState<number | null>(null);
 
   useEffect(() => {
     loadProfile()
   }, [])
+
+  useEffect(() => {
+    // Enter edit mode if edit=true is in the URL
+    if (searchParams.get('edit') === 'true') {
+      setIsEditing(true)
+    }
+  }, [searchParams])
 
   const loadProfile = async () => {
     setLoading(true)
@@ -59,6 +60,15 @@ export const UserProfile = () => {
       setProfile(data)
       if (data) {
         setEditData(data)
+        // Calculate days until name change is allowed
+        if (data.last_name_change_date) {
+          const lastChange = new Date(data.last_name_change_date);
+          const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
+          const daysRemaining = Math.max(30 - daysSinceChange, 0);
+          setDaysUntilNameChange(daysRemaining);
+        } else {
+          setDaysUntilNameChange(0);
+        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load profile')
@@ -105,44 +115,63 @@ export const UserProfile = () => {
   }
 
   const handleSave = async () => {
-    if (!editData) return
+    if (!editData || !profile) return;
 
-    setSaving(true)
-    setError(null)
-    setSuccess(null)
+    setSaving(true);
+    setError(null);
+    setSuccess(null);
 
     try {
-      let updatedData = { ...editData }
+      let updatedData = { ...editData };
+
+      // Check if trainer name or country is being changed
+      const isNameChanged = profile.trainer_name !== editData.trainer_name;
+      const isCountryChanged = profile.country !== editData.country;
+
+      if ((isNameChanged || isCountryChanged) && daysUntilNameChange && daysUntilNameChange > 0) {
+        setError(`Trainer name and country can only be changed once every 30 days. Days remaining: ${daysUntilNameChange}`);
+        setSaving(false);
+        return;
+      }
+
+      // If only trainer name or country is changed, update last_name_change_date
+      if (isNameChanged || isCountryChanged) {
+        updatedData.last_name_change_date = new Date().toISOString();
+      }
+
+      // Ensure trainer code privacy is properly set
+      updatedData.trainer_code_private = editData.trainer_code_private || false;
 
       // Upload new screenshot if provided
       if (newScreenshot) {
-        const { data: uploadData, error: uploadError } = await profileService.uploadProfileScreenshot(newScreenshot)
+        const { data: uploadData, error: uploadError } = await profileService.uploadProfileScreenshot(newScreenshot);
         if (uploadError) {
-          throw new Error('Failed to upload screenshot: ' + uploadError.message)
+          throw new Error('Failed to upload screenshot: ' + uploadError.message);
         }
-        updatedData.profile_screenshot_url = uploadData || ''
+        updatedData.profile_screenshot_url = uploadData || '';
       }
 
       // Update profile in database
-      const { data, error } = await profileService.updateProfile(updatedData)
+      const { data, error } = await profileService.updateProfile(updatedData);
+      
       if (error) {
-        throw new Error('Failed to update profile: ' + error.message)
+        throw new Error('Failed to update profile: ' + error.message);
       }
 
-      setProfile(data)
-      setEditData(data)
-      setIsEditing(false)
-      setNewScreenshot(null)
-      setSuccess('Profile updated successfully!')
+      setProfile(data);
+      setEditData(data);
+      setIsEditing(false);
+      setNewScreenshot(null);
+      setSuccess('Profile updated successfully!');
       
-      // Update timeout to clear success message
-      setTimeout(() => setSuccess(null), 3000)
+      // Navigate to home page after successful save
+      navigate('/UserProfile');
     } catch (err: any) {
-      setError(err.message || 'Failed to update profile')
+      setError(err.message || 'Failed to update profile');
     } finally {
-      setSaving(false)
+      setSaving(false);
     }
-  }
+  };
   
   const isPaid = profile?.is_paid_user === true
 
@@ -191,7 +220,7 @@ export const UserProfile = () => {
           {SOCIAL_MEDIA.map(platform => (
             <div key={platform.key} className="form-group">
               <label className="form-label">
-                <span className="social-icon">{platform.icon}</span>
+                <SocialIcon platform={platform.key} size={20} color="currentColor" />
                 {platform.label}
               </label>
               {isEditing ? (
@@ -225,15 +254,10 @@ export const UserProfile = () => {
   const renderTrainerCodeSection = () => {
     if (!profile) return null;
 
-    const showPrivateNotice = !isPaid;
-
     return (
       <div className="form-group" style={{marginTop: '1rem'}}>
         <label className="form-label">
           Trainer Code
-          {showPrivateNotice && (
-            <span className="private-badge">Private</span>
-          )}
         </label>
         {isEditing ? (
           <div className="input-group-with-notice">
@@ -241,35 +265,127 @@ export const UserProfile = () => {
               type="text"
               value={editData?.trainer_code || ''}
               onChange={(e) => handleInputChange('trainer_code', e.target.value)}
-              className={`form-input ${!isPaid ? 'disabled' : ''}`}
+              className="form-input"
               placeholder="1234 5678 9012"
-              disabled={!isPaid}
             />
-            {!isPaid && (
-              <div className="private-notice-inline">
-                Private field
-              </div>
-            )}
-            {isPaid && (
-              <div className="checkbox-group">
-                <input
-                  type="checkbox"
-                  id="trainer_code_private_edit"
-                  checked={editData?.trainer_code_private || false}
-                  onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
-                  className="checkbox-input"
-                />
-                <label htmlFor="trainer_code_private_edit" className="checkbox-label">
-                  Keep trainer code private
-                </label>
-              </div>
-            )}
+            <div className="checkbox-group">
+              <input
+                type="checkbox"
+                id="trainer_code_private_edit"
+                checked={editData?.trainer_code_private || false}
+                onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
+                className="checkbox-input"
+              />
+              <label htmlFor="trainer_code_private_edit" className="checkbox-label">
+                Keep trainer code private
+              </label>
+            </div>
           </div>
         ) : (
           <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-            {profile.trainer_code_private ? '******* (Private)' : profile.trainer_code || 'Not set'}
+            {profile.trainer_code_private ? (
+              <span className="private-text">
+                <span className="private-icon">🔒</span> Hidden
+              </span>
+            ) : (
+              profile.trainer_code || 'Not set'
+            )}
           </div>
         )}
+      </div>
+    );
+  };
+
+  const renderTrainerInfoSection = () => {
+    if (!profile) return null;
+
+    const isNameChangeDisabled = daysUntilNameChange !== null && daysUntilNameChange > 0;
+    const nameChangeTooltip = isNameChangeDisabled 
+      ? `Changes allowed in ${daysUntilNameChange} days` 
+      : '';
+
+    return (
+      <div className="form-section">
+        <h3 className="form-section-header">
+          <span className="form-section-icon" style={{background: '#dc2626'}}>
+            👤
+          </span>
+          Trainer Information
+        </h3>
+        <div className="form-grid form-grid-2">
+          <div className="form-group">
+            <label className="form-label">
+              Trainer Name
+              {isNameChangeDisabled && isEditing && (
+                <span className="help-text" style={{color: '#666'}}>
+                  ({nameChangeTooltip})
+                </span>
+              )}
+            </label>
+            {isEditing ? (
+              <input
+                type="text"
+                value={editData?.trainer_name || ''}
+                onChange={(e) => handleInputChange('trainer_name', e.target.value)}
+                className={`form-input ${isNameChangeDisabled ? 'disabled' : ''}`}
+                disabled={isNameChangeDisabled}
+                title={nameChangeTooltip}
+              />
+            ) : (
+              <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                {profile.trainer_name}
+              </div>
+            )}
+          </div>
+          <div className="form-group">
+            <label className="form-label">Trainer Level</label>
+            {isEditing ? (
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={editData?.trainer_level || 1}
+                onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
+                className="form-input"
+              />
+            ) : (
+              <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+                Level {profile.trainer_level}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {renderTrainerCodeSection()}
+
+        <div className="form-group" style={{marginTop: '1rem'}}>
+          <label className="form-label">
+            Country
+            {isNameChangeDisabled && isEditing && (
+              <span className="help-text" style={{color: '#666'}}>
+                ({nameChangeTooltip})
+              </span>
+            )}
+          </label>
+          {isEditing ? (
+            <select
+              value={editData?.country || ''}
+              onChange={(e) => handleInputChange('country', e.target.value)}
+              className={`form-input ${isNameChangeDisabled ? 'disabled' : ''}`}
+              disabled={isNameChangeDisabled}
+              title={nameChangeTooltip}
+            >
+              <option value="">Select a country</option>
+              {COUNTRIES.map(country => (
+                <option key={country} value={country}>{country}</option>
+              ))}
+            </select>
+          ) : (
+            <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
+              {profile.country || 'Not set'}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
@@ -384,119 +500,39 @@ export const UserProfile = () => {
             </div>
 
             {/* Trainer Information */}
-            <div className="form-section">
-              <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#dc2626'}}>
-                  👤
-                </span>
-                Trainer Information
-              </h3>
-              <div className="form-grid form-grid-2">
-                <div className="form-group">
-                  <label className="form-label">Trainer Name</label>
-                  {isEditing ? (
-                    <input
-                      type="text"
-                      value={editData?.trainer_name || ''}
-                      onChange={(e) => handleInputChange('trainer_name', e.target.value)}
-                      className="form-input"
-                    />
-                  ) : (
-                    <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                      {profile.trainer_name}
-                    </div>
-                  )}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Trainer Level</label>
-                  {isEditing ? (
-                    <input
-                      type="number"
-                      min="1"
-                      max="50"
-                      value={editData?.trainer_level || 1}
-                      onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
-                      className="form-input"
-                    />
-                  ) : (
-                    <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                      Level {profile.trainer_level}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {renderTrainerCodeSection()}
+            {renderTrainerInfoSection()}
 
-              <div className="form-grid form-grid-2" style={{marginTop: '1rem'}}>
-                <div className="form-group">
-                  <label className="form-label">Start Date</label>
-                  {isEditing ? (
-                    <input
-                      type="date"
-                      value={editData?.start_date || ''}
-                      onChange={(e) => handleInputChange('start_date', e.target.value)}
-                      className="form-input"
-                    />
-                  ) : (
-                    <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                      {profile.start_date ? new Date(profile.start_date).toLocaleDateString() : 'Not set'}
-                    </div>
-                  )}
-                </div>
-                <div className="form-group">
-                  <label className="form-label">Country</label>
-                  {isEditing ? (
-                    <select
-                      value={editData?.country || ''}
-                      onChange={(e) => handleInputChange('country', e.target.value)}
-                      className="form-select"
+            {/* Team Affiliation */}
+            <div style={{marginTop: '1.5rem'}}>
+              <label className="form-label">Team Affiliation</label>
+              {isEditing ? (
+                <div className="team-grid">
+                  {TEAM_COLORS.map(team => (
+                    <button
+                      key={team.value}
+                      type="button"
+                      onClick={() => handleInputChange('team_color', team.value)}
+                      className={`team-button ${editData?.team_color === team.value ? 'selected' : ''}`}
                     >
-                      <option value="">Select your country</option>
-                      {COUNTRIES.map(country => (
-                        <option key={country} value={country}>{country}</option>
-                      ))}
-                    </select>
-                  ) : (
-                    <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                      {profile.country || 'Not set'}
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Team Affiliation */}
-              <div style={{marginTop: '1.5rem'}}>
-                <label className="form-label">Team Affiliation</label>
-                {isEditing ? (
-                  <div className="team-grid">
-                    {TEAM_COLORS.map(team => (
-                      <button
-                        key={team.value}
-                        type="button"
-                        onClick={() => handleInputChange('team_color', team.value)}
-                        className={`team-button ${editData?.team_color === team.value ? 'selected' : ''}`}
-                      >
-                        <div 
-                          className="team-color-dot"
-                          style={{ backgroundColor: team.color }}
-                        />
-                        <span className="team-label">{team.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="team-grid">
-                    <div className={`team-button selected`} style={{ cursor: 'default' }}>
                       <div 
                         className="team-color-dot"
-                        style={{ backgroundColor: selectedTeam?.color || '#666' }}
+                        style={{ backgroundColor: team.color }}
                       />
-                      <span className="team-label">{selectedTeam?.label || 'Unknown'}</span>
-                    </div>
+                      <span className="team-label">{team.label}</span>
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="team-grid">
+                  <div className={`team-button selected`} style={{ cursor: 'default' }}>
+                    <div 
+                      className="team-color-dot"
+                      style={{ backgroundColor: selectedTeam?.color || '#666' }}
+                    />
+                    <span className="team-label">{selectedTeam?.label || 'Unknown'}</span>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Core Statistics */}

@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { QuickProfileView } from '../profile/QuickProfileView'
-import { dashboardService, type LeaderboardEntry } from '../../services/dashboardService'
-import { FaMedal, FaGlobe, FaUsers, FaShieldAlt, FaSearch } from 'react-icons/fa'
+import { dashboardService, type LeaderboardEntry, type HistoricalWinner } from '../../services/dashboardService'
+import { FaMedal, FaGlobe, FaUsers, FaShieldAlt, FaSearch, FaTrophy, FaCrown, FaCamera } from 'react-icons/fa'
+import html2canvas from 'html2canvas'
 
 // Import country list from profile setup
 const COUNTRIES = [
@@ -37,25 +38,29 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
   const [period, setPeriod] = useState<'weekly' | 'monthly' | 'all-time'>('weekly')
   const [sortBy, setSortBy] = useState<'xp' | 'catches' | 'distance' | 'pokestops'>('xp')
-  const [view, setView] = useState<'all' | 'country' | 'team' | 'search'>(
-    (searchParams.get('view') as 'all' | 'country' | 'team' | 'search') || 'all'
+  const [view, setView] = useState<'all' | 'country' | 'team'>(
+    (searchParams.get('view') as 'all' | 'country' | 'team') || 'all'
   )
   const [filterValue, setFilterValue] = useState<string>('')
-  const [searchQuery, setSearchQuery] = useState<string>('')
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [lastWeekWinners, setLastWeekWinners] = useState<HistoricalWinner[]>([])
+  const [lastMonthWinners, setLastMonthWinners] = useState<HistoricalWinner[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
   const [quickViewAnchor, setQuickViewAnchor] = useState<HTMLElement | null>(null);
+  const leaderboardContentRef = useRef<HTMLDivElement>(null);
+  const [exportStatus, setExportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
   useEffect(() => {
     // Update view when URL parameter changes
-    const viewParam = searchParams.get('view') as 'all' | 'country' | 'team' | 'search'
-    if (viewParam && ['all', 'country', 'team', 'search'].includes(viewParam)) {
+    const viewParam = searchParams.get('view') as 'all' | 'country' | 'team'
+    if (viewParam && ['all', 'country', 'team'].includes(viewParam)) {
       setView(viewParam)
     }
     loadLeaderboard()
-  }, [period, sortBy, view, filterValue, searchQuery])
+    loadHistoricalWinners()
+  }, [period, sortBy, view, filterValue])
 
   const loadLeaderboard = async () => {
     setLoading(true)
@@ -66,7 +71,7 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
         period,
         sortBy,
         view,
-        filterValue: view === 'search' ? searchQuery : filterValue
+        filterValue
       })
       setLeaderboard(data || [])
     } catch (err: any) {
@@ -74,6 +79,21 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
       setError(err.message || 'Failed to load leaderboard')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const loadHistoricalWinners = async () => {
+    try {
+      const [weekResult, monthResult] = await Promise.all([
+        dashboardService.getLastWeekWinners(),
+        dashboardService.getLastMonthWinners()
+      ])
+      
+      setLastWeekWinners(weekResult.data || [])
+      setLastMonthWinners(monthResult.data || [])
+    } catch (err: any) {
+      console.error('Historical winners error:', err)
+      // Don't show error for historical winners - it's secondary
     }
   }
 
@@ -118,6 +138,16 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     if (sortBy === 'distance') {
       return `${value.toFixed(1)} km`
     }
+
+    if (sortBy === 'xp') {
+      if (value >= 1000000) {
+        return `${(value / 1000000).toFixed(2)}M`
+      } else if (value >= 1000) {
+        return `${(value / 1000).toFixed(1)}K`
+      }
+      // For values less than 1000, show as is
+      return value.toString()
+    }
     
     return value.toLocaleString()
   }
@@ -129,6 +159,110 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
     return <span className="rank-number">{rank + 1}</span>
   }
 
+  const getWinnerIcon = (rank: number) => {
+    if (rank === 1) return <FaMedal className="winner-icon gold" />
+    if (rank === 2) return <FaMedal className="winner-icon silver" />
+    if (rank === 3) return <FaMedal className="winner-icon bronze" />
+    return null
+  }
+
+  const formatHistoricalValue = (winner: HistoricalWinner, sortBy: string) => {
+    const getValue = () => {
+      switch (sortBy) {
+        case 'xp': return winner.xp_gained
+        case 'catches': return winner.catches_gained
+        case 'distance': return winner.distance_gained
+        case 'pokestops': return winner.pokestops_gained
+        default: return 0
+      }
+    }
+
+    const value = getValue() || 0
+    
+    if (sortBy === 'distance') {
+      return `${value.toFixed(1)} km`
+    }
+
+    if (sortBy === 'xp') {
+      if (value >= 1000000) {
+        return `${(value / 1000000).toFixed(2)}M`
+      } else if (value >= 1000) {
+        return `${(value / 1000).toFixed(1)}K`
+      }
+      return value.toString()
+    }
+    
+    return value.toLocaleString()
+  }
+
+  const shouldShowHistoricalWinners = () => {
+    // Don't show historical winners since weekly/monthly now show completed periods
+    return false
+  }
+
+  const getHistoricalWinnersForCurrentPeriod = () => {
+    if (period === 'weekly') return lastWeekWinners
+    if (period === 'monthly') return lastMonthWinners
+    return []
+  }
+
+  const getPeriodLabel = () => {
+    switch (period) {
+      case 'weekly': return 'Weekly Final Results'
+      case 'monthly': return 'Monthly Final Results'
+      case 'all-time': return 'All-Time Live Leaderboard'
+      default: return 'Current'
+    }
+  }
+
+  const getHistoricalPeriodLabel = () => {
+    if (period === 'weekly') return 'Last Week\'s Final Results'
+    if (period === 'monthly') return 'Last Month\'s Final Results'
+    return ''
+  }
+
+  const handleExportClick = async () => {
+    setExportStatus('loading');
+    try {
+      if (!leaderboardContentRef.current) {
+        setExportStatus('error');
+        return;
+      }
+
+      // Wait a moment for any loading states to complete
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      const canvas = await html2canvas(leaderboardContentRef.current, {
+        backgroundColor: '#1a1a1a',
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+
+      // Create filename
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+      const filterPart = filterValue ? `-${filterValue}` : '';
+      const filename = `playerzero-leaderboard-${period}-${sortBy}-${view}${filterPart}-${timestamp}.png`;
+
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      setExportStatus('success');
+      // Reset status after 3 seconds
+      setTimeout(() => setExportStatus('idle'), 3000);
+    } catch (err) {
+      console.error('Export error:', err);
+      setExportStatus('error');
+      // Reset status after 3 seconds
+      setTimeout(() => setExportStatus('idle'), 3000);
+    }
+  };
+
   return (
     <div className="leaderboards-container">
       <ValuePropModal 
@@ -137,12 +271,24 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
         daysRemaining={daysRemaining} 
       />
       
-      <QuickProfileView
-        profileId={selectedProfile || ''}
-        isOpen={!!selectedProfile}
-        onClose={handleCloseQuickView}
-        anchorEl={quickViewAnchor}
-      />
+      {/* Profile Preview Modal */}
+      {selectedProfile && (
+        <div className="profile-preview-modal">
+          <div className="modal-backdrop" onClick={handleCloseQuickView}></div>
+          <div className="modal-content">
+            <div className="modal-inner">
+              <button className="modal-close" onClick={handleCloseQuickView}>×</button>
+              <div className="quick-profile-container">
+                <QuickProfileView 
+                  profileId={selectedProfile}
+                  isOpen={true}
+                  onClose={handleCloseQuickView}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="leaderboards-header">
         <h2>🏆 Community Leaderboards</h2>
@@ -154,6 +300,14 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
             </span>
           </div>
         )}
+        <div className="export-button-container">
+          <button className="export-button" onClick={handleExportClick} disabled={exportStatus === 'loading'}>
+            <FaCamera className="export-icon" />
+            {exportStatus === 'loading' ? 'Exporting...' : 'Export Leaderboard'}
+          </button>
+          {exportStatus === 'success' && <span className="export-success-message">✅ Exported!</span>}
+          {exportStatus === 'error' && <span className="export-error-message">❌ Export failed</span>}
+        </div>
       </div>
 
       {/* View Filters */}
@@ -163,7 +317,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
           onClick={() => {
             setView('all')
             setFilterValue('')
-            setSearchQuery('')
           }}
         >
           <FaUsers className="view-icon" /> All Trainers
@@ -172,7 +325,7 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
           className={`view-tab ${view === 'country' ? 'active' : ''}`}
           onClick={() => {
             setView('country')
-            setSearchQuery('')
+            setFilterValue('')
           }}
         >
           <FaGlobe className="view-icon" /> By Country
@@ -181,19 +334,10 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
           className={`view-tab ${view === 'team' ? 'active' : ''}`}
           onClick={() => {
             setView('team')
-            setSearchQuery('')
-          }}
-        >
-          <FaShieldAlt className="view-icon" /> By Team
-        </button>
-        <button
-          className={`view-tab ${view === 'search' ? 'active' : ''}`}
-          onClick={() => {
-            setView('search')
             setFilterValue('')
           }}
         >
-          <FaSearch className="view-icon" /> Search
+          <FaShieldAlt className="view-icon" /> By Team
         </button>
       </div>
 
@@ -231,17 +375,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
             ))}
           </select>
         )}
-        {view === 'search' && (
-          <div className="search-container">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by trainer name..."
-              className="search-input"
-            />
-          </div>
-        )}
       </div>
 
       {/* Time Period Filters */}
@@ -252,19 +385,19 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
               className={`period-tab ${period === 'weekly' ? 'active' : ''}`}
               onClick={() => setPeriod('weekly')}
             >
-              Weekly
+              Weekly Final
             </button>
             <button
               className={`period-tab ${period === 'monthly' ? 'active' : ''}`}
               onClick={() => setPeriod('monthly')}
             >
-              Monthly
+              Monthly Final
             </button>
             <button
               className={`period-tab ${period === 'all-time' ? 'active' : ''}`}
               onClick={() => setPeriod('all-time')}
             >
-              All-Time
+              All-Time Live
             </button>
           </div>
         </div>
@@ -283,8 +416,66 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
         </div>
       </div>
 
-      {/* Leaderboard Content */}
-      <div className="leaderboard-content">
+      {/* Historical Winners Section */}
+      {shouldShowHistoricalWinners() && (
+        <div className="historical-winners-section">
+          <div className="historical-winners-header">
+            <FaCrown className="crown-icon" />
+            <h3>{getHistoricalPeriodLabel()}</h3>
+          </div>
+          <div className="historical-winners-list">
+            {getHistoricalWinnersForCurrentPeriod().map((winner, index) => (
+              <div
+                key={`winner-${winner.rank}`}
+                className={`historical-winner rank-${winner.rank}`}
+              >
+                <div className="winner-rank">
+                  {getWinnerIcon(winner.rank)}
+                </div>
+                <div className="winner-info">
+                  <span className="winner-name">{winner.trainer_name}</span>
+                  <div className="winner-meta">
+                    <span 
+                      className="team-dot"
+                      style={{ backgroundColor: getTeamColor(winner.team_color) }}
+                    ></span>
+                    <span className="country-flag">
+                      {winner.country}
+                    </span>
+                  </div>
+                </div>
+                <div className="winner-stats">
+                  <div className="primary-stat">
+                    {formatHistoricalValue(winner, sortBy)}
+                  </div>
+                  <div className="stat-label">
+                    {sortBy === 'xp' && 'XP'}
+                    {sortBy === 'catches' && 'Caught'}
+                    {sortBy === 'distance' && 'Distance'}
+                    {sortBy === 'pokestops' && 'PokéStops'}
+                  </div>
+                </div>
+                {winner.profile_screenshot_url && (
+                  <div className="winner-avatar">
+                    <img
+                      src={winner.profile_screenshot_url}
+                      alt={`${winner.trainer_name}'s profile`}
+                      className="avatar-image"
+                    />
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Current Leaderboard Content */}
+      <div className="leaderboard-content" ref={leaderboardContentRef}>
+        <div className="current-leaderboard-header">
+          <h3>{getPeriodLabel()} Leaderboard</h3>
+        </div>
+        
         {loading ? (
           <div className="leaderboard-loading">
             <div className="loading-spinner"></div>
@@ -300,27 +491,12 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
             {leaderboard.length === 0 ? (
               <div className="empty-leaderboard">
                 <div className="empty-icon">📊</div>
-                {view === 'search' ? (
-                  <>
-                    <h3>No Trainers Found</h3>
-                    {isPaidUser ? (
-                      <p>Try adjusting your search terms or check back later.</p>
-                    ) : (
-                      <>
-                        <p>Upgrade to Premium to unlock full search capabilities!</p>
-                        <button 
-                          className="upgrade-cta"
-                          onClick={handleUpgradeClick}
-                        >
-                          ✨ Upgrade to Premium
-                        </button>
-                      </>
-                    )}
-                  </>
+                <h3>No Trainers Found</h3>
+                {isPaidUser ? (
+                  <p>Try adjusting your search terms or check back later.</p>
                 ) : (
                   <>
-                    <h3>No Premium Members Yet</h3>
-                    <p>Be the first to upgrade and claim the top spot!</p>
+                    <p>Upgrade to Premium to unlock full search capabilities!</p>
                     <button 
                       className="upgrade-cta"
                       onClick={handleUpgradeClick}
