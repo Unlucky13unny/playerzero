@@ -79,20 +79,29 @@ export interface PublicProfileData {
 // XP requirements for each level
 const LEVEL_50_XP = 176_000_000;
 
-// Calculate summit date based on current XP and average daily gain
-export const calculateSummitDate = (currentXp: number, averageDailyXp: number): string => {
-  // If already level 50 or no XP gain
+// Calculate summit date based on current XP and start date (more accurate than stored average)
+export const calculateSummitDate = (currentXp: number, averageDailyXp: number, startDate?: string): string => {
+  // If already level 50
   if (currentXp >= LEVEL_50_XP) {
     return 'Complete';
   }
   
-  if (!averageDailyXp || averageDailyXp <= 0) {
+  // If we have a start date, calculate more accurate daily XP rate
+  let dailyXpRate = averageDailyXp;
+  
+  if (startDate) {
+    const start = new Date(startDate);
+    const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    dailyXpRate = currentXp / daysSinceStart;
+  }
+  
+  if (!dailyXpRate || dailyXpRate <= 0) {
     return 'Calculating...';
   }
 
   // Calculate days needed
   const xpNeeded = LEVEL_50_XP - currentXp;
-  const daysNeeded = Math.ceil(xpNeeded / averageDailyXp);
+  const daysNeeded = Math.ceil(xpNeeded / dailyXpRate);
   
   // Calculate future date
   const summitDate = new Date();

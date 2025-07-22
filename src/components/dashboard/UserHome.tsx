@@ -139,7 +139,7 @@ export const UserHome = () => {
             <div className="summit-badge">
               <span className="summit-icon">🏔️</span>
               <span className="summit-date">
-                Summit: {stats ? calculateSummitDate(stats.total_xp || 0, stats.average_daily_xp || 0) : 'Loading...'}
+                Summit: {stats ? calculateSummitDate(stats.total_xp || 0, stats.average_daily_xp || 0, stats.start_date) : 'Loading...'}
               </span>
             </div>
             {stats?.trainer_code && !stats?.trainer_code_private && (

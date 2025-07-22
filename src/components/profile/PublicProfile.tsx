@@ -233,7 +233,7 @@ export const PublicProfile = () => {
             <div className="summit-badge">
               <span className="summit-icon">🏔️</span>
               <span className="summit-date">
-                Summit: {calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0)}
+                Summit: {calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)}
               </span>
             </div>
             {profile.is_paid_user && (

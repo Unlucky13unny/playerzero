@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import type { ProfileWithMetadata } from '../../services/profileService'
+import { calculateSummitDate } from '../../services/profileService'
+
+const LEVEL_50_XP = 176_000_000;
 
 interface VisualExportProps {
   profile: ProfileWithMetadata
@@ -14,7 +17,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const trialStatus = useTrialStatus()
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
-  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement'>('all-time')
+  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
 
   const exportCard = async () => {
@@ -84,14 +87,19 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     navigate('/upgrade')
   }
 
-  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement') => {
+  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit') => {
     switch (type) {
       case 'all-time':
         return trialStatus.canGenerateAllTimeCard
       case 'grind':
         return trialStatus.canShareGrindCard
       case 'achievement':
-        return trialStatus.canGenerateAllTimeCard // Achievement cards follow same rules as all-time
+        // Achievement cards require summit achievement (level 50) AND private mode access
+        const hasSummitAchievement = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
+        return trialStatus.canGenerateAllTimeCard && hasSummitAchievement
+      case 'summit':
+        // Summit cards are available to everyone with private mode access
+        return trialStatus.canGenerateAllTimeCard
       case 'weekly':
       case 'monthly':
         return trialStatus.canViewWeeklyMonthlyCards
@@ -100,7 +108,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     }
   }
 
-  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement') => {
+  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'grind' | 'achievement' | 'summit') => {
     const timeLeft = trialStatus.timeRemaining.days > 0 
       ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
       : trialStatus.timeRemaining.hours > 0 
@@ -111,7 +119,18 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
     switch (type) {
       case 'all-time':
+        return trialStatus.isInTrial 
+          ? `Available in private mode (${timeLeft})`
+          : 'Available in private mode only'
       case 'achievement':
+        const hasSummitAchievement = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
+        if (!hasSummitAchievement) {
+          return 'Unlock at Level 50 Summit'
+        }
+        return trialStatus.isInTrial 
+          ? `Available in private mode (${timeLeft})`
+          : 'Available in private mode only'
+      case 'summit':
         return trialStatus.isInTrial 
           ? `Available in private mode (${timeLeft})`
           : 'Available in private mode only'
@@ -321,6 +340,77 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           </div>
         )
 
+      case 'summit':
+        const hasAchievedSummit = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
+        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
+        return (
+          <div className="card-template summit-card" style={{ 
+            backgroundImage: 'url(/public/images/summit.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            minWidth: '400px',
+            minHeight: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
+            {/* Trainer Name - Top Left */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '30px',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '20px',
+            }}>
+              {profile.trainer_name}
+            </div>
+            
+            {/* Start Date - Top Right */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              right: '30px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
+            </div>
+
+            {/* Summit Date - Above Total XP */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '430px',
+              left: '30px',
+              color: 'red',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {summitDate}
+            </div>
+
+            {/* Total XP - Bottom Left */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '100px',
+              left: '30px',
+              color: 'white',
+              fontSize: '12px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontSize: '30px', fontWeight: 'bold', color: 'white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
+            </div>
+          </div>
+        )
+
       case 'grind':
         return (
           <div className="card-template grind-card">
@@ -472,6 +562,15 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         >
           🏆 Achievement
           {!isCardTypeAllowed('achievement') && <span className="restriction-badge">🔒</span>}
+        </button>
+        <button
+          className={`card-type-tab ${cardType === 'summit' ? 'active' : ''} ${!isCardTypeAllowed('summit') ? 'restricted' : ''}`}
+          onClick={() => isCardTypeAllowed('summit') && setCardType('summit')}
+          disabled={!isCardTypeAllowed('summit')}
+          title={!isCardTypeAllowed('summit') ? getRestrictedMessage('summit') : ''}
+        >
+          🏔️ Summit
+          {!isCardTypeAllowed('summit') && <span className="restriction-badge">🔒</span>}
         </button>
         <button
           className={`card-type-tab ${cardType === 'grind' ? 'active' : ''} ${!isCardTypeAllowed('grind') ? 'restricted' : ''}`}
