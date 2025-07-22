@@ -17,7 +17,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const trialStatus = useTrialStatus()
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
-  const [cardType, setCardType] = useState<'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit'>('all-time')
+  const [cardType, setCardType] = useState<'all-time' | 'achievement' | 'summit'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
 
   const exportCard = async () => {
@@ -87,7 +87,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
     navigate('/upgrade')
   }
 
-  const isCardTypeAllowed = (type: 'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit') => {
+  const isCardTypeAllowed = (type: 'all-time' | 'achievement' | 'summit') => {
     switch (type) {
       case 'all-time':
         return trialStatus.canGenerateAllTimeCard
@@ -97,15 +97,12 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       case 'summit':
         // Summit cards are available to everyone with private mode access
         return trialStatus.canGenerateAllTimeCard
-      case 'weekly':
-      case 'monthly':
-        return trialStatus.canViewWeeklyMonthlyCards
       default:
         return false
     }
   }
 
-  const getRestrictedMessage = (type: 'all-time' | 'weekly' | 'monthly' | 'achievement' | 'summit') => {
+  const getRestrictedMessage = (type: 'all-time' | 'achievement' | 'summit') => {
     const timeLeft = trialStatus.timeRemaining.days > 0 
       ? `${trialStatus.timeRemaining.days}d ${trialStatus.timeRemaining.hours}h ${trialStatus.timeRemaining.minutes}m ${trialStatus.timeRemaining.seconds}s left`
       : trialStatus.timeRemaining.hours > 0 
@@ -127,9 +124,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         return trialStatus.isInTrial 
           ? `Available in private mode (${timeLeft})`
           : 'Available in private mode only'
-      case 'weekly':
-      case 'monthly':
-        return 'Premium feature only'
       default:
         return 'Restricted'
     }
@@ -141,12 +135,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
   const dailyXPRate = currentXP / daysSinceStart
   
-  // XP requirements for each level (simplified - Level 50 = 176M XP)
-  const targetXP = profile.trainer_level >= 50 ? 176000000 : 176000000
-  const daysToTarget = currentXP >= targetXP ? 0 : Math.ceil((targetXP - currentXP) / Math.max(dailyXPRate, 1))
-  const projectedDate = new Date()
-  projectedDate.setDate(projectedDate.getDate() + daysToTarget)
-
   // Calculate estimated catch rate based on pokestops vs pokemon ratio
   const estimatedCatchRate = Math.min(99.9, (profile.pokemon_caught || 0) / Math.max(1, (profile.pokestops_visited || 1)) * 100)
 
@@ -416,63 +404,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           </div>
         )
 
-      case 'weekly':
-      case 'monthly':
-        return (
-          <div className="card-template projection-card">
-            {/* Start Date - Top Right */}
-            <div className="start-date-top">Start Date:</div>
-            <div className="start-date-value">{startDate}</div>
-            
-            {/* Trainer Name - Top Left */}
-            <div className="trainer-name-header">{profile.trainer_name}</div>
-            
-            {/* Projected Date Section - Center */}
-            <div className="projected-section">
-              <div className="projected-label">Projected Date:</div>
-              <div className="projected-date">{projectedDate.toLocaleDateString('en-US', { 
-                month: '2-digit', 
-                day: '2-digit', 
-                year: 'numeric' 
-              })}</div>
-            </div>
-            
-            {/* Progress Bars - Left */}
-            <div className="progress-bars">
-              {Array.from({ length: 12 }, (_, i) => {
-                // Calculate progress based on actual XP progression
-                const monthlyProgress = ((profile.total_xp || 0) / targetXP) * 100
-                const barHeight = Math.max(5, Math.min(25, (monthlyProgress / 12) * (i + 1) + (i * 2)))
-                return (
-                  <div 
-                    key={i} 
-                    className="progress-bar"
-                    style={{ 
-                      opacity: i < Math.floor(monthlyProgress / 10) ? 1 : 0.3,
-                      height: `${barHeight}px`
-                    }}
-                  ></div>
-                )
-              })}
-            </div>
-            
-            {/* XP Section - Bottom Center */}
-            <div className="xp-section">
-              <div className="xp-label">XP</div>
-              <div className="xp-value">{Math.floor(targetXP - currentXP).toLocaleString()}</div>
-            </div>
-            
-            {/* Level Badge - Bottom Right */}
-            <div className="level-badge">
-              <div className="level-number">({profile.trainer_level || 50})</div>
-              <div className="level-text">Summit</div>
-            </div>
-            
-            {/* PlayerZERO Logo - Bottom Right */}
-            <div className="playerzero-logo">PlayerZERØ</div>
-          </div>
-        )
-
       default:
         return null
     }
@@ -509,24 +440,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         >
           📊 All-Time
           {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
-        </button>
-        <button
-          className={`card-type-tab ${cardType === 'weekly' ? 'active' : ''} ${!isCardTypeAllowed('weekly') ? 'restricted' : ''}`}
-          onClick={() => isCardTypeAllowed('weekly') && setCardType('weekly')}
-          disabled={!isCardTypeAllowed('weekly')}
-          title={!isCardTypeAllowed('weekly') ? getRestrictedMessage('weekly') : ''}
-        >
-          📅 Weekly
-          {!isCardTypeAllowed('weekly') && <span className="restriction-badge">👑</span>}
-        </button>
-        <button
-          className={`card-type-tab ${cardType === 'monthly' ? 'active' : ''} ${!isCardTypeAllowed('monthly') ? 'restricted' : ''}`}
-          onClick={() => isCardTypeAllowed('monthly') && setCardType('monthly')}
-          disabled={!isCardTypeAllowed('monthly')}
-          title={!isCardTypeAllowed('monthly') ? getRestrictedMessage('monthly') : ''}
-        >
-          📊 Monthly
-          {!isCardTypeAllowed('monthly') && <span className="restriction-badge">👑</span>}
         </button>
         <button
           className={`card-type-tab ${cardType === 'summit' ? 'active' : ''} ${!isCardTypeAllowed('summit') ? 'restricted' : ''}`}
