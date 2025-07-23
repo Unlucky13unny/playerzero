@@ -19,6 +19,7 @@ export const StatUpdater = () => {
   const navigate = useNavigate()
   const [currentStats, setCurrentStats] = useState<Stats>({})
   const [updates, setUpdates] = useState<Stats>({})
+  const [validationErrors, setValidationErrors] = useState<Record<string, boolean>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
@@ -153,31 +154,49 @@ export const StatUpdater = () => {
   }
 
   const handleInputChange = (field: keyof Stats, value: string) => {
+    // Allow empty values
     if (!value.trim()) {
       setUpdates(prev => ({ ...prev, [field]: undefined }))
       return
     }
 
-    const cleanValue = value.replace(/^0+/, '')
+    // Store the raw input value to allow typing intermediate values
+    const rawValue = value
     let parsedValue: number | undefined
 
+    // Parse the value based on field type
     if (field === 'distance_walked') {
-      parsedValue = cleanValue ? parseFloat(cleanValue) : undefined
+      parsedValue = rawValue ? parseFloat(rawValue) : undefined
     } else {
-      parsedValue = cleanValue ? parseInt(cleanValue) : undefined
+      parsedValue = rawValue ? parseInt(rawValue) : undefined
     }
 
-    if (parsedValue !== undefined) {
+    // Only validate when we have a complete, valid number
+    if (parsedValue !== undefined && !isNaN(parsedValue)) {
       const currentValue = currentStats[field]
-      if (currentValue !== undefined && typeof parsedValue === 'number' && typeof currentValue === 'number' && parsedValue < currentValue) {
+      
+      // Only block if the final value is definitely invalid
+      if (currentValue !== undefined && typeof currentValue === 'number' && parsedValue < currentValue) {
+        // For typing experience, we'll store the value but add validation styling
+        setUpdates(prev => ({ ...prev, [field]: parsedValue }))
+        setValidationErrors(prev => ({ ...prev, [field]: true }))
         return
       }
+      
       if (field === 'unique_pokedex_entries' && parsedValue > maxPokedexEntries) {
+        // For typing experience, we'll store the value but add validation styling
+        setUpdates(prev => ({ ...prev, [field]: parsedValue }))
+        setValidationErrors(prev => ({ ...prev, [field]: true }))
         return
       }
+      
+      // Clear any previous validation flags
+      setUpdates(prev => ({ ...prev, [field]: parsedValue }))
+      setValidationErrors(prev => ({ ...prev, [field]: false }))
+    } else {
+      // For partial input while typing, store as string temporarily
+      setUpdates(prev => ({ ...prev, [field]: rawValue }))
     }
-
-    setUpdates(prev => ({ ...prev, [field]: parsedValue }))
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -323,7 +342,7 @@ export const StatUpdater = () => {
                   value={updates.total_xp || ''}
                   onChange={(e) => handleInputChange('total_xp', e.target.value)}
                   placeholder={`Enter new value`}
-                  className="stat-input"
+                  className={`stat-input ${validationErrors.total_xp ? 'invalid' : ''}`}
                 />
                 <div className="current-value">
                   <span className="current-value-icon">📊</span>
@@ -343,7 +362,7 @@ export const StatUpdater = () => {
                   value={updates.pokemon_caught || ''}
                   onChange={(e) => handleInputChange('pokemon_caught', e.target.value)}
                   placeholder={`Enter new value`}
-                  className="stat-input"
+                  className={`stat-input ${validationErrors.pokemon_caught ? 'invalid' : ''}`}
                 />
                 <div className="current-value">
                   <span className="current-value-icon">📊</span>
@@ -364,7 +383,7 @@ export const StatUpdater = () => {
                   value={updates.distance_walked || ''}
                   onChange={(e) => handleInputChange('distance_walked', e.target.value)}
                   placeholder={`Enter new value`}
-                  className="stat-input"
+                  className={`stat-input ${validationErrors.distance_walked ? 'invalid' : ''}`}
                 />
                 <div className="current-value">
                   <span className="current-value-icon">📊</span>
@@ -384,7 +403,7 @@ export const StatUpdater = () => {
                   value={updates.pokestops_visited || ''}
                   onChange={(e) => handleInputChange('pokestops_visited', e.target.value)}
                   placeholder={`Enter new value`}
-                  className="stat-input"
+                  className={`stat-input ${validationErrors.pokestops_visited ? 'invalid' : ''}`}
                 />
                 <div className="current-value">
                   <span className="current-value-icon">📊</span>
@@ -405,7 +424,7 @@ export const StatUpdater = () => {
                   value={updates.unique_pokedex_entries || ''}
                   onChange={(e) => handleInputChange('unique_pokedex_entries', e.target.value)}
                   placeholder={`Enter new value`}
-                  className="stat-input"
+                  className={`stat-input ${validationErrors.unique_pokedex_entries ? 'invalid' : ''}`}
                 />
                 <div className="current-value">
                   <span className="current-value-icon">📊</span>

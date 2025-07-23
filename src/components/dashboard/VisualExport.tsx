@@ -462,7 +462,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       </div>
 
       {/* Export Controls */}
-      <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', marginBottom: '2rem', alignItems: 'center' }}>
+      <div className="export-actions">
         <button
           onClick={exportCard}
           disabled={exporting || !isCardTypeAllowed(cardType)}
@@ -472,23 +472,26 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             cursor: (!isCardTypeAllowed(cardType)) ? 'not-allowed' : 'pointer'
           }}
         >
+          <span className="export-icon">📤</span>
           {exporting ? (
             <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
               <div className="loading-spinner" style={{ width: '1rem', height: '1rem' }}></div>
               Generating...
             </span>
           ) : (
-            `📤 Export ${cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card`
+            `Export ${cardType.charAt(0).toUpperCase() + cardType.slice(1)} Card`
           )}
         </button>
         
         {downloadMessage && (
-          <span style={{ 
+          <div className="export-message" style={{ 
             color: downloadMessage.includes('failed') ? '#ef4444' : '#22c55e',
-            fontSize: '0.875rem'
+            fontSize: '0.875rem',
+            textAlign: 'center',
+            padding: '0.5rem'
           }}>
             {downloadMessage}
-          </span>
+          </div>
         )}
       </div>
 
