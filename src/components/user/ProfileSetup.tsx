@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData } from '../../services/profileService'
 import { adminService } from '../../services/adminService'
+import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import './ProfileSetup.css'
 
 const TEAM_COLORS = [
@@ -22,17 +23,20 @@ const COUNTRIES = [
   'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
 ]
 
-const SOCIAL_MEDIA = [
-  { key: 'instagram', label: 'Instagram', icon: '📸', placeholder: '@username' },
-  { key: 'tiktok', label: 'TikTok', icon: '🎵', placeholder: '@username' },
-  { key: 'twitter', label: 'Twitter', icon: '🐦', placeholder: '@username' },
-  { key: 'youtube', label: 'YouTube', icon: '🎥', placeholder: 'channel name or URL' },
-  { key: 'twitch', label: 'Twitch', icon: '🎮', placeholder: 'username' },
-  { key: 'reddit', label: 'Reddit', icon: '🤖', placeholder: 'u/username' }
-]
+const getSocialGradient = (platform: string): string => {
+  const gradients = {
+    instagram: 'linear-gradient(135deg, #e91e63, #9c27b0)',
+    tiktok: 'linear-gradient(135deg, #111827, #1f2937)',
+    twitter: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+    youtube: 'linear-gradient(135deg, #dc2626, #b91c1c)',
+    twitch: 'linear-gradient(135deg, #7c3aed, #6d28d9)',
+    reddit: 'linear-gradient(135deg, #f97316, #ea580c)'
+  };
+  return gradients[platform as keyof typeof gradients] || 'linear-gradient(135deg, #64748b, #475569)';
+};
 
 export const ProfileSetup = () => {
-  const { updateProfile, userMetadata } = useAuth()
+  const { updateProfile } = useAuth()
   const navigate = useNavigate()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -48,6 +52,7 @@ export const ProfileSetup = () => {
     start_date: '',
     country: '',
     team_color: '',
+    average_daily_xp: 0,
     distance_walked: undefined,
     pokemon_caught: undefined,
     pokestops_visited: undefined,
@@ -203,7 +208,7 @@ export const ProfileSetup = () => {
       }
       
       // Save to database
-      const { data, error: dbError } = await profileService.upsertProfile(profileDataToSave)
+      const { error: dbError } = await profileService.upsertProfile(profileDataToSave)
       
       if (dbError) {
         throw new Error('Failed to save profile: ' + dbError.message)
@@ -232,7 +237,7 @@ export const ProfileSetup = () => {
     }
   }
 
-  const renderPrivacyToggle = (fieldName: string) => (
+  const renderPrivacyToggle = () => (
     <div className="privacy-toggle" title="This field is private until you upgrade">
       <div className="privacy-status">
         <span className="privacy-icon">🔒</span>
@@ -288,7 +293,6 @@ export const ProfileSetup = () => {
           <div className="form-group" style={{marginTop: '1rem'}}>
             <label className="form-label">
               Trainer Code
-              <span className="help-text">(Enter now, share later when you upgrade)</span>
             </label>
             <div className="input-group">
               <input
@@ -300,7 +304,18 @@ export const ProfileSetup = () => {
                 pattern="\d{4}\s?\d{4}\s?\d{4}"
                 title="Enter your 12-digit trainer code"
               />
-              {renderPrivacyToggle('trainer_code')}
+              <div className="checkbox-group">
+                <input
+                  type="checkbox"
+                  id="trainer_code_private"
+                  checked={profileData.trainer_code_private}
+                  onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
+                  className="checkbox-input"
+                />
+                <label htmlFor="trainer_code_private" className="checkbox-label">
+                  Keep trainer code private
+                </label>
+              </div>
             </div>
           </div>
         </div>
@@ -382,7 +397,8 @@ export const ProfileSetup = () => {
             {SOCIAL_MEDIA.map(platform => (
               <div key={platform.key} className="form-group">
                 <label className="form-label">
-                  {platform.icon} {platform.label}
+                  <SocialIcon platform={platform.key} size={20} color="currentColor" />
+                  {platform.label}
                 </label>
                 <div className="input-group">
                   <input
@@ -392,7 +408,7 @@ export const ProfileSetup = () => {
                     className="form-input"
                     placeholder={platform.placeholder}
                   />
-                  {renderPrivacyToggle(platform.key)}
+                  {renderPrivacyToggle()}
                 </div>
               </div>
             ))}
@@ -515,26 +531,19 @@ export const ProfileSetup = () => {
       </div>
       
       <div className="social-grid">
-        {[
-          { key: 'instagram', label: 'Instagram', icon: '📷', color: 'linear-gradient(135deg, #e91e63, #9c27b0)', placeholder: '@username' },
-          { key: 'tiktok', label: 'TikTok', icon: '🎵', color: 'linear-gradient(135deg, #111827, #1f2937)', placeholder: '@username' },
-          { key: 'twitter', label: 'X / Twitter', icon: '🐦', color: 'linear-gradient(135deg, #3b82f6, #2563eb)', placeholder: '@username' },
-          { key: 'youtube', label: 'YouTube', icon: '📺', color: 'linear-gradient(135deg, #dc2626, #b91c1c)', placeholder: 'Channel URL or @username' },
-          { key: 'twitch', label: 'Twitch', icon: '🎮', color: 'linear-gradient(135deg, #7c3aed, #6d28d9)', placeholder: 'username' },
-          { key: 'reddit', label: 'Reddit', icon: '🤖', color: 'linear-gradient(135deg, #f97316, #ea580c)', placeholder: 'u/username' }
-        ].map((social) => (
-          <div key={social.key} className="social-card">
-            <div className="social-icon" style={{background: social.color}}>
-              <span>{social.icon}</span>
+        {SOCIAL_MEDIA.map(platform => (
+          <div key={platform.key} className="social-card">
+            <div className="social-icon" style={{background: getSocialGradient(platform.key)}}>
+              <SocialIcon platform={platform.key} size={24} color="white" />
             </div>
             <div className="social-content">
-              <label className="form-label">{social.label}</label>
+              <label className="form-label">{platform.label}</label>
               <input
                 type="text"
-                value={profileData[social.key as keyof ProfileData] as string || ''}
-                onChange={(e) => setProfileData(prev => ({ ...prev, [social.key]: e.target.value }))}
+                value={profileData[platform.key as keyof ProfileData] as string || ''}
+                onChange={(e) => setProfileData(prev => ({ ...prev, [platform.key]: e.target.value }))}
                 className="form-input"
-                placeholder={social.placeholder}
+                placeholder={platform.placeholder}
               />
             </div>
           </div>

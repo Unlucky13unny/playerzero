@@ -2,17 +2,6 @@ import { useState, useEffect } from 'react'
 import { dashboardService, type StatCalculationResult } from '../../services/dashboardService'
 import StatCard from './StatCard'
 
-const TEAM_COLORS = {
-  blue: { name: 'Blue', color: '#0074D9' },
-  red: { name: 'Red', color: '#FF4136' },
-  yellow: { name: 'Yellow', color: '#FFDC00' },
-  black: { name: 'Black', color: '#111111' },
-  green: { name: 'Green', color: '#2ECC40' },
-  orange: { name: 'Orange', color: '#FF851B' },
-  purple: { name: 'Purple', color: '#B10DC9' },
-  pink: { name: 'Pink', color: '#F012BE' }
-}
-
 type CalculatorType = 'grind' | 'community'
 
 interface StatCalculatorsProps {

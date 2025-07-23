@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '../common/Logo'
 import { profileService } from '../../services/profileService'
 
@@ -11,7 +11,6 @@ export const LoginForm = () => {
   const [error, setError] = useState<string | null>(null)
   const { signIn } = useAuth()
   const navigate = useNavigate()
-  const location = useLocation()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -33,7 +32,7 @@ export const LoginForm = () => {
           
           // If profile is set up, redirect to home
           if (hasProfile) {
-            navigate('/home', { replace: true })
+            navigate('/UserProfile', { replace: true })
           } else {
             // If profile is not set up, redirect to profile setup
             navigate('/profile-setup', { replace: true })
@@ -41,7 +40,7 @@ export const LoginForm = () => {
         } catch (profileErr) {
           console.warn('Error checking profile existence:', profileErr)
           // If there's an error checking profile, default to home
-          navigate('/home', { replace: true })
+          navigate('/UserProfile', { replace: true })
         }
       }
     } catch (err) {

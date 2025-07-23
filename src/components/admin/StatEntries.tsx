@@ -103,8 +103,6 @@ export const StatEntries = () => {
   }
 
   // Calculate stats
-  const totalXP = statEntries.reduce((sum, entry) => sum + entry.total_xp, 0)
-  const totalPokemon = statEntries.reduce((sum, entry) => sum + entry.pokemon_caught, 0)
   const avgLevel = statEntries.length > 0 ? Math.round(statEntries.reduce((sum, entry) => sum + entry.trainer_level, 0) / statEntries.length) : 0
 
   if (loading) {
@@ -155,10 +153,6 @@ export const StatEntries = () => {
             onChange={(e) => setSearchQuery(e.target.value)}
             className="search-input"
           />
-          <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none">
-            <circle cx="11" cy="11" r="8" stroke="currentColor" strokeWidth="2"/>
-            <path d="m21 21-4.35-4.35" stroke="currentColor" strokeWidth="2"/>
-          </svg>
         </div>
 
         <button onClick={fetchStatEntries} className="btn btn-secondary">
