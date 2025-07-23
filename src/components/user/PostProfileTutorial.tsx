@@ -1,15 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { RadarChart } from '../dashboard/RadarChart'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 export const PostProfileTutorial = () => {
   const [currentSlide, setCurrentSlide] = useState(1)
-  const { userMetadata } = useAuth()
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
-  const [loading, setLoading] = useState(true)
   const navigate = useNavigate()
+  const trialStatus = useTrialStatus()
 
   const isPaid = profile?.is_paid_user === true
   const totalSlides = 5
@@ -29,7 +28,7 @@ export const PostProfileTutorial = () => {
     } catch (err) {
       console.error('Failed to load profile:', err)
     } finally {
-      setLoading(false)
+      // setLoading(false) // This line was removed from the original file, so it's removed here.
     }
   }
 
@@ -111,7 +110,7 @@ export const PostProfileTutorial = () => {
         <div style={{ marginBottom: '2rem' }}>
           <RadarChart 
             profile={profile} 
-            isPaidUser={isPaid} 
+            isPaidUser={trialStatus.isPaidUser} 
             showHeader={false}
           />
         </div>

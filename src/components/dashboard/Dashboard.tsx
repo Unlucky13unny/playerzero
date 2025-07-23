@@ -4,31 +4,15 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { StatCalculators } from './StatCalculators'
-import { Leaderboards } from './Leaderboards'
-import { VisualExport } from './VisualExport'
-import { RadarChart } from './RadarChart'
 import { StatUpdater } from './StatUpdater'
 
-type DashboardTab = 'calculators' | 'leaderboards' | 'analytics' | 'update'
-type AnalyticsTab = 'performance' | 'export'
-
-const TEAM_COLORS = {
-  blue: { name: 'Blue', color: '#0074D9' },
-  red: { name: 'Red', color: '#FF4136' },
-  yellow: { name: 'Yellow', color: '#FFDC00' },
-  black: { name: 'Black', color: '#111111' },
-  green: { name: 'Green', color: '#2ECC40' },
-  orange: { name: 'Orange', color: '#FF851B' },
-  purple: { name: 'Purple', color: '#B10DC9' },
-  pink: { name: 'Pink', color: '#F012BE' }
-}
+type DashboardTab = 'calculators' | 'update'
 
 export const Dashboard = () => {
   const { user } = useAuth()
   const trialStatus = useTrialStatus()
   const [searchParams, setSearchParams] = useSearchParams()
   const [activeTab, setActiveTab] = useState<DashboardTab>('calculators')
-  const [activeAnalyticsTab, setActiveAnalyticsTab] = useState<AnalyticsTab>('performance')
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -45,18 +29,10 @@ export const Dashboard = () => {
     if (tabParam && isValidTab(tabParam)) {
       setActiveTab(tabParam as DashboardTab)
     }
-    const analyticsTabParam = searchParams.get('analyticsTab')
-    if (analyticsTabParam && isValidAnalyticsTab(analyticsTabParam)) {
-      setActiveAnalyticsTab(analyticsTabParam as AnalyticsTab)
-    }
   }, [searchParams])
 
   const isValidTab = (tab: string): tab is DashboardTab => {
-    return ['calculators', 'leaderboards', 'analytics', 'update'].includes(tab)
-  }
-
-  const isValidAnalyticsTab = (tab: string): tab is AnalyticsTab => {
-    return ['performance', 'export'].includes(tab)
+    return ['calculators', 'update'].includes(tab)
   }
 
   const checkUpgradeSuccess = () => {
@@ -78,6 +54,7 @@ export const Dashboard = () => {
       const { data } = await profileService.getProfile()
       setProfile(data)
     } catch (err: any) {
+      console.error('Error loading profile:', err)
       setError(err.message || 'Failed to load profile')
     } finally {
       setLoading(false)
@@ -88,45 +65,6 @@ export const Dashboard = () => {
     setActiveTab(tab)
     searchParams.set('tab', tab)
     setSearchParams(searchParams)
-  }
-
-  const handleAnalyticsTabChange = (tab: AnalyticsTab) => {
-    setActiveAnalyticsTab(tab)
-    searchParams.set('analyticsTab', tab)
-    setSearchParams(searchParams)
-  }
-
-  const renderAnalyticsContent = () => {
-    if (!profile) return null;
-    
-    return (
-      <div className="analytics-section">
-        <div className="analytics-tabs">
-          <button
-            className={`analytics-tab ${activeAnalyticsTab === 'performance' ? 'active' : ''}`}
-            onClick={() => handleAnalyticsTabChange('performance')}
-          >
-            <span className="tab-icon">📈</span>
-            Performance
-          </button>
-          <button
-            className={`analytics-tab ${activeAnalyticsTab === 'export' ? 'active' : ''}`}
-            onClick={() => handleAnalyticsTabChange('export')}
-          >
-            <span className="tab-icon">📤</span>
-            Visual Export
-          </button>
-        </div>
-
-        <div className="analytics-content">
-          {activeAnalyticsTab === 'performance' ? (
-            <RadarChart profile={profile} isPaidUser={trialStatus.isPaidUser} />
-          ) : (
-            <VisualExport profile={profile} isPaidUser={trialStatus.isPaidUser} />
-          )}
-        </div>
-      </div>
-    )
   }
 
   const renderTabContent = () => {
@@ -158,10 +96,6 @@ export const Dashboard = () => {
     switch (activeTab) {
       case 'calculators':
         return <StatCalculators initialCalculator={searchParams.get('calc') === 'community' ? 'community' : 'grind'} />
-      case 'leaderboards':
-        return <Leaderboards isPaidUser={trialStatus.isPaidUser} />
-      case 'analytics':
-        return renderAnalyticsContent()
       case 'update':
         return <StatUpdater onStatsUpdated={handleStatsUpdated} />
       default:
@@ -169,8 +103,7 @@ export const Dashboard = () => {
     }
   }
 
-  const handleStatsUpdated = (updatedProfile: any) => {
-    // Refresh the profile data
+  const handleStatsUpdated = () => {
     loadProfile()
   }
 
@@ -246,18 +179,6 @@ export const Dashboard = () => {
           onClick={() => handleTabChange('update')}
         >
           📊 Update Stats
-        </button>
-        <button
-          className={`dashboard-tab ${activeTab === 'leaderboards' ? 'active' : ''}`}
-          onClick={() => handleTabChange('leaderboards')}
-        >
-          🏆 Leaderboards
-        </button>
-        <button
-          className={`dashboard-tab ${activeTab === 'analytics' ? 'active' : ''}`}
-          onClick={() => handleTabChange('analytics')}
-        >
-          📈 Analytics
         </button>
       </div>
 

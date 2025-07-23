@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useTrialStatus } from '../../hooks/useTrialStatus'
-import { profileService, type PublicProfileData } from '../../services/profileService'
+import { profileService, type PublicProfileData, calculateSummitDate } from '../../services/profileService'
+import { dashboardService } from '../../services/dashboardService'
 import { RadarChart } from '../dashboard/RadarChart'
-import { useAuth } from '../../contexts/AuthContext'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 
 interface TeamColor {
   value: string
@@ -24,54 +25,117 @@ const TEAM_COLORS: TeamColor[] = [
 ]
 
 export const PublicProfile = () => {
-  const { profileId } = useParams<{ profileId: string }>()
+  const { id } = useParams()
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const trialStatus = useTrialStatus()
   const [profile, setProfile] = useState<PublicProfileData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isPaid, setIsPaid] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<TeamColor | null>(null)
+  const [copyFeedback, setCopyFeedback] = useState(false)
+  const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
+  const [screenshotsLoading, setScreenshotsLoading] = useState(false)
+  const [showScreenshots, setShowScreenshots] = useState(false)
+  const trialStatus = useTrialStatus()
 
   useEffect(() => {
-    if (profileId) {
-      loadProfile()
-      checkPaidStatus()
+    loadProfile()
+  }, [id])
+
+  // Anti-screenshot protection
+  useEffect(() => {
+    const preventScreenshots = (e: KeyboardEvent) => {
+      // Prevent Print Screen
+      if (e.key === 'PrintScreen') {
+        e.preventDefault()
+        console.log('Screenshot attempt detected and blocked')
+      }
+      
+      // Prevent common screenshot shortcuts
+      if (e.ctrlKey && e.shiftKey && e.key === 'S') {
+        e.preventDefault()
+        console.log('Screenshot shortcut blocked')
+      }
+      
+      // Prevent F12 (DevTools)
+      if (e.key === 'F12') {
+        e.preventDefault()
+      }
+      
+      // Prevent Ctrl+Shift+I (DevTools)
+      if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+        e.preventDefault()
+      }
+      
+      // Prevent Ctrl+U (View Source)
+      if (e.ctrlKey && e.key === 'u') {
+        e.preventDefault()
+      }
     }
-  }, [profileId])
+
+    const preventRightClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement
+      if (target.closest('.screenshot-protected')) {
+        e.preventDefault()
+      }
+    }
+
+    // Blur page when switching tabs (potential screenshot attempt)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Could add additional protection here
+        console.log('Page visibility changed - potential screenshot attempt')
+      }
+    }
+
+    document.addEventListener('keydown', preventScreenshots)
+    document.addEventListener('contextmenu', preventRightClick)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+
+    return () => {
+      document.removeEventListener('keydown', preventScreenshots)
+      document.removeEventListener('contextmenu', preventRightClick)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+    }
+  }, [])
 
   const loadProfile = async () => {
-    if (!profileId) return
-
-    try {
+    if (!id) return
     setLoading(true)
     setError(null)
-      const { data } = await profileService.getPublicProfile(profileId)
+
+    try {
+      const { data, error } = await profileService.getPublicProfile(id)
+      if (error) throw error
+
       setProfile(data)
+      if (data?.team_color) {
+        const team = TEAM_COLORS.find(t => t.value === data.team_color)
+        setSelectedTeam(team || null)
+      }
     } catch (err: any) {
-      console.error('Profile loading error:', err)
+      console.error('Error loading profile:', err)
       setError(err.message || 'Failed to load profile')
     } finally {
       setLoading(false)
     }
   }
 
-  const checkPaidStatus = async () => {
+  const loadVerificationScreenshots = async () => {
+    if (!profile?.user_id) return
+    setScreenshotsLoading(true)
+
     try {
-      const { isPaid } = await profileService.isPaidUser()
-      setIsPaid(isPaid)
-    } catch (error) {
-      console.error('Error checking paid status:', error)
-      setIsPaid(false)
+      const screenshots = await dashboardService.getVerificationScreenshots(profile.user_id, 20)
+      setVerificationScreenshots(screenshots)
+    } catch (err: any) {
+      console.error('Error loading verification screenshots:', err)
+    } finally {
+      setScreenshotsLoading(false)
     }
   }
 
-  const selectedTeam = profile?.team_color 
-    ? TEAM_COLORS.find(team => team.value === profile.team_color)
-    : null
-
-  const getSocialLink = (platform: string, value: string) => {
-    if (!value) return null
+  const getSocialLink = (platform: string, value: string): string | undefined => {
+    if (!value) return undefined
     
     switch (platform) {
       case 'instagram':
@@ -91,50 +155,15 @@ export const PublicProfile = () => {
     }
   }
 
-  const renderSocialLinks = () => {
-    if (!profile || !profile.is_paid_user) {
-      return (
-        <div className="profile-section">
-          <h3>Social Links</h3>
-          <p className="private-notice">This user's social links are private</p>
-        </div>
-      );
+  const handleCopyTrainerCode = async (code: string) => {
+    try {
+      await navigator.clipboard.writeText(code)
+      setCopyFeedback(true)
+      setTimeout(() => setCopyFeedback(false), 2000) // Hide feedback after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy trainer code:', err)
     }
-
-    return (
-      <div className="profile-section">
-        <h3>Social Links</h3>
-        <div className="social-links">
-          {profile.instagram && (
-            <a href={`https://instagram.com/${profile.instagram}`} target="_blank" rel="noopener noreferrer">
-              <span className="social-icon">📸</span> {profile.instagram}
-            </a>
-          )}
-          {/* Add other social links similarly */}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTrainerCode = () => {
-    if (!profile || !profile.is_paid_user) {
-      return (
-        <div className="profile-section">
-          <h3>Trainer Code</h3>
-          <p className="private-notice">This user's trainer code is private</p>
-        </div>
-      );
-    }
-
-    return (
-      <div className="profile-section">
-        <h3>Trainer Code</h3>
-        <div className="trainer-code">
-          <span className="code">{profile.trainer_code}</span>
-        </div>
-      </div>
-    );
-  };
+  }
 
   if (loading) {
     return (
@@ -180,13 +209,57 @@ export const PublicProfile = () => {
           <div className="trainer-details">
             {selectedTeam && (
               <div className="team-badge" style={{ backgroundColor: selectedTeam.color }}>
-                <span className="team-icon">{TEAM_COLORS.find(t => t.value === selectedTeam.value)?.team || selectedTeam.team}</span>
+                <span className="team-icon">{selectedTeam.team}</span>
               </div>
             )}
             {profile.country && (
               <div className="country-badge">
                 <span className="country-icon">🌍</span>
                 <span className="country-name">{profile.country}</span>
+              </div>
+            )}
+            {profile.start_date && (
+              <div className="start-date-badge">
+                <span className="start-icon">📅</span>
+                <span className="start-date">
+                  Started: {new Date(profile.start_date).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </span>
+              </div>
+            )}
+            <div className="summit-badge">
+              <span className="summit-icon">🏔️</span>
+              <span className="summit-date">
+                Summit: {calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)}
+              </span>
+            </div>
+            {profile.is_paid_user && (
+              <div className="trainer-code-badge">
+                <span className="code-icon">🎮</span>
+                {profile.trainer_code_private ? (
+                  <span className="code-value private">
+                    <span className="private-icon">🔒</span> Hidden
+                  </span>
+                ) : profile.trainer_code ? (
+                  <>
+                    <span className="code-value">{profile.trainer_code}</span>
+                    <button 
+                      className="copy-button"
+                      onClick={() => handleCopyTrainerCode(profile.trainer_code || '')}
+                      title="Copy trainer code"
+                    >
+                      📋
+                    </button>
+                    {copyFeedback && (
+                      <span className="copy-feedback">Copied!</span>
+                    )}
+                  </>
+                ) : (
+                  <span className="code-value">Not set</span>
+                )}
               </div>
             )}
           </div>
@@ -196,94 +269,64 @@ export const PublicProfile = () => {
       {/* Stats Grid */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon">🚶</div>
-          <div className="stat-content">
-            <h3>Distance Walked</h3>
-            <div className="stat-value">{profile.distance_walked || 0} km</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
+          <div className="stat-icon">🎯</div>
           <div className="stat-content">
             <h3>Pokémon Caught</h3>
-            <div className="stat-value">{profile.pokemon_caught || 0}</div>
+            <div className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</div>
           </div>
         </div>
         <div className="stat-card">
           <div className="stat-icon">📍</div>
           <div className="stat-content">
             <h3>PokéStops Visited</h3>
-            <div className="stat-value">{profile.pokestops_visited || 0}</div>
+            <div className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</div>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon">🎯</div>
+          <div className="stat-icon">🚶</div>
           <div className="stat-content">
-            <h3>Total XP</h3>
-            <div className="stat-value">{profile.total_xp || 0}</div>
+            <h3>Distance Walked</h3>
+            <div className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</div>
           </div>
         </div>
-        <div className="stat-card full-width">
-          <div className="stat-icon">📖</div>
+        <div className="stat-card">
+          <div className="stat-icon">⚡</div>
           <div className="stat-content">
-            <h3>Pokédex Entries</h3>
-            <div className="stat-value">{profile.unique_pokedex_entries || 0}</div>
+            <h3>Total XP</h3>
+            <div className="stat-value">{profile.total_xp?.toLocaleString() || 0}</div>
           </div>
         </div>
       </div>
 
-      {/* Social Links and Trainer Code */}
-      <div className="stats-grid" style={{ marginTop: '1rem' }}>
-        <div className="stat-card">
-          <div className="stat-icon">🌐</div>
-          <div className="stat-content">
-            <h3>Social Links</h3>
-            {profile.is_paid_user ? (
-              <div className="social-links">
-                {profile.instagram && profile.instagram !== '' && (
-                  <a href={getSocialLink('instagram', profile.instagram)} target="_blank" rel="noopener noreferrer" className="social-link">
-                    <span className="social-icon">📸</span> {profile.instagram}
+      {/* Social Links Section */}
+      <div className="section-header">
+        <h2>Social Links</h2>
+      </div>
+      <div className="social-links-container">
+        {profile.is_paid_user ? (
+          <div className="social-links-grid">
+            {SOCIAL_MEDIA.map(platform => {
+              const value = profile[platform.key as keyof typeof profile];
+              if (value && value !== '' && typeof value === 'string') {
+                return (
+                  <a 
+                    key={platform.key}
+                    href={getSocialLink(platform.key, value)} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="social-link"
+                  >
+                    <SocialIcon platform={platform.key} size={24} color="currentColor" />
+                    <span>{value}</span>
                   </a>
-                )}
-                {profile.twitter && profile.twitter !== '' && (
-                  <a href={getSocialLink('twitter', profile.twitter)} target="_blank" rel="noopener noreferrer" className="social-link">
-                    <span className="social-icon">🐦</span> {profile.twitter}
-                  </a>
-                )}
-                {profile.youtube && profile.youtube !== '' && (
-                  <a href={getSocialLink('youtube', profile.youtube)} target="_blank" rel="noopener noreferrer" className="social-link">
-                    <span className="social-icon">🎥</span> {profile.youtube}
-                  </a>
-                )}
-                {profile.twitch && profile.twitch !== '' && (
-                  <a href={getSocialLink('twitch', profile.twitch)} target="_blank" rel="noopener noreferrer" className="social-link">
-                    <span className="social-icon">🎮</span> {profile.twitch}
-                  </a>
-                )}
-                {profile.reddit && profile.reddit !== '' && (
-                  <a href={getSocialLink('reddit', profile.reddit)} target="_blank" rel="noopener noreferrer" className="social-link">
-                    <span className="social-icon">👽</span> {profile.reddit}
-                  </a>
-                )}
-              </div>
-            ) : (
-              <p className="private-notice">This user's social links are private</p>
-            )}
+                );
+              }
+              return null;
+            })}
           </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🎮</div>
-          <div className="stat-content">
-            <h3>Trainer Code</h3>
-            {profile.is_paid_user && profile.trainer_code ? (
-              <div className="trainer-code">
-                <span className="code">{profile.trainer_code}</span>
-              </div>
-            ) : (
-              <p className="private-notice">This user's trainer code is private</p>
-            )}
-          </div>
-        </div>
+        ) : (
+          <p className="private-notice">This user's social links are private</p>
+        )}
       </div>
 
       {/* Radar Chart */}
@@ -293,13 +336,136 @@ export const PublicProfile = () => {
           <RadarChart
             profile={{
               ...profile,
-              user_id: profile.id,
+              user_id: profile.user_id,
               trainer_code: profile.trainer_code || '',
               trainer_code_private: !profile.is_paid_user
             }}
-            isPaidUser={profile.is_paid_user}
+            isPaidUser={trialStatus.isPaidUser}
             showHeader={false}
           />
+        </div>
+      </div>
+
+      {/* Verification Screenshots */}
+      <div className="verification-screenshots-section">
+        <div className="screenshots-section-header">
+          <div className="screenshots-title-group">
+            <div className="screenshots-icon">📸</div>
+            <div>
+              <h2>Verification Screenshots</h2>
+              <p className="screenshots-subtitle">
+                View stat update verification history
+                {!screenshotsLoading && verificationScreenshots.length > 0 && (
+                  <span className="screenshot-count"> • {verificationScreenshots.length} screenshot{verificationScreenshots.length !== 1 ? 's' : ''}</span>
+                )}
+              </p>
+            </div>
+          </div>
+          <button 
+            className={`toggle-screenshots-button ${showScreenshots ? 'active' : ''}`}
+            onClick={() => {
+              if (!showScreenshots && verificationScreenshots.length === 0 && profile) {
+                loadVerificationScreenshots()
+              }
+              setShowScreenshots(!showScreenshots)
+            }}
+          >
+            <span className="toggle-icon">
+              {showScreenshots ? '👁️‍🗨️' : '👁️'}
+            </span>
+            <span className="toggle-text">
+              {showScreenshots ? 'Hide' : 'View'}
+            </span>
+            <span className="toggle-arrow">
+              {showScreenshots ? '▲' : '▼'}
+            </span>
+          </button>
+        </div>
+        
+        <div className={`screenshots-content ${showScreenshots ? 'expanded' : 'collapsed'}`}>
+          {showScreenshots && (
+            <>
+              {screenshotsLoading ? (
+                <div className="screenshots-loading-state">
+                  <div className="loading-spinner-large"></div>
+                  <h3>Loading Screenshots</h3>
+                  <p>Fetching verification history...</p>
+                </div>
+              ) : verificationScreenshots.length > 0 ? (
+                <div className="screenshots-grid">
+                  {verificationScreenshots.map((screenshot, index) => (
+                    <div key={screenshot.id} className="screenshot-card screenshot-protected">
+                      <div className="screenshot-card-header">
+                        <div className="screenshot-date-badge">
+                          <span className="date-icon">📅</span>
+                          <span className="date-text">
+                            {new Date(screenshot.entry_date).toLocaleDateString('en-US', {
+                              month: 'short',
+                              day: 'numeric',
+                              year: 'numeric'
+                            })}
+                          </span>
+                        </div>
+                        <div className="screenshot-index">#{verificationScreenshots.length - index}</div>
+                      </div>
+                      
+                      <div className="screenshot-image-container">
+                        <img 
+                          src={screenshot.screenshot_url} 
+                          alt={`Stats verification for ${screenshot.entry_date}`}
+                          className="verification-screenshot"
+                          onContextMenu={(e) => e.preventDefault()}
+                          onDragStart={(e) => e.preventDefault()}
+                          style={{ userSelect: 'none', pointerEvents: 'none' }}
+                        />
+                        <div className="screenshot-overlay">
+                          <div className="protection-notice">
+                            <span className="shield-icon">🛡️</span>
+                            <span>Screenshot Protected</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="screenshot-stats-footer">
+                        <div className="stat-badges">
+                          <div className="stat-badge xp-badge">
+                            <span className="stat-icon">⚡</span>
+                            <span className="stat-label">XP</span>
+                            <span className="stat-value">{screenshot.stat_entries.total_xp?.toLocaleString()}</span>
+                          </div>
+                          <div className="stat-badge caught-badge">
+                            <span className="stat-icon">🔴</span>
+                            <span className="stat-label">Caught</span>
+                            <span className="stat-value">{screenshot.stat_entries.pokemon_caught?.toLocaleString()}</span>
+                          </div>
+                          <div className="stat-badge distance-badge">
+                            <span className="stat-icon">👣</span>
+                            <span className="stat-label">Distance</span>
+                            <span className="stat-value">{screenshot.stat_entries.distance_walked?.toFixed(1)}km</span>
+                          </div>
+                          <div className="stat-badge stops-badge">
+                            <span className="stat-icon">🔵</span>
+                            <span className="stat-label">Stops</span>
+                            <span className="stat-value">{screenshot.stat_entries.pokestops_visited?.toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="no-screenshots-state">
+                  <div className="empty-state-icon">📷</div>
+                  <h3>No Verification Screenshots</h3>
+                  <p>This trainer hasn't uploaded any stat verification screenshots yet.</p>
+                  <div className="empty-state-hint">
+                    <span className="hint-icon">💡</span>
+                    <span>Screenshots are required when updating stats to maintain leaderboard integrity</span>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>
