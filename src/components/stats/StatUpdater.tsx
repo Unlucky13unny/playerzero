@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { dashboardService } from '../../services/dashboardService'
-import { profileService, type ProfileWithMetadata } from '../../services/profileService'
+import { profileService } from '../../services/profileService'
 import { adminService } from '../../services/adminService'
 import { supabase } from '../../supabaseClient'
 

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { dashboardService, type StatCalculationResult } from '../../services/dashboardService'
-import StatCard from '../dashboard/StatCard'
 
 type CalculatorType = 'grind' | 'community'
 
@@ -92,10 +91,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
   const handleDownload = () => {
     if (!result) return
     setDownloading(true)
-  }
-
-  const handleDownloadComplete = () => {
-    setDownloading(false)
   }
 
   return (

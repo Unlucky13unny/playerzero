@@ -481,7 +481,7 @@ export const dashboardService = {
       const fileName = `${user.id}/stat-verification-${timestamp}.${fileExt}`
 
       // Upload file to storage
-      const { data, error } = await supabase.storage
+      const { data: _data, error } = await supabase.storage
         .from('stat-verification-screenshots')
         .upload(fileName, file, {
           upsert: false, // Don't overwrite existing files

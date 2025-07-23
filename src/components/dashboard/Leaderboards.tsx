@@ -5,7 +5,7 @@ import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { QuickProfileView } from '../profile/QuickProfileView'
 import { dashboardService, type LeaderboardEntry, type HistoricalWinner } from '../../services/dashboardService'
-import { FaMedal, FaGlobe, FaUsers, FaShieldAlt, FaSearch, FaTrophy, FaCrown, FaCamera } from 'react-icons/fa'
+import { FaMedal, FaGlobe, FaUsers, FaShieldAlt, FaCrown, FaCamera } from 'react-icons/fa'
 import html2canvas from 'html2canvas'
 
 // Import country list from profile setup
@@ -48,7 +48,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedProfile, setSelectedProfile] = useState<string | null>(null);
-  const [quickViewAnchor, setQuickViewAnchor] = useState<HTMLElement | null>(null);
   const leaderboardContentRef = useRef<HTMLDivElement>(null);
   const [exportStatus, setExportStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
 
@@ -100,12 +99,10 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
   const handleTrainerClick = (entry: LeaderboardEntry, event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
     setSelectedProfile(entry.profile_id);
-    setQuickViewAnchor(event.currentTarget);
   };
 
   const handleCloseQuickView = () => {
     setSelectedProfile(null);
-    setQuickViewAnchor(null);
   };
 
   const handleUpgradeClick = () => {
@@ -424,7 +421,7 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
             <h3>{getHistoricalPeriodLabel()}</h3>
           </div>
           <div className="historical-winners-list">
-            {getHistoricalWinnersForCurrentPeriod().map((winner, index) => (
+            {getHistoricalWinnersForCurrentPeriod().map((winner, _index) => (
               <div
                 key={`winner-${winner.rank}`}
                 className={`historical-winner rank-${winner.rank}`}

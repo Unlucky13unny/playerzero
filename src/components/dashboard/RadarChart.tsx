@@ -30,7 +30,7 @@ interface RadarChartProps {
   showHeader?: boolean // Optional prop to control header visibility
 }
 
-export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChartProps) => {
+export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true }: RadarChartProps) => {
   const navigate = useNavigate()
   const { user } = useAuth() // Add this to get current user
   const trialStatus = useTrialStatus() // Add this to get current user's trial status
@@ -231,38 +231,6 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
       }
     }
   }
-
-  const getPerformanceMessage = () => {
-    const userStats = data.datasets[0].data
-    const avgStats = data.datasets[1].data
-    
-    let aboveAverage = 0
-    let strongestStat = { index: 0, value: 0, label: '' }
-    let weakestStat = { index: 0, value: 100, label: '' }
-
-    userStats.forEach((stat, index) => {
-      if (stat > avgStats[index]) {
-        aboveAverage++
-      }
-      
-      if (stat > strongestStat.value) {
-        strongestStat = { index, value: stat, label: data.labels[index] }
-      }
-      
-      if (stat < weakestStat.value) {
-        weakestStat = { index, value: stat, label: data.labels[index] }
-      }
-    })
-
-    return {
-      aboveAverage,
-      total: userStats.length,
-      strongest: strongestStat.label,
-      weakest: weakestStat.label
-    }
-  }
-
-  const performance = getPerformanceMessage()
 
   return (
     <div className="radar-chart-container">

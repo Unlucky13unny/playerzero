@@ -5,8 +5,6 @@ import { useTrialStatus } from '../../hooks/useTrialStatus'
 import type { ProfileWithMetadata } from '../../services/profileService'
 import { calculateSummitDate } from '../../services/profileService'
 
-const LEVEL_50_XP = 176_000_000;
-
 interface VisualExportProps {
   profile: ProfileWithMetadata
   isPaidUser: boolean
@@ -134,10 +132,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const startDate = profile.start_date ? new Date(profile.start_date) : new Date()
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
   const dailyXPRate = currentXP / daysSinceStart
-  
-  // Calculate estimated catch rate based on pokestops vs pokemon ratio
-  const estimatedCatchRate = Math.min(99.9, (profile.pokemon_caught || 0) / Math.max(1, (profile.pokestops_visited || 1)) * 100)
-
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
       <div className="locked-content">
@@ -334,7 +328,6 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         )
 
       case 'summit':
-        const hasAchievedSummit = (profile.total_xp || 0) >= LEVEL_50_XP || profile.trainer_level >= 50
         const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
         return (
           <div className="card-template summit-card" style={{ 

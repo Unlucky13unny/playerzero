@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
@@ -37,7 +37,7 @@ interface QuickProfileData {
 export const QuickProfileView = ({ 
   profileId, 
   isOpen, 
-  onClose
+  onClose: _onClose
 }: QuickProfileViewProps) => {
   const [profileData, setProfileData] = useState<QuickProfileData | null>(null);
   const [loading, setLoading] = useState(true);
