@@ -11,11 +11,16 @@ CREATE TABLE profiles (
   start_date DATE,
   country TEXT,
   team_color TEXT,
+  average_daily_xp INTEGER DEFAULT 0,
+  last_name_change_date TIMESTAMP WITH TIME ZONE,
   
   -- Subscription Status
   is_paid_user BOOLEAN DEFAULT false,
   subscription_type TEXT, -- 'monthly', 'yearly', 'lifetime', etc.
   subscription_expires_at TIMESTAMP WITH TIME ZONE,
+  
+  -- User Role
+  role TEXT DEFAULT 'user' NOT NULL CHECK (role IN ('user', 'admin')),
   
   -- Core Statistics
   distance_walked DECIMAL(10,2) DEFAULT 0,
@@ -64,6 +69,40 @@ CREATE TABLE stat_entries (
   -- Prevent duplicate entries for same user on same date
   UNIQUE(user_id, entry_date)
 );
+
+-- Create notifications table
+create table notifications (
+  id uuid default gen_random_uuid() primary key,
+  user_id uuid references auth.users(id) on delete cascade,
+  message text not null,
+  notification_type text not null,
+  created_at timestamp with time zone default timezone('utc'::text, now()) not null,
+  is_read boolean default false not null
+);
+
+-- Create index for faster queries
+create index notifications_user_id_idx on notifications(user_id);
+
+-- Enable RLS
+alter table notifications enable row level security;
+
+-- Create policies
+create policy "Users can view their own notifications"
+  on notifications for select
+  using (auth.uid() = user_id);
+
+create policy "System can insert notifications"
+  on notifications for insert
+  with check (true);
+
+create policy "Users can update their own notifications"
+  on notifications for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+create policy "Users can delete their own notifications"
+  on notifications for delete
+  using (auth.uid() = user_id);
 
 -- Enable Row Level Security
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
@@ -185,6 +224,48 @@ CREATE TRIGGER create_initial_stat_entry
   FOR EACH ROW
   EXECUTE FUNCTION create_initial_stat_entry();
 
+-- Function to calculate and update average daily XP
+CREATE OR REPLACE FUNCTION calculate_average_daily_xp()
+RETURNS TRIGGER AS $$
+DECLARE
+  oldest_entry_date DATE;
+  xp_gain BIGINT;
+  days_between INTEGER;
+BEGIN
+  -- Get the oldest stat entry for this user
+  SELECT MIN(entry_date) INTO oldest_entry_date
+  FROM stat_entries
+  WHERE user_id = NEW.user_id;
+
+  -- If we have at least 2 days of data
+  IF oldest_entry_date IS NOT NULL AND oldest_entry_date < CURRENT_DATE THEN
+    -- Calculate total XP gain
+    xp_gain := NEW.total_xp - (
+      SELECT total_xp 
+      FROM stat_entries 
+      WHERE user_id = NEW.user_id 
+      AND entry_date = oldest_entry_date
+    );
+    
+    -- Calculate days between
+    days_between := CURRENT_DATE - oldest_entry_date;
+    
+    -- Update average daily XP if we have valid data
+    IF days_between > 0 THEN
+      NEW.average_daily_xp := GREATEST(xp_gain / days_between, 0);
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Trigger to update average daily XP before profile update
+CREATE TRIGGER update_average_daily_xp
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW
+  EXECUTE FUNCTION calculate_average_daily_xp();
+
 -- Create indexes for better performance
 CREATE INDEX idx_profiles_user_id ON profiles(user_id);
 CREATE INDEX idx_profiles_trainer_name ON profiles(trainer_name);
@@ -199,47 +280,232 @@ CREATE INDEX idx_stat_entries_entry_date ON stat_entries(entry_date);
 CREATE INDEX idx_stat_entries_total_xp ON stat_entries(total_xp);
 CREATE INDEX idx_stat_entries_pokemon_caught ON stat_entries(pokemon_caught);
 
+-- Create table to track period boundaries and completed periods
+CREATE TABLE period_boundaries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  period_type TEXT NOT NULL CHECK (period_type IN ('weekly', 'monthly')),
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  is_completed BOOLEAN DEFAULT false,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Ensure no overlapping periods for same type
+  UNIQUE(period_type, period_start, period_end)
+);
+
+-- Create table to store historical period winners
+CREATE TABLE period_winners (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  period_boundary_id UUID NOT NULL REFERENCES period_boundaries(id) ON DELETE CASCADE,
+  period_type TEXT NOT NULL CHECK (period_type IN ('weekly', 'monthly')),
+  period_start DATE NOT NULL,
+  period_end DATE NOT NULL,
+  rank INTEGER NOT NULL CHECK (rank >= 1 AND rank <= 3),
+  
+  -- Winner details
+  profile_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
+  trainer_name TEXT NOT NULL,
+  country TEXT,
+  team_color TEXT,
+  profile_screenshot_url TEXT,
+  
+  -- Stats for the period
+  xp_gained BIGINT NOT NULL DEFAULT 0,
+  catches_gained INTEGER NOT NULL DEFAULT 0,
+  distance_gained DECIMAL(10,2) NOT NULL DEFAULT 0,
+  pokestops_gained INTEGER NOT NULL DEFAULT 0,
+  
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Ensure unique rank per period
+  UNIQUE(period_boundary_id, rank)
+);
+
+-- Create table to store verification screenshots for stat updates
+CREATE TABLE stat_verification_screenshots (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  stat_entry_id UUID NOT NULL REFERENCES stat_entries(id) ON DELETE CASCADE,
+  
+  -- Screenshot details
+  screenshot_url TEXT NOT NULL,
+  entry_date DATE NOT NULL DEFAULT CURRENT_DATE,
+  
+  -- Metadata
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  -- Ensure one screenshot per stat entry
+  UNIQUE(stat_entry_id)
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_period_boundaries_type_date ON period_boundaries(period_type, period_start, period_end);
+CREATE INDEX idx_period_boundaries_completed ON period_boundaries(period_type, is_completed);
+CREATE INDEX idx_period_winners_period_type ON period_winners(period_type, period_start, period_end);
+CREATE INDEX idx_period_winners_rank ON period_winners(period_boundary_id, rank);
+CREATE INDEX idx_stat_verification_screenshots_user_id ON stat_verification_screenshots(user_id);
+CREATE INDEX idx_stat_verification_screenshots_entry_date ON stat_verification_screenshots(entry_date);
+CREATE INDEX idx_stat_verification_screenshots_stat_entry_id ON stat_verification_screenshots(stat_entry_id);
+
+-- Function to get the start of current week (Monday 00:00 UTC)
+CREATE OR REPLACE FUNCTION get_current_week_start()
+RETURNS DATE AS $$
+BEGIN
+  -- Get current date and subtract days to get to Monday
+  -- DOW: 0=Sunday, 1=Monday, 2=Tuesday, etc.
+  -- We want: if today is Monday(1), subtract 0; if Sunday(0), subtract 6
+  RETURN CURRENT_DATE - ((EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + 6) % 7);
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get the start of current month (1st day 00:00 UTC)
+CREATE OR REPLACE FUNCTION get_current_month_start()
+RETURNS DATE AS $$
+BEGIN
+  RETURN DATE_TRUNC('month', CURRENT_DATE)::DATE;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get the last completed week period (Monday to Sunday)
+CREATE OR REPLACE FUNCTION get_last_completed_week()
+RETURNS TABLE(period_start DATE, period_end DATE) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    (get_current_week_start() - INTERVAL '7 days')::DATE AS period_start,
+    (get_current_week_start() - INTERVAL '1 day')::DATE AS period_end;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get the last completed month period
+CREATE OR REPLACE FUNCTION get_last_completed_month()
+RETURNS TABLE(period_start DATE, period_end DATE) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    (DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 month')::DATE AS period_start,
+    (DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '1 day')::DATE AS period_end;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Updated weekly leaderboard view for current period
+CREATE OR REPLACE VIEW current_weekly_leaderboard AS
+SELECT 
+  p.id as profile_id,
+  p.trainer_name,
+  p.country,
+  p.team_color,
+  p.profile_screenshot_url,
+  COALESCE(current_stats.total_xp - week_start_stats.total_xp, 0) as xp_delta,
+  COALESCE(current_stats.pokemon_caught - week_start_stats.pokemon_caught, 0) as catches_delta,
+  COALESCE(current_stats.distance_walked - week_start_stats.distance_walked, 0) as distance_delta,
+  COALESCE(current_stats.pokestops_visited - week_start_stats.pokestops_visited, 0) as pokestops_delta,
+  p.total_xp,
+  p.pokemon_caught,
+  p.distance_walked,
+  p.pokestops_visited,
+  COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
+FROM profiles p
+LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
+  AND current_stats.entry_date = (
+    SELECT MAX(entry_date) 
+    FROM stat_entries se 
+    WHERE se.profile_id = p.id 
+    AND se.entry_date >= get_current_week_start()
+  )
+LEFT JOIN stat_entries week_start_stats ON p.id = week_start_stats.profile_id 
+  AND week_start_stats.entry_date = get_current_week_start()
+WHERE p.is_paid_user = true
+  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+  AND p.role = 'user'
+ORDER BY xp_delta DESC NULLS LAST;
+
+-- Updated monthly leaderboard view for current period
+CREATE OR REPLACE VIEW current_monthly_leaderboard AS
+SELECT 
+  p.id as profile_id,
+  p.trainer_name,
+  p.country,
+  p.team_color,
+  p.profile_screenshot_url,
+  COALESCE(current_stats.total_xp - month_start_stats.total_xp, 0) as xp_delta,
+  COALESCE(current_stats.pokemon_caught - month_start_stats.pokemon_caught, 0) as catches_delta,
+  COALESCE(current_stats.distance_walked - month_start_stats.distance_walked, 0) as distance_delta,
+  COALESCE(current_stats.pokestops_visited - month_start_stats.pokestops_visited, 0) as pokestops_delta,
+  p.total_xp,
+  p.pokemon_caught,
+  p.distance_walked,
+  p.pokestops_visited,
+  COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
+FROM profiles p
+LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
+  AND current_stats.entry_date = (
+    SELECT MAX(entry_date) 
+    FROM stat_entries se 
+    WHERE se.profile_id = p.id 
+    AND se.entry_date >= get_current_month_start()
+  )
+LEFT JOIN stat_entries month_start_stats ON p.id = month_start_stats.profile_id 
+  AND month_start_stats.entry_date = get_current_month_start()
+WHERE p.is_paid_user = true
+  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+  AND p.role = 'user'
+ORDER BY xp_delta DESC NULLS LAST;
+
+-- View for last completed week winners
+CREATE OR REPLACE VIEW last_week_winners AS
+SELECT 
+  pw.rank,
+  pw.trainer_name,
+  pw.country,
+  pw.team_color,
+  pw.profile_screenshot_url,
+  pw.xp_gained,
+  pw.catches_gained,
+  pw.distance_gained,
+  pw.pokestops_gained,
+  pw.period_start,
+  pw.period_end
+FROM period_winners pw
+JOIN period_boundaries pb ON pw.period_boundary_id = pb.id
+WHERE pw.period_type = 'weekly'
+  AND pb.is_completed = true
+  AND pw.period_start = (SELECT period_start FROM get_last_completed_week())
+  AND pw.period_end = (SELECT period_end FROM get_last_completed_week())
+ORDER BY pw.rank;
+
+-- View for last completed month winners  
+CREATE OR REPLACE VIEW last_month_winners AS
+SELECT 
+  pw.rank,
+  pw.trainer_name,
+  pw.country,
+  pw.team_color,
+  pw.profile_screenshot_url,
+  pw.xp_gained,
+  pw.catches_gained,
+  pw.distance_gained,
+  pw.pokestops_gained,
+  pw.period_start,
+  pw.period_end
+FROM period_winners pw
+JOIN period_boundaries pb ON pw.period_boundary_id = pb.id
+WHERE pw.period_type = 'monthly'
+  AND pb.is_completed = true
+  AND pw.period_start = (SELECT period_start FROM get_last_completed_month())
+  AND pw.period_end = (SELECT period_end FROM get_last_completed_month())
+ORDER BY pw.rank;
+
+-- Replace the old weekly_leaderboard view to point to current period
+DROP VIEW IF EXISTS weekly_leaderboard;
+CREATE VIEW weekly_leaderboard AS SELECT * FROM current_weekly_leaderboard;
+
+-- Replace the old monthly_leaderboard view to point to current period  
+DROP VIEW IF EXISTS monthly_leaderboard;
+CREATE VIEW monthly_leaderboard AS SELECT * FROM current_monthly_leaderboard;
+
 -- Views for leaderboards and analytics (PAID USERS ONLY)
-CREATE OR REPLACE VIEW weekly_leaderboard AS
-SELECT 
-  p.trainer_name,
-  p.country,
-  p.team_color,
-  p.profile_screenshot_url,
-  current_stats.total_xp - week_ago_stats.total_xp as xp_delta,
-  current_stats.pokemon_caught - week_ago_stats.pokemon_caught as catches_delta,
-  current_stats.distance_walked - week_ago_stats.distance_walked as distance_delta,
-  current_stats.pokestops_visited - week_ago_stats.pokestops_visited as pokestops_delta,
-  current_stats.entry_date as last_update
-FROM profiles p
-JOIN stat_entries current_stats ON p.id = current_stats.profile_id
-LEFT JOIN stat_entries week_ago_stats ON p.id = week_ago_stats.profile_id 
-  AND week_ago_stats.entry_date = CURRENT_DATE - INTERVAL '7 days'
-WHERE current_stats.entry_date >= CURRENT_DATE - INTERVAL '7 days'
-  AND p.is_paid_user = true
-  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
-ORDER BY xp_delta DESC NULLS LAST;
-
-CREATE OR REPLACE VIEW monthly_leaderboard AS
-SELECT 
-  p.trainer_name,
-  p.country,
-  p.team_color,
-  p.profile_screenshot_url,
-  current_stats.total_xp - month_ago_stats.total_xp as xp_delta,
-  current_stats.pokemon_caught - month_ago_stats.pokemon_caught as catches_delta,
-  current_stats.distance_walked - month_ago_stats.distance_walked as distance_delta,
-  current_stats.pokestops_visited - month_ago_stats.pokestops_visited as pokestops_delta,
-  current_stats.entry_date as last_update
-FROM profiles p
-JOIN stat_entries current_stats ON p.id = current_stats.profile_id
-LEFT JOIN stat_entries month_ago_stats ON p.id = month_ago_stats.profile_id 
-  AND month_ago_stats.entry_date = CURRENT_DATE - INTERVAL '30 days'
-WHERE current_stats.entry_date >= CURRENT_DATE - INTERVAL '30 days'
-  AND p.is_paid_user = true
-  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
-ORDER BY xp_delta DESC NULLS LAST;
-
 CREATE OR REPLACE VIEW all_time_leaderboard AS
 SELECT 
   p.trainer_name,
@@ -254,4 +520,216 @@ SELECT
 FROM profiles p
 WHERE p.is_paid_user = true
   AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+  AND p.role = 'user'
 ORDER BY p.total_xp DESC; 
+
+-- Function to complete a period and record the top 3 winners
+CREATE OR REPLACE FUNCTION complete_period(
+  p_period_type TEXT,
+  p_period_start DATE,
+  p_period_end DATE
+)
+RETURNS VOID AS $$
+DECLARE
+  period_boundary_id UUID;
+  winner_record RECORD;
+  rank_counter INTEGER := 1;
+BEGIN
+  -- First, create or get the period boundary
+  INSERT INTO period_boundaries (period_type, period_start, period_end, is_completed, completed_at)
+  VALUES (p_period_type, p_period_start, p_period_end, true, NOW())
+  ON CONFLICT (period_type, period_start, period_end) 
+  DO UPDATE SET is_completed = true, completed_at = NOW()
+  RETURNING id INTO period_boundary_id;
+
+  -- Delete existing winners for this period (in case of recompute)
+  DELETE FROM period_winners WHERE period_boundary_id = period_boundary_id;
+
+  -- Get top 3 winners for the completed period and insert them
+  IF p_period_type = 'weekly' THEN
+    FOR winner_record IN
+      SELECT 
+        p.id as profile_id,
+        p.trainer_name,
+        p.country,
+        p.team_color,
+        p.profile_screenshot_url,
+        COALESCE(end_stats.total_xp - start_stats.total_xp, 0) as xp_gained,
+        COALESCE(end_stats.pokemon_caught - start_stats.pokemon_caught, 0) as catches_gained,
+        COALESCE(end_stats.distance_walked - start_stats.distance_walked, 0) as distance_gained,
+        COALESCE(end_stats.pokestops_visited - start_stats.pokestops_visited, 0) as pokestops_gained
+      FROM profiles p
+      LEFT JOIN stat_entries start_stats ON p.id = start_stats.profile_id 
+        AND start_stats.entry_date = p_period_start
+      LEFT JOIN stat_entries end_stats ON p.id = end_stats.profile_id 
+        AND end_stats.entry_date = (
+          SELECT MAX(entry_date) 
+          FROM stat_entries se 
+          WHERE se.profile_id = p.id 
+          AND se.entry_date <= p_period_end
+        )
+      WHERE p.is_paid_user = true
+        AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+        AND p.role = 'user'
+        AND end_stats.entry_date IS NOT NULL
+      ORDER BY (COALESCE(end_stats.total_xp - start_stats.total_xp, 0)) DESC
+      LIMIT 3
+    LOOP
+      INSERT INTO period_winners (
+        period_boundary_id, period_type, period_start, period_end, rank,
+        profile_id, trainer_name, country, team_color, profile_screenshot_url,
+        xp_gained, catches_gained, distance_gained, pokestops_gained
+      ) VALUES (
+        period_boundary_id, p_period_type, p_period_start, p_period_end, rank_counter,
+        winner_record.profile_id, winner_record.trainer_name, winner_record.country, 
+        winner_record.team_color, winner_record.profile_screenshot_url,
+        winner_record.xp_gained, winner_record.catches_gained, 
+        winner_record.distance_gained, winner_record.pokestops_gained
+      );
+      rank_counter := rank_counter + 1;
+    END LOOP;
+  
+  ELSIF p_period_type = 'monthly' THEN
+    FOR winner_record IN
+      SELECT 
+        p.id as profile_id,
+        p.trainer_name,
+        p.country,
+        p.team_color,
+        p.profile_screenshot_url,
+        COALESCE(end_stats.total_xp - start_stats.total_xp, 0) as xp_gained,
+        COALESCE(end_stats.pokemon_caught - start_stats.pokemon_caught, 0) as catches_gained,
+        COALESCE(end_stats.distance_walked - start_stats.distance_walked, 0) as distance_gained,
+        COALESCE(end_stats.pokestops_visited - start_stats.pokestops_visited, 0) as pokestops_gained
+      FROM profiles p
+      LEFT JOIN stat_entries start_stats ON p.id = start_stats.profile_id 
+        AND start_stats.entry_date = p_period_start
+      LEFT JOIN stat_entries end_stats ON p.id = end_stats.profile_id 
+        AND end_stats.entry_date = (
+          SELECT MAX(entry_date) 
+          FROM stat_entries se 
+          WHERE se.profile_id = p.id 
+          AND se.entry_date <= p_period_end
+        )
+      WHERE p.is_paid_user = true
+        AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+        AND p.role = 'user'
+        AND end_stats.entry_date IS NOT NULL
+      ORDER BY (COALESCE(end_stats.total_xp - start_stats.total_xp, 0)) DESC
+      LIMIT 3
+    LOOP
+      INSERT INTO period_winners (
+        period_boundary_id, period_type, period_start, period_end, rank,
+        profile_id, trainer_name, country, team_color, profile_screenshot_url,
+        xp_gained, catches_gained, distance_gained, pokestops_gained
+      ) VALUES (
+        period_boundary_id, p_period_type, p_period_start, p_period_end, rank_counter,
+        winner_record.profile_id, winner_record.trainer_name, winner_record.country, 
+        winner_record.team_color, winner_record.profile_screenshot_url,
+        winner_record.xp_gained, winner_record.catches_gained, 
+        winner_record.distance_gained, winner_record.pokestops_gained
+      );
+      rank_counter := rank_counter + 1;
+    END LOOP;
+  END IF;
+
+  RAISE NOTICE 'Completed % period from % to % with % winners', 
+    p_period_type, p_period_start, p_period_end, rank_counter - 1;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to check if current periods need to be completed
+CREATE OR REPLACE FUNCTION check_and_complete_periods()
+RETURNS VOID AS $$
+DECLARE
+  last_week_start DATE;
+  last_week_end DATE;
+  last_month_start DATE;
+  last_month_end DATE;
+BEGIN
+  -- Get last completed week period
+  SELECT period_start, period_end INTO last_week_start, last_week_end
+  FROM get_last_completed_week();
+
+  -- Get last completed month period  
+  SELECT period_start, period_end INTO last_month_start, last_month_end
+  FROM get_last_completed_month();
+
+  -- Check if last week is already completed
+  IF NOT EXISTS (
+    SELECT 1 FROM period_boundaries 
+    WHERE period_type = 'weekly' 
+    AND period_start = last_week_start 
+    AND period_end = last_week_end 
+    AND is_completed = true
+  ) THEN
+    -- Complete last week
+    PERFORM complete_period('weekly', last_week_start, last_week_end);
+  END IF;
+
+  -- Check if last month is already completed
+  IF NOT EXISTS (
+    SELECT 1 FROM period_boundaries 
+    WHERE period_type = 'monthly' 
+    AND period_start = last_month_start 
+    AND period_end = last_month_end 
+    AND is_completed = true
+  ) THEN
+    -- Complete last month
+    PERFORM complete_period('monthly', last_month_start, last_month_end);
+  END IF;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Function to get completed period leaderboard (for viewing finalized results)
+CREATE OR REPLACE FUNCTION get_completed_period_leaderboard(
+  p_period_type TEXT,
+  p_period_start DATE,
+  p_period_end DATE
+)
+RETURNS TABLE(
+  rank INTEGER,
+  profile_id UUID,
+  trainer_name TEXT,
+  country TEXT,
+  team_color TEXT,
+  profile_screenshot_url TEXT,
+  xp_gained BIGINT,
+  catches_gained INTEGER,
+  distance_gained DECIMAL(10,2),
+  pokestops_gained INTEGER,
+  last_update DATE
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    ROW_NUMBER() OVER (ORDER BY 
+      COALESCE(end_stats.total_xp - start_stats.total_xp, 0) DESC
+    )::INTEGER as rank,
+    p.id as profile_id,
+    p.trainer_name,
+    p.country,
+    p.team_color,
+    p.profile_screenshot_url,
+    COALESCE(end_stats.total_xp - start_stats.total_xp, 0) as xp_gained,
+    COALESCE(end_stats.pokemon_caught - start_stats.pokemon_caught, 0) as catches_gained,
+    COALESCE(end_stats.distance_walked - start_stats.distance_walked, 0) as distance_gained,
+    COALESCE(end_stats.pokestops_visited - start_stats.pokestops_visited, 0) as pokestops_gained,
+    COALESCE(end_stats.entry_date, p.updated_at::date) as last_update
+  FROM profiles p
+  LEFT JOIN stat_entries start_stats ON p.id = start_stats.profile_id 
+    AND start_stats.entry_date = p_period_start
+  LEFT JOIN stat_entries end_stats ON p.id = end_stats.profile_id 
+    AND end_stats.entry_date = (
+      SELECT MAX(entry_date) 
+      FROM stat_entries se 
+      WHERE se.profile_id = p.id 
+      AND se.entry_date <= p_period_end
+    )
+  WHERE p.is_paid_user = true
+    AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+    AND p.role = 'user'
+    AND end_stats.entry_date IS NOT NULL
+  ORDER BY xp_gained DESC;
+END;
+$$ LANGUAGE plpgsql; 

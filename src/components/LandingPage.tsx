@@ -1,10 +1,8 @@
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
 import { useEffect, useRef } from 'react';
 
 export const LandingPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const statsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {

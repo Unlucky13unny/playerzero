@@ -11,7 +11,9 @@ import {
 } from 'chart.js'
 import { Radar } from 'react-chartjs-2'
 import { type ProfileWithMetadata } from '../../services/profileService'
-import { dashboardService } from '../../services/dashboardService'
+import { dashboardService, type StatBounds } from '../../services/dashboardService'
+import { useAuth } from '../../contexts/AuthContext'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 ChartJS.register(
   RadialLinearScale,
@@ -24,37 +26,47 @@ ChartJS.register(
 
 interface RadarChartProps {
   profile: ProfileWithMetadata | null
-  isPaidUser: boolean
+  isPaidUser: boolean // This now represents if the VIEWING user is paid
   showHeader?: boolean // Optional prop to control header visibility
 }
 
-export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChartProps) => {
+export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true }: RadarChartProps) => {
   const navigate = useNavigate()
+  const { user } = useAuth() // Add this to get current user
+  const trialStatus = useTrialStatus() // Add this to get current user's trial status
   const [communityAverages, setCommunityAverages] = useState<any>(null)
+  const [statBounds, setStatBounds] = useState<StatBounds | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const loadAverages = async () => {
+    const loadData = async () => {
       try {
-        const averages = await dashboardService.getAverageStats()
+        const [averages, bounds] = await Promise.all([
+          dashboardService.getAverageStats(),
+          dashboardService.getPaidUserStatBounds()
+        ])
         setCommunityAverages(averages)
+        setStatBounds(bounds)
       } catch (err) {
-        setError('Failed to load community averages')
-        console.error('Error loading averages:', err)
+        setError('Failed to load data')
+        console.error('Error loading data:', err)
       } finally {
         setLoading(false)
       }
     }
 
-    loadAverages()
+    loadData()
   }, [])
 
   const handleUpgradeClick = () => {
     navigate('/upgrade')
   }
 
-  if (!isPaidUser) {
+  // Only show upgrade prompt if viewing own profile and not paid
+  const showUpgradePrompt = profile?.user_id === user?.id && !trialStatus.isPaidUser
+
+  if (showUpgradePrompt) {
     return (
       <div className="locked-content">
         <div className="locked-icon">🔒</div>
@@ -72,7 +84,7 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
     )
   }
 
-  if (!profile || loading || !communityAverages) {
+  if (!profile || loading || !communityAverages || !statBounds) {
     return (
       <div className="radar-chart-loading">
         <div className="loading-spinner"></div>
@@ -89,39 +101,31 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
     )
   }
 
-  // Normalize stats to a 0-100 scale for radar chart
-  const normalizeStats = (value: number, max: number) => {
-    return Math.min((value / max) * 100, 100)
-  }
-
-  const getMaxValue = (stat: keyof typeof communityAverages) => {
-    const profileStat = stat === 'total_xp' ? profile?.total_xp :
-      stat === 'pokemon_caught' ? profile?.pokemon_caught :
-      stat === 'distance_walked' ? profile?.distance_walked :
-      stat === 'pokestops_visited' ? profile?.pokestops_visited :
-      stat === 'unique_pokedex_entries' ? profile?.unique_pokedex_entries : 0
-    return Math.max(profileStat || 0, communityAverages[stat]) * 2
+  // Normalize stats based on min/max values from paid users
+  const normalizeStats = (value: number, stat: keyof StatBounds) => {
+    const { min, max } = statBounds[stat]
+    // Clamp the value between min and max, then normalize to 0-100
+    const clampedValue = Math.max(min, Math.min(max, value))
+    return ((clampedValue - min) / (max - min)) * 100
   }
 
   const data = {
     labels: [
-      'XP',
       'Pokémon Caught',
-      'Distance (km)',
-      'PokéStops',
-      'Level',
-      'Pokédex'
+      'PokéStops Visited',
+      'Distance Walked (km)',
+      'Total XP',
+      'Pokédex Entries' // Moving this to the end since it's not part of core 4
     ],
     datasets: [
       {
         label: 'Your Stats',
         data: [
-          normalizeStats(profile.total_xp || 0, getMaxValue('total_xp')),
-          normalizeStats(profile.pokemon_caught || 0, getMaxValue('pokemon_caught')),
-          normalizeStats(profile.distance_walked || 0, getMaxValue('distance_walked')),
-          normalizeStats(profile.pokestops_visited || 0, getMaxValue('pokestops_visited')),
-          normalizeStats(profile.trainer_level || 1, 50), // Max level 50
-          normalizeStats(profile.unique_pokedex_entries || 0, getMaxValue('unique_pokedex_entries'))
+          normalizeStats(profile.pokemon_caught || 0, 'pokemon_caught'),
+          normalizeStats(profile.pokestops_visited || 0, 'pokestops_visited'),
+          normalizeStats(profile.distance_walked || 0, 'distance_walked'),
+          normalizeStats(profile.total_xp || 0, 'total_xp'),
+          normalizeStats(profile.unique_pokedex_entries || 0, 'unique_pokedex_entries')
         ],
         backgroundColor: 'rgba(220, 38, 127, 0.2)',
         borderColor: 'rgba(220, 38, 127, 1)',
@@ -134,12 +138,11 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
       {
         label: 'Community Average',
         data: [
-          normalizeStats(communityAverages.total_xp, getMaxValue('total_xp')),
-          normalizeStats(communityAverages.pokemon_caught, getMaxValue('pokemon_caught')),
-          normalizeStats(communityAverages.distance_walked, getMaxValue('distance_walked')),
-          normalizeStats(communityAverages.pokestops_visited, getMaxValue('pokestops_visited')),
-          normalizeStats(communityAverages.trainer_level, 50),
-          normalizeStats(communityAverages.unique_pokedex_entries, getMaxValue('unique_pokedex_entries'))
+          normalizeStats(communityAverages.pokemon_caught, 'pokemon_caught'),
+          normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
+          normalizeStats(communityAverages.distance_walked, 'distance_walked'),
+          normalizeStats(communityAverages.total_xp, 'total_xp'),
+          normalizeStats(communityAverages.unique_pokedex_entries, 'unique_pokedex_entries')
         ],
         backgroundColor: 'rgba(128, 128, 128, 0.1)',
         borderColor: 'rgba(128, 128, 128, 0.8)',
@@ -152,6 +155,7 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
     ]
   }
 
+  // Update tooltip to show actual values instead of percentages
   const options = {
     responsive: true,
     maintainAspectRatio: false,
@@ -179,8 +183,21 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
         callbacks: {
           label: function(context: any) {
             const label = context.dataset.label || ''
-            const value = context.parsed.r
-            return `${label}: ${value.toFixed(1)}%`
+            const dataIndex = context.dataIndex
+            const statKeys: (keyof StatBounds)[] = [
+              'pokemon_caught',
+              'pokestops_visited',
+              'distance_walked',
+              'total_xp',
+              'unique_pokedex_entries'
+            ]
+            const actualValue = context.dataset.label === 'Your Stats'
+              ? profile[statKeys[dataIndex]]
+              : communityAverages[statKeys[dataIndex]]
+            
+            // Format large numbers with commas
+            const formattedValue = new Intl.NumberFormat().format(actualValue)
+            return `${label}: ${formattedValue}`
           }
         }
       }
@@ -215,38 +232,6 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
     }
   }
 
-  const getPerformanceMessage = () => {
-    const userStats = data.datasets[0].data
-    const avgStats = data.datasets[1].data
-    
-    let aboveAverage = 0
-    let strongestStat = { index: 0, value: 0, label: '' }
-    let weakestStat = { index: 0, value: 100, label: '' }
-
-    userStats.forEach((stat, index) => {
-      if (stat > avgStats[index]) {
-        aboveAverage++
-      }
-      
-      if (stat > strongestStat.value) {
-        strongestStat = { index, value: stat, label: data.labels[index] }
-      }
-      
-      if (stat < weakestStat.value) {
-        weakestStat = { index, value: stat, label: data.labels[index] }
-      }
-    })
-
-    return {
-      aboveAverage,
-      total: userStats.length,
-      strongest: strongestStat.label,
-      weakest: weakestStat.label
-    }
-  }
-
-  const performance = getPerformanceMessage()
-
   return (
     <div className="radar-chart-container">
       {showHeader && (
@@ -259,56 +244,6 @@ export const RadarChart = ({ profile, isPaidUser, showHeader = true }: RadarChar
       <div className="radar-chart-content">
         <div className="chart-wrapper">
           <Radar data={data} options={options} />
-        </div>
-
-        <div className="performance-summary">
-          <div className="summary-header">
-            <h3>Performance Summary</h3>
-          </div>
-          
-          <div className="summary-stats">
-            <div className="summary-item">
-              <span className="summary-label">Above Average:</span>
-              <span className="summary-value">
-                {performance.aboveAverage}/{performance.total} categories
-              </span>
-            </div>
-            
-            <div className="summary-item">
-              <span className="summary-label">Strongest Area:</span>
-              <span className="summary-value strongest">
-                {performance.strongest}
-              </span>
-            </div>
-            
-            <div className="summary-item">
-              <span className="summary-label">Growth Opportunity:</span>
-              <span className="summary-value weakest">
-                {performance.weakest}
-              </span>
-            </div>
-          </div>
-
-          <div className="performance-tips">
-            <h4>💡 Tips for Improvement</h4>
-            <ul>
-              {performance.aboveAverage < 3 && (
-                <li>Focus on consistent daily play to improve overall stats</li>
-              )}
-              {performance.weakest === 'Distance (km)' && (
-                <li>Try walking more during your Pokémon GO sessions</li>
-              )}
-              {performance.weakest === 'Pokémon Caught' && (
-                <li>Use items like Incense and Lures to encounter more Pokémon</li>
-              )}
-              {performance.weakest === 'PokéStops' && (
-                <li>Explore new areas with more PokéStops and Gyms</li>
-              )}
-              {performance.weakest === 'Pokédex' && (
-                <li>Participate in events to catch rare and regional Pokémon</li>
-              )}
-            </ul>
-          </div>
         </div>
       </div>
     </div>
