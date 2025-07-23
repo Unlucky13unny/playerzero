@@ -9,11 +9,16 @@ export type ProfileData = {
   start_date: string
   country: string
   team_color: string
+  average_daily_xp: number
+  last_name_change_date?: string
   
   // Subscription Status
   is_paid_user?: boolean
   subscription_type?: string
   subscription_expires_at?: string
+  
+  // User Role
+  role?: 'user' | 'admin' | 'moderator'
   
   // Core Statistics
   distance_walked?: number
@@ -44,6 +49,7 @@ export interface ProfileWithMetadata extends ProfileData {
 // Public profile data (excludes private fields)
 export interface PublicProfileData {
   id: string
+  user_id: string
   trainer_name: string
   trainer_level: number
   country: string
@@ -64,8 +70,50 @@ export interface PublicProfileData {
   created_at: string
   updated_at: string
   is_paid_user: boolean
-  trainer_code?: string // Optional trainer code, only shown for paid users
+  trainer_code?: string
+  trainer_code_private: boolean
+  average_daily_xp: number
+  role: 'user' | 'admin' | 'moderator'
 }
+
+// XP requirements for each level
+const LEVEL_50_XP = 176_000_000;
+
+// Calculate summit date based on current XP and start date (more accurate than stored average)
+export const calculateSummitDate = (currentXp: number, averageDailyXp: number, startDate?: string): string => {
+  // If already level 50
+  if (currentXp >= LEVEL_50_XP) {
+    return 'Complete';
+  }
+  
+  // If we have a start date, calculate more accurate daily XP rate
+  let dailyXpRate = averageDailyXp;
+  
+  if (startDate) {
+    const start = new Date(startDate);
+    const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    dailyXpRate = currentXp / daysSinceStart;
+  }
+  
+  if (!dailyXpRate || dailyXpRate <= 0) {
+    return 'Calculating...';
+  }
+
+  // Calculate days needed
+  const xpNeeded = LEVEL_50_XP - currentXp;
+  const daysNeeded = Math.ceil(xpNeeded / dailyXpRate);
+  
+  // Calculate future date
+  const summitDate = new Date();
+  summitDate.setDate(summitDate.getDate() + daysNeeded);
+  
+  // Format date as Month Day, Year
+  return summitDate.toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+};
 
 export const profileService = {
   // Get current user's profile
@@ -157,7 +205,9 @@ export const profileService = {
 
       if (error) {
         return { data: null, error }
-      }
+      } else {
+        console.log(data);
+      } 
 
       // Get public URL
       const { data: { publicUrl } } = supabase.storage
@@ -300,6 +350,7 @@ export const profileService = {
         .from('profiles')
         .select(`
           id,
+          user_id,
           trainer_name,
           trainer_level,
           country,
@@ -320,10 +371,17 @@ export const profileService = {
           created_at,
           updated_at,
           is_paid_user,
-          trainer_code
+          trainer_code,
+          trainer_code_private,
+          average_daily_xp
         `)
         .eq('id', profileId)
         .maybeSingle()
+
+      // If profile is found and trainer code is private, remove it from the response
+      if (data && data.trainer_code_private) {
+        data.trainer_code = undefined;
+      }
 
       return { data: data as PublicProfileData | null, error }
     } catch (error) {
@@ -338,6 +396,7 @@ export const profileService = {
         .from('profiles')
         .select(`
           id,
+          user_id,
           trainer_name,
           trainer_level,
           country,
@@ -358,7 +417,8 @@ export const profileService = {
           created_at,
           updated_at,
           is_paid_user,
-          trainer_code
+          trainer_code,
+          average_daily_xp
         `)
         .eq('trainer_name', trainerName)
         .maybeSingle()
@@ -399,7 +459,7 @@ export const profileService = {
       const { data, error } = await supabase
         .from('profiles')
         .select(`
-          username,
+          trainer_name,
           team_color,
           trainer_level,
           country,
@@ -417,4 +477,29 @@ export const profileService = {
       return { data: null, error };
     }
   },
+
+  // Search users by trainer name with pagination and preview data
+  async searchUsers(query: string, limit: number = 10, offset: number = 0): Promise<{ data: PublicProfileData[] | null; error: any }> {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          trainer_name,
+          trainer_level,
+          team_color,
+          total_xp,
+          pokemon_caught,
+          distance_walked,
+          profile_screenshot_url
+        `)
+        .ilike('trainer_name', `%${query}%`)
+        .order('trainer_name', { ascending: true })
+        .range(offset, offset + limit - 1)
+
+      return { data: data as PublicProfileData[], error }
+    } catch (error) {
+      return { data: null, error }
+    }
+  }
 }; 

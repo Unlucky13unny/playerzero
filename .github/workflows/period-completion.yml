@@ -1,0 +1,16 @@
+name: Period Completion
+on:
+  schedule:
+    # Run daily at 1:00 AM UTC
+    - cron: '0 1 * * *'
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  complete-periods:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Call Period Completion Function
+        run: |
+          curl -X POST '${{ secrets.SUPABASE_URL }}/functions/v1/period-completion' \
+            -H 'Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}' \
+            -H 'Content-Type: application/json' 

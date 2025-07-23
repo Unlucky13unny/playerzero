@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
-import { useAuth } from '../../contexts/AuthContext'
 import { supabase } from '../../supabaseClient'
-import { profileService } from '../../services/profileService'
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
 
 export const UpgradePage = () => {
-  const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
