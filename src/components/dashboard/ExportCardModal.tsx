@@ -320,7 +320,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
       case 'all-time':
         return (
           <div className="card-template all-time-card" style={{ 
-            backgroundImage: 'url(/public/images/grind.png)',
+            backgroundImage: 'url(/images/grind.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -426,7 +426,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
       case 'achievement':
         return (
           <div className="card-template achievement-card" style={{ 
-            backgroundImage: 'url(/public/images/achieved.png)',
+            backgroundImage: 'url(/images/achieved.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -482,7 +482,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
         const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
         return (
           <div className="card-template summit-card" style={{ 
-            backgroundImage: 'url(/public/images/summit.png)',
+            backgroundImage: 'url(/images/summit.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
