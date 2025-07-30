@@ -2,9 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { RadarChart } from './RadarChart';
-import { VisualExport } from './VisualExport';
-import { type ProfileWithMetadata, calculateSummitDate } from '../../services/profileService';
+import { ExportCardModal } from './ExportCardModal';
+import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
+import { FaDownload } from 'react-icons/fa';
 
 const TEAM_COLORS = {
   blue: { name: 'Blue', color: '#0074D9', icon: '❄️' },
@@ -23,6 +24,7 @@ export const UserHome = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ProfileWithMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExportModal, setShowExportModal] = useState(false);
 
   useEffect(() => {
     loadUserStats();
@@ -52,6 +54,22 @@ export const UserHome = () => {
   const formatNumber = (num: number | null | undefined) => {
     if (num == null) return '0';
     return new Intl.NumberFormat().format(num);
+  };
+
+  const getTeamColor = (teamColor: string) => {
+    switch (teamColor?.toLowerCase()) {
+      case 'valor':
+      case 'red':
+        return '#FF4444';
+      case 'mystic':
+      case 'blue':
+        return '#4444FF';
+      case 'instinct':
+      case 'yellow':
+        return '#FFAA00';
+      default:
+        return '#888888';
+    }
   };
 
   if (loading) {
@@ -113,8 +131,8 @@ export const UserHome = () => {
           <div className="trainer-level">Level {stats?.trainer_level || 1}</div>
           <div className="trainer-details">
             {teamInfo && (
-              <div className="team-badge" style={{ backgroundColor: teamInfo.color }}>
-                <span className="team-icon">{teamInfo.icon}</span>
+              <div className="team-badge">
+                <div className="team-color-circle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></div>
                 <span className="team-name">Team {teamInfo.name}</span>
               </div>
             )}
@@ -124,38 +142,15 @@ export const UserHome = () => {
                 <span className="country-name">{stats.country}</span>
               </div>
             )}
-            {stats?.start_date && (
-              <div className="start-date-badge">
-                <span className="start-icon">📅</span>
-                <span className="start-date">
-                  Started: {new Date(stats.start_date).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </span>
-              </div>
-            )}
+            
             <div className="summit-badge">
               <span className="summit-icon">🏔️</span>
-              <span className="summit-date">
-                Summit: {stats ? calculateSummitDate(stats.total_xp || 0, stats.average_daily_xp || 0, stats.start_date) : 'Loading...'}
-              </span>
+              <span className="summit-date">Summit: 50</span>
             </div>
             {stats?.trainer_code && !stats?.trainer_code_private && (
               <div className="trainer-code-badge">
                 <span className="code-icon">🎮</span>
                 <span className="code-value">{stats.trainer_code}</span>
-                <button 
-                  className="copy-button"
-                  onClick={() => {
-                    navigator.clipboard.writeText(stats.trainer_code);
-                    // You could add a toast notification here
-                  }}
-                  title="Copy trainer code"
-                >
-                  📋
-                </button>
               </div>
             )}
           </div>
@@ -206,18 +201,27 @@ export const UserHome = () => {
         </div>
       </div>
 
-      {/* Visual Export */}
+      {/* Export Card Button */}
       {stats && (
-        <div className="visual-export-section">
-          <h2>Visual Export</h2>
-          <div className="visual-export-container">
-            <VisualExport
-              profile={stats}
-              isPaidUser={!!stats?.is_paid_user}
-            />
-          </div>
+        <div className="export-card-button-container">
+          <button 
+            className="export-card-button"
+            onClick={() => setShowExportModal(true)}
+            disabled={!trialStatus.isPaidUser && !trialStatus.isInTrial}
+          >
+            <FaDownload />
+            <span>Create Card</span>
+          </button>
         </div>
       )}
+
+      {/* Export Card Modal */}
+      <ExportCardModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        profile={stats}
+        isPaidUser={!!stats?.is_paid_user}
+      />
     </div>
   );
 }; 

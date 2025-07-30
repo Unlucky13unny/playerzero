@@ -2825,7 +2825,8 @@ h1, h2, h3, h4, h5, h6 {
   border-top: 3px solid #dc267f;
   border-radius: 50%;
   animation: spin 1s linear infinite;
-  margin: 0;
+  margin: 0 auto;
+  display: block;
 }
 
 .leaderboard-error {
@@ -5214,11 +5215,17 @@ h1, h2, h3, h4, h5, h6 {
   justify-content: center;
   padding: 4rem;
   text-align: center;
+  position: relative;
+  min-height: 100vh;
+  width: 100%;
+  gap: 0.3rem;
 }
 
 .loading-container p {
   color: #a0a0a0;
-  margin-top: 1rem;
+  margin: 0;
+  text-align: center;
+  width: 100%;
 }
 
 .users-table-container {
@@ -6487,6 +6494,37 @@ h1, h2, h3, h4, h5, h6 {
   force-3d: none;
 }
 
+/* Mobile breakpoints for full image display */
+@media (max-width: 768px) {
+  .card-template {
+    width: 100% !important;
+    max-width: 350px !important;
+    height: auto !important;
+    aspect-ratio: 2/3 !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-template {
+    width: 100% !important;
+    max-width: 300px !important;
+    height: auto !important;
+    aspect-ratio: 2/3 !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .card-template {
+    width: 100% !important;
+    max-width: 280px !important;
+    height: auto !important;
+    aspect-ratio: 2/3 !important;
+    overflow: visible !important;
+  }
+}
+
 /* Ensure all text stays within card boundaries */
 .card-template * {
   word-wrap: break-word;
@@ -6530,6 +6568,41 @@ h1, h2, h3, h4, h5, h6 {
   align-items: center;
   min-height: 600px;
   padding: 20px;
+  overflow: visible;
+}
+
+/* Mobile breakpoints for card container */
+@media (max-width: 768px) {
+  .card-container {
+    width: 100% !important;
+    max-width: 350px !important;
+    height: auto !important;
+    min-height: 525px !important;
+    padding: 10px !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-container {
+    width: 100% !important;
+    max-width: 300px !important;
+    height: auto !important;
+    min-height: 450px !important;
+    padding: 8px !important;
+    overflow: visible !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .card-container {
+    width: 100% !important;
+    max-width: 280px !important;
+    height: auto !important;
+    min-height: 420px !important;
+    padding: 5px !important;
+    overflow: visible !important;
+  }
 }
 
 /* Common Header Elements */

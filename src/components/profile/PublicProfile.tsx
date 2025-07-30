@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { profileService, type PublicProfileData, calculateSummitDate } from '../../services/profileService'
+import { profileService, type PublicProfileData } from '../../services/profileService'
 import { dashboardService } from '../../services/dashboardService'
 import { RadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
@@ -208,8 +208,9 @@ export const PublicProfile = () => {
           <div className="trainer-level">Level {profile.trainer_level || 1}</div>
           <div className="trainer-details">
             {selectedTeam && (
-              <div className="team-badge" style={{ backgroundColor: selectedTeam.color }}>
-                <span className="team-icon">{selectedTeam.team}</span>
+              <div className="team-badge">
+                <div className="team-color-circle" style={{ backgroundColor: selectedTeam.color }}></div>
+                <span className="team-name">{selectedTeam.team}</span>
               </div>
             )}
             {profile.country && (
@@ -218,23 +219,9 @@ export const PublicProfile = () => {
                 <span className="country-name">{profile.country}</span>
               </div>
             )}
-            {profile.start_date && (
-              <div className="start-date-badge">
-                <span className="start-icon">📅</span>
-                <span className="start-date">
-                  Started: {new Date(profile.start_date).toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </span>
-              </div>
-            )}
             <div className="summit-badge">
               <span className="summit-icon">🏔️</span>
-              <span className="summit-date">
-                Summit: {calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)}
-              </span>
+              <span className="summit-date">Summit: 50</span>
             </div>
             {profile.is_paid_user && (
               <div className="trainer-code-badge">

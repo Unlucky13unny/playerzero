@@ -515,7 +515,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                     {sortBy === 'distance' && ' Distance'}
                     {sortBy === 'pokestops' && ' PokéStops'}
                   </div>
-                  <div className="header-avatar">Profile</div>
                 </div>
                 
                 {leaderboard.map((entry, index) => (
@@ -525,6 +524,11 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                   >
                     <div className="rank-section">
                       {getRankIcon(index)}
+                      <div className="avatar-section">
+                        <div className="avatar-placeholder">
+                          <span>👤</span>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="trainer-section">
@@ -576,25 +580,6 @@ export const Leaderboards = ({ isPaidUser }: LeaderboardsProps) => {
                       <div className="last-update">
                         Updated {new Date(entry.last_update).toLocaleDateString()}
                       </div>
-                    </div>
-
-                    <div className="avatar-section">
-                      {entry.profile_screenshot_url ? (
-                        <img
-                          src={entry.profile_screenshot_url}
-                          alt={`${entry.trainer_name}'s profile`}
-                          className="trainer-avatar"
-                          style={{
-                            cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
-                            opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
-                          }}
-                          onClick={(e) => handleTrainerClick(entry, e)}
-                        />
-                      ) : (
-                        <div className="avatar-placeholder">
-                          <span>👤</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}

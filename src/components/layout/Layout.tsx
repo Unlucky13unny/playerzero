@@ -58,8 +58,8 @@ export const Layout = ({ children }: LayoutProps) => {
       <header className="header">
         {/* Mobile Layout */}
         <div className="mobile-header-container mobile-only">
-          {user && (
-            <div className="mobile-header-actions">
+          <div className="mobile-header-left">
+            {user && (
               <button 
                 className="mobile-menu-toggle"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -78,13 +78,16 @@ export const Layout = ({ children }: LayoutProps) => {
                   </svg>
                 )}
               </button>
-              <NotificationBell />
-            </div>
-          )}
+            )}
+          </div>
           
           <Link to="/UserProfile" className="logo mobile-logo">
-            <Logo style={{ color: 'var(--white-pure)' }} />
+            <Logo style={{ width: '100%',marginRight: '50%', color: 'var(--white-pure)' }} />
           </Link>
+
+          <div className="mobile-header-right">
+            {user && <NotificationBell />}
+          </div>
         </div>
 
         {/* Desktop Logo */}
@@ -174,6 +177,13 @@ export const Layout = ({ children }: LayoutProps) => {
                       onClick={() => setFeaturesDropdownOpen(false)}
                     >
                       🔍 Search Users
+                    </Link>
+                    <Link 
+                      to="/contact" 
+                      className="dropdown-item"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                    >
+                      💬 Help & Support
                     </Link>
                   </div>
                 )}
@@ -314,6 +324,17 @@ export const Layout = ({ children }: LayoutProps) => {
                   </svg>
                   Calculators
                 </Link>
+
+                <Link 
+                  to="/contact" 
+                  className={`mobile-menu-item ${isActiveRoute('/contact') ? 'active' : ''}`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  Help & Support
+                </Link>
               </div>
 
               <div className="mobile-menu-section">
@@ -370,9 +391,9 @@ export const Layout = ({ children }: LayoutProps) => {
             <a href="#" className="footer-link">
               Privacy
             </a>
-            <a href="#" className="footer-link">
+            <Link to="/contact" className="footer-link">
               Contact
-            </a>
+            </Link>
           </div>
         </div>
       </footer>

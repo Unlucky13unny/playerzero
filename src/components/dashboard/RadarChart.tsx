@@ -38,6 +38,8 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
   const [statBounds, setStatBounds] = useState<StatBounds | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
+  const [isVerySmallScreen, setIsVerySmallScreen] = useState(window.innerWidth <= 360)
 
   useEffect(() => {
     const loadData = async () => {
@@ -57,6 +59,17 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
     }
 
     loadData()
+  }, [])
+
+  // Handle window resize for mobile detection
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768)
+      setIsVerySmallScreen(window.innerWidth <= 360)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   const handleUpgradeClick = () => {
@@ -109,14 +122,33 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
     return ((clampedValue - min) / (max - min)) * 100
   }
 
+  // Create shorter labels for mobile to prevent text wrapping issues
+  const labels = isMobile 
+    ? isVerySmallScreen
+      ? [
+          'Pokémon\nCaught',
+          'Stops', 
+          'Distance\nWalked',
+          'XP',
+          'Dex'
+        ]
+      : [
+          'Pokémon\nCaught',
+          'PokéStops', 
+          'Distance\nWalked',
+          'Total XP',
+          'Pokédex'
+        ]
+    : [
+        'Pokémon Caught',
+        'PokéStops Visited',
+        'Distance Walked (km)',
+        'Total XP',
+        'Pokédex Entries'
+      ];
+
   const data = {
-    labels: [
-      'Pokémon Caught',
-      'PokéStops Visited',
-      'Distance Walked (km)',
-      'Total XP',
-      'Pokédex Entries' // Moving this to the end since it's not part of core 4
-    ],
+    labels: labels,
     datasets: [
       {
         label: 'Your Stats',
@@ -165,10 +197,10 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
         labels: {
           color: '#ffffff',
           font: {
-            size: 14,
+            size: isVerySmallScreen ? 8 : isMobile ? 10 : 14,
             weight: 500
           },
-          padding: 20,
+          padding: isVerySmallScreen ? 5 : isMobile ? 10 : 20,
           usePointStyle: true,
           pointStyle: 'circle'
         }
@@ -214,8 +246,30 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
         pointLabels: {
           color: '#ffffff',
           font: {
-            size: 13,
+            size: isVerySmallScreen ? 7 : isMobile ? 8 : 13,
             weight: 500
+          },
+          callback: function(value: any, index: number) {
+            // Handle multi-line labels on mobile
+            if (isMobile) {
+              const labels = isVerySmallScreen
+                ? [
+                    'Pokémon\nCaught',
+                    'Stops', 
+                    'Distance\nWalked',
+                    'XP',
+                    'Dex'
+                  ]
+                : [
+                    'Pokémon\nCaught',
+                    'PokéStops', 
+                    'Distance\nWalked',
+                    'Total XP',
+                    'Pokédex'
+                  ];
+              return labels[index] || value;
+            }
+            return value;
           }
         },
         ticks: {

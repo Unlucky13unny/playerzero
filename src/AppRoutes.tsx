@@ -24,6 +24,7 @@ import { LandingPage } from './components/LandingPage'
 import { Leaderboards } from './components/dashboard/Leaderboards'
 import { useTrialStatus } from './hooks/useTrialStatus'
 import { SearchPage } from './components/search/SearchPage';
+import { ContactHelp } from './components/ContactHelp';
 
 // Wrapper component to handle isPaidUser prop
 const LeaderboardsWrapper = () => {
@@ -159,6 +160,13 @@ const AppRoutes = () => {
 
       {/* Search Page Route */}
       <Route path="/search" element={<SearchPage />} />
+      
+      {/* Contact/Help Page Route */}
+      <Route path="/contact" element={
+        <Layout>
+          <ContactHelp />
+        </Layout>
+      } />
       
       {/* Admin routes */}
       <Route path="/admin/login" element={<AdminLogin />} />

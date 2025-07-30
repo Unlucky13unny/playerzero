@@ -4,7 +4,8 @@ import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
-import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
+import { SOCIAL_MEDIA } from '../common/SocialIcons'
+import './UserProfile.css'
 
 const TEAM_COLORS = [
   { value: 'blue', label: 'Blue', color: '#0074D9' },
@@ -188,7 +189,6 @@ export const UserProfile = () => {
       <div className="form-section">
         <h3 className="form-section-header">
           <span className="form-section-icon" style={{background: '#2563eb'}}>
-            🌐
           </span>
           Social Media Links
           {showPrivateNotice && (
@@ -220,7 +220,6 @@ export const UserProfile = () => {
           {SOCIAL_MEDIA.map(platform => (
             <div key={platform.key} className="form-group">
               <label className="form-label">
-                <SocialIcon platform={platform.key} size={20} color="currentColor" />
                 {platform.label}
               </label>
               {isEditing ? (
@@ -551,7 +550,7 @@ export const UserProfile = () => {
                   { key: 'total_xp', label: 'Total XP', icon: '🎯' },
                   { key: 'unique_pokedex_entries', label: 'Pokédex Entries', icon: '📖' }
                 ].map((stat) => (
-                  <div key={stat.key} className={`stat-card ${stat.key === 'unique_pokedex_entries' ? 'full-width' : ''}`}>
+                  <div key={stat.key} className="stat-card">
                     <div className="stat-icon">
                       <span>{stat.icon}</span>
                     </div>

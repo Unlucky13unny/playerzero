@@ -444,7 +444,7 @@ export const ProfileSetup = () => {
           { key: 'total_xp', label: 'Total XP', icon: '🎯' },
           { key: 'unique_pokedex_entries', label: 'Pokédex Entries', icon: '📖', max: maxPokedexEntries }
         ].map(stat => (
-          <div key={stat.key} className={`stat-card ${stat.key === 'unique_pokedex_entries' ? 'full-width' : ''}`}>
+          <div key={stat.key} className="stat-card">
             <label htmlFor={stat.key}>
               {stat.icon} {stat.label}
             </label>
