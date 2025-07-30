@@ -12,7 +12,7 @@ export const Logo = ({ size = 'medium', className = '', style = {} }: LogoProps)
       case 'small':
         return '24px'
       case 'large':
-        return '60px'
+        return '50px'
       case 'medium':
       default:
         return '40px'

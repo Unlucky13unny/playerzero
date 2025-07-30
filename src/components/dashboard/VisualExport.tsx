@@ -1,9 +1,8 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import html2canvas from 'html2canvas'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
-import type { ProfileWithMetadata } from '../../services/profileService'
-import { calculateSummitDate } from '../../services/profileService'
+import { calculateSummitDate } from '../../utils/calculations'
+import type { ProfileWithMetadata } from '../../types/profile'
 
 interface VisualExportProps {
   profile: ProfileWithMetadata
@@ -13,61 +12,110 @@ interface VisualExportProps {
 export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const navigate = useNavigate()
   const trialStatus = useTrialStatus()
+  const [cardType, setCardType] = useState<'all-time' | 'achievement' | 'summit'>('all-time')
   const [exporting, setExporting] = useState(false)
   const [downloadMessage, setDownloadMessage] = useState<string | null>(null)
-  const [cardType, setCardType] = useState<'all-time' | 'achievement' | 'summit'>('all-time')
   const cardRef = useRef<HTMLDivElement>(null)
+
+  // Mobile responsive state
+  const [isMobile, setIsMobile] = useState(false)
+  const [isSmallMobile, setIsSmallMobile] = useState(false)
+
+  // Detect screen size changes
+  useEffect(() => {
+    const checkScreenSize = () => {
+      const width = window.innerWidth
+      setIsMobile(width <= 768)
+      setIsSmallMobile(width <= 480)
+    }
+
+    checkScreenSize()
+    window.addEventListener('resize', checkScreenSize)
+    return () => window.removeEventListener('resize', checkScreenSize)
+  }, [])
+
+  // Get responsive dimensions and font sizes
+  const getResponsiveStyles = () => {
+    if (isSmallMobile) {
+      return {
+        cardWidth: '280px',
+        cardHeight: '420px',
+        trainerNameFontSize: '14px',
+        dateFontSize: '11px',
+        statLabelFontSize: '9px',
+        statValueFontSize: '16px',
+        statDailyFontSize: '10px',
+        totalXPFontSize: '18px',
+        allTimeLabelFontSize: '16px',
+        summitDateFontSize: '18px',
+        achievementXPFontSize: '28px'
+      }
+    } else if (isMobile) {
+      return {
+        cardWidth: '320px',
+        cardHeight: '480px',
+        trainerNameFontSize: '16px',
+        dateFontSize: '12px',
+        statLabelFontSize: '10px',
+        statValueFontSize: '18px',
+        statDailyFontSize: '11px',
+        totalXPFontSize: '20px',
+        allTimeLabelFontSize: '18px',
+        summitDateFontSize: '20px',
+        achievementXPFontSize: '30px'
+      }
+    } else {
+      return {
+        cardWidth: '400px',
+        cardHeight: '600px',
+        trainerNameFontSize: '18px',
+        dateFontSize: '15px',
+        statLabelFontSize: '12px',
+        statValueFontSize: '20px',
+        statDailyFontSize: '12px',
+        totalXPFontSize: '20px',
+        allTimeLabelFontSize: '20px',
+        summitDateFontSize: '24px',
+        achievementXPFontSize: '34px'
+      }
+    }
+  }
+
+  const styles = getResponsiveStyles()
 
   const exportCard = async () => {
     if (!cardRef.current || !profile) return
 
-    setExporting(true)
-    setDownloadMessage(null)
-
     try {
-      // Find the actual card template element inside the container
+      setExporting(true)
       const cardElement = cardRef.current.querySelector('.card-template') as HTMLElement
-      if (!cardElement) {
-        throw new Error('Card template not found')
+      if (cardElement) {
+        cardElement.classList.add('exporting')
       }
 
-      // Add export class to disable problematic styles temporarily
-      cardElement.classList.add('exporting')
-      
-      // Ensure the card is fully visible in viewport during capture
-      cardElement.scrollIntoView({ behavior: 'instant', block: 'center' })
-      
-      // Wait for styles to apply and scroll to complete
-      await new Promise(resolve => setTimeout(resolve, 200))
-
-      const canvas = await html2canvas(cardElement, {
-        backgroundColor: null,
-        scale: 2,
+      // Use html2canvas with responsive settings
+      const { default: html2canvas } = await import('html2canvas')
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: '#1a1a1a',
+        scale: isMobile ? 1.5 : 2,
+        logging: false,
         useCORS: true,
         allowTaint: true,
-        logging: false,
-        width: 400,
-        height: 600,
+        foreignObjectRendering: true,
         scrollX: 0,
-        scrollY: 0,
-        windowWidth: window.innerWidth,
-        windowHeight: window.innerHeight
+        scrollY: 0
       })
 
-      // Remove export class from card element
-      cardElement.classList.remove('exporting')
-
-      // Create high-quality PNG
+      const image = canvas.toDataURL('image/png')
       const link = document.createElement('a')
-      link.download = `playerzero-${profile.trainer_name}-${cardType}-card.png`
-      link.href = canvas.toDataURL('image/png', 1.0)
+      link.download = `${cardType}-card-${new Date().getTime()}.png`
+      link.href = image
       link.click()
 
       setDownloadMessage('Card downloaded successfully!')
       setTimeout(() => setDownloadMessage(null), 3000)
     } catch (error) {
       console.error('Export failed:', error)
-      // Make sure to remove export class if error occurs
       if (cardRef.current) {
         const cardElement = cardRef.current.querySelector('.card-template') as HTMLElement
         if (cardElement) {
@@ -170,10 +218,8 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             position: 'relative',
-            width: '100%',
-            height: '100%',
-            minWidth: '400px',
-            minHeight: '600px',
+            width: styles.cardWidth,
+            height: styles.cardHeight,
             margin: 0,
             padding: 0,
             border: 'none',
@@ -182,11 +228,11 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Text Overlays */}
             <div style={{ 
               position: 'absolute',
-              top: '50px',
-              left: '20px',
+              top: isSmallMobile ? '30px' : isMobile ? '40px' : '50px',
+              left: isSmallMobile ? '12px' : isMobile ? '15px' : '18px',
               color: 'black',
               fontWeight: 'bold',
-              fontSize: '18px',
+              fontSize: styles.trainerNameFontSize,
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
               {profile.trainer_name}
@@ -194,10 +240,10 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             
             <div style={{ 
               position: 'absolute',
-              top: '55px',
-              right: '30px',
+              top: isSmallMobile ? '35px' : isMobile ? '45px' : '55px',
+              right: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'black',
-              fontSize: '15px',
+              fontSize: styles.dateFontSize,
               textAlign: 'right',
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
@@ -207,62 +253,62 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Bottom Left Stats */}
              <div style={{ 
                position: 'absolute',
-               top: '340px',
-               bottom: '90px',
-               left: '30px',
-               fontSize: '12px'
+               top: isSmallMobile ? '200px' : isMobile ? '240px' : '340px',
+               bottom: isSmallMobile ? '60px' : isMobile ? '70px' : '90px',
+               left: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
+               fontSize: styles.statLabelFontSize
              }}>
-               <div style={{ marginBottom: '15px' }}>
+               <div style={{ marginBottom: isSmallMobile ? '10px' : isMobile ? '12px' : '15px' }}>
                  <div style={{ 
                    color: 'black', 
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Pokemon Caught</div>
-                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokemon_caught || 0).toLocaleString()}</div>
-                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.pokemon_caught || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
                </div>
-               <div style={{ marginBottom: '15px' }}>
+               <div style={{ marginBottom: isSmallMobile ? '10px' : isMobile ? '12px' : '15px' }}>
                  <div style={{ 
                    color: 'black', 
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Distance Walked</div>
-                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.distance_walked || 0).toLocaleString()} km</div>
-                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.distance_walked || 0).toLocaleString()} km</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
                </div>
                <div>
                  <div style={{ 
                    color: 'black', 
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Pokestops Visited</div>
-                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokestops_visited || 0).toLocaleString()}</div>
-                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.pokestops_visited || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
                </div>
              </div>
 
                          {/* Bottom Right Stats */}
              <div style={{ 
                position: 'absolute',
-               top: '400px',
-               bottom: '80px',
-               right: '60px',
-               fontSize: '30px',
+               top: isSmallMobile ? '240px' : isMobile ? '280px' : '400px',
+               bottom: isSmallMobile ? '60px' : isMobile ? '70px' : '80px',
+               right: isSmallMobile ? '40px' : isMobile ? '50px' : '60px',
+               fontSize: styles.statLabelFontSize,
                textAlign: 'right'
              }}>
                <div style={{ 
                  color: 'black', 
                  textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                }}>Total XP</div>
-               <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.total_xp || 0).toLocaleString()}</div>
-               <div style={{ fontSize: '12px', color: 'red'}}>{(dailyXPRate).toFixed(2)} /Day</div>
+               <div style={{ fontSize: styles.totalXPFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.total_xp || 0).toLocaleString()}</div>
+               <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{(dailyXPRate).toFixed(2)} /Day</div>
              </div>
             
             {/* All-time Label */}
             <div style={{ 
               position: 'absolute',
-              top: '325px',
-              bottom: '45px',
-              right: '35px',
+              top: isSmallMobile ? '180px' : isMobile ? '220px' : '325px',
+              bottom: isSmallMobile ? '30px' : isMobile ? '35px' : '45px',
+              right: isSmallMobile ? '25px' : isMobile ? '30px' : '35px',
               color: 'white',
-              fontSize: '20px',
+              fontSize: styles.allTimeLabelFontSize,
               fontWeight: 'bold',
             }}>
               All-time
@@ -278,10 +324,8 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             position: 'relative',
-            width: '100%',
-            height: '100%',
-            minWidth: '400px',
-            minHeight: '600px',
+            width: styles.cardWidth,
+            height: styles.cardHeight,
             margin: 0,
             padding: 0,
             border: 'none',
@@ -290,11 +334,11 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Trainer Name - Top Left */}
             <div style={{ 
               position: 'absolute',
-              top: '50px',
-              left: '30px',
+              top: isSmallMobile ? '30px' : isMobile ? '40px' : '50px',
+              left: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'black',
               fontWeight: 'bold',
-              fontSize: '20px',
+              fontSize: styles.trainerNameFontSize,
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
               {profile.trainer_name}
@@ -303,10 +347,10 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Start Date - Top Right */}
             <div style={{ 
               position: 'absolute',
-              top: '55px',
-              right: '30px',
+              top: isSmallMobile ? '35px' : isMobile ? '45px' : '55px',
+              right: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'black',
-              fontSize: '15px',
+              fontSize: styles.dateFontSize,
               textAlign: 'right',
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
@@ -316,13 +360,13 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Total XP - Bottom Left */}
             <div style={{ 
               position: 'absolute',
-              bottom: '90px',
-              left: '25px',
+              bottom: isSmallMobile ? '60px' : isMobile ? '70px' : '90px',
+              left: isSmallMobile ? '15px' : isMobile ? '20px' : '25px',
               color: 'red',
-              fontSize: '12px',
+              fontSize: styles.statLabelFontSize,
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
-              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
+              <div style={{ fontSize: styles.achievementXPFontSize, fontWeight: 'bold', color: 'white', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
             </div>
           </div>
         )
@@ -336,10 +380,8 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
             position: 'relative',
-            width: '100%',
-            height: '100%',
-            minWidth: '400px',
-            minHeight: '600px',
+            width: styles.cardWidth,
+            height: styles.cardHeight,
             margin: 0,
             padding: 0,
             border: 'none',
@@ -348,11 +390,11 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Trainer Name - Top Left */}
             <div style={{ 
               position: 'absolute',
-              top: '50px',
-              left: '30px',
+              top: isSmallMobile ? '30px' : isMobile ? '40px' : '50px',
+              left: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'white',
               fontWeight: 'bold',
-              fontSize: '20px',
+              fontSize: styles.trainerNameFontSize,
             }}>
               {profile.trainer_name}
             </div>
@@ -360,10 +402,10 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Start Date - Top Right */}
             <div style={{ 
               position: 'absolute',
-              top: '50px',
-              right: '30px',
+              top: isSmallMobile ? '35px' : isMobile ? '45px' : '50px',
+              right: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'black',
-              fontSize: '15px',
+              fontSize: styles.dateFontSize,
               textAlign: 'right',
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
@@ -373,10 +415,10 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Summit Date - Above Total XP */}
             <div style={{ 
               position: 'absolute',
-              bottom: '430px',
-              left: '30px',
+              bottom: isSmallMobile ? '280px' : isMobile ? '320px' : '430px',
+              left: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'red',
-              fontSize: '24px',
+              fontSize: styles.summitDateFontSize,
               fontWeight: 'bold',
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
@@ -386,13 +428,13 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
             {/* Total XP - Bottom Left */}
             <div style={{ 
               position: 'absolute',
-              bottom: '100px',
-              left: '30px',
+              bottom: isSmallMobile ? '70px' : isMobile ? '80px' : '100px',
+              left: isSmallMobile ? '20px' : isMobile ? '25px' : '30px',
               color: 'white',
-              fontSize: '12px',
+              fontSize: styles.statLabelFontSize,
               textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
             }}>
-              <div style={{ fontSize: '30px', fontWeight: 'bold', color: 'white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
+              <div style={{ fontSize: styles.totalXPFontSize, fontWeight: 'bold', color: 'white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
             </div>
           </div>
         )
@@ -489,8 +531,8 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       </div>
 
       {/* Card Preview */}
-      <div className="card-preview-container">
-        <div ref={cardRef} className="card-container">
+      <div className="card-preview-container"  style={{backgroundColor: 'green'}}>
+        <div ref={cardRef} className="card-container" style={{backgroundColor: 'red'}}>
           {renderCard()}
         </div>
       </div>

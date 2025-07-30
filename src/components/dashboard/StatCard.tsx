@@ -17,7 +17,7 @@ interface StatCardProps {
     stopsPerDay?: number
   }
   onDownloadComplete?: () => void
-  cardType: 'grind' | 'community'
+  cardType: 'grind' | 'grind-stats' | 'community'
 }
 
 const formatNumber = (num: number | undefined) => {
@@ -86,9 +86,9 @@ const StatCard = ({ result, onDownloadComplete, cardType }: StatCardProps) => {
         <div className="results-header-content">
           <div className="results-title-wrapper">
             <span className="results-type-icon">
-              {cardType === 'grind' ? '📈' : '🎉'}
+              {cardType === 'grind' || cardType === 'grind-stats' ? '📈' : '🎉'}
             </span>
-            <h3>{cardType === 'grind' ? 'Grind Stats' : 'Community Day Stats'}</h3>
+            <h3>{cardType === 'grind' ? 'Grind Stats' : cardType === 'grind-stats' ? 'Daily Averages' : 'Community Day Stats'}</h3>
           </div>
           <div className="date-range">
             <span className="date-icon">📅</span>
@@ -97,6 +97,10 @@ const StatCard = ({ result, onDownloadComplete, cardType }: StatCardProps) => {
                 {result.startDate && result.endDate && (
                   `${formatDate(result.startDate)} - ${formatDate(result.endDate)}`
                 )}
+              </>
+            ) : cardType === 'grind-stats' ? (
+              <>
+                <span>Daily Averages</span>
               </>
             ) : (
               <>
@@ -140,7 +144,7 @@ const StatCard = ({ result, onDownloadComplete, cardType }: StatCardProps) => {
       </div>
 
       {/* Daily Averages - Only show for grind stats */}
-      {cardType === 'grind' && (
+      {(cardType === 'grind' || cardType === 'grind-stats') && (
         <div className="daily-averages">
           <div className="daily-averages-header">
             <span className="daily-icon">📊</span>

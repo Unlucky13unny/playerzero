@@ -119,7 +119,8 @@ export const QuickProfileView = ({
             <div className="quick-profile-info">
               <h3>{profileData.trainer_name}</h3>
               <div className="quick-profile-meta">
-                <span className="team-badge" style={{ backgroundColor: getTeamColor(profileData.team_color) }}>
+                <span className="team-badge">
+                  <div className="team-color-circle" style={{ backgroundColor: getTeamColor(profileData.team_color) }}></div>
                   {getTeamName(profileData.team_color)}
                 </span>
                 <span className="level-badge">Level {profileData.trainer_level}</span>
@@ -149,17 +150,6 @@ export const QuickProfileView = ({
               <span className="stat-value">{formatXP(profileData.total_xp)}</span>
             </div>
           </div>
-
-          {/* Screenshot Preview */}
-          {profileData.profile_screenshot_url && (
-            <div className="quick-profile-screenshot">
-              <img 
-                src={profileData.profile_screenshot_url} 
-                alt="Profile Screenshot" 
-                className="preview-image"
-              />
-            </div>
-          )}
 
           {/* Footer */}
           <div className="quick-profile-footer">

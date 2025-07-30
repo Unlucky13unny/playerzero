@@ -362,6 +362,65 @@ export const dashboardService = {
     }
   },
 
+  // Calculate grind stats from start date to current day
+  async calculateGrindStats(): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile to find start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date, total_xp, pokemon_caught, distance_walked, pokestops_visited, unique_pokedex_entries')
+        .eq('user_id', user.id)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      if (!profile.start_date) {
+        throw new Error('Start date not set in profile')
+      }
+
+      // Calculate days from start date to current day
+      const startDate = new Date(profile.start_date)
+      const currentDate = new Date()
+      const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+
+      // Use current total stats (not delta between dates)
+      const totalXP = profile.total_xp || 0
+      const pokemonCaught = profile.pokemon_caught || 0
+      const distanceWalked = profile.distance_walked || 0
+      const pokestopsVisited = profile.pokestops_visited || 0
+      const uniquePokedexEntries = profile.unique_pokedex_entries || 0
+
+      // Calculate daily averages
+      const xpPerDay = Math.round(totalXP / daysPlayed)
+      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
+      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay,
+        catchesPerDay,
+        distancePerDay,
+        stopsPerDay,
+        startDate: profile.start_date,
+        endDate: currentDate.toISOString().split('T')[0]
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
   // Get Community Day stats for a specific date
   async getCommunityDayStats(date: string): Promise<StatCalculationResult> {
     try {

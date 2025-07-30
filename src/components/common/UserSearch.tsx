@@ -153,7 +153,7 @@ export const UserSearch = () => {
                       onClick={(e) => handlePreviewClick(e, profile.id)}
                       title={trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles"}
                     >
-                      {selectedProfile === profile.id ? 'Hide Preview' : 'Preview Profile'}
+                      {selectedProfile === profile.id ? 'Hide Preview' : 'Profile'}
                     </button>
                   </div>
                 </div>
