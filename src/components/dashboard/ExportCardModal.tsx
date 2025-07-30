@@ -426,7 +426,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
       case 'achievement':
         return (
           <div className="card-template achievement-card" style={{ 
-            backgroundImage: 'url(/images/achieved.png)',
+            backgroundImage: '/images/achieved.png',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
