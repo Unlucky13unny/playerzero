@@ -1,8 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
-import { calculateSummitDate } from '../../utils/calculations'
-import type { ProfileWithMetadata } from '../../types/profile'
+import { calculateSummitDate, type ProfileWithMetadata } from '../../services/profileService'
 
 interface VisualExportProps {
   profile: ProfileWithMetadata
@@ -531,8 +530,21 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
       </div>
 
       {/* Card Preview */}
-      <div className="card-preview-container"  style={{backgroundColor: 'green'}}>
-        <div ref={cardRef} className="card-container" style={{backgroundColor: 'red'}}>
+      <div className="card-preview-container" style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: isSmallMobile ? '10px' : isMobile ? '15px' : '20px',
+        minHeight: isSmallMobile ? '450px' : isMobile ? '500px' : '600px',
+        overflow: 'hidden'
+      }}>
+        <div ref={cardRef} className="card-container" style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          width: '100%',
+          height: '100%'
+        }}>
           {renderCard()}
         </div>
       </div>

@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { RadarChart } from './RadarChart';
 import { ExportCardModal } from './ExportCardModal';
-import { type ProfileWithMetadata, calculateSummitDate } from '../../services/profileService';
+import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
 

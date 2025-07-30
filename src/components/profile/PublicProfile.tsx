@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { profileService, type PublicProfileData, calculateSummitDate } from '../../services/profileService'
+import { profileService, type PublicProfileData } from '../../services/profileService'
 import { dashboardService } from '../../services/dashboardService'
 import { RadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
