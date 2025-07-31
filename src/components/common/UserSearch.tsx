@@ -98,32 +98,16 @@ export const UserSearch = () => {
                   className="table-row"
                 >
                   <div className="table-cell trainer">
-                    {profile.profile_screenshot_url ? (
-                      <img
-                        src={profile.profile_screenshot_url}
-                        alt={profile.trainer_name}
-                        className="trainer-avatar"
-                        onClick={(e) => handlePreviewClick(e, profile.id)}
-                        style={{
-                          cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
-                          opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
-                        }}
-                      />
-                    ) : (
-                      <div 
-                        className="person-icon" 
-                        onClick={(e) => handlePreviewClick(e, profile.id)}
-                        style={{
-                          cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
-                          opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
-                        }}
-                      >
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                          <circle cx="12" cy="7" r="4" />
-                        </svg>
-                      </div>
-                    )}
+                    <div 
+                      className="person-icon" 
+                      onClick={(e) => handlePreviewClick(e, profile.id)}
+                      style={{
+                        cursor: trialStatus.canClickIntoProfiles ? 'pointer' : 'default',
+                        opacity: trialStatus.canClickIntoProfiles ? 1 : 0.6
+                      }}
+                    >
+                      <span style={{ fontSize: '24px' }}>👤</span>
+                    </div>
                     <span 
                       className="trainer-name"
                       onClick={(e) => handlePreviewClick(e, profile.id)}

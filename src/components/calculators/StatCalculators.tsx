@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { dashboardService, type StatCalculationResult } from '../../services/dashboardService'
 import StatCard from '../dashboard/StatCard'
 
-type CalculatorType = 'grind' | 'grind-stats' | 'community'
+type CalculatorType = 'grind' | 'community'
 
 interface StatCalculatorsProps {
   initialCalculator?: CalculatorType
@@ -43,20 +43,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
       setResult(calculation)
     } catch (err: any) {
       setError(err.message || 'Failed to calculate stats')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGrindStatsCalculation = async () => {
-    setLoading(true)
-    setError(null)
-
-    try {
-      const calculation = await dashboardService.calculateGrindStats()
-      setResult(calculation)
-    } catch (err: any) {
-      setError(err.message || 'Failed to calculate grind stats')
     } finally {
       setLoading(false)
     }
@@ -133,18 +119,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
           <span className="calc-icon">📈</span>
           <div className="calc-tab-content">
             <span className="calc-tab-title">Grind Stats</span>          </div>
-        </button>
-        <button
-          className={`calc-tab ${calculatorType === 'grind-stats' ? 'active' : ''}`}
-          onClick={() => {
-            setCalculatorType('grind-stats')
-            clearResults()
-          }}
-        >
-          <span className="calc-icon">📊</span>
-          <div className="calc-tab-content">
-            <span className="calc-tab-title">B. Grind Stats</span>
-          </div>
         </button>
         <button
           className={`calc-tab ${calculatorType === 'community' ? 'active' : ''}`}
@@ -272,101 +246,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
                     <div className="stat-item">
                       <div className="stat-label">Pokestops Visited</div>
                       <div className="stat-value">{formatNumber(result.pokestopsVisited)}</div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Hidden StatCard component for image generation */}
-                {downloading && (
-                  <StatCard
-                    result={result}
-                    onDownloadComplete={handleDownloadComplete}
-                    cardType={calculatorType}
-                  />
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {calculatorType === 'grind-stats' && (
-          <div className="grind-stats-calculator">
-            <div className="calc-card">
-              <div className="calc-card-header">
-                <div className="calc-card-icon">📊</div>
-                <div className="calc-card-info">
-                  <h3>B. Grind Stats</h3>
-                  <p>Calculate daily averages from your start date to current day</p>
-                </div>
-              </div>
-
-              <div className="date-inputs">
-                <div className="info-message">
-                  <span className="info-icon">ℹ️</span>
-                  <span>Uses your profile start date to calculate daily averages</span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleGrindStatsCalculation}
-                disabled={loading}
-                className="calc-button primary"
-              >
-                {loading ? (
-                  <>
-                    <div className="loading-spinner"></div>
-                    <span>Calculating...</span>
-                  </>
-                ) : (
-                  <>
-                    <span className="button-icon">🚀</span>
-                    <span>Generate Grind Stats</span>
-                  </>
-                )}
-              </button>
-            </div>
-
-            {/* Results Section */}
-            {result && (
-              <div className="results-section">
-                <div className="results-preview">
-                  <div className="preview-header">
-                    <h3>Daily Averages</h3>
-                    <button 
-                      className="download-button"
-                      onClick={handleDownload}
-                      disabled={downloading}
-                    >
-                      {downloading ? (
-                        <>
-                          <span className="button-icon">⏳</span>
-                          <span>Generating...</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="button-icon">⬇️</span>
-                          <span>Download Card</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="stats-grid">
-                    <div className="stat-item">
-                      <div className="stat-label">Average XP per Day</div>
-                      <div className="stat-value">{formatNumber(result.xpPerDay)}</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Average Pokemon Caught per Day</div>
-                      <div className="stat-value">{formatNumber(result.catchesPerDay)}</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Average Distance Walked per Day</div>
-                      <div className="stat-value">{result.distancePerDay.toFixed(1)}km</div>
-                    </div>
-                    <div className="stat-item">
-                      <div className="stat-label">Average Pokestops Visited per Day</div>
-                      <div className="stat-value">{formatNumber(result.stopsPerDay)}</div>
                     </div>
                   </div>
                 </div>

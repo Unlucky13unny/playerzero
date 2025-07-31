@@ -374,7 +374,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
         const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
         return (
           <div className="card-template summit-card" style={{ 
-            backgroundImage: '/images/summit.png',
+            backgroundImage: 'url(/images/summit.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',

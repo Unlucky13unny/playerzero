@@ -4,7 +4,7 @@ import html2canvas from 'html2canvas'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import type { ProfileWithMetadata } from '../../services/profileService'
 import { calculateSummitDate } from '../../services/profileService'
-import { FaDownload, FaShare, FaTimes, FaTwitter, FaFacebook, FaWhatsapp, FaTelegram } from 'react-icons/fa'
+import { FaDownload, FaShare, FaTimes, FaTwitter, FaFacebook, FaWhatsapp, FaTelegram, FaCopy } from 'react-icons/fa'
 
 interface ExportCardModalProps {
   isOpen: boolean
@@ -426,7 +426,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
       case 'achievement':
         return (
           <div className="card-template achievement-card" style={{ 
-            backgroundImage: '/images/achieved.png',
+            backgroundImage: 'url(/images/achieved.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -705,7 +705,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
                 className="social-button copy-link"
                 title="Copy Link"
               >
-                <FaShare />
+                <FaCopy />
                 <span>Copy Link</span>
               </button>
             </div>

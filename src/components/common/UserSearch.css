@@ -125,11 +125,12 @@
   align-items: center;
   justify-content: center;
   color: var(--gray-light);
+  font-size: 24px;
 }
 
-.person-icon svg {
-  width: 24px;
-  height: 24px;
+.person-icon span {
+  font-size: 24px;
+  line-height: 1;
 }
 
 .trainer-name {
@@ -507,9 +508,8 @@
     height: 32px;
   }
 
-  .person-icon svg {
-    width: 20px;
-    height: 20px;
+  .person-icon span {
+    font-size: 20px;
   }
 
   .trainer-name {
@@ -625,9 +625,8 @@
     border-radius: 6px;
   }
 
-  .person-icon svg {
-    width: 16px;
-    height: 16px;
+  .person-icon span {
+    font-size: 16px;
   }
 
   .trainer-name {
@@ -779,9 +778,8 @@
     height: 24px;
   }
 
-  .person-icon svg {
-    width: 14px;
-    height: 14px;
+  .person-icon span {
+    font-size: 14px;
   }
 
   .trainer-name {
