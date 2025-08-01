@@ -1037,6 +1037,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  text-align: left;
 }
 
 /* Profile Header */
@@ -1404,6 +1405,15 @@ body {
   .trainer-code-badge .code-value {
     max-width: none;
     font-size: 0.875rem;
+  }
+  
+  /* Special mobile styling for summit badge */
+  .summit-badge .summit-date {
+    max-width: none;
+    font-size: 0.8rem;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
   }
 
   .team-badge .team-color-circle,
@@ -2306,7 +2316,7 @@ body {
   display: flex;
   gap: 1rem;
   margin: 0 2rem;
-  justify-content: flex-end;
+
   flex: 1;
 }
 
@@ -8732,8 +8742,8 @@ body {
   width: 100%;
   max-width: 1200px;
   height: 48px;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8747,6 +8757,10 @@ body {
 .country-badge {
   background: rgba(255, 255, 255, 0.1);
   color: var(--white-pure);
+}
+
+.country-badge .country-icon {
+  margin-left: 15px;
 }
 
 .summit-badge {
@@ -8770,6 +8784,16 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 120px;
+  text-align: left;
+}
+
+/* Special styling for summit badge to accommodate longer text */
+.summit-badge .summit-date {
+  max-width: 200px;
+  font-size: var(--font-xs);
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
 }
 
 /* Badge icon styling for consistent sizing */
@@ -8788,8 +8812,9 @@ body {
 
 .team-badge .team-color-circle {
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  margin-left: 20px;
 }
 
 .team-badge:hover, .country-badge:hover, .summit-badge:hover, .trainer-code-badge:hover {
@@ -9484,3 +9509,30 @@ body {
     min-height: 250px;
   }
 }
+
+/* Grind Chart Section */
+.grind-chart-section {
+  background: var(--black-card);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--gray-darker);
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .grind-chart-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grind-chart-section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+}
+
+/* Profile Card Table Layout */
+@import url('./profile-card.css');

@@ -421,6 +421,343 @@ export const dashboardService = {
     }
   },
 
+  // Calculate grind stats for any user by ID
+  async calculateGrindStatsForUser(userId: string): Promise<StatCalculationResult> {
+    try {
+      // Get user's profile to find start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date, total_xp, pokemon_caught, distance_walked, pokestops_visited, unique_pokedex_entries')
+        .eq('user_id', userId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      if (!profile.start_date) {
+        throw new Error('Start date not set in profile')
+      }
+
+      // Calculate days from start date to current day
+      const startDate = new Date(profile.start_date)
+      const currentDate = new Date()
+      const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+
+      // Use current total stats (not delta between dates)
+      const totalXP = profile.total_xp || 0
+      const pokemonCaught = profile.pokemon_caught || 0
+      const distanceWalked = profile.distance_walked || 0
+      const pokestopsVisited = profile.pokestops_visited || 0
+      const uniquePokedexEntries = profile.unique_pokedex_entries || 0
+
+      // Calculate daily averages
+      const xpPerDay = Math.round(totalXP / daysPlayed)
+      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
+      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay,
+        catchesPerDay,
+        distancePerDay,
+        stopsPerDay,
+        startDate: profile.start_date,
+        endDate: currentDate.toISOString().split('T')[0]
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // Calculate weekly grind stats (last 7 days)
+  async calculateWeeklyGrindStats(userId?: string): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const targetUserId = userId || user?.id
+      
+      if (!targetUserId) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile to check start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date')
+        .eq('user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(endDate.getDate() - 7)
+
+      const endDateStr = endDate.toISOString().split('T')[0]
+
+      // Check if user's start date is after our calculated start date
+      // If so, use the user's start date instead
+      const userStartDate = new Date(profile.start_date)
+      const adjustedStartDate = userStartDate > startDate ? userStartDate : startDate
+      const adjustedStartDateStr = adjustedStartDate.toISOString().split('T')[0]
+
+      const { data, error } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('entry_date', adjustedStartDateStr)
+        .lte('entry_date', endDateStr)
+        .order('entry_date', { ascending: true })
+
+      if (error) {
+        throw new Error('Failed to fetch weekly stat entries')
+      }
+
+      let firstEntry, lastEntry
+
+      if (!data || data.length === 0) {
+        // No data in the period, try to get any available data
+        const { data: allData, error: allError } = await supabase
+          .from('stat_entries')
+          .select('*')
+          .eq('user_id', targetUserId)
+          .order('entry_date', { ascending: true })
+
+        if (allError || !allData || allData.length === 0) {
+          return {
+            totalXP: 0,
+            pokemonCaught: 0,
+            distanceWalked: 0,
+            pokestopsVisited: 0,
+            uniquePokedexEntries: 0,
+            xpPerDay: 0,
+            catchesPerDay: 0,
+            distancePerDay: 0,
+            stopsPerDay: 0,
+            startDate: adjustedStartDateStr,
+            endDate: endDateStr
+          }
+        }
+
+        // Use the first and last available entries
+        firstEntry = allData[0]
+        lastEntry = allData[allData.length - 1]
+      } else if (data.length === 1) {
+        // Only one entry in the period, use it for both first and last
+        firstEntry = data[0]
+        lastEntry = data[0]
+      } else {
+        // Multiple entries, use first and last
+        firstEntry = data[0]
+        lastEntry = data[data.length - 1]
+      }
+
+      // For weekly stats, use the actual 7-day period, not just the days between entries
+      const actualDaysDiff = getDaysDifference(adjustedStartDateStr, endDateStr)
+
+      const totalXP = Math.max(0, lastEntry.total_xp - firstEntry.total_xp)
+      const pokemonCaught = Math.max(0, lastEntry.pokemon_caught - firstEntry.pokemon_caught)
+      const distanceWalked = Math.max(0, lastEntry.distance_walked - firstEntry.distance_walked)
+      const pokestopsVisited = Math.max(0, lastEntry.pokestops_visited - firstEntry.pokestops_visited)
+      const uniquePokedexEntries = Math.max(0, lastEntry.unique_pokedex_entries - firstEntry.unique_pokedex_entries)
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / actualDaysDiff),
+        catchesPerDay: Math.round(pokemonCaught / actualDaysDiff),
+        distancePerDay: Math.round((distanceWalked / actualDaysDiff) * 10) / 10,
+        stopsPerDay: Math.round(pokestopsVisited / actualDaysDiff),
+        startDate: adjustedStartDateStr,
+        endDate: endDateStr
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // Calculate monthly grind stats (last 30 days)
+  async calculateMonthlyGrindStats(userId?: string): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const targetUserId = userId || user?.id
+      
+      if (!targetUserId) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile to check start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date')
+        .eq('user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      const endDate = new Date()
+      const startDate = new Date()
+      startDate.setDate(endDate.getDate() - 30)
+
+      const endDateStr = endDate.toISOString().split('T')[0]
+
+      // Check if user's start date is after our calculated start date
+      // If so, use the user's start date instead
+      const userStartDate = new Date(profile.start_date)
+      const adjustedStartDate = userStartDate > startDate ? userStartDate : startDate
+      const adjustedStartDateStr = adjustedStartDate.toISOString().split('T')[0]
+
+      const { data, error } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('entry_date', adjustedStartDateStr)
+        .lte('entry_date', endDateStr)
+        .order('entry_date', { ascending: true })
+
+      if (error) {
+        throw new Error('Failed to fetch monthly stat entries')
+      }
+
+      let firstEntry, lastEntry
+
+      if (!data || data.length === 0) {
+        // No data in the period, try to get any available data
+        const { data: allData, error: allError } = await supabase
+          .from('stat_entries')
+          .select('*')
+          .eq('user_id', targetUserId)
+          .order('entry_date', { ascending: true })
+
+        if (allError || !allData || allData.length === 0) {
+          return {
+            totalXP: 0,
+            pokemonCaught: 0,
+            distanceWalked: 0,
+            pokestopsVisited: 0,
+            uniquePokedexEntries: 0,
+            xpPerDay: 0,
+            catchesPerDay: 0,
+            distancePerDay: 0,
+            stopsPerDay: 0,
+            startDate: adjustedStartDateStr,
+            endDate: endDateStr
+          }
+        }
+
+        // Use the first and last available entries
+        firstEntry = allData[0]
+        lastEntry = allData[allData.length - 1]
+      } else if (data.length === 1) {
+        // Only one entry in the period, use it for both first and last
+        firstEntry = data[0]
+        lastEntry = data[0]
+      } else {
+        // Multiple entries, use first and last
+        firstEntry = data[0]
+        lastEntry = data[data.length - 1]
+      }
+
+      // For monthly stats, use the actual 30-day period, not just the days between entries
+      const actualDaysDiff = getDaysDifference(adjustedStartDateStr, endDateStr)
+
+      const totalXP = Math.max(0, lastEntry.total_xp - firstEntry.total_xp)
+      const pokemonCaught = Math.max(0, lastEntry.pokemon_caught - firstEntry.pokemon_caught)
+      const distanceWalked = Math.max(0, lastEntry.distance_walked - firstEntry.distance_walked)
+      const pokestopsVisited = Math.max(0, lastEntry.pokestops_visited - firstEntry.pokestops_visited)
+      const uniquePokedexEntries = Math.max(0, lastEntry.unique_pokedex_entries - firstEntry.unique_pokedex_entries)
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / actualDaysDiff),
+        catchesPerDay: Math.round(pokemonCaught / actualDaysDiff),
+        distancePerDay: Math.round((distanceWalked / actualDaysDiff) * 10) / 10,
+        stopsPerDay: Math.round(pokestopsVisited / actualDaysDiff),
+        startDate: adjustedStartDateStr,
+        endDate: endDateStr
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // Calculate all-time grind stats (from start date to current)
+  async calculateAllTimeGrindStats(userId?: string): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const targetUserId = userId || user?.id
+      
+      if (!targetUserId) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile to find start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date, total_xp, pokemon_caught, distance_walked, pokestops_visited, unique_pokedex_entries')
+        .eq('user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      if (!profile.start_date) {
+        throw new Error('Start date not set in profile')
+      }
+
+      // Calculate days from start date to current day
+      const startDate = new Date(profile.start_date)
+      const currentDate = new Date()
+      const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+
+      // Use current total stats (not delta between dates)
+      const totalXP = profile.total_xp || 0
+      const pokemonCaught = profile.pokemon_caught || 0
+      const distanceWalked = profile.distance_walked || 0
+      const pokestopsVisited = profile.pokestops_visited || 0
+      const uniquePokedexEntries = profile.unique_pokedex_entries || 0
+
+      // Calculate daily averages
+      const xpPerDay = Math.round(totalXP / daysPlayed)
+      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
+      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked,
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay,
+        catchesPerDay,
+        distancePerDay,
+        stopsPerDay,
+        startDate: profile.start_date,
+        endDate: currentDate.toISOString().split('T')[0]
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
   // Get Community Day stats for a specific date
   async getCommunityDayStats(date: string): Promise<StatCalculationResult> {
     try {
@@ -852,5 +1189,7 @@ function getDaysDifference(start: string, end: string): number {
   const startDate = new Date(start)
   const endDate = new Date(end)
   const diffTime = Math.abs(endDate.getTime() - startDate.getTime())
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  const daysDiff = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  // Ensure we never return 0 to prevent division by zero
+  return Math.max(1, daysDiff)
 } 

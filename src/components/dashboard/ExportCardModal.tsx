@@ -316,6 +316,18 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
       year: 'numeric' 
     })
 
+    // Use mobile responsive cards for mobile devices
+    if (isMobile || isSmallMobile) {
+      return renderMobileCard(startDate)
+    } else {
+      // Use separate web cards for desktop
+      return renderWebCard(startDate)
+    }
+  }
+
+  const renderMobileCard = (startDate: string) => {
+    if (!profile) return null
+
     switch (cardType) {
       case 'all-time':
         return (
@@ -551,9 +563,249 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
     }
   }
 
+  const renderWebCard = (startDate: string) => {
+    if (!profile) return null
+
+    switch (cardType) {
+      case 'all-time':
+        return (
+          <div className="card-template all-time-card web-card" style={{ 
+            backgroundImage: 'url(/images/grind.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '400px',
+            height: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
+            {/* Web All-Time Card - You can adjust text positioning here later */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '20px',
+              color: 'black',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {profile.trainer_name}
+            </div>
+            
+            <div style={{ 
+              position: 'absolute',
+              top: '55px',
+              right: '30px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
+            </div>
+
+            {/* Bottom Left Stats */}
+             <div style={{ 
+               position: 'absolute',
+               top: '310px',
+               bottom: '90px',
+               left: '30px',
+               fontSize: '10px'
+             }}>
+               <div style={{ marginBottom: '15px' }}>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Pokemon Caught</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokemon_caught || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
+               <div style={{ marginBottom: '15px' }}>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Distance Walked</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.distance_walked || 0).toLocaleString()} km</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
+               <div style={{ marginBottom: '5px' }}>
+                 <div style={{ 
+                   color: 'black', 
+                   textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+                 }}>Pokestops Visited</div>
+                 <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.pokestops_visited || 0).toLocaleString()}</div>
+                 <div style={{ fontSize: '12px', color: 'red'}}>{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+               </div>
+             </div>
+
+                         {/* Bottom Right Stats */}
+             <div style={{ 
+               position: 'absolute',
+               top: '350px',
+               bottom: '80px',
+               right: '20px',
+               fontSize: '20px',
+               textAlign: 'right'
+             }}>
+               <div style={{ 
+                 color: 'black', 
+                 textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
+               }}>Total XP</div>
+               <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'red'}}>{(profile.total_xp || 0).toLocaleString()}</div>
+               <div style={{ fontSize: '12px', color: 'red'}}>{(dailyXPRate).toFixed(2)} /Day</div>
+             </div>
+             
+             {/* All-time Label */}
+             <div style={{ 
+               position: 'absolute',
+               top: '300px',
+               bottom: '45px',
+               right: '35px',
+               color: 'white',
+               fontSize: '20px',
+               fontWeight: 'bold',
+             }}>
+               All-time
+             </div>
+           </div>
+         )
+
+      case 'achievement':
+        return (
+          <div className="card-template achievement-card web-card" style={{ 
+            backgroundImage: 'url(/images/achieved.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '400px',
+            height: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
+            {/* Web Achievement Card - You can adjust text positioning here later */}
+            {/* Trainer Name - Top Left */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '30px',
+              color: 'black',
+              fontWeight: 'bold',
+              fontSize: '18px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {profile.trainer_name}
+            </div>
+            
+            {/* Start Date - Top Right */}
+            <div style={{ 
+              position: 'absolute',
+              top: '55px',
+              right: '30px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
+            </div>
+
+            {/* Total XP - Bottom Left */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '90px',
+              left: '25px',
+              color: 'red',
+              fontSize: '12px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontSize: '34px', fontWeight: 'bold', color: 'white', textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
+            </div>
+          </div>
+        )
+
+      case 'summit':
+        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
+        return (
+          <div className="card-template summit-card web-card" style={{ 
+            backgroundImage: 'url(/images/summit.png)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            position: 'relative',
+            width: '400px',
+            height: '600px',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            overflow: 'hidden'
+          }}>
+            {/* Web Summit Card - You can adjust text positioning here later */}
+            {/* Trainer Name - Top Left */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              left: '30px',
+              color: 'white',
+              fontWeight: 'bold',
+              fontSize: '18px',
+            }}>
+              {profile.trainer_name}
+            </div>
+            
+            {/* Start Date - Top Right */}
+            <div style={{ 
+              position: 'absolute',
+              top: '50px',
+              right: '20px',
+              color: 'black',
+              fontSize: '15px',
+              textAlign: 'right',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontWeight: 'bold' }}>{startDate}</div>
+            </div>
+
+            {/* Summit Date - Above Total XP */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '400px',
+              left: '20px',
+              color: 'red',
+              fontSize: '24px',
+              fontWeight: 'bold',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              {summitDate}
+            </div>
+
+            {/* Total XP - Bottom Left */}
+            <div style={{ 
+              position: 'absolute',
+              bottom: '100px',
+              left: '30px',
+              color: 'white',
+              fontSize: '12px',
+              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+            }}>
+              <div style={{ fontSize: '20px', fontWeight: 'bold', color: 'white' }}>{(profile.total_xp || 0).toLocaleString()}</div>
+            </div>
+          </div>
+        )
+
+      default:
+        return null
+    }
+  }
+
   return (
     <div className="export-modal-overlay" onClick={onClose}>
-      <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
+      <div className={`export-modal-content ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`} onClick={(e) => e.stopPropagation()}>
         <div className="export-modal-header">
           <h2>📤 Create Cards</h2>
           <button className="modal-close-button" onClick={onClose}>
@@ -608,31 +860,18 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
         </div>
 
         {/* Card Preview */}
-        <div className="card-preview-container" style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: isSmallMobile ? '10px' : isMobile ? '15px' : '20px',
-          minHeight: isSmallMobile ? '450px' : isMobile ? '500px' : '600px',
-          overflow: 'hidden'
-        }}>
-          <div ref={cardRef} className="card-container" style={{
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            width: '100%',
-            height: '100%'
-          }}>
+        <div className={`card-preview-container ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}>
+          <div ref={cardRef} className={`card-container ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}>
             {renderCard()}
           </div>
         </div>
 
         {/* Export Actions */}
-        <div className="export-actions">
+        <div className={`export-actions ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}>
           <button
             onClick={exportCard}
             disabled={exporting || !isCardTypeAllowed(cardType)}
-            className="export-button download-button"
+            className={`export-button download-button ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
             style={{
               opacity: (!isCardTypeAllowed(cardType)) ? 0.5 : 1,
               cursor: (!isCardTypeAllowed(cardType)) ? 'not-allowed' : 'pointer'
@@ -651,7 +890,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
           
           <button
             onClick={() => setShowShareOptions(!showShareOptions)}
-            className="export-button share-button"
+            className={`export-button share-button ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
             disabled={!isCardTypeAllowed(cardType)}
             style={{
               opacity: (!isCardTypeAllowed(cardType)) ? 0.5 : 1,
@@ -665,12 +904,12 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
 
         {/* Social Media Share Options */}
         {showShareOptions && (
-          <div className="social-share-options">
+          <div className={`social-share-options ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}>
             <h3>Share to Social Media</h3>
-            <div className="social-buttons">
+            <div className={`social-buttons ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}>
               <button
                 onClick={() => shareToSocialMedia('twitter')}
-                className="social-button twitter"
+                className={`social-button twitter ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
                 title="Share on Twitter"
               >
                 <FaTwitter />
@@ -678,7 +917,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
               </button>
               <button
                 onClick={() => shareToSocialMedia('facebook')}
-                className="social-button facebook"
+                className={`social-button facebook ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
                 title="Share on Facebook"
               >
                 <FaFacebook />
@@ -686,7 +925,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
               </button>
               <button
                 onClick={() => shareToSocialMedia('whatsapp')}
-                className="social-button whatsapp"
+                className={`social-button whatsapp ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
                 title="Share on WhatsApp"
               >
                 <FaWhatsapp />
@@ -694,7 +933,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
               </button>
               <button
                 onClick={() => shareToSocialMedia('telegram')}
-                className="social-button telegram"
+                className={`social-button telegram ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
                 title="Share on Telegram"
               >
                 <FaTelegram />
@@ -702,7 +941,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
               </button>
               <button
                 onClick={() => shareToSocialMedia('copy-link')}
-                className="social-button copy-link"
+                className={`social-button copy-link ${isMobile || isSmallMobile ? 'mobile-view' : 'web-view'}`}
                 title="Copy Link"
               >
                 <FaCopy />

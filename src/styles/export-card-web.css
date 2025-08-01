@@ -1,0 +1,228 @@
+/* Export Card Modal - Web Styles */
+/* This file contains styles specifically for web/desktop view of export cards */
+
+/* Web Card Template Styles */
+.card-template.web-card {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  width: 400px;
+  height: 600px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+/* Web All-Time Card */
+.card-template.all-time-card.web-card {
+  background-image: url(/images/grind.png);
+}
+
+/* Web Achievement Card */
+.card-template.achievement-card.web-card {
+  background-image: url(/images/achieved.png);
+}
+
+/* Web Summit Card */
+.card-template.summit-card.web-card {
+  background-image: url(/images/summit.png);
+}
+
+/* Web Card Text Positioning - All-Time Card */
+.web-card .trainer-name {
+  position: absolute;
+  top: 50px;
+  left: 20px;
+  color: black;
+  font-weight: bold;
+  font-size: 18px;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card .start-date {
+  position: absolute;
+  top: 55px;
+  right: 30px;
+  color: black;
+  font-size: 15px;
+  text-align: right;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card .start-date div {
+  font-weight: bold;
+}
+
+/* Web Card Stats - All-Time Card */
+.web-card .bottom-left-stats {
+  position: absolute;
+  top: 231px;
+  bottom: 90px;
+  left: 30px;
+  font-size: 10px;
+}
+
+.web-card .stat-item {
+  margin-bottom: 15px;
+}
+
+.web-card .stat-item:last-child {
+  margin-bottom: 5px;
+}
+
+.web-card .stat-label {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card .stat-value {
+  font-size: 20px;
+  font-weight: bold;
+  color: red;
+}
+
+.web-card .stat-daily {
+  font-size: 12px;
+  color: red;
+}
+
+/* Web Card Bottom Right Stats - All-Time Card */
+.web-card .bottom-right-stats {
+  position: absolute;
+  top: 270px;
+  bottom: 80px;
+  right: 60px;
+  font-size: 20px;
+  text-align: right;
+}
+
+.web-card .bottom-right-stats .stat-label {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+/* Web Card All-Time Label */
+.web-card .all-time-label {
+  position: absolute;
+  top: 220px;
+  bottom: 45px;
+  right: 35px;
+  color: white;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Web Card Achievement Styles */
+.web-card.achievement-card .trainer-name {
+  top: 50px;
+  left: 30px;
+}
+
+.web-card.achievement-card .start-date {
+  top: 55px;
+  right: 30px;
+}
+
+.web-card.achievement-card .total-xp {
+  position: absolute;
+  bottom: 90px;
+  left: 25px;
+  color: red;
+  font-size: 12px;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card.achievement-card .total-xp div {
+  font-size: 34px;
+  font-weight: bold;
+  color: white;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+/* Web Card Summit Styles */
+.web-card.summit-card .trainer-name {
+  top: 50px;
+  left: 30px;
+  color: white;
+}
+
+.web-card.summit-card .start-date {
+  top: 50px;
+  right: 30px;
+}
+
+.web-card.summit-card .summit-date {
+  position: absolute;
+  bottom: 300px;
+  left: 30px;
+  color: red;
+  font-size: 24px;
+  font-weight: bold;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card.summit-card .total-xp {
+  position: absolute;
+  bottom: 100px;
+  left: 30px;
+  color: white;
+  font-size: 12px;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.web-card.summit-card .total-xp div {
+  font-size: 20px;
+  font-weight: bold;
+  color: white;
+}
+
+/* Web Modal Container Styles */
+.export-modal-content.web-view {
+  max-width: 800px;
+  max-height: 90vh;
+}
+
+.card-preview-container.web-view {
+  padding: 20px;
+  min-height: 650px;
+}
+
+.card-container.web-view {
+  width: 400px;
+  height: 600px;
+  overflow: visible;
+}
+
+/* Web Export Actions */
+.export-actions.web-view {
+  flex-direction: row;
+  gap: 1rem;
+  padding: 1.5rem;
+}
+
+.export-button.web-view {
+  padding: 1rem 2rem;
+  font-size: 1rem;
+}
+
+/* Web Social Share Options */
+.social-share-options.web-view {
+  padding: 1.5rem;
+}
+
+.social-buttons.web-view {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.social-button.web-view {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+.social-button.web-view svg {
+  width: 1.5rem;
+  height: 1.5rem;
+} 

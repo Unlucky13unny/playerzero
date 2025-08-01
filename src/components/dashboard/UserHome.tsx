@@ -3,9 +3,12 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { RadarChart } from './RadarChart';
 import { ExportCardModal } from './ExportCardModal';
+import { GrindChart } from './GrindChart';
 import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
+import { CountryFlag } from '../common/CountryFlag';
+
 
 const TEAM_COLORS = {
   blue: { name: 'Blue', color: '#0074D9', icon: '❄️' },
@@ -72,6 +75,8 @@ export const UserHome = () => {
     }
   };
 
+
+
   if (loading) {
     return (
       <div className="user-home-container">
@@ -125,36 +130,71 @@ export const UserHome = () => {
         <h1>Welcome Back, Trainer!</h1>
       </div>
 
-      {/* Profile Header */}
-      <div className="profile-header">
-        <div className="profile-info">
-          <div className="trainer-level">Level {stats?.trainer_level || 1}</div>
-          <div className="trainer-details">
-            {teamInfo && (
-              <div className="team-badge">
-                <div className="team-color-circle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></div>
-                <span className="team-name">Team {teamInfo.name}</span>
-              </div>
-            )}
-            {stats?.country && (
-              <div className="country-badge">
-                <span className="country-icon">🌍</span>
-                <span className="country-name">{stats.country}</span>
-              </div>
-            )}
-            
-            <div className="summit-badge">
-              <span className="summit-icon">🏔️</span>
-              <span className="summit-date">Summit: 50</span>
-            </div>
-            {stats?.trainer_code && !stats?.trainer_code_private && (
-              <div className="trainer-code-badge">
-                <span className="code-icon">🎮</span>
-                <span className="code-value">{stats.trainer_code}</span>
-              </div>
-            )}
-          </div>
-        </div>
+      {/* Profile Header - New Table Layout */}
+      <div className="profile-card-container">
+      
+        <table className="profile-table" style={{ width:"100%", borderCollapse: "collapse" }}>
+          {/* Row 1: Username (Full width) */}
+          <thead>
+            <tr>
+              <th  colSpan={3} className="username-header">
+                {user?.email?.split('@')[0] || 'Trainer'}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {/* Row 2: Country flag + Team name with rectangle */}
+            <tr>
+              <th className="country-cell">
+                {stats?.country && <CountryFlag countryName={stats.country} size={40} />}
+              </th>
+              <td colSpan={2} className="team-cell">
+                {teamInfo && (
+                  <>
+                    <span className="team-rectangle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></span>
+                    {teamInfo.name} Team
+                  </>
+                )}
+              </td>
+            </tr>
+
+            {/* Row 3: Level + Start Date */}
+            <tr>
+              <th rowSpan={3} className="level-cell">
+                <div className="level-number">{stats?.trainer_level || 1}</div>
+                <div className="level-label">LVL</div>
+              </th>
+              <td className="label-cell">Start Date:</td>
+              <td className="value-cell">
+                {stats?.start_date ? new Date(stats.start_date).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric'
+                }) : 'N/A'}
+              </td>
+            </tr>
+
+            {/* Row 4: 50 Summit */}
+            <tr>
+              <td className="label-cell">50 Summit</td>
+              <td className="value-cell">
+                {(stats?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+              </td>
+            </tr>
+
+            {/* Row 5: Trainer Code */}
+            <tr>
+              <td colSpan={2} className="code-cell">
+                {stats?.trainer_code && !stats?.trainer_code_private ? (
+                  stats.trainer_code.replace(/(.{4})/g, "$1 ").trim()
+                ) : (
+                  'No trainer code'
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Stats Grid */}
@@ -199,6 +239,11 @@ export const UserHome = () => {
             showHeader={false}
           />
         </div>
+      </div>
+
+      {/* Grind Progress Chart */}
+      <div className="grind-chart-section">
+        <GrindChart />
       </div>
 
       {/* Export Card Button */}
