@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
+import { GrindChart } from '../dashboard/GrindChart'
 import { SOCIAL_MEDIA } from '../common/SocialIcons'
 import './UserProfile.css'
 
@@ -586,14 +587,14 @@ export const UserProfile = () => {
             {/* Profile Screenshot */}
             <div className="form-section">
               <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#7c3aed'}}>
+                <span className="form-section-icon" style={{background: '#dc2626'}}>
                   📸
                 </span>
                 Profile Screenshot
               </h3>
               
-              {profile.profile_screenshot_url && !isEditing && (
-                <div style={{ marginBottom: '1rem', textAlign: 'center' }}>
+              {profile.profile_screenshot_url && (
+                <div className="screenshot-container">
                   <img 
                     src={profile.profile_screenshot_url} 
                     alt="Profile Screenshot" 
@@ -649,6 +650,11 @@ export const UserProfile = () => {
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Grind Progress Chart */}
+            <div className="form-section">
+              <GrindChart />
             </div>
 
             {/* Social Media */}

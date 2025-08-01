@@ -1,0 +1,426 @@
+/* Export Card Modal - Mobile Responsive Styles */
+/* This file contains styles specifically for mobile/tablet view of export cards */
+
+/* Mobile Card Template Styles */
+.card-template.mobile-card {
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  position: relative;
+  margin: 0;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+}
+
+/* Mobile All-Time Card */
+.card-template.all-time-card.mobile-card {
+  background-image: url(/images/grind.png);
+}
+
+/* Mobile Achievement Card */
+.card-template.achievement-card.mobile-card {
+  background-image: url(/images/achieved.png);
+}
+
+/* Mobile Summit Card */
+.card-template.summit-card.mobile-card {
+  background-image: url(/images/summit.png);
+}
+
+/* Mobile Card Text Positioning - All-Time Card */
+.mobile-card .trainer-name {
+  position: absolute;
+  color: black;
+  font-weight: bold;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card .start-date {
+  position: absolute;
+  color: black;
+  text-align: right;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card .start-date div {
+  font-weight: bold;
+}
+
+/* Mobile Card Stats - All-Time Card */
+.mobile-card .bottom-left-stats {
+  position: absolute;
+  font-size: 10px;
+}
+
+.mobile-card .stat-item {
+  margin-bottom: 5px;
+}
+
+.mobile-card .stat-item:last-child {
+  margin-bottom: 5px;
+}
+
+.mobile-card .stat-label {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card .stat-value {
+  font-weight: bold;
+  color: red;
+}
+
+.mobile-card .stat-daily {
+  color: red;
+}
+
+/* Mobile Card Bottom Right Stats - All-Time Card */
+.mobile-card .bottom-right-stats {
+  position: absolute;
+  text-align: right;
+}
+
+.mobile-card .bottom-right-stats .stat-label {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+/* Mobile Card All-Time Label */
+.mobile-card .all-time-label {
+  position: absolute;
+  color: white;
+  font-weight: bold;
+}
+
+/* Mobile Card Achievement Styles */
+.mobile-card.achievement-card .trainer-name {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.achievement-card .start-date {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.achievement-card .total-xp {
+  position: absolute;
+  color: red;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.achievement-card .total-xp div {
+  font-weight: bold;
+  color: white;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+/* Mobile Card Summit Styles */
+.mobile-card.summit-card .trainer-name {
+  color: white;
+}
+
+.mobile-card.summit-card .start-date {
+  color: black;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.summit-card .summit-date {
+  position: absolute;
+  color: red;
+  font-weight: bold;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.summit-card .total-xp {
+  position: absolute;
+  color: white;
+  text-shadow: -1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white;
+}
+
+.mobile-card.summit-card .total-xp div {
+  font-weight: bold;
+  color: white;
+}
+
+/* Mobile Modal Container Styles */
+.export-modal-content.mobile-view {
+  margin: 0.25rem;
+  max-width: calc(100vw - 0.5rem);
+  max-height: calc(100vh - 0.5rem);
+}
+
+.card-preview-container.mobile-view {
+  padding: 1rem;
+  margin: 1rem;
+  min-height: 500px;
+}
+
+.card-container.mobile-view {
+  overflow: visible;
+}
+
+/* Mobile Export Actions */
+.export-actions.mobile-view {
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+}
+
+.export-button.mobile-view {
+  padding: 1rem 1.5rem;
+  font-size: 0.875rem;
+}
+
+/* Mobile Social Share Options */
+.social-share-options.mobile-view {
+  padding: 1rem;
+}
+
+.social-buttons.mobile-view {
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+}
+
+.social-button.mobile-view {
+  padding: 0.875rem 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.social-button.mobile-view svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+/* Small Mobile Specific Styles */
+@media (max-width: 480px) {
+  .export-modal-content.mobile-view {
+    margin: 0.5rem;
+    max-width: calc(100vw - 1rem);
+    max-height: calc(100vh - 1rem);
+  }
+
+  .card-preview-container.mobile-view {
+    padding: 0.75rem;
+    margin: 0.75rem 1rem;
+    min-height: 450px;
+  }
+
+  .card-container.mobile-view {
+    overflow: hidden;
+  }
+
+  .social-buttons.mobile-view {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .social-button.mobile-view {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* Mobile Card Responsive Dimensions */
+@media (max-width: 768px) {
+  .card-template.mobile-card {
+    width: 320px;
+    height: 480px;
+  }
+
+  .mobile-card .trainer-name {
+    top: 40px;
+    left: 18px;
+    font-size: 16px;
+  }
+
+  .mobile-card .start-date {
+    top: 45px;
+    right: 25px;
+    font-size: 12px;
+  }
+
+  .mobile-card .bottom-left-stats {
+    top: 231px;
+    bottom: 70px;
+    left: 25px;
+  }
+
+  .mobile-card .stat-item {
+    margin-bottom: 12px;
+  }
+
+  .mobile-card .stat-value {
+    font-size: 18px;
+  }
+
+  .mobile-card .stat-daily {
+    font-size: 11px;
+  }
+
+  .mobile-card .bottom-right-stats {
+    top: 270px;
+    bottom: 60px;
+    right: 50px;
+    font-size: 18px;
+  }
+
+  .mobile-card .all-time-label {
+    top: 220px;
+    bottom: 35px;
+    right: 30px;
+    font-size: 18px;
+  }
+
+  .mobile-card.achievement-card .trainer-name {
+    top: 40px;
+    left: 25px;
+    font-size: 16px;
+  }
+
+  .mobile-card.achievement-card .start-date {
+    top: 45px;
+    right: 25px;
+    font-size: 12px;
+  }
+
+  .mobile-card.achievement-card .total-xp {
+    bottom: 70px;
+    left: 20px;
+    font-size: 10px;
+  }
+
+  .mobile-card.achievement-card .total-xp div {
+    font-size: 30px;
+  }
+
+  .mobile-card.summit-card .trainer-name {
+    top: 40px;
+    left: 25px;
+    font-size: 16px;
+  }
+
+  .mobile-card.summit-card .start-date {
+    top: 40px;
+    right: 25px;
+    font-size: 12px;
+  }
+
+  .mobile-card.summit-card .summit-date {
+    bottom: 300px;
+    left: 25px;
+    font-size: 20px;
+  }
+
+  .mobile-card.summit-card .total-xp {
+    bottom: 80px;
+    left: 25px;
+    font-size: 10px;
+  }
+
+  .mobile-card.summit-card .total-xp div {
+    font-size: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-template.mobile-card {
+    width: 280px;
+    height: 420px;
+  }
+
+  .mobile-card .trainer-name {
+    top: 30px;
+    left: 15px;
+    font-size: 14px;
+  }
+
+  .mobile-card .start-date {
+    top: 35px;
+    right: 20px;
+    font-size: 11px;
+  }
+
+  .mobile-card .bottom-left-stats {
+    top: 231px;
+    bottom: 60px;
+    left: 20px;
+  }
+
+  .mobile-card .stat-item {
+    margin-bottom: 5px;
+  }
+
+  .mobile-card .stat-value {
+    font-size: 16px;
+  }
+
+  .mobile-card .stat-daily {
+    font-size: 10px;
+  }
+
+  .mobile-card .bottom-right-stats {
+    top: 270px;
+    bottom: 50px;
+    right: 40px;
+    font-size: 16px;
+  }
+
+  .mobile-card .all-time-label {
+    top: 220px;
+    bottom: 30px;
+    right: 25px;
+    font-size: 16px;
+  }
+
+  .mobile-card.achievement-card .trainer-name {
+    top: 30px;
+    left: 20px;
+    font-size: 14px;
+  }
+
+  .mobile-card.achievement-card .start-date {
+    top: 35px;
+    right: 20px;
+    font-size: 11px;
+  }
+
+  .mobile-card.achievement-card .total-xp {
+    bottom: 60px;
+    left: 15px;
+    font-size: 9px;
+  }
+
+  .mobile-card.achievement-card .total-xp div {
+    font-size: 28px;
+  }
+
+  .mobile-card.summit-card .trainer-name {
+    top: 30px;
+    left: 20px;
+    font-size: 14px;
+  }
+
+  .mobile-card.summit-card .start-date {
+    top: 30px;
+    right: 20px;
+    font-size: 11px;
+  }
+
+  .mobile-card.summit-card .summit-date {
+    bottom: 300px;
+    left: 20px;
+    font-size: 18px;
+  }
+
+  .mobile-card.summit-card .total-xp {
+    bottom: 70px;
+    left: 20px;
+    font-size: 9px;
+  }
+
+  .mobile-card.summit-card .total-xp div {
+    font-size: 16px;
+  }
+} 

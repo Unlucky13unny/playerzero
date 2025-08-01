@@ -82,7 +82,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
           
           <Link to="/UserProfile" className="logo mobile-logo">
-            <Logo style={{ width: '100%',marginRight: '50%', color: 'var(--white-pure)' }} />
+            <Logo style={{ width: '93%',marginRight: '45%',marginLeft: '-1%' ,marginTop:"3%",color: 'var(--white-pure)' }} />
           </Link>
 
           <div className="mobile-header-right">
@@ -138,28 +138,7 @@ export const Layout = ({ children }: LayoutProps) => {
             <>
               {/* Quick Navigation Buttons */}
               <div className="quick-nav-buttons">
-                <Link 
-                  to="/UserProfile" 
-                  className={`nav-button ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="7" r="4" />
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  </svg>
-                  Profile
-                </Link>
-                <Link 
-                  to="/leaderboards" 
-                  className={`nav-button ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="2" y="2" width="8" height="8" />
-                    <rect x="14" y="2" width="8" height="8" />
-                    <rect x="2" y="14" width="8" height="8" />
-                    <rect x="14" y="14" width="8" height="8" />
-                  </svg>
-                  Leaderboard
-                </Link>
+                {/* Profile and Leaderboard buttons removed */}
               </div>
 
               {/* Features Dropdown */}
