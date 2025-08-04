@@ -3,7 +3,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
 import { RadarChart } from './RadarChart';
 import { ExportCardModal } from './ExportCardModal';
-import { GrindChart } from './GrindChart';
 import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
@@ -233,13 +232,10 @@ export const UserHome = () => {
     if (!stats || !user?.id) return;
 
     try {
-      const now = new Date();
-      let daysToCalculate: number;
       let filteredData: any = {};
 
       switch (activeTimeFilter) {
         case 'weekly':
-          daysToCalculate = 7;
           // Calculate daily average for last 7 days
           const weeklyDailyDistance = (stats.distance_walked || 0) / 365 * 7; // Assuming 365 days total
           const weeklyDailyCaught = (stats.pokemon_caught || 0) / 365 * 7;
@@ -254,7 +250,6 @@ export const UserHome = () => {
           };
           break;
         case 'monthly':
-          daysToCalculate = 30;
           // Calculate daily average for last 30 days
           const monthlyDailyDistance = (stats.distance_walked || 0) / 365 * 30;
           const monthlyDailyCaught = (stats.pokemon_caught || 0) / 365 * 30;
