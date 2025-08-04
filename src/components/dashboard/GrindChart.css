@@ -9,14 +9,13 @@
 }
 
 .grind-chart-header {
-  display: flex;
+  
   flex-direction: column;
   gap: 1rem;
   margin-bottom: 1.5rem;
 }
 
 .grind-chart-title {
-  display: flex;
   align-items: center;
   gap: 0.75rem;
 }

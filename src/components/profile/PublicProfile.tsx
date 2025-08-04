@@ -198,10 +198,11 @@ export const PublicProfile = () => {
         </h1>
       </div>
 
-      {/* Profile Header - New Table Layout */}
-      <div className="profile-card-container">
+      {/* Profile Header - Side by Side Layout */}
+      <div className="profile-card-container" style={{ display: "flex", gap: "2rem", alignItems: "flex-start" }}>
         
-        <table className="profile-table" style={{ width: "50%", borderCollapse: "collapse" }}>
+        {/* Profile Table - Left Side */}
+        <table className="profile-table" style={{ flex: "1", borderCollapse: "collapse" }}>
           {/* Row 1: Username (Full width) */}
           <thead>
             <tr>
@@ -263,38 +264,34 @@ export const PublicProfile = () => {
             </tr>
           </tbody>
         </table>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">🎯</div>
-          <div className="stat-content">
-            <h3>Pokémon Caught</h3>
-            <div className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📍</div>
-          <div className="stat-content">
-            <h3>PokéStops Visited</h3>
-            <div className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🚶</div>
-          <div className="stat-content">
-            <h3>Distance Walked</h3>
-            <div className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
-          <div className="stat-content">
-            <h3>Total XP</h3>
-            <div className="stat-value">{profile.total_xp?.toLocaleString() || 0}</div>
-          </div>
-        </div>
+        {/* Stats Table - Right Side */}
+        <table className="stats-table" style={{ width: "50%", borderCollapse: "collapse" }}>
+          {/* Row 1: Grind Chart Header */}
+          <thead>
+            <tr>
+              <th colSpan={4} className="grind-chart-header">
+                Grind Chart
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Row 2: Column Headers */}
+            <tr>
+              <th className="stat-value">KM/DAY</th>
+              <th className="stat-value">CAUGHT/DAY</th>
+              <th className="stat-value">STOPS/DAY</th>
+              <th className="stat-value">XP/DAY</th>
+            </tr>
+            {/* Row 3: Values */}
+            <tr>
+              <td className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</td>
+              <td className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</td>
+              <td className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</td>
+              <td className="stat-value">{profile.total_xp?.toLocaleString() || 0}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Social Links Section */}
@@ -302,7 +299,7 @@ export const PublicProfile = () => {
         <h2>Social Links</h2>
       </div>
       <div className="social-links-container">
-        {profile.is_paid_user ? (
+        {profile?.is_paid_user ? (
           <div className="social-links-grid">
             {SOCIAL_MEDIA.map(platform => {
               const value = profile[platform.key as keyof typeof profile];
@@ -333,12 +330,13 @@ export const PublicProfile = () => {
         <h2>Performance Overview</h2>
         <div className="radar-chart-container">
           <RadarChart
-            profile={{
+            profile={profile ? {
               ...profile,
+              id: profile.id || '',
               user_id: profile.user_id,
               trainer_code: profile.trainer_code || '',
               trainer_code_private: !profile.is_paid_user
-            }}
+            } : null}
             isPaidUser={trialStatus.isPaidUser}
             showHeader={false}
           />
