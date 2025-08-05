@@ -1656,6 +1656,13 @@ body {
   aspect-ratio: 1;
 }
 
+/* Web view specific styles for radar chart */
+@media (min-width: 769px) {
+  .radar-chart-container {
+    margin-top: calc(1rem - 12px);
+  }
+}
+
 /* Loading and Error States */
 .loading-spinner {
   width: 3rem;
@@ -7008,7 +7015,7 @@ body {
 
   .notification-header {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--gray-dark);
+    border-bottom: 1px solid var(--gray-darker);
   }
 
   .notification-header h3 {
