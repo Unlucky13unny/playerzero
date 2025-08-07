@@ -11,4 +11,23 @@ export default defineConfig({
     // Allow access from any host including ngrok tunnels
     allowedHosts: ['3bb2-39-46-170-15.ngrok-free.app', 'localhost', '.ngrok-free.app']
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: undefined
+      }
+    },
+    outDir: 'dist',
+    assetsDir: 'assets',
+    sourcemap: false,
+    minify: 'terser',
+    target: 'es2015'
+  },
+  preview: {
+    port: 5173,
+    host: true
+  },
+  define: {
+    'process.env.NODE_ENV': '"production"'
+  }
 })

@@ -204,7 +204,46 @@ const AppRoutes = () => {
       } />
 
       {/* Fallback route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          minHeight: '100vh',
+          background: '#000000',
+          color: 'white',
+          textAlign: 'center',
+          padding: '2rem'
+        }}>
+          <div style={{
+            background: 'rgba(15, 15, 35, 0.8)',
+            border: '1px solid rgba(139, 0, 0, 0.3)',
+            borderRadius: '1rem',
+            padding: '2rem',
+            maxWidth: '400px'
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
+            <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Page Not Found</h1>
+            <p style={{ color: '#a0a0a0', marginBottom: '1.5rem' }}>
+              The page you're looking for doesn't exist.
+            </p>
+            <a 
+              href="/" 
+              style={{
+                display: 'inline-block',
+                padding: '0.75rem 1.5rem',
+                background: 'linear-gradient(135deg, #B91C1C, #8B0000)',
+                color: 'white',
+                textDecoration: 'none',
+                borderRadius: '0.5rem',
+                fontWeight: '600'
+              }}
+            >
+              Go Home
+            </a>
+          </div>
+        </div>
+      } />
     </Routes>
   )
 }

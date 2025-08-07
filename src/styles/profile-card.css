@@ -1,0 +1,330 @@
+/* Profile Card Table Layout - Professional Theme */
+.profile-card-container {
+  background: transparent;
+  padding: 2rem 0;
+  margin-bottom: 2rem;
+  text-align: left;
+}
+
+.profile-card-container h2 {
+  color: var(--white-pure);
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  letter-spacing: 1px;
+}
+
+.profile-card-container p {
+  color: var(--white-muted);
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+  font-weight: 500;
+}
+
+.profile-table {
+  width: 40% !important;
+  border-collapse: collapse !important;
+  margin: 0;
+  background: var(--gray-darker);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--gray-dark);
+}
+
+.profile-table th,
+.profile-table td {
+  border: 1px solid var(--gray-dark) !important;
+  padding: 1rem;
+
+  vertical-align: middle;
+  position: relative;
+  background: var(--gray-darker);
+}
+
+/* Username Header - Large and Professional */
+.username-header {
+  background: linear-gradient(135deg, var(--red-bright) 0%, var(--red-dark) 100%);
+  color: var(--white-pure);
+  font-size: 1.5em !important;
+  font-weight: 800 !important;
+  text-align: left !important;
+  padding: 2rem 1.5rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--gray-dark) !important;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+/* Country Cell - Professional Container */
+.country-cell {
+  background: var(--gray-dark);
+  text-align: center !important;
+  width: 40px;
+  border: 1px solid var(--gray-dark) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+.country-flag {
+  font-size: 2.5rem;
+  display: block;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  position: relative;
+  z-index: 1;
+}
+
+/* Team Cell - Professional Container */
+.team-cell {
+  background: var(--gray-dark);
+  color: var(--white-pure);
+  font-weight: 600;
+  padding: 1rem;
+  text-align: left !important;
+  border: 1px solid var(--gray-dark) !important;
+  position: relative;
+  overflow: hidden;
+  margin-top: 50%;
+}
+
+.team-rectangle {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 100%;
+  margin-right: 1rem;
+
+  margin-left: 2%;
+  margin-top: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+/* Level Cell - Professional Container */
+.level-cell {
+  background: linear-gradient(135deg, var(--red-bright) 0%, var(--red-dark) 100%);
+  color: var(--white-pure);
+  text-align: center !important;
+  width: 100px;
+  border: 1px solid var(--gray-dark) !important;
+  vertical-align: middle;
+  padding: 1.5rem 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.level-number {
+  font-size: 3rem !important;
+  font-weight: 900 !important;
+  line-height: 1;
+  margin-bottom: 0.5em;
+  text-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+.level-label {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  display: block;
+  position: relative;
+  z-index: 1;
+}
+
+/* Label and Value Cells - Professional Containers */
+.label-cell {
+  background: var(--gray-dark);
+  color: var(--white-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  width: 50%;
+  padding: 1rem 1.5rem;
+  text-align: center !important;
+  border: 1px solid var(--gray-dark) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.value-cell {
+  background: var(--gray-darker);
+  color: var(--white-pure);
+  font-weight: 600;
+  width: 65%;
+  padding: 1rem 1.5rem;
+  text-align: center !important;
+  border: 1px solid var(--gray-dark) !important;
+  font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+/* Code Cell - Professional Container */
+.code-cell {
+  background: var(--gray-darker);
+  color: var(--white-pure);
+  font-weight: 600;
+  padding: 1rem 1.5rem;
+  font-family: 'Courier New', monospace;
+ 
+  text-align: left !important;
+  border: 1px solid var(--gray-dark) !important;
+  font-size: 1rem;
+  position: relative;
+  overflow: hidden;
+}
+
+
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .profile-card-container {
+    padding: 1rem 0;
+  }
+  
+  .profile-card-container h2 {
+    font-size: 1.25rem;
+  }
+  
+  .profile-card-container p {
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+  }
+  
+  .profile-table {
+    width: 40% !important;
+    max-width: 50%;
+    border-radius: 8px;
+  }
+  
+  .username-header {
+    font-size: 1.75rem !important;
+    padding: 1.5rem 1rem;
+    border: 1px solid var(--gray-dark) !important;
+    text-align: left !important;
+  }
+  
+  .country-flag {
+    font-size: 1.5rem;
+  }
+  
+  .country-cell {
+    width: 60px;
+  }
+  
+  .level-cell {
+    width: 100px;
+    padding: 1rem 0.75rem;
+  }
+  
+  .level-number {
+    font-size: 2rem !important;
+  }
+  
+  .level-label {
+    font-size: 0.8rem;
+  }
+  
+  .profile-table th,
+  .profile-table td {
+    padding: 0.75rem;
+    border: 1px solid var(--gray-dark) !important;
+  }
+  
+  .label-cell,
+  .value-cell {
+    padding: 0.75rem 1rem;
+  }
+  
+  .team-rectangle {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .code-cell {
+    text-align: left !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-card-container {
+    padding: 0.5rem 0;
+  }
+  
+  .profile-card-container h2 {
+    font-size: 1.1rem;
+  }
+  
+  .profile-card-container p {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .profile-table {
+    width: 100% !important;
+    max-width: none;
+    border-radius: 6px;
+  }
+  
+  .username-header {
+    font-size: 1.5rem !important;
+    padding: 1rem 0.75rem;
+    border: 1px solid var(--gray-dark) !important;
+    text-align: left !important;
+  }
+  
+  .country-flag {
+    font-size: 1.25rem;
+  }
+  
+  .country-cell {
+    width: 50px;
+  }
+  
+  .level-cell {
+    width: 40px;
+    padding: 0.5rem;
+  }
+  
+  .level-number {
+    font-size: 1.5rem !important;
+  }
+  
+  .level-label {
+    font-size: 1rem;
+  }
+  
+  .profile-table th,
+  .profile-table td {
+    padding: 0.2rem;
+    border: 1px solid var(--gray-dark) !important;
+  }
+  
+  .label-cell,
+  .value-cell {
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .team-rectangle {
+    width: 14px;
+    height: 14px;
+  }
+  
+  .code-cell {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+    text-align: left !important;
+  }
+} 

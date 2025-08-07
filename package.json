@@ -7,7 +7,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-build": "npm run build",
+    "deploy": "npm run build && vercel --prod"
   },
   "dependencies": {
     "@stripe/react-stripe-js": "^3.7.0",
