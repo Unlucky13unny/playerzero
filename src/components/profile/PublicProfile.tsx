@@ -5,6 +5,8 @@ import { dashboardService } from '../../services/dashboardService'
 import { RadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
+import { CountryFlag } from '../common/CountryFlag'
+
 
 interface TeamColor {
   value: string
@@ -31,7 +33,7 @@ export const PublicProfile = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamColor | null>(null)
-  const [copyFeedback, setCopyFeedback] = useState(false)
+
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
@@ -155,15 +157,9 @@ export const PublicProfile = () => {
     }
   }
 
-  const handleCopyTrainerCode = async (code: string) => {
-    try {
-      await navigator.clipboard.writeText(code)
-      setCopyFeedback(true)
-      setTimeout(() => setCopyFeedback(false), 2000) // Hide feedback after 2 seconds
-    } catch (err) {
-      console.error('Failed to copy trainer code:', err)
-    }
-  }
+
+
+
 
   if (loading) {
     return (
@@ -202,87 +198,100 @@ export const PublicProfile = () => {
         </h1>
       </div>
 
-      {/* Profile Header */}
-      <div className="profile-header">
-        <div className="profile-info">
-          <div className="trainer-level">Level {profile.trainer_level || 1}</div>
-          <div className="trainer-details">
-            {selectedTeam && (
-              <div className="team-badge">
-                <div className="team-color-circle" style={{ backgroundColor: selectedTeam.color }}></div>
-                <span className="team-name">{selectedTeam.team}</span>
-              </div>
-            )}
-            {profile.country && (
-              <div className="country-badge">
-                <span className="country-icon">🌍</span>
-                <span className="country-name">{profile.country}</span>
-              </div>
-            )}
-            <div className="summit-badge">
-              <span className="summit-icon">🏔️</span>
-              <span className="summit-date">Summit: 50</span>
-            </div>
-            {profile.is_paid_user && (
-              <div className="trainer-code-badge">
-                <span className="code-icon">🎮</span>
-                {profile.trainer_code_private ? (
-                  <span className="code-value private">
-                    <span className="private-icon">🔒</span> Hidden
-                  </span>
-                ) : profile.trainer_code ? (
-                  <>
-                    <span className="code-value">{profile.trainer_code}</span>
-                    <button 
-                      className="copy-button"
-                      onClick={() => handleCopyTrainerCode(profile.trainer_code || '')}
-                      title="Copy trainer code"
-                    >
-                      📋
-                    </button>
-                    {copyFeedback && (
-                      <span className="copy-feedback">Copied!</span>
-                    )}
-                  </>
-                ) : (
-                  <span className="code-value">Not set</span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
+      {/* Profile Header - Side by Side Layout */}
+      <div className="profile-card-container" style={{ display: "flex", gap: "2rem", alignItems: "flex-start" }}>
+        
+        {/* Profile Table - Left Side */}
+        <table className="profile-table" style={{ flex: "1", borderCollapse: "collapse" }}>
+          {/* Row 1: Username (Full width) */}
+          <thead>
+            <tr>
+              <th colSpan={3} className="username-header">
+                {profile.trainer_name || 'Trainer'}
+              </th>
+            </tr>
+          </thead>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">🎯</div>
-          <div className="stat-content">
-            <h3>Pokémon Caught</h3>
-            <div className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📍</div>
-          <div className="stat-content">
-            <h3>PokéStops Visited</h3>
-            <div className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🚶</div>
-          <div className="stat-content">
-            <h3>Distance Walked</h3>
-            <div className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
-          <div className="stat-content">
-            <h3>Total XP</h3>
-            <div className="stat-value">{profile.total_xp?.toLocaleString() || 0}</div>
-          </div>
-        </div>
+          <tbody>
+            {/* Row 2: Country flag + Team name with rectangle */}
+            <tr>
+              <th className="country-cell">
+                {profile.country && <CountryFlag countryName={profile.country} size={40} />}
+              </th>
+              <td colSpan={2} className="team-cell">
+                {selectedTeam && (
+                  <>
+                    <span className="team-rectangle" style={{ backgroundColor: selectedTeam.color }}></span>
+                    {selectedTeam.team}
+                  </>
+                )}
+              </td>
+            </tr>
+
+            {/* Row 3: Level + Start Date */}
+            <tr>
+              <th rowSpan={3} className="level-cell">
+                <div className="level-number">{profile.trainer_level || 1}</div>
+                <div className="level-label">LVL</div>
+              </th>
+              <td className="label-cell">Start Date:</td>
+              <td className="value-cell">
+                {profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric'
+                }) : 'N/A'}
+              </td>
+            </tr>
+
+            {/* Row 4: 50 Summit */}
+            <tr>
+              <td className="label-cell">50 Summit</td>
+              <td className="value-cell">
+                {(profile.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+              </td>
+            </tr>
+
+            {/* Row 5: Trainer Code */}
+            <tr>
+              <td colSpan={2} className="code-cell">
+                {profile.is_paid_user && profile.trainer_code && !profile.trainer_code_private ? (
+                  profile.trainer_code.replace(/(.{4})/g, "$1 ").trim()
+                ) : (
+                  'No trainer code'
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Stats Table - Right Side */}
+        <table className="stats-table" style={{ width: "50%", borderCollapse: "collapse" }}>
+          {/* Row 1: Grind Chart Header */}
+          <thead>
+            <tr>
+              <th colSpan={4} className="grind-chart-header">
+                Grind Chart
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Row 2: Column Headers */}
+            <tr>
+              <th className="stat-value">KM/DAY</th>
+              <th className="stat-value">CAUGHT/DAY</th>
+              <th className="stat-value">STOPS/DAY</th>
+              <th className="stat-value">XP/DAY</th>
+            </tr>
+            {/* Row 3: Values */}
+            <tr>
+              <td className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</td>
+              <td className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</td>
+              <td className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</td>
+              <td className="stat-value">{profile.total_xp?.toLocaleString() || 0}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       {/* Social Links Section */}
@@ -290,7 +299,7 @@ export const PublicProfile = () => {
         <h2>Social Links</h2>
       </div>
       <div className="social-links-container">
-        {profile.is_paid_user ? (
+        {profile?.is_paid_user ? (
           <div className="social-links-grid">
             {SOCIAL_MEDIA.map(platform => {
               const value = profile[platform.key as keyof typeof profile];
@@ -321,12 +330,13 @@ export const PublicProfile = () => {
         <h2>Performance Overview</h2>
         <div className="radar-chart-container">
           <RadarChart
-            profile={{
+            profile={profile ? {
               ...profile,
+              id: profile.id || '',
               user_id: profile.user_id,
               trainer_code: profile.trainer_code || '',
               trainer_code_private: !profile.is_paid_user
-            }}
+            } : null}
             isPaidUser={trialStatus.isPaidUser}
             showHeader={false}
           />

@@ -1037,6 +1037,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  text-align: left;
 }
 
 /* Profile Header */
@@ -1127,6 +1128,95 @@ body {
   gap: 1rem;
   transition: transform var(--transition-medium), box-shadow var(--transition-medium);
   min-height: 120px;
+}
+
+/* Stats Table Layout */
+.stats-table-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 2rem;
+}
+
+.stats-table {
+  background: var(--black-card);
+  border: 1px solid var(--gray-darker);
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: var(--shadow-soft);
+}
+
+.grind-chart-header {
+  background: linear-gradient(135deg, var(--gray-darker) 0%, var(--black-card) 100%);
+  color: var(--white-pure);
+  font-size: var(--font-lg);
+  font-weight: 700;
+  text-align: center;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--gray-darker);
+  letter-spacing: -0.02em;
+}
+
+.stats-table tbody tr {
+  border-bottom: 1px solid var(--gray-darker);
+  transition: background-color var(--transition-medium);
+}
+
+.stats-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.stats-table tbody tr:hover {
+  background-color: var(--gray-darker);
+}
+
+.stat-label {
+  padding: 1rem 1.5rem;
+  color: var(--white-muted);
+  font-weight: 600;
+  font-size: var(--font-md);
+  border-right: 1px solid var(--gray-darker);
+  width: 50%;
+}
+
+.stat-value {
+  padding: 1rem 1.5rem;
+  color: var(--white-pure);
+  font-weight: 700;
+  font-size: var(--font-lg);
+  text-align: right;
+  width: 50%;
+}
+
+/* Column Headers for Stats Table */
+.stat-header {
+  background: var(--gray-darker);
+  color: var(--white-muted);
+  font-weight: 600;
+  font-size: var(--font-sm);
+  text-align: center;
+  padding: 1rem 0.75rem;
+  border-right: 1px solid var(--gray-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-header:last-child {
+  border-right: none;
+}
+
+/* Values Row in Stats Table */
+.stats-table tbody tr:last-child .stat-value {
+  padding: 1rem 0.75rem;
+  color: var(--white-pure);
+  font-weight: 700;
+  font-size: var(--font-md);
+  text-align: center;
+  border-right: 1px solid var(--gray-darker);
+  width: auto;
+}
+
+.stats-table tbody tr:last-child .stat-value:last-child {
+  border-right: none;
 }
 
 /* Force full-width card to new row and take full width */
@@ -1228,6 +1318,158 @@ body {
     /* Center align value */
     text-align: center;
   }
+
+  /* Stats Table Mobile Styles */
+  .stats-table-container {
+    justify-content: center;
+  }
+
+  .stats-table {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .grind-chart-header {
+    font-size: var(--font-md);
+    padding: 1rem;
+    justify-content: center;
+  }
+
+  .stat-label,
+  .stat-value {
+    padding: 0.75rem 1rem;
+    font-size: var(--font-sm);
+  }
+
+  /* Additional Mobile Responsive Styles for Profile Cards */
+  .profile-card-container {
+    padding: 1rem;
+  }
+
+  /* Ensure tables don't overflow on mobile */
+  .profile-table,
+  .stats-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  /* Make text more readable on mobile */
+  .username-header {
+    word-break: break-word;
+  }
+
+  .team-cell {
+    word-break: break-word;
+  }
+
+  .code-cell {
+    word-break: break-all;
+  }
+
+  /* Profile Card Container Mobile Styles */
+  .profile-card-container {
+    flex-direction: column !important;
+    gap: 1.5rem !important;
+    padding: 1rem;
+  }
+
+  /* Profile Table Mobile Styles */
+  .profile-table {
+    width: 100% !important;
+    font-size: var(--font-sm);
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .username-header {
+    font-size: var(--font-lg);
+    padding: 1.25rem 1rem;
+    word-break: break-word;
+    line-height: 1.2;
+    text-align: center;
+  }
+
+  .level-cell {
+    padding: 1rem 0.75rem;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  .level-number {
+    font-size: var(--font-xl);
+    line-height: 1;
+    font-weight: 700;
+  }
+
+  .level-label {
+    font-size: var(--font-xs);
+    line-height: 1;
+    opacity: 0.8;
+  }
+
+  .label-cell,
+  .value-cell {
+    padding: 0.875rem 1rem;
+    font-size: var(--font-sm);
+    line-height: 1.3;
+    vertical-align: middle;
+  }
+
+  .country-cell {
+    padding: 0.75rem;
+    width: 60px;
+    text-align: center;
+  }
+
+  .team-cell {
+    padding: 0.875rem 1rem;
+    word-break: break-word;
+    line-height: 1.3;
+  }
+
+  .code-cell {
+    padding: 0.875rem 1rem;
+    font-size: var(--font-sm);
+    word-break: break-all;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  /* Stats Table Mobile Styles */
+  .stats-table {
+    width: 100% !important;
+    margin-left: 0 !important;
+    border-radius: 0.75rem;
+    overflow: hidden;
+  }
+
+  .grind-chart-header {
+    font-size: var(--font-lg);
+    padding: 1.25rem 1rem;
+    text-align: center;
+    line-height: 1.2;
+    font-weight: 700;
+  }
+
+  /* Column Headers */
+  .stat-header {
+    font-size: var(--font-sm);
+    padding: 1rem 0.5rem;
+    text-align: center;
+    line-height: 1.2;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Values Row */
+  .stats-table tbody tr:last-child .stat-value {
+    font-size: var(--font-md);
+    padding: 1rem 0.5rem;
+    text-align: center;
+    line-height: 1.2;
+    font-weight: 700;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1261,6 +1503,132 @@ body {
   .stat-value {
     font-size: var(--font-lg);
   }
+
+  /* Extra Small Mobile Styles (480px and below) */
+  .profile-card-container {
+    gap: 1rem !important;
+    padding: 0.75rem;
+  }
+
+  .profile-table,
+  .stats-table {
+    font-size: var(--font-sm);
+    border-radius: 0.5rem;
+  }
+
+  .username-header {
+    font-size: var(--font-lg);
+    padding: 1rem;
+  }
+
+  .level-number {
+    font-size: var(--font-xl);
+  }
+
+  .level-label {
+    font-size: var(--font-xs);
+  }
+
+  .label-cell,
+  .value-cell {
+    padding: 0.75rem 0.875rem;
+    font-size: var(--font-sm);
+  }
+
+  .country-cell {
+    padding: 0.75rem;
+  }
+
+  .team-cell {
+    padding: 0.75rem 0.875rem;
+  }
+
+  .code-cell {
+    padding: 0.75rem 0.875rem;
+    font-size: var(--font-sm);
+  }
+
+  .grind-chart-header {
+    font-size: var(--font-lg);
+    padding: 1rem;
+  }
+
+  .stat-header {
+    font-size: var(--font-sm);
+    padding: 0.875rem 0.5rem;
+  }
+
+  .stats-table tbody tr:last-child .stat-value {
+    font-size: var(--font-sm);
+    padding: 0.875rem 0.5rem;
+  }
+
+  /* Additional mobile styles for stats table to prevent text overlap */
+  .stats-table .stat-value {
+    font-size: 0.65rem !important;
+    padding: 0.5rem 0.25rem !important;
+    word-break: break-word;
+    line-height: 1.2;
+  }
+
+  .stats-table th.stat-value {
+    font-size: 0.6rem !important;
+    padding: 0.4rem 0.2rem !important;
+  }
+
+  /* Mobile responsive level-cell width adjustment */
+  .level-cell {
+    min-width: 30px !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  /* Mobile responsive country-cell width adjustment */
+  .country-cell {
+    min-width: 50px !important;
+    padding: 0.5rem  !important;
+  }
+
+  /* Additional mobile styles for profile table to prevent cropping */
+  .profile-table {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    overflow: hidden !important;
+  }
+
+  .profile-table th,
+  .profile-table td {
+    word-break: break-word !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+  }
+
+  .username-header {
+    font-size: 1rem !important;
+    padding: 1rem 0.5rem !important;
+  }
+
+  .level-cell {
+    min-width: 50px !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .label-cell,
+  .value-cell {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .team-cell {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.8rem !important;
+  }
+
+  .code-cell {
+    padding: 0.75rem 0.5rem !important;
+    font-size: 0.75rem !important;
+    word-break: break-all !important;
+  }
 }
 
 /* Radar Chart Section */
@@ -1286,6 +1654,13 @@ body {
   max-width: 600px;
   margin: 2rem auto 0;
   aspect-ratio: 1;
+}
+
+/* Web view specific styles for radar chart */
+@media (min-width: 769px) {
+  .radar-chart-container {
+    margin-top: calc(1rem - 12px);
+  }
 }
 
 /* Loading and Error States */
@@ -1404,6 +1779,15 @@ body {
   .trainer-code-badge .code-value {
     max-width: none;
     font-size: 0.875rem;
+  }
+  
+  /* Special mobile styling for summit badge */
+  .summit-badge .summit-date {
+    max-width: none;
+    font-size: 0.8rem;
+    overflow: visible;
+    text-overflow: unset;
+    white-space: normal;
   }
 
   .team-badge .team-color-circle,
@@ -2306,7 +2690,7 @@ body {
   display: flex;
   gap: 1rem;
   margin: 0 2rem;
-  justify-content: flex-end;
+
   flex: 1;
 }
 
@@ -6631,7 +7015,7 @@ body {
 
   .notification-header {
     padding: 16px 20px;
-    border-bottom: 1px solid var(--gray-dark);
+    border-bottom: 1px solid var(--gray-darker);
   }
 
   .notification-header h3 {
@@ -8732,8 +9116,8 @@ body {
   width: 100%;
   max-width: 1200px;
   height: 48px;
-  justify-content: center;
-  text-align: center;
+  justify-content: flex-start;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -8747,6 +9131,10 @@ body {
 .country-badge {
   background: rgba(255, 255, 255, 0.1);
   color: var(--white-pure);
+}
+
+.country-badge .country-icon {
+  margin-left: 15px;
 }
 
 .summit-badge {
@@ -8770,6 +9158,16 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
   max-width: 120px;
+  text-align: left;
+}
+
+/* Special styling for summit badge to accommodate longer text */
+.summit-badge .summit-date {
+  max-width: 200px;
+  font-size: var(--font-xs);
+  overflow: visible;
+  text-overflow: unset;
+  white-space: normal;
 }
 
 /* Badge icon styling for consistent sizing */
@@ -8788,8 +9186,9 @@ body {
 
 .team-badge .team-color-circle {
   border-radius: 50%;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
+  margin-left: 20px;
 }
 
 .team-badge:hover, .country-badge:hover, .summit-badge:hover, .trainer-code-badge:hover {
@@ -9484,3 +9883,50 @@ body {
     min-height: 250px;
   }
 }
+
+/* Grind Chart Section */
+.grind-chart-section {
+  background: var(--black-card);
+  border-radius: 1rem;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border: 1px solid var(--gray-darker);
+  width: 100%;
+}
+
+@media (max-width: 768px) {
+  .grind-chart-section {
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .grind-chart-section {
+    padding: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  /* Stats Table Mobile Styles */
+  .stats-table-container {
+    justify-content: center;
+  }
+
+  .stats-table {
+    width: 100% !important;
+    margin-left: 0 !important;
+  }
+
+  .grind-chart-header {
+    font-size: var(--font-sm);
+    padding: 0.75rem;
+  }
+
+  .stat-label,
+  .stat-value {
+    padding: 0.5rem 0.75rem;
+    font-size: var(--font-xs);
+  }
+}
+
+/* Profile Card Table Layout */

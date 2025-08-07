@@ -1,4 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('./styles/profile-card.css');
+@import url('./styles/export-card-web.css');
+@import url('./styles/export-card-mobile.css');
 
 /* Reset and Base Styles */
 * {

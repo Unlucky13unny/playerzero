@@ -6,6 +6,165 @@ import { ExportCardModal } from './ExportCardModal';
 import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
+import { CountryFlag } from '../common/CountryFlag';
+
+// Styles for the new layout
+const chartStyles = {
+  chartsContainer: {
+    display: "flex",
+    gap: "2rem",
+    alignItems: "stretch",
+    marginTop: "2rem",
+    flexDirection: "row" as const
+  },
+  chartSection: {
+    width: "50%",
+    display: "flex",
+    flexDirection: "column" as const
+  },
+  mobileChartsContainer: {
+    display: "flex",
+    flexDirection: "column" as const,
+    gap: "2rem",
+    marginTop: "2rem"
+  },
+  mobileChartSection: {
+    width: "100%",
+    display: "flex",
+    flexDirection: "column" as const
+  },
+  grindChartTable: {
+    width: "100%",
+    borderCollapse: "collapse" as const,
+    border: "1px solid #374151",
+    borderRadius: "12px",
+    overflow: "hidden",
+    boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
+    flex: "1",
+    display: "flex",
+    flexDirection: "column" as const,
+    backgroundColor: "#111827"
+  },
+  grindChartHeader: {
+    backgroundColor: "#1f2937",
+    padding: "0.75rem",
+    borderBottom: "2px solid #374151"
+  },
+  buttonContainer: {
+    display: "flex",
+    gap: "0.5rem",
+    width: "100%"
+  },
+  timeFilterButton: {
+    padding: "0.5rem 1rem",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    backgroundColor: "#ffffff",
+    color: "#374151",
+    fontSize: "0.875rem",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    flex: "1"
+  },
+  timeFilterButtonActive: {
+    padding: "0.5rem 1rem",
+    border: "1px solid #dc267f",
+    borderRadius: "8px",
+    backgroundColor: "#dc267f",
+    color: "#ffffff",
+    fontSize: "0.875rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 4px 0 rgba(220, 38, 127, 0.2)",
+    flex: "1"
+  },
+  exportChartButton: {
+    padding: "0.5rem",
+    border: "1px solid #d1d5db",
+    borderRadius: "8px",
+    backgroundColor: "#ffffff",
+    color: "#374151",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    flex: "1"
+  },
+  mobileTimeFilterButton: {
+    padding: "0.4rem 0.75rem",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    backgroundColor: "#ffffff",
+    color: "#374151",
+    fontSize: "0.75rem",
+    fontWeight: "500",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    flex: "1"
+  },
+  mobileTimeFilterButtonActive: {
+    padding: "0.4rem 0.75rem",
+    border: "1px solid #dc267f",
+    borderRadius: "6px",
+    backgroundColor: "#dc267f",
+    color: "#ffffff",
+    fontSize: "0.75rem",
+    fontWeight: "600",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    boxShadow: "0 2px 4px 0 rgba(220, 38, 127, 0.2)",
+    flex: "1"
+  },
+  mobileExportChartButton: {
+    padding: "0.4rem",
+    border: "1px solid #d1d5db",
+    borderRadius: "6px",
+    backgroundColor: "#ffffff",
+    color: "#374151",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
+    flex: "1"
+  },
+  grindLabel: {
+    padding: "0.5rem 1rem",
+    borderBottom: "1px solid #374151",
+    textAlign: "left" as const,
+    fontWeight: "600",
+    color: "#d1d5db",
+    backgroundColor: "#1f2937",
+    fontSize: "0.8rem",
+    flex: "1",
+    display: "flex",
+    alignItems: "center",
+    minHeight: "32px",
+    transition: "background-color 0.2s ease"
+  },
+  grindValue: {
+    padding: "0.5rem 1rem",
+    borderBottom: "1px solid #374151",
+    textAlign: "left" as const,
+    fontWeight: "700",
+    color: "#f9fafb",
+    backgroundColor: "#111827",
+    fontSize: "0.9rem",
+    flex: "1",
+    display: "flex",
+    alignItems: "center",
+    minHeight: "32px",
+    transition: "background-color 0.2s ease"
+  }
+};
+
 
 const TEAM_COLORS = {
   blue: { name: 'Blue', color: '#0074D9', icon: '❄️' },
@@ -25,9 +184,27 @@ export const UserHome = () => {
   const [stats, setStats] = useState<ProfileWithMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [activeTimeFilter, setActiveTimeFilter] = useState<'weekly' | 'monthly' | 'all-time'>('weekly');
+  const [filteredStats, setFilteredStats] = useState<any>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     loadUserStats();
+  }, []);
+
+  useEffect(() => {
+    loadFilteredStats();
+  }, [activeTimeFilter, stats]);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const loadUserStats = async () => {
@@ -51,10 +228,91 @@ export const UserHome = () => {
     }
   };
 
+  const loadFilteredStats = async () => {
+    if (!stats || !user?.id) return;
+
+    try {
+      let filteredData: any = {};
+
+      switch (activeTimeFilter) {
+        case 'weekly':
+          // Calculate daily average for last 7 days
+          const weeklyDailyDistance = (stats.distance_walked || 0) / 365 * 7; // Assuming 365 days total
+          const weeklyDailyCaught = (stats.pokemon_caught || 0) / 365 * 7;
+          const weeklyDailyStops = (stats.pokestops_visited || 0) / 365 * 7;
+          const weeklyDailyXP = (stats.total_xp || 0) / 365 * 7;
+          
+          filteredData = {
+            distance_walked: Math.round(weeklyDailyDistance),
+            pokemon_caught: Math.round(weeklyDailyCaught),
+            pokestops_visited: Math.round(weeklyDailyStops),
+            total_xp: Math.round(weeklyDailyXP)
+          };
+          break;
+        case 'monthly':
+          // Calculate daily average for last 30 days
+          const monthlyDailyDistance = (stats.distance_walked || 0) / 365 * 30;
+          const monthlyDailyCaught = (stats.pokemon_caught || 0) / 365 * 30;
+          const monthlyDailyStops = (stats.pokestops_visited || 0) / 365 * 30;
+          const monthlyDailyXP = (stats.total_xp || 0) / 365 * 30;
+          
+          filteredData = {
+            distance_walked: Math.round(monthlyDailyDistance),
+            pokemon_caught: Math.round(monthlyDailyCaught),
+            pokestops_visited: Math.round(monthlyDailyStops),
+            total_xp: Math.round(monthlyDailyXP)
+          };
+          break;
+        case 'all-time':
+          filteredData = {
+            distance_walked: stats.distance_walked || 0,
+            pokemon_caught: stats.pokemon_caught || 0,
+            pokestops_visited: stats.pokestops_visited || 0,
+            total_xp: stats.total_xp || 0
+          };
+          break;
+        default:
+          filteredData = {
+            distance_walked: stats.distance_walked || 0,
+            pokemon_caught: stats.pokemon_caught || 0,
+            pokestops_visited: stats.pokestops_visited || 0,
+            total_xp: stats.total_xp || 0
+          };
+      }
+
+      setFilteredStats(filteredData);
+    } catch (err: any) {
+      console.error('Error loading filtered stats:', err);
+      setFilteredStats(stats); // Fallback to current stats
+    }
+  };
+
   const formatNumber = (num: number | null | undefined) => {
     if (num == null) return '0';
     return new Intl.NumberFormat().format(num);
   };
+
+  const calculateDailyAverage = (totalValue: number | null | undefined, startDate: string | null | undefined) => {
+    if (!totalValue || !startDate) return 0;
+    
+    const start = new Date(startDate);
+    const now = new Date();
+    const daysSinceStart = Math.max(1, Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    return totalValue / daysSinceStart;
+  };
+
+  const formatDailyAverage = (totalValue: number | null | undefined, startDate: string | null | undefined, isDistance: boolean = false) => {
+    const dailyAverage = calculateDailyAverage(totalValue, startDate);
+    
+    if (isDistance) {
+      return `${dailyAverage.toFixed(1)} km`;
+    }
+    
+    return formatNumber(Math.round(dailyAverage));
+  };
+
+
 
   const getTeamColor = (teamColor: string) => {
     switch (teamColor?.toLowerCase()) {
@@ -71,6 +329,8 @@ export const UserHome = () => {
         return '#888888';
     }
   };
+
+
 
   if (loading) {
     return (
@@ -125,74 +385,344 @@ export const UserHome = () => {
         <h1>Welcome Back, Trainer!</h1>
       </div>
 
-      {/* Profile Header */}
-      <div className="profile-header">
-        <div className="profile-info">
-          <div className="trainer-level">Level {stats?.trainer_level || 1}</div>
-          <div className="trainer-details">
-            {teamInfo && (
-              <div className="team-badge">
-                <div className="team-color-circle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></div>
-                <span className="team-name">Team {teamInfo.name}</span>
+      {/* Profile Header - Side by Side Layout */}
+      <div className="profile-card-container" style={{ 
+        display: "flex", 
+        gap: "2rem", 
+        alignItems: "flex-start",
+        ...(isMobile && {
+          flexDirection: "column",
+          gap: "1.5rem",
+          padding: "1rem",
+          width: "100%",
+          overflow: "hidden"
+        })
+      }}>
+        
+        {/* Profile Table - Left Side */}
+        <table className="profile-table" style={{ 
+          flex: "1", 
+          borderCollapse: "collapse",
+          ...(isMobile && {
+            width: "100%",
+            minWidth: "0",
+            tableLayout: "fixed",
+            fontSize: "0.875rem"
+          })
+        }}>
+          {/* Row 1: Username (Full width) */}
+          <thead>
+            <tr>
+              <th colSpan={3} className="username-header">
+                {user?.email?.split('@')[0] || 'Trainer'}
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {/* Row 2: Country flag + Team name with rectangle */}
+            <tr>
+              <th className="country-cell">
+                {stats?.country && <CountryFlag countryName={stats.country} size={40} />}
+              </th>
+              <td colSpan={2} className="team-cell">
+                {teamInfo && (
+                  <>
+                    <span className="team-rectangle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></span>
+                    {teamInfo.name} Team
+                  </>
+                )}
+              </td>
+            </tr>
+
+            {/* Row 3: Level + Start Date */}
+            <tr>
+              <th rowSpan={3} className="level-cell">
+                <div className="level-number">{stats?.trainer_level || 1}</div>
+                <div className="level-label">LVL</div>
+              </th>
+              <td className="label-cell">Start Date:</td>
+              <td className="value-cell">
+                {stats?.start_date ? new Date(stats.start_date).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric'
+                }) : 'N/A'}
+              </td>
+            </tr>
+
+            {/* Row 4: 50 Summit */}
+            <tr>
+              <td className="label-cell">50 Summit</td>
+              <td className="value-cell">
+                {(stats?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+              </td>
+            </tr>
+
+            {/* Row 5: Trainer Code */}
+            <tr>
+              <td colSpan={2} className="code-cell">
+                {stats?.trainer_code && !stats?.trainer_code_private ? (
+                  stats.trainer_code.replace(/(.{4})/g, "$1 ").trim()
+                ) : (
+                  'No trainer code'
+                )}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        {/* Stats Table - Right Side */}
+        <table className="stats-table" style={{ 
+          width: "50%", 
+          borderCollapse: "collapse",
+          ...(isMobile && {
+            width: "100%",
+            fontSize: "0.75rem",
+            minWidth: "0",
+            tableLayout: "fixed",
+            overflow: "hidden"
+          })
+        }}>
+          {/* Row 1: Grind Chart Header */}
+          <thead>
+            <tr>
+              <th colSpan={4} className="grind-chart-header">
+                Grind Chart
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {/* Row 2: Column Headers */}
+            <tr>
+              <th className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "600", 
+                fontSize: isMobile ? "0.7rem" : "0.875rem",
+                wordBreak: "break-word"
+              }}>KM/DAY</th>
+              <th className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "600", 
+                fontSize: isMobile ? "0.7rem" : "0.875rem",
+                wordBreak: "break-word"
+              }}>CAUGHT/DAY</th>
+              <th className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "600", 
+                fontSize: isMobile ? "0.7rem" : "0.875rem",
+                wordBreak: "break-word"
+              }}>STOPS/DAY</th>
+              <th className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "600", 
+                fontSize: isMobile ? "0.7rem" : "0.875rem",
+                wordBreak: "break-word"
+              }}>XP/DAY</th>
+            </tr>
+            {/* Row 3: Values */}
+            <tr>
+              <td className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "700", 
+                fontSize: isMobile ? "0.8rem" : "1rem",
+                wordBreak: "break-word"
+              }}>{formatDailyAverage(stats?.distance_walked, stats?.start_date, true)}</td>
+              <td className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "700", 
+                fontSize: isMobile ? "0.8rem" : "1rem",
+                wordBreak: "break-word"
+              }}>{formatDailyAverage(stats?.pokemon_caught, stats?.start_date)}</td>
+              <td className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "700", 
+                fontSize: isMobile ? "0.8rem" : "1rem",
+                wordBreak: "break-word"
+              }}>{formatDailyAverage(stats?.pokestops_visited, stats?.start_date)}</td>
+              <td className="stat-value" style={{ 
+                padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
+                textAlign: "center", 
+                fontWeight: "700", 
+                fontSize: isMobile ? "0.8rem" : "1rem",
+                wordBreak: "break-word"
+              }}>{formatDailyAverage(stats?.total_xp, stats?.start_date)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      {/* Charts Section - Responsive Layout */}
+      {isMobile ? (
+        <div style={chartStyles.mobileChartsContainer}>
+          {/* Grind Chart - Mobile First */}
+          <div style={chartStyles.mobileChartSection}>
+            <div style={chartStyles.grindChartTable}>
+              {/* Header with buttons */}
+              <div style={chartStyles.grindChartHeader}>
+                <div style={chartStyles.buttonContainer}>
+                  <button 
+                    style={activeTimeFilter === 'weekly' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
+                    onClick={() => setActiveTimeFilter('weekly')}
+                  >
+                    Weekly
+                  </button>
+                  <button 
+                    style={activeTimeFilter === 'monthly' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
+                    onClick={() => setActiveTimeFilter('monthly')}
+                  >
+                    Monthly
+                  </button>
+                  <button 
+                    style={activeTimeFilter === 'all-time' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
+                    onClick={() => setActiveTimeFilter('all-time')}
+                  >
+                    All-Time
+                  </button>
+                  <button 
+                    style={chartStyles.mobileExportChartButton}
+                    onClick={() => setShowExportModal(true)}
+                    disabled={!trialStatus.isPaidUser && !trialStatus.isInTrial}
+                    title="Export Chart"
+                  >
+                    <FaDownload />
+                  </button>
+                </div>
               </div>
-            )}
-            {stats?.country && (
-              <div className="country-badge">
-                <span className="country-icon">🌍</span>
-                <span className="country-name">{stats.country}</span>
+              
+              {/* Content area with flex distribution */}
+              <div style={{ 
+                flex: "1", 
+                display: "flex", 
+                flexDirection: "column",
+                backgroundColor: "#111827"
+              }}>
+                {/* Distance */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Distance Walked
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
+                </div>
+                
+                {/* Pokémon Caught */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Pokémon Caught
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.pokemon_caught || stats?.pokemon_caught)}
+                </div>
+                
+                {/* Pokéstops Visited */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Pokéstops Visited
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.pokestops_visited || stats?.pokestops_visited)}
+                </div>
+                
+                {/* Total XP */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Total XP
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.total_xp || stats?.total_xp)}
+                </div>
               </div>
-            )}
-            
-            <div className="summit-badge">
-              <span className="summit-icon">🏔️</span>
-              <span className="summit-date">Summit: 50</span>
             </div>
-            {stats?.trainer_code && !stats?.trainer_code_private && (
-              <div className="trainer-code-badge">
-                <span className="code-icon">🎮</span>
-                <span className="code-value">{stats.trainer_code}</span>
-              </div>
-            )}
           </div>
-        </div>
-      </div>
 
-      {/* Stats Grid */}
-      <div className="stats-grid">
-        <div className="stat-card">
-          <div className="stat-icon">🚶</div>
-          <div className="stat-content">
-            <h3>Distance Walked</h3>
-            <div className="stat-value">{formatNumber(stats?.distance_walked)} km</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">⚡</div>
-          <div className="stat-content">
-            <h3>Pokémon Caught</h3>
-            <div className="stat-value">{formatNumber(stats?.pokemon_caught)}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">📍</div>
-          <div className="stat-content">
-            <h3>PokéStops Visited</h3>
-            <div className="stat-value">{formatNumber(stats?.pokestops_visited)}</div>
-          </div>
-        </div>
-        <div className="stat-card">
-          <div className="stat-icon">🎯</div>
-          <div className="stat-content">
-            <h3>Total XP</h3>
-            <div className="stat-value">{formatNumber(stats?.total_xp)}</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Radar Chart */}
-      <div className="radar-chart-section">
-        <h2>Performance Overview</h2>
-        <div className="radar-chart-container">
+          {/* Radar Chart - Mobile Second */}
+          <div style={chartStyles.mobileChartSection}>
+            <div className="radar-chart-container" style={{ 
+              flex: "1", 
+              display: "flex", 
+              flexDirection: "column",
+              backgroundColor: "#111827",
+              border: "1px solid #374151",
+              borderRadius: "12px",
+              overflow: "hidden",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
+              padding: "1rem",
+              minHeight: "400px"
+            }}>
+              <h2 style={{ 
+                marginBottom: "1rem", 
+                color: "#f9fafb",
+                fontSize: "1.25rem",
+                fontWeight: "600"
+              }}>Performance Overview</h2>
           <RadarChart
             profile={stats}
             isPaidUser={trialStatus.isPaidUser}
@@ -200,18 +730,177 @@ export const UserHome = () => {
           />
         </div>
       </div>
-
-      {/* Export Card Button */}
-      {stats && (
-        <div className="export-card-button-container">
+      </div>
+      ) : (
+        <div style={chartStyles.chartsContainer}>
+          {/* Grind Chart - Left Side (Desktop) */}
+          <div style={chartStyles.chartSection}>
+            <div style={chartStyles.grindChartTable}>
+              {/* Header with buttons */}
+              <div style={chartStyles.grindChartHeader}>
+                <div style={chartStyles.buttonContainer}>
+                  <button 
+                    style={activeTimeFilter === 'weekly' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
+                    onClick={() => setActiveTimeFilter('weekly')}
+                  >
+                    Weekly
+                  </button>
+                  <button 
+                    style={activeTimeFilter === 'monthly' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
+                    onClick={() => setActiveTimeFilter('monthly')}
+                  >
+                    Monthly
+                  </button>
+                  <button 
+                    style={activeTimeFilter === 'all-time' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
+                    onClick={() => setActiveTimeFilter('all-time')}
+                  >
+                    All-Time
+                  </button>
           <button 
-            className="export-card-button"
+                    style={chartStyles.exportChartButton}
             onClick={() => setShowExportModal(true)}
             disabled={!trialStatus.isPaidUser && !trialStatus.isInTrial}
+                    title="Export Chart"
           >
             <FaDownload />
-            <span>Create Card</span>
           </button>
+                </div>
+              </div>
+              
+              {/* Content area with flex distribution */}
+              <div style={{ 
+                flex: "1", 
+                display: "flex", 
+                flexDirection: "column",
+                backgroundColor: "#111827"
+              }}>
+                {/* Distance */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Distance Walked
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
+                </div>
+                
+                {/* Pokémon Caught */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Pokémon Caught
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.pokemon_caught || stats?.pokemon_caught)}
+                </div>
+                
+                {/* Pokéstops Visited */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Pokéstops Visited
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.pokestops_visited || stats?.pokestops_visited)}
+                </div>
+                
+                {/* Total XP */}
+                <div 
+                  style={chartStyles.grindLabel}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#374151";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                >
+                  Total XP
+                </div>
+                <div 
+                  style={chartStyles.grindValue}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.backgroundColor = "#1f2937";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.backgroundColor = "#111827";
+                  }}
+                >
+                  {formatNumber(filteredStats?.total_xp || stats?.total_xp)}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Radar Chart - Right Side (Desktop) */}
+          <div style={chartStyles.chartSection}>
+            <div className="radar-chart-container" style={{ 
+              flex: "1", 
+              display: "flex", 
+              flexDirection: "column",
+              backgroundColor: "#111827",
+              border: "1px solid #374151",
+              borderRadius: "12px",
+              overflow: "hidden",
+              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
+              padding: "1.5rem",
+              minHeight: "500px"
+            }}>
+              <h2 style={{ 
+                marginBottom: "1.5rem", 
+                color: "#f9fafb",
+                fontSize: "1.5rem",
+                fontWeight: "600"
+              }}>Performance Overview</h2>
+              <RadarChart
+                profile={stats}
+                isPaidUser={trialStatus.isPaidUser}
+                showHeader={false}
+              />
+            </div>
+          </div>
         </div>
       )}
 
