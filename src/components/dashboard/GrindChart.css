@@ -1,0 +1,368 @@
+.grind-chart-container {
+  background: var(--gray-darker);
+  border: 1px solid var(--gray-dark);
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.grind-chart-header {
+  
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grind-chart-title {
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.grind-icon {
+  font-size: 1.5rem;
+}
+
+.grind-chart-title h3 {
+  margin: 0;
+  font-size: var(--font-lg);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Professional Period Selector Styles */
+.period-selector {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin: 0.5rem 0;
+}
+
+.period-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  background: var(--gray-dark);
+  border: 2px solid var(--gray);
+  border-radius: 0.75rem;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 100px;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.period-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.period-button:hover::before {
+  left: 100%;
+}
+
+.period-button:hover {
+  background: var(--gray);
+  border-color: var(--primary-color);
+  color: var(--text-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.period-button.active {
+  background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+  border-color: var(--primary-color);
+  color: white;
+  box-shadow: 0 4px 16px rgba(220, 38, 127, 0.3);
+  transform: translateY(-1px);
+}
+
+.period-button.active:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 127, 0.4);
+}
+
+.period-icon {
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.period-button:hover .period-icon {
+  transform: scale(1.1);
+}
+
+.period-text {
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+.grind-period {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--font-sm);
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0.5rem;
+  background: var(--black-card);
+  border-radius: 0.5rem;
+  border: 1px solid var(--gray-dark);
+}
+
+.period-label {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.period-dates {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.days-played {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-style: italic;
+}
+
+.grind-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.grind-stat-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  transition: all var(--transition-medium);
+}
+
+.grind-stat-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  transform: translateY(-2px);
+}
+
+.stat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stat-icon {
+  font-size: 1.25rem;
+}
+
+.stat-label {
+  font-size: var(--font-md);
+  font-weight: 600;
+  color: var(--white-pure);
+}
+
+.stat-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0;
+}
+
+.stat-name {
+  font-size: var(--font-sm);
+  color: var(--white-muted);
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: var(--font-sm);
+  color: var(--white-pure);
+  font-weight: 600;
+}
+
+.loading-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top: 2px solid var(--red-bright);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.error-message,
+.no-data-message {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--white-muted);
+  font-size: var(--font-sm);
+  text-align: center;
+}
+
+.error-message {
+  color: var(--red-bright);
+}
+
+.upgrade-notice {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 165, 0, 0.1));
+  border: 1px solid rgba(255, 215, 0, 0.3);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  margin-top: 1rem;
+}
+
+.upgrade-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.upgrade-icon {
+  font-size: 1.25rem;
+}
+
+.upgrade-text {
+  font-size: var(--font-sm);
+  color: var(--white-muted);
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .grind-chart-container {
+    padding: 1rem;
+  }
+
+  .grind-chart-header {
+    gap: 0.75rem;
+  }
+
+  .grind-chart-title h3 {
+    font-size: var(--font-md);
+  }
+
+  .period-selector {
+    gap: 0.4rem;
+    justify-content: center;
+  }
+
+  .period-button {
+    padding: 0.6rem 1rem;
+    font-size: var(--font-xs);
+    min-width: 85px;
+  }
+
+  .period-icon {
+    font-size: 1rem;
+  }
+
+  .grind-stats-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .grind-stat-card {
+    padding: 0.75rem;
+  }
+
+  .stat-header {
+    gap: 0.4rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-icon {
+    font-size: 1.1rem;
+  }
+
+  .stat-label {
+    font-size: var(--font-xs);
+  }
+
+  .stat-name,
+  .stat-value {
+    font-size: var(--font-xs);
+  }
+}
+
+@media (max-width: 480px) {
+  .grind-chart-container {
+    padding: 0.75rem;
+  }
+
+  .grind-chart-title h3 {
+    font-size: var(--font-md);
+  }
+
+  .period-selector {
+    gap: 0.3rem;
+    justify-content: center;
+  }
+
+  .period-button {
+    padding: 0.5rem 0.8rem;
+    font-size: var(--font-xs);
+    min-width: 75px;
+  }
+
+  .period-icon {
+    font-size: 0.9rem;
+  }
+
+  .period-text {
+    font-size: 0.75rem;
+  }
+
+  .grind-stat-card {
+    padding: 0.5rem;
+  }
+
+  .stat-header {
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .stat-icon {
+    font-size: 1rem;
+  }
+
+  .stat-label {
+    font-size: 0.8rem;
+  }
+
+  .stat-name,
+  .stat-value {
+    font-size: 0.75rem;
+  }
+} 
