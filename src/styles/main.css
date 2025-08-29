@@ -1,7 +1,6 @@
 /* Premium dark theme styling */
 :root {
-  --black-pure: #000000;
-  --black-rich: #121212;
+
   --black-dark: #161616;
   --black-card: #1c1c1e;
   --gray-darker: #2c2c2e;
@@ -111,19 +110,20 @@ body {
 
 /* Header */
 .header {
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: #ffffff;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   padding: 1rem 2.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid #e5e7eb;
   position: sticky;
   top: 0;
   z-index: 100;
   height: var(--header-height);
   flex-shrink: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
 }
 
 /* Mobile header layout */
@@ -263,7 +263,7 @@ body {
 }
 
 .nav-link {
-  color: var(--white-muted);
+  color: #6b7280;
   text-decoration: none;
   font-size: var(--font-sm);
   font-weight: 500;
@@ -283,7 +283,7 @@ body {
 }
 
 .nav-link:hover {
-  color: var(--white-pure);
+  color: #000000;
   transform: translateY(-1px);
 }
 
@@ -871,14 +871,14 @@ body {
 .section-header h1 {
   font-size: var(--font-2xl);
   font-weight: 700;
-  color: var(--white-pure);
+  color: #000000;
   margin-bottom: 0.75rem;
   letter-spacing: -0.02em;
 }
 
 .section-header p {
   font-size: var(--font-lg);
-  color: var(--white-muted);
+  color: #666666;
 }
 
 .feature-grid {
@@ -1038,6 +1038,8 @@ body {
   flex-direction: column;
   gap: 2rem;
   text-align: left;
+  background: #ffffff;
+  color: #000000;
 }
 
 /* Profile Header */
@@ -2700,7 +2702,7 @@ body {
   gap: 0.5rem;
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
-  color: var(--white-pure);
+  color: #6b7280;
   text-decoration: none;
   transition: all 0.2s ease;
   font-weight: 500;
@@ -2711,7 +2713,8 @@ body {
 }
 
 .nav-button:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
 }
 
 .nav-button:hover svg {
@@ -2719,7 +2722,8 @@ body {
 }
 
 .nav-button.active {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--red-bright);
   font-weight: 600;
 }
 
@@ -2918,7 +2922,7 @@ body {
 .mobile-menu-toggle {
   background: none;
   border: none;
-  color: var(--white-pure);
+  color: #6b7280;
   cursor: pointer;
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -2937,7 +2941,7 @@ body {
 .mobile-header-right .notification-container .nav-button {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.7);
+  color: #6b7280;
   cursor: pointer;
   padding: 0.75rem;
   border-radius: 0.5rem;
@@ -2953,8 +2957,8 @@ body {
 }
 
 .mobile-header-right .notification-container .nav-button:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: rgba(255, 255, 255, 0.9);
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
   transform: scale(1.05);
 }
 
@@ -2996,13 +3000,14 @@ body {
 }
 
 .mobile-menu-toggle:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.05);
+  color: #000000;
   transform: scale(1.05);
 }
 
 .mobile-menu-toggle:active {
   transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .mobile-menu-toggle svg {
@@ -6802,7 +6807,6 @@ body {
 .notification-container {
   position: relative;
   z-index: 1201; /* Above mobile menu and other elements */
-  margin-right: 320%;
 }
 
 .notification-badge {

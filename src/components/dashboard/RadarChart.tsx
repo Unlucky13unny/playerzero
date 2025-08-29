@@ -99,9 +99,37 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
 
   if (!profile || loading || !communityAverages || !statBounds) {
     return (
-      <div className="radar-chart-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading performance data...</p>
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          width: '100%',
+          height: isMobile ? '310px' : '487px',
+          background: isMobile ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+          boxShadow: isMobile ? 'none' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
+          borderRadius: isMobile ? '0px' : '8px',
+        }}
+      >
+        <div 
+          style={{
+            width: '40px',
+            height: '40px',
+            border: '3px solid #f3f4f6',
+            borderTop: '3px solid #dc2626',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite',
+            marginBottom: '16px'
+          }}
+        ></div>
+        <p style={{ color: '#000000', fontSize: '14px', textAlign: 'center' }}>Loading performance data...</p>
+        <style>{`
+          @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}</style>
       </div>
     )
   }
@@ -159,7 +187,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
           normalizeStats(profile.total_xp || 0, 'total_xp'),
           normalizeStats(profile.unique_pokedex_entries || 0, 'unique_pokedex_entries')
         ],
-        backgroundColor: 'rgba(220, 38, 127, 0.2)',
+        backgroundColor: 'rgba(255, 182, 193, 0.6)',
         borderColor: 'rgba(220, 38, 127, 1)',
         borderWidth: 2,
         pointBackgroundColor: 'rgba(220, 38, 127, 1)',
@@ -191,11 +219,14 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
   const options = {
     responsive: true,
     maintainAspectRatio: false,
+    layout: {
+      padding: 10
+    },
     plugins: {
       legend: {
-        position: 'top' as const,
+        position: 'bottom' as const,
         labels: {
-          color: '#ffffff',
+          color: '#000000',
           font: {
             size: isVerySmallScreen ? 8 : isMobile ? 10 : 14,
             weight: 500
@@ -237,14 +268,14 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
     scales: {
       r: {
         angleLines: {
-          color: 'rgba(255, 255, 255, 0.1)'
+          color: 'rgba(0, 0, 0, 0.3)'
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)',
+          color: 'rgba(0, 0, 0, 0.2)',
           circular: true
         },
         pointLabels: {
-          color: '#ffffff',
+          color: '#000000',
           font: {
             size: isVerySmallScreen ? 7 : isMobile ? 8 : 13,
             weight: 500
@@ -273,7 +304,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
           }
         },
         ticks: {
-          color: 'rgba(255, 255, 255, 0.5)',
+          color: 'rgba(0, 0, 0, 0.6)',
           backdropColor: 'transparent',
           font: {
             size: 10
@@ -287,17 +318,62 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
   }
 
   return (
-    <div className="radar-chart-container">
+    <div 
+      style={{
+        /* Frame 458 - Mobile: No container, Desktop: Full container */
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: isMobile ? '0px' : '0px 0px 10px',
+        position: 'relative',
+        width: '100%',
+        height: isMobile ? '310px' : '487px',
+        background: isMobile ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+        boxShadow: isMobile ? 'none' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
+        borderRadius: isMobile ? '0px' : '8px',
+      }}
+    >
       {showHeader && (
-        <div className="radar-chart-header">
-          <h2>Performance Radar</h2>
-          <p>See how your stats compare to the community average</p>
+        <div style={{ 
+          textAlign: 'center', 
+          marginBottom: isMobile ? '10px' : '20px', 
+          marginTop: isMobile ? '10px' : '20px' 
+        }}>
+          <h2 style={{ 
+            color: '#000000', 
+            fontSize: isMobile ? '16px' : '20px', 
+            fontWeight: 'bold', 
+            margin: '0 0 8px 0' 
+          }}>Performance Radar</h2>
+          <p style={{ 
+            color: '#666666', 
+            fontSize: isMobile ? '12px' : '14px', 
+            margin: '0' 
+          }}>See how your stats compare to the community average</p>
         </div>
       )}
 
-      <div className="radar-chart-content">
-        <div className="chart-wrapper">
-          <Radar data={data} options={options} />
+      <div style={{ 
+        width: '100%', 
+        height: showHeader ? (isMobile ? 'calc(100% - 60px)' : 'calc(100% - 80px)') : '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '0 5px' : '0 20px'
+      }}>
+        <div style={{ 
+          width: '100%', 
+          height: '100%', 
+          maxWidth: isMobile ? '100%' : '600px',
+          background: isMobile ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
+          borderRadius: isMobile ? '0px' : '8px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{ width: isMobile ? '98%' : '95%', height: isMobile ? '100%' : '95%' }}>
+            <Radar data={data} options={options} />
+          </div>
         </div>
       </div>
     </div>

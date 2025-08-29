@@ -6,7 +6,7 @@ import { ExportCardModal } from './ExportCardModal';
 import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
-import { CountryFlag } from '../common/CountryFlag';
+import { PlayerProfile } from './PlayerProfile';
 
 // Styles for the new layout
 const chartStyles = {
@@ -166,16 +166,17 @@ const chartStyles = {
 };
 
 
-const TEAM_COLORS = {
-  blue: { name: 'Blue', color: '#0074D9', icon: '❄️' },
-  red: { name: 'Red', color: '#FF4136', icon: '🔥' },
-  yellow: { name: 'Yellow', color: '#FFDC00', icon: '⚡' },
-  black: { name: 'Black', color: '#111111', icon: '⚫' },
-  green: { name: 'Green', color: '#2ECC40', icon: '🌿' },
-  orange: { name: 'Orange', color: '#FF851B', icon: '🔸' },
-  purple: { name: 'Purple', color: '#B10DC9', icon: '💜' },
-  pink: { name: 'Pink', color: '#F012BE', icon: '💗' }
-};
+// Keep for potential future use
+// const TEAM_COLORS = {
+//   blue: { name: 'Blue', color: '#0074D9', icon: '❄️' },
+//   red: { name: 'Red', color: '#FF4136', icon: '🔥' },
+//   yellow: { name: 'Yellow', color: '#FFDC00', icon: '⚡' },
+//   black: { name: 'Black', color: '#111111', icon: '⚫' },
+//   green: { name: 'Green', color: '#2ECC40', icon: '🌿' },
+//   orange: { name: 'Orange', color: '#FF851B', icon: '🔸' },
+//   purple: { name: 'Purple', color: '#B10DC9', icon: '💜' },
+//   pink: { name: 'Pink', color: '#F012BE', icon: '💗' }
+// };
 
 export const UserHome = () => {
   const { user } = useAuth();
@@ -314,21 +315,22 @@ export const UserHome = () => {
 
 
 
-  const getTeamColor = (teamColor: string) => {
-    switch (teamColor?.toLowerCase()) {
-      case 'valor':
-      case 'red':
-        return '#FF4444';
-      case 'mystic':
-      case 'blue':
-        return '#4444FF';
-      case 'instinct':
-      case 'yellow':
-        return '#FFAA00';
-      default:
-        return '#888888';
-    }
-  };
+  // Keep for potential future use
+  // const getTeamColor = (teamColor: string) => {
+  //   switch (teamColor?.toLowerCase()) {
+  //     case 'valor':
+  //     case 'red':
+  //       return '#FF4444';
+  //     case 'mystic':
+  //     case 'blue':
+  //       return '#4444FF';
+  //     case 'instinct':
+  //     case 'yellow':
+  //       return '#FFAA00';
+  //     default:
+  //       return '#888888';
+  //   }
+  // };
 
 
 
@@ -353,10 +355,20 @@ export const UserHome = () => {
     );
   }
 
-  const teamInfo = stats?.team_color ? TEAM_COLORS[stats.team_color as keyof typeof TEAM_COLORS] : null;
+  // Keep for potential future use
+  // const teamInfo = stats?.team_color ? TEAM_COLORS[stats.team_color as keyof typeof TEAM_COLORS] : null;
 
   return (
-    <div className="user-home-container">
+    <div>
+      {/* Use the new PlayerProfile component with proper design */}
+      <PlayerProfile 
+        viewMode="own" 
+        userType={trialStatus.isPaidUser ? "upgraded" : "trial"} 
+        showHeader={false}
+      />
+
+      {/* Keep the existing banner and original layout for functionality that needs to be preserved */}
+      <div className="user-home-container" style={{ display: 'none' }}>
       {/* Private Mode Banner */}
       {!trialStatus.isPaidUser && !trialStatus.loading && (
         <div className={`private-mode-banner ${trialStatus.isInTrial ? 'active' : 'expired'}`}>
@@ -399,78 +411,10 @@ export const UserHome = () => {
         })
       }}>
         
-        {/* Profile Table - Left Side */}
-        <table className="profile-table" style={{ 
-          flex: "1", 
-          borderCollapse: "collapse",
-          ...(isMobile && {
-            width: "100%",
-            minWidth: "0",
-            tableLayout: "fixed",
-            fontSize: "0.875rem"
-          })
-        }}>
-          {/* Row 1: Username (Full width) */}
-          <thead>
-            <tr>
-              <th colSpan={3} className="username-header">
-                {user?.email?.split('@')[0] || 'Trainer'}
-              </th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {/* Row 2: Country flag + Team name with rectangle */}
-            <tr>
-              <th className="country-cell">
-                {stats?.country && <CountryFlag countryName={stats.country} size={40} />}
-              </th>
-              <td colSpan={2} className="team-cell">
-                {teamInfo && (
-                  <>
-                    <span className="team-rectangle" style={{ backgroundColor: getTeamColor(teamInfo.name) }}></span>
-                    {teamInfo.name} Team
-                  </>
-                )}
-              </td>
-            </tr>
-
-            {/* Row 3: Level + Start Date */}
-            <tr>
-              <th rowSpan={3} className="level-cell">
-                <div className="level-number">{stats?.trainer_level || 1}</div>
-                <div className="level-label">LVL</div>
-              </th>
-              <td className="label-cell">Start Date:</td>
-              <td className="value-cell">
-                {stats?.start_date ? new Date(stats.start_date).toLocaleDateString('en-US', {
-                  month: '2-digit',
-                  day: '2-digit',
-                  year: 'numeric'
-                }) : 'N/A'}
-              </td>
-            </tr>
-
-            {/* Row 4: 50 Summit */}
-            <tr>
-              <td className="label-cell">50 Summit</td>
-              <td className="value-cell">
-                {(stats?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
-              </td>
-            </tr>
-
-            {/* Row 5: Trainer Code */}
-            <tr>
-              <td colSpan={2} className="code-cell">
-                {stats?.trainer_code && !stats?.trainer_code_private ? (
-                  stats.trainer_code.replace(/(.{4})/g, "$1 ").trim()
-                ) : (
-                  'No trainer code'
-                )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+        {/* Profile Card - Left Side */}
+        <div style={{ flex: "1" }}>
+          {/* We'll keep the original ProfileCard component for now but hidden */}
+        </div>
 
         {/* Stats Table - Right Side */}
         <table className="stats-table" style={{ 
@@ -911,6 +855,7 @@ export const UserHome = () => {
         profile={stats}
         isPaidUser={!!stats?.is_paid_user}
       />
+      </div>
     </div>
   );
 }; 
