@@ -25,7 +25,7 @@ export const Logo = ({ size = 'medium', className = '', style = {} }: LogoProps)
       display: 'inline-block',
     }}>
       <img 
-        src="/images/image.png" 
+        src="/images/logo.png" 
         alt="PlayerZERO Logo" 
         style={{ 
           height,

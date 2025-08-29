@@ -4,6 +4,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { NotificationBell } from '../common/NotificationBell'
+import { Menu, User, Trophy } from "lucide-react"
+import { Button } from "../ui/button"
+import { Crown } from "../icons/Crown"
+import { useMobile } from "../../hooks/useMobile"
 
 type LayoutProps = {
   children: ReactNode
@@ -16,6 +20,7 @@ export const Layout = ({ children }: LayoutProps) => {
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false)
+  const isMobile = useMobile()
   
   const handleSignOut = async () => {
     await signOut()
@@ -54,8 +59,140 @@ export const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="app-container">
-      {/* Header */}
-      <header className="header">
+      {/* Header - Updated to match figma-ui design */}
+      <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
+        <div className="flex items-center">
+          <Link to="/UserProfile" className="text-xl font-bold text-black">
+            Player<span className="font-normal">ZER⊘</span>
+          </Link>
+        </div>
+
+        <div className="flex items-center gap-3">
+          {!isMobile && user && (
+            <>
+              <Link to="/UserProfile">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
+                >
+                  <User className="w-4 h-4 mr-1" />
+                  Profile
+                </Button>
+              </Link>
+              <Link to="/leaderboards">
+                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50">
+                  <Trophy className="w-4 h-4 mr-1" />
+                  Leaderboard
+                </Button>
+              </Link>
+            </>
+          )}
+
+          {user && (
+            <>
+              {!trialStatus.isPaidUser && !isMobile && (
+                <button 
+                  onClick={() => navigate('/upgrade')}
+                  className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
+                  title="Upgrade to Premium"
+                >
+                  <Crown className="w-4 h-4 text-white" />
+                </button>
+              )}
+              <NotificationBell />
+            </>
+          )}
+
+          {/* Features Dropdown */}
+          <div className="relative" id="features-dropdown">
+            <button
+              onClick={toggleFeaturesDropdown}
+              className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+              title="Menu"
+            >
+              <Menu className="w-5 h-5 text-gray-600" />
+            </button>
+
+            {featuresDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                <div className="px-4 py-2 border-b border-gray-100">
+                  <div className="text-sm font-medium text-gray-900">{user?.email}</div>
+                  <div className="text-xs text-gray-500">
+                    {trialStatus.isPaidUser ? "Premium Account" : "Trial Account"}
+                  </div>
+                </div>
+                
+                <Link
+                  to="/profile?edit=true"
+                  onClick={() => setFeaturesDropdownOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  <User className="w-4 h-4 mr-3" />
+                  Edit Profile
+                </Link>
+                
+                <Link
+                  to="/update-stats"
+                  onClick={() => setFeaturesDropdownOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  📊 Update Stats
+                </Link>
+                
+                <Link
+                  to="/calculators"
+                  onClick={() => setFeaturesDropdownOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  🧮 Calculators
+                </Link>
+                
+                <Link
+                  to="/search"
+                  onClick={() => setFeaturesDropdownOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  🔍 Search Users
+                </Link>
+                
+                <Link
+                  to="/contact"
+                  onClick={() => setFeaturesDropdownOpen(false)}
+                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                >
+                  💬 Help & Support
+                </Link>
+
+                {!trialStatus.isPaidUser && (
+                  <button
+                    onClick={() => {
+                      navigate('/upgrade')
+                      setFeaturesDropdownOpen(false)
+                    }}
+                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                  >
+                    <Crown className="w-4 h-4 mr-3" />
+                    Upgrade to Premium
+                  </button>
+                )}
+                
+                <div className="border-t border-gray-100 mt-2 pt-2">
+                  <button
+                    onClick={handleSignOut}
+                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  >
+                    🚪 Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* Old Header - Keep for backwards compatibility but hidden */}
+      <header className="header" style={{ display: 'none' }}>
         {/* Mobile Layout */}
         <div className="mobile-header-container mobile-only">
           <div className="mobile-header-left">
@@ -82,7 +219,7 @@ export const Layout = ({ children }: LayoutProps) => {
           </div>
           
           <Link to="/UserProfile" className="logo mobile-logo">
-            <Logo style={{ width: '93%',marginRight: '45%',marginLeft: '-1%' ,marginTop:"3%",color: 'var(--white-pure)' }} />
+            <Logo style={{ width: '93%', marginRight: '45%', marginLeft: '-1%', marginTop: "3%", color: '#000000' }} />
           </Link>
 
           <div className="mobile-header-right">
@@ -92,7 +229,7 @@ export const Layout = ({ children }: LayoutProps) => {
 
         {/* Desktop Logo */}
         <Link to="/UserProfile" className="logo desktop-only">
-          <Logo style={{ color: 'var(--white-pure)' }} />
+          <Logo style={{ color: '#000000' }} />
         </Link>
         
         {/* Private Mode Countdown - Only for active private mode users */}
@@ -103,119 +240,157 @@ export const Layout = ({ children }: LayoutProps) => {
         )}
 
         {/* Desktop Navigation */}
-        {user && (
-          <nav className="nav-links desktop-only">
-            <Link 
-              to="/UserProfile" 
-              className={`nav-button ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <circle cx="12" cy="7" r="4" />
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-              </svg>
-              Profile
-            </Link>
-            <Link 
-              to="/leaderboards" 
-              className={`nav-button ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="2" y="2" width="8" height="8" />
-                <rect x="14" y="2" width="8" height="8" />
-                <rect x="2" y="14" width="8" height="8" />
-                <rect x="14" y="14" width="8" height="8" />
-              </svg>
-              Leaderboard
-            </Link>
-            
-            <NotificationBell />
-          </nav>
-        )}
+        <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
+          {user && (
+            <>
+              <div style={{ marginRight: 'auto' }}>
+                {/* Left side - empty or can be used for logo/branding */}
+              </div>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <Link 
+                  to="/UserProfile" 
+                  className={`nav-button ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
+                  style={{
+                    color: '#ef4444',
+                    border: '1px solid #ef4444',
+                    backgroundColor: 'transparent',
+                    borderRadius: '0.375rem',
+                    padding: '0.375rem 0.75rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.backgroundColor = '#fef2f2';
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem' }}>
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  </svg>
+                  Profile
+                </Link>
+                <Link 
+                  to="/leaderboards" 
+                  className={`nav-button ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
+                  style={{
+                    color: '#6b7280',
+                    border: '1px solid #d1d5db',
+                    backgroundColor: 'transparent',
+                    borderRadius: '0.375rem',
+                    padding: '0.375rem 0.75rem',
+                    fontSize: '0.875rem',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease',
+                    textDecoration: 'none'
+                  }}
+                  onMouseEnter={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.backgroundColor = '#f9fafb';
+                    target.style.borderColor = '#9ca3af';
+                  }}
+                  onMouseLeave={(e) => {
+                    const target = e.target as HTMLElement;
+                    target.style.backgroundColor = 'transparent';
+                    target.style.borderColor = '#d1d5db';
+                  }}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem' }}>
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
+                    <path d="M14 9h1.5a2.5 2.5 0 0 1 0 5H14"></path>
+                    <path d="M6 9v6"></path>
+                    <path d="M14 9v6"></path>
+                    <path d="M6 15h8"></path>
+                    <path d="M8 9h4"></path>
+                    <path d="M8 15v6"></path>
+                    <path d="M12 15v6"></path>
+                  </svg>
+                  Leaderboard
+                </Link>
+                <NotificationBell />
+                
+                {/* Features Dropdown */}
+                <div className="features-dropdown-container" id="features-dropdown">
+                  <button 
+                    className="nav-button icon-only"
+                    onClick={toggleFeaturesDropdown}
+                    title="Features"
+                    style={{
+                      border: 'none',
+                      background: 'transparent',
+                      marginLeft: '0.25rem'
+                    }}
+                  >
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="3">
+                      <path d="M3 6h18M3 12h18M3 18h18"></path>
+                    </svg>
+                  </button>
+                  
+                  {featuresDropdownOpen && (
+                    <div className="features-dropdown-menu">
+                      <Link 
+                        to="/profile?edit=true" 
+                        className="dropdown-item"
+                        onClick={() => setFeaturesDropdownOpen(false)}
+                      >
+                        ✏️ Edit Profile
+                      </Link>
+                      <Link 
+                        to="/update-stats" 
+                        className="dropdown-item"
+                        onClick={() => setFeaturesDropdownOpen(false)}
+                      >
+                        📊 Update Stats
+                      </Link>
+                      <Link 
+                        to="/calculators" 
+                        className="dropdown-item"
+                        onClick={() => setFeaturesDropdownOpen(false)}
+                      >
+                        🧮 Calculators
+                      </Link>
+                      <Link 
+                        to="/search" 
+                        className="dropdown-item"
+                        onClick={() => setFeaturesDropdownOpen(false)}
+                      >
+                        🔍 Search Users
+                      </Link>
+                      <Link 
+                        to="/contact" 
+                        className="dropdown-item"
+                        onClick={() => setFeaturesDropdownOpen(false)}
+                      >
+                        💬 Help & Support
+                      </Link>
+                      <button
+                        onClick={handleSignOut}
+                        className="dropdown-item"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                      >
+                        🚪 Sign Out
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
         
         {/* Desktop Actions */}
         <div className="nav-actions desktop-only">
           {user ? (
-            <>
-              {/* Quick Navigation Buttons */}
-              <div className="quick-nav-buttons">
-                {/* Profile and Leaderboard buttons removed */}
-              </div>
-
-              {/* Features Dropdown */}
-              <div className="features-dropdown-container" id="features-dropdown">
-                <button 
-                  className="nav-button icon-only"
-                  onClick={toggleFeaturesDropdown}
-                  title="Features"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                    <path d="M3 6h18M3 12h18M3 18h18"></path>
-                  </svg>
-                </button>
-                
-                {featuresDropdownOpen && (
-                  <div className="features-dropdown-menu">
-                    <Link 
-                      to="/profile?edit=true" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      ✏️ Edit Profile
-                    </Link>
-                    <Link 
-                      to="/update-stats" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      📊 Update Stats
-                    </Link>
-                    <Link 
-                      to="/calculators" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      🧮 Calculators
-                    </Link>
-                    <Link 
-                      to="/search" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      🔍 Search Users
-                    </Link>
-                    <Link 
-                      to="/contact" 
-                      className="dropdown-item"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                    >
-                      💬 Help & Support
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {!trialStatus.loading && (
-                trialStatus.isPaidUser ? (
-                  <span className="badge">PRO</span>
-                ) : (
-                  <Link to="/upgrade" className="nav-link highlight">
-                    Upgrade
-                  </Link>
-                )
-              )}
-              
-              <div className="avatar">
-                {user.email?.charAt(0).toUpperCase()}
-              </div>
-              
-              <button
-                onClick={handleSignOut}
-                className="nav-link"
-                style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-              >
-                Sign out
-              </button>
-            </>
+            <div className="quick-nav-buttons">
+              {/* Profile and Leaderboard buttons removed */}
+            </div>
           ) : (
             <>
               <Link to="/login" className="nav-link">
@@ -237,10 +412,6 @@ export const Layout = ({ children }: LayoutProps) => {
             
             <div className={`mobile-menu ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
               <div className="mobile-menu-header">
-                <div className="avatar">
-                  {user.email?.charAt(0).toUpperCase()}
-                </div>
-                <div className="user-email">{user.email}</div>
                 {!trialStatus.loading && (
                   trialStatus.isPaidUser ? (
                     <span className="badge">PRO</span>
@@ -378,30 +549,29 @@ export const Layout = ({ children }: LayoutProps) => {
         {children}
       </main>
       
-      {/* Footer */}
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-info">
-            <div className="footer-logo">
-              <Logo size="small" style={{ color: 'var(--white-pure)' }} />
+      {/* Footer - Hide on leaderboard page in web view */}
+      {!(location.pathname === '/leaderboards' && !isMobile) && (
+        <footer className="footer">
+          <div className="footer-content">
+            <div className="footer-info">
+              <p className="footer-copyright">
+                © {new Date().getFullYear()} PlayerZERO. All rights reserved.
+              </p>
             </div>
-            <p className="footer-copyright">
-              © {new Date().getFullYear()} PlayerZERO. All rights reserved.
-            </p>
+            <div className="footer-links">
+              <a href="#" className="footer-link">
+                Terms
+              </a>
+              <a href="#" className="footer-link">
+                Privacy
+              </a>
+              <Link to="/contact" className="footer-link">
+                Contact
+              </Link>
+            </div>
           </div>
-          <div className="footer-links">
-            <a href="#" className="footer-link">
-              Terms
-            </a>
-            <a href="#" className="footer-link">
-              Privacy
-            </a>
-            <Link to="/contact" className="footer-link">
-              Contact
-            </Link>
-          </div>
-        </div>
-      </footer>
+        </footer>
+      )}
     </div>
   )
 } 

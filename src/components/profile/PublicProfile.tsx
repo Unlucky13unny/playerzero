@@ -7,7 +7,6 @@ import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
 
-
 interface TeamColor {
   value: string
   label: string
@@ -33,6 +32,7 @@ export const PublicProfile = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamColor | null>(null)
+  const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'alltime'>('monthly')
 
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
@@ -157,9 +157,11 @@ export const PublicProfile = () => {
     }
   }
 
-
-
-
+  const copyTrainerCode = () => {
+    if (profile?.trainer_code) {
+      navigator.clipboard.writeText(profile.trainer_code.replace(/\s/g, ''))
+    }
+  }
 
   if (loading) {
     return (
@@ -191,107 +193,187 @@ export const PublicProfile = () => {
 
   return (
     <div className="user-home-container">
-      {/* Page Header */}
-      <div className="section-header">
-        <h1 style={{ color: selectedTeam?.color || '#dc267f' }}>
-          {profile.trainer_name || 'Trainer Profile'}
-        </h1>
-      </div>
+      
 
-      {/* Profile Header - Side by Side Layout */}
-      <div className="profile-card-container" style={{ display: "flex", gap: "2rem", alignItems: "flex-start" }}>
-        
-        {/* Profile Table - Left Side */}
-        <table className="profile-table" style={{ flex: "1", borderCollapse: "collapse" }}>
-          {/* Row 1: Username (Full width) */}
-          <thead>
-            <tr>
-              <th colSpan={3} className="username-header">
-                {profile.trainer_name || 'Trainer'}
-              </th>
-            </tr>
-          </thead>
+      {/* Profile Card Container */}
+      <div className="profile-card-container">
+        <div className="profile-main-layout">
+          
+          {/* Left Column - Player Information */}
+          <div className="profile-left-column">
+            
+            {/* Player Identity */}
+            <div className="player-identity">
+              <div className="player-level">
+                {profile.trainer_level || 1}
+                <div className="player-level-label">LVL</div>
+              </div>
+              
+              <div className="player-info">
+                <div className="player-name">{profile.trainer_name || 'Trainer'}</div>
+                <div className="player-location">
+                  {profile.country && <CountryFlag countryName={profile.country} size={16} />}
+                  <span>{profile.country || 'Unknown'}</span>
+                </div>
+                <div className="social-icons">
+                  <SocialIcon platform="facebook" size={24} color="currentColor" />
+                  <SocialIcon platform="instagram" size={24} color="currentColor" />
+                  <SocialIcon platform="snapchat" size={24} color="currentColor" />
+                </div>
+              </div>
+              
+              <div className="public-mode-badge">Public mode</div>
+            </div>
 
-          <tbody>
-            {/* Row 2: Country flag + Team name with rectangle */}
-            <tr>
-              <th className="country-cell">
-                {profile.country && <CountryFlag countryName={profile.country} size={40} />}
-              </th>
-              <td colSpan={2} className="team-cell">
-                {selectedTeam && (
-                  <>
-                    <span className="team-rectangle" style={{ backgroundColor: selectedTeam.color }}></span>
-                    {selectedTeam.team}
-                  </>
-                )}
-              </td>
-            </tr>
-
-            {/* Row 3: Level + Start Date */}
-            <tr>
-              <th rowSpan={3} className="level-cell">
-                <div className="level-number">{profile.trainer_level || 1}</div>
-                <div className="level-label">LVL</div>
-              </th>
-              <td className="label-cell">Start Date:</td>
-              <td className="value-cell">
+            {/* Detailed Stats */}
+            <div className="detailed-stats">
+              <div className="stat-row">
+                <span className="stat-label">Team:</span>
+                <span className="stat-value team-value">{selectedTeam?.label || 'Unknown'}</span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Start Date:</span>
+                <span className="stat-value">
                 {profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', {
                   month: '2-digit',
                   day: '2-digit',
                   year: 'numeric'
                 }) : 'N/A'}
-              </td>
-            </tr>
-
-            {/* Row 4: 50 Summit */}
-            <tr>
-              <td className="label-cell">50 Summit</td>
-              <td className="value-cell">
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Summit Date:</span>
+                <span className="stat-value">
                 {(profile.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
-              </td>
-            </tr>
-
-            {/* Row 5: Trainer Code */}
-            <tr>
-              <td colSpan={2} className="code-cell">
+                </span>
+              </div>
+              <div className="stat-row">
+                <span className="stat-label">Trainer Code:</span>
+                <span className="stat-value">
                 {profile.is_paid_user && profile.trainer_code && !profile.trainer_code_private ? (
-                  profile.trainer_code.replace(/(.{4})/g, "$1 ").trim()
+                    <>
+                      {profile.trainer_code.replace(/(.{4})/g, "$1 ").trim()}
+                      <span className="copy-icon" onClick={copyTrainerCode}>📋</span>
+                    </>
                 ) : (
                   'No trainer code'
                 )}
-              </td>
-            </tr>
-          </tbody>
-        </table>
+                </span>
+              </div>
+            </div>
 
-        {/* Stats Table - Right Side */}
-        <table className="stats-table" style={{ width: "50%", borderCollapse: "collapse" }}>
-          {/* Row 1: Grind Chart Header */}
-          <thead>
-            <tr>
-              <th colSpan={4} className="grind-chart-header">
-                Grind Chart
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {/* Row 2: Column Headers */}
-            <tr>
-              <th className="stat-value">KM/DAY</th>
-              <th className="stat-value">CAUGHT/DAY</th>
-              <th className="stat-value">STOPS/DAY</th>
-              <th className="stat-value">XP/DAY</th>
-            </tr>
-            {/* Row 3: Values */}
-            <tr>
-              <td className="stat-value">{profile.distance_walked?.toLocaleString() || 0} km</td>
-              <td className="stat-value">{profile.pokemon_caught?.toLocaleString() || 0}</td>
-              <td className="stat-value">{profile.pokestops_visited?.toLocaleString() || 0}</td>
-              <td className="stat-value">{profile.total_xp?.toLocaleString() || 0}</td>
-            </tr>
-          </tbody>
-        </table>
+            {/* Timeframe Tabs */}
+            <div className="timeframe-tabs">
+              <button 
+                className={`timeframe-tab ${selectedTimeframe === 'weekly' ? 'active' : ''}`}
+                onClick={() => setSelectedTimeframe('weekly')}
+              >
+                Weekly
+              </button>
+              <button 
+                className={`timeframe-tab ${selectedTimeframe === 'monthly' ? 'active' : ''}`}
+                onClick={() => setSelectedTimeframe('monthly')}
+              >
+                Monthly
+              </button>
+              <button 
+                className={`timeframe-tab ${selectedTimeframe === 'alltime' ? 'active' : ''}`}
+                onClick={() => setSelectedTimeframe('alltime')}
+              >
+                All time
+              </button>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="kpi-grid">
+              <div className="kpi-card">
+                <div className="kpi-value">{(profile.distance_walked || 0).toLocaleString()} km</div>
+                <div className="kpi-label">Distance Walked</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-value">{(profile.pokemon_caught || 0).toLocaleString()}</div>
+                <div className="kpi-label">Pokémon Caught</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-value">{(profile.pokestops_visited || 0).toLocaleString()}</div>
+                <div className="kpi-label">Pokéstops Visited</div>
+              </div>
+              <div className="kpi-card">
+                <div className="kpi-value">{(profile.total_xp || 0).toLocaleString()}</div>
+                <div className="kpi-label">Total XP</div>
+              </div>
+            </div>
+
+            {/* Shareables Hub */}
+            <div className="shareables-hub">
+              <div className="shareables-header">
+                <span>📤</span>
+                <span className="shareables-title">Shareables Hub</span>
+              </div>
+              <div className="shareables-description">
+                Create shareable cards of your achievements and stats. Show off your progress and let the community verify your accomplishments.
+              </div>
+              <div className="verification-badge">
+                <div className="verification-left">
+                  <span className="verification-icon">✅</span>
+                  <div>
+                    <div className="verification-text">Stats verified</div>
+                    <div className="verification-date">Uploaded Jul 15th, 2025</div>
+                  </div>
+                </div>
+                <span className="delete-icon">🗑️</span>
+              </div>
+              <div className="disclaimer">
+                Screenshots are publicly viewable for transparency and anti-cheat verification.
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Statistics */}
+          <div className="profile-right-column">
+            
+            {/* Grind Stats */}
+            <div className="grind-stats">
+              <div className="grind-stats-title">Grind Stats</div>
+              <div className="grind-stats-grid">
+                <div className="grind-stat-card">
+                  <div className="grind-stat-value">4.6</div>
+                  <div className="grind-stat-label">Km</div>
+                </div>
+                <div className="grind-stat-card">
+                  <div className="grind-stat-value">52.1</div>
+                  <div className="grind-stat-label">Caught</div>
+                </div>
+                <div className="grind-stat-card">
+                  <div className="grind-stat-value">46.8</div>
+                  <div className="grind-stat-label">Stops</div>
+                </div>
+                <div className="grind-stat-card">
+                  <div className="grind-stat-value">33.4K</div>
+                  <div className="grind-stat-label">XP</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Performance Overview */}
+            <div className="performance-overview">
+              <div className="performance-title">Performance Overview</div>
+              <div className="radar-chart-container">
+                <RadarChart
+                  profile={profile ? {
+                    ...profile,
+                    id: profile.id || '',
+                    user_id: profile.user_id,
+                    trainer_code: profile.trainer_code || '',
+                    trainer_code_private: !profile.is_paid_user
+                  } : null}
+                  isPaidUser={trialStatus.isPaidUser}
+                  showHeader={false}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Social Links Section */}
@@ -323,24 +405,6 @@ export const PublicProfile = () => {
         ) : (
           <p className="private-notice">This user's social links are private</p>
         )}
-      </div>
-
-      {/* Radar Chart */}
-      <div className="radar-chart-section">
-        <h2>Performance Overview</h2>
-        <div className="radar-chart-container">
-          <RadarChart
-            profile={profile ? {
-              ...profile,
-              id: profile.id || '',
-              user_id: profile.user_id,
-              trainer_code: profile.trainer_code || '',
-              trainer_code_private: !profile.is_paid_user
-            } : null}
-            isPaidUser={trialStatus.isPaidUser}
-            showHeader={false}
-          />
-        </div>
       </div>
 
       {/* Verification Screenshots */}

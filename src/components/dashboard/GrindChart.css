@@ -28,7 +28,7 @@
   margin: 0;
   font-size: var(--font-lg);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #000000;
 }
 
 /* Professional Period Selector Styles */
@@ -45,10 +45,10 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 1.25rem;
-  background: var(--gray-dark);
-  border: 2px solid var(--gray);
+  background: #f3f4f6;
+  border: 2px solid #d1d5db;
   border-radius: 0.75rem;
-  color: var(--text-secondary);
+  color: #374151;
   font-size: var(--font-sm);
   font-weight: 600;
   cursor: pointer;
@@ -75,9 +75,9 @@
 }
 
 .period-button:hover {
-  background: var(--gray);
-  border-color: var(--primary-color);
-  color: var(--text-primary);
+  background: #e5e7eb;
+  border-color: #ef4444;
+  color: #000000;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
@@ -125,11 +125,11 @@
 
 .period-label {
   font-weight: 600;
-  color: var(--text-primary);
+  color: #000000;
 }
 
 .period-dates {
-  color: var(--text-primary);
+  color: #000000;
   font-weight: 500;
 }
 
@@ -176,7 +176,7 @@
 .stat-label {
   font-size: var(--font-md);
   font-weight: 600;
-  color: var(--white-pure);
+  color: #000000;
 }
 
 .stat-values {
