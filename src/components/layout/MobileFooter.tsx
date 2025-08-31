@@ -24,8 +24,8 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
             size="sm"
             className={`w-full h-10 text-xs font-medium ${
               currentPage === "profile"
-                ? "text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
-                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-transparent"
+                ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
+                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-white"
             }`}
           >
             <User className="w-3.5 h-3.5 mr-1.5" />
@@ -38,8 +38,8 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
             size="sm"
             className={`w-full h-10 text-xs font-medium ${
               currentPage === "leaderboard"
-                ? "text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
-                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-transparent"
+                ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
+                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-white"
             }`}
           >
             <Trophy className="w-3.5 h-3.5 mr-1.5" />

@@ -74,14 +74,14 @@ export const Layout = ({ children }: LayoutProps) => {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
+                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent w-32"
                 >
                   <User className="w-4 h-4 mr-1" />
                   Profile
                 </Button>
               </Link>
               <Link to="/leaderboards">
-                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50 w-32">
                   <Trophy className="w-4 h-4 mr-1" />
                   Leaderboard
                 </Button>
@@ -115,74 +115,56 @@ export const Layout = ({ children }: LayoutProps) => {
             </button>
 
             {featuresDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-                <div className="px-4 py-2 border-b border-gray-100">
-                  <div className="text-sm font-medium text-gray-900">{user?.email}</div>
-                  <div className="text-xs text-gray-500">
-                    {trialStatus.isPaidUser ? "Premium Account" : "Trial Account"}
-                  </div>
-                </div>
+              <div className="layout-menu-dropdown">
+              
                 
                 <Link
                   to="/profile?edit=true"
                   onClick={() => setFeaturesDropdownOpen(false)}
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="layout-menu-item"
                 >
-                  <User className="w-4 h-4 mr-3" />
-                  Edit Profile
+                
+                  Profile Settings
                 </Link>
                 
                 <Link
                   to="/update-stats"
                   onClick={() => setFeaturesDropdownOpen(false)}
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="layout-menu-item"
                 >
-                  📊 Update Stats
+                  Update Stats
                 </Link>
                 
                 <Link
                   to="/calculators"
                   onClick={() => setFeaturesDropdownOpen(false)}
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="layout-menu-item"
                 >
-                  🧮 Calculators
+                 Calculators
                 </Link>
                 
                 <Link
                   to="/search"
                   onClick={() => setFeaturesDropdownOpen(false)}
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="layout-menu-item"
                 >
-                  🔍 Search Users
+                  Search Users
                 </Link>
                 
                 <Link
                   to="/contact"
                   onClick={() => setFeaturesDropdownOpen(false)}
-                  className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                  className="layout-menu-item"
                 >
-                  💬 Help & Support
+                  Help & Support
                 </Link>
 
-                {!trialStatus.isPaidUser && (
-                  <button
-                    onClick={() => {
-                      navigate('/upgrade')
-                      setFeaturesDropdownOpen(false)
-                    }}
-                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                  >
-                    <Crown className="w-4 h-4 mr-3" />
-                    Upgrade to Premium
-                  </button>
-                )}
-                
-                <div className="border-t border-gray-100 mt-2 pt-2">
+                <div className="layout-menu-separator">
                   <button
                     onClick={handleSignOut}
-                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                    className="layout-menu-item"
                   >
-                    🚪 Sign Out
+                     Sign Out
                   </button>
                 </div>
               </div>

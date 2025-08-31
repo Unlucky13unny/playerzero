@@ -68,7 +68,7 @@ export function PlayerHeader({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent"
+                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent w-32"
                 >
                   <User className="w-4 h-4 mr-1" />
                   Profile
@@ -77,7 +77,7 @@ export function PlayerHeader({
             )}
             {showLeaderboardButton && (
               <Link to="/leaderboards">
-                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50">
+                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50 w-32">
                   <Trophy className="w-4 h-4 mr-1" />
                   Leaderboard
                 </Button>
@@ -111,73 +111,55 @@ export function PlayerHeader({
           </button>
 
           {menuOpen && (
-            <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
-              <div className="px-4 py-2 border-b border-gray-100">
-                <div className="text-sm font-medium text-gray-900">{user?.email}</div>
-                <div className="text-xs text-gray-500">
-                  {userType === "trial" ? "Trial Account" : "Premium Account"}
-                </div>
-              </div>
-              
+            <div className="layout-menu-dropdown" style={{ width: '177px', height: '239px' }}>
+              {/* Profile Settings */}
               <Link
                 to="/profile?edit=true"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="layout-menu-item"
+                style={{ width: '157px', height: '36px', padding: '0px 8px' }}
               >
-                <User className="w-4 h-4 mr-3" />
-                Edit Profile
+                Profile Settings
               </Link>
-              
-              <Link
-                to="/update-stats"
-                onClick={() => setMenuOpen(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-              >
-                📊 Update Stats
-              </Link>
-              
+
+              {/* Color options */}
               <Link
                 to="/calculators"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="layout-menu-item"
+                style={{ width: '157px', height: '36px', padding: '0px 8px' }}
               >
-                🧮 Calculators
+                Calculators
               </Link>
-              
+
+              {/* Search Users */}
               <Link
                 to="/search"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="layout-menu-item"
+                style={{ width: '157px', height: '36px', padding: '0px 8px' }}
               >
-                🔍 Search Users
+                Search Users
               </Link>
-              
+
+              {/* Help & Support */}
               <Link
                 to="/contact"
                 onClick={() => setMenuOpen(false)}
-                className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+                className="layout-menu-item"
+                style={{ width: '157px', height: '36px', padding: '0px 8px' }}
               >
-                💬 Help & Support
+                Help & Support
               </Link>
 
-              {userType === "trial" && (
-                <button
-                  onClick={handleUpgrade}
-                  className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                >
-                  <Crown className="w-4 h-4 mr-3" />
-                  Upgrade to Premium
-                </button>
-              )}
-              
-              <div className="border-t border-gray-100 mt-2 pt-2">
-                <button
-                  onClick={handleSignOut}
-                  className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                >
-                  🚪 Sign Out
-                </button>
-              </div>
+              {/* Logout */}
+              <button
+                onClick={handleSignOut}
+                className="layout-menu-item"
+                style={{ width: '157px', height: '36px', padding: '0px 8px' }}
+              >
+                Logout
+              </button>
             </div>
           )}
         </div>

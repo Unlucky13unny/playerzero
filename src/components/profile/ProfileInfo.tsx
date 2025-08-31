@@ -23,6 +23,32 @@ interface ProfileInfoProps {
   profile?: any
 }
 
+// Utility function to generate social media links
+const getSocialLink = (platform: string, value: string): string | undefined => {
+  if (!value) return undefined
+  
+  switch (platform) {
+    case 'instagram':
+      return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
+    case 'facebook':
+      return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
+    case 'snapchat':
+      return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
+    case 'twitter':
+      return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
+    case 'tiktok':
+      return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
+    case 'youtube':
+      return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
+    case 'twitch':
+      return `https://twitch.tv/${value}`
+    case 'reddit':
+      return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+    default:
+      return value
+  }
+}
+
 export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
   const isMobile = useMobile()
   const getModeButton = () => {
@@ -88,9 +114,56 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
                 <span style={{ color: '#000000' }}>{profile?.country || "Unknown Country"}</span>
               </div>
               <div className="flex gap-2 mt-2">
-                <Facebook className="w-5 h-5 text-blue-600" />
-                <Instagram className="w-5 h-5 text-pink-600" />
-                <SnapchatIcon className="w-5 h-5 text-yellow-400" />
+                {/* Facebook Icon */}
+                {profile?.facebook ? (
+                  <a 
+                    href={getSocialLink('facebook', profile.facebook)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit ${profile.facebook} on Facebook`}
+                  >
+                    <Facebook className="w-5 h-5 text-blue-600 cursor-pointer" />
+                  </a>
+                ) : (
+                  <span title="No Facebook profile linked">
+                    <Facebook className="w-5 h-5 text-gray-400" />
+                  </span>
+                )}
+                
+                {/* Instagram Icon */}
+                {profile?.instagram ? (
+                  <a 
+                    href={getSocialLink('instagram', profile.instagram)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit ${profile.instagram} on Instagram`}
+                  >
+                    <Instagram className="w-5 h-5 text-pink-600 cursor-pointer" />
+                  </a>
+                ) : (
+                  <span title="No Instagram profile linked">
+                    <Instagram className="w-5 h-5 text-gray-400" />
+                  </span>
+                )}
+                
+                {/* Snapchat Icon */}
+                {profile?.snapchat ? (
+                  <a 
+                    href={getSocialLink('snapchat', profile.snapchat)} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Add ${profile.snapchat} on Snapchat`}
+                  >
+                    <SnapchatIcon className="w-5 h-5 text-yellow-400 cursor-pointer" />
+                  </a>
+                ) : (
+                  <span title="No Snapchat profile linked">
+                    <SnapchatIcon className="w-5 h-5 text-gray-400" />
+                  </span>
+                )}
               </div>
             </div>
           </div>

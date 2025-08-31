@@ -152,6 +152,10 @@ export const PublicProfile = () => {
         return `https://twitch.tv/${value}`
       case 'reddit':
         return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+      case 'facebook':
+        return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
+      case 'snapchat':
+        return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
       default:
         return value
     }

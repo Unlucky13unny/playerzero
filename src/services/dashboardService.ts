@@ -844,6 +844,72 @@ export const dashboardService = {
     }
   },
 
+  // Get country average stats for radar chart
+  async getCountryAverageStats(country: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('total_xp, pokemon_caught, distance_walked, pokestops_visited, unique_pokedex_entries, trainer_level')
+      .eq('country', country)
+
+    if (error) {
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        total_xp: 0,
+        pokemon_caught: 0,
+        distance_walked: 0,
+        pokestops_visited: 0,
+        unique_pokedex_entries: 0,
+        trainer_level: 0
+      }
+    }
+
+    const count = data.length
+    return {
+      total_xp: Math.round(data.reduce((sum: number, p: any) => sum + p.total_xp, 0) / count),
+      pokemon_caught: Math.round(data.reduce((sum: number, p: any) => sum + p.pokemon_caught, 0) / count),
+      distance_walked: Math.round(data.reduce((sum: number, p: any) => sum + p.distance_walked, 0) / count * 10) / 10,
+      pokestops_visited: Math.round(data.reduce((sum: number, p: any) => sum + p.pokestops_visited, 0) / count),
+      unique_pokedex_entries: Math.round(data.reduce((sum: number, p: any) => sum + p.unique_pokedex_entries, 0) / count),
+      trainer_level: Math.round(data.reduce((sum: number, p: any) => sum + p.trainer_level, 0) / count)
+    }
+  },
+
+  // Get team average stats for radar chart
+  async getTeamAverageStats(teamColor: string) {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('total_xp, pokemon_caught, distance_walked, pokestops_visited, unique_pokedex_entries, trainer_level')
+      .eq('team_color', teamColor)
+
+    if (error) {
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      return {
+        total_xp: 0,
+        pokemon_caught: 0,
+        distance_walked: 0,
+        pokestops_visited: 0,
+        unique_pokedex_entries: 0,
+        trainer_level: 0
+      }
+    }
+
+    const count = data.length
+    return {
+      total_xp: Math.round(data.reduce((sum: number, p: any) => sum + p.total_xp, 0) / count),
+      pokemon_caught: Math.round(data.reduce((sum: number, p: any) => sum + p.pokemon_caught, 0) / count),
+      distance_walked: Math.round(data.reduce((sum: number, p: any) => sum + p.distance_walked, 0) / count * 10) / 10,
+      pokestops_visited: Math.round(data.reduce((sum: number, p: any) => sum + p.pokestops_visited, 0) / count),
+      unique_pokedex_entries: Math.round(data.reduce((sum: number, p: any) => sum + p.unique_pokedex_entries, 0) / count),
+      trainer_level: Math.round(data.reduce((sum: number, p: any) => sum + p.trainer_level, 0) / count)
+    }
+  },
+
   // Create a new stat entry
   async createStatEntry(stats: Omit<StatEntry, 'id' | 'user_id' | 'created_at'>) {
     const { data: { user } } = await supabase.auth.getUser()

@@ -4,6 +4,7 @@ import { GrindStats } from "./GrindStats"
 import { ShareablesHub } from "../shareables/ShareablesHub"
 import { MobileFooter } from "../layout/MobileFooter"
 import { RadarChart } from "./RadarChart"
+import { ExportCardModal } from "./ExportCardModal"
 import { useMobile } from "../../hooks/useMobile"
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -25,6 +26,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   const [loading, setLoading] = useState(true)
   const [timePeriod, setTimePeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly')
   const [filteredStats, setFilteredStats] = useState<any>(null)
+  const [showExportModal, setShowExportModal] = useState(false)
   const showMobileFooter = isMobile
 
   // Calculate header props - these are used in the conditional render
@@ -72,18 +74,56 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
           try {
             statsResult = await dashboardService.calculateWeeklyGrindStats(user.id)
             console.log('Weekly stats loaded:', statsResult)
+            // Ensure we have valid data before proceeding
+            if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
+                               statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
+              console.log('Weekly stats are all zero, using profile data as fallback')
+              statsResult = {
+                totalXP: profile.total_xp || 0,
+                pokemonCaught: profile.pokemon_caught || 0,
+                distanceWalked: profile.distance_walked || 0,
+                pokestopsVisited: profile.pokestops_visited || 0,
+                uniquePokedexEntries: profile.unique_pokedex_entries || 0
+              }
+            }
           } catch (weeklyError) {
-            console.warn('Weekly stats calculation failed, using fallback:', weeklyError)
-            statsResult = null
+            console.warn('Weekly stats calculation failed, using profile fallback:', weeklyError)
+            // Use profile data as fallback instead of null
+            statsResult = {
+              totalXP: profile.total_xp || 0,
+              pokemonCaught: profile.pokemon_caught || 0,
+              distanceWalked: profile.distance_walked || 0,
+              pokestopsVisited: profile.pokestops_visited || 0,
+              uniquePokedexEntries: profile.unique_pokedex_entries || 0
+            }
           }
           break
         case 'monthly':
           try {
             statsResult = await dashboardService.calculateMonthlyGrindStats(user.id)
             console.log('Monthly stats loaded:', statsResult)
+            // Ensure we have valid data before proceeding
+            if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
+                               statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
+              console.log('Monthly stats are all zero, using profile data as fallback')
+              statsResult = {
+                totalXP: profile.total_xp || 0,
+                pokemonCaught: profile.pokemon_caught || 0, 
+                distanceWalked: profile.distance_walked || 0,
+                pokestopsVisited: profile.pokestops_visited || 0,
+                uniquePokedexEntries: profile.unique_pokedex_entries || 0
+              }
+            }
           } catch (monthlyError) {
-            console.warn('Monthly stats calculation failed, using fallback:', monthlyError)
-            statsResult = null
+            console.warn('Monthly stats calculation failed, using profile fallback:', monthlyError)
+            // Use profile data as fallback instead of null
+            statsResult = {
+              totalXP: profile.total_xp || 0,
+              pokemonCaught: profile.pokemon_caught || 0,
+              distanceWalked: profile.distance_walked || 0,
+              pokestopsVisited: profile.pokestops_visited || 0,
+              uniquePokedexEntries: profile.unique_pokedex_entries || 0
+            }
           }
           break
         case 'alltime':
@@ -157,8 +197,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)
     setTimePeriod(period)
-    // Clear filtered stats to prevent showing stale data while loading
-    setFilteredStats(null)
+    // Don't clear filtered stats to prevent data vanishing - let new data overwrite
+    // setFilteredStats(null) - REMOVED to fix vanishing issue
   }
 
   const formatNumber = (num: number | null | undefined) => {
@@ -208,18 +248,41 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
           />
         )}
         <main 
-          className="fixed inset-0 flex items-center justify-center bg-gray-50"
           style={{
+            position: 'fixed',
             top: showMobileFooter ? '0' : '0',
             bottom: showMobileFooter ? '80px' : '0',
             left: '0',
             right: '0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#f9fafb',
             zIndex: 10
           }}
         >
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-            <p className="text-gray-600 text-lg">Loading your profile...</p>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            textAlign: 'center',
+            gap: '16px'
+          }}>
+            <div style={{
+              width: '48px',
+              height: '48px',
+              border: '2px solid transparent',
+              borderTop: '2px solid #DC2627',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}></div>
+            <p style={{
+              color: '#6B7280',
+              fontSize: '18px',
+              fontWeight: '500',
+              margin: '0'
+            }}>Loading your profile...</p>
           </div>
         </main>
         {showMobileFooter && <MobileFooter currentPage="profile" />}
@@ -514,14 +577,46 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                   />
 
                   {/* 3. Time Period Controls + Upload Card Button */}
-                  <div className="bg-white rounded-lg p-4">
-                    <div className="flex gap-4 mb-6 flex-wrap">
+                  <div className="bg-white rounded-lg p-4" style={{
+                    marginTop: isMobile ? '20px' : '0px',
+                    marginBottom: isMobile ? '20px' : '0px'
+                  }}>
+                    <div 
+                      style={isMobile ? {
+                        /* Frame 541 - Mobile CSS */
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: '0px',
+                        width: '351px',
+                        height: '48px',
+                        borderRadius: '6px',
+                        flex: 'none',
+                        order: 0,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                        marginBottom: '24px',
+                        justifyContent: 'space-between'
+                      } : {
+                        display: 'flex',
+                        gap: '16px',
+                        marginBottom: '24px',
+                        flexWrap: 'wrap'
+                      }}
+                    >
                       <button 
                         onClick={() => handleTimePeriodChange('weekly')}
                         className={`text-sm font-medium transition-colors ${
                           timePeriod === 'weekly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
                         }`}
+                        style={isMobile ? {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px'
+                        } : {}}
                       >
+                        {isMobile && <span>📅</span>}
                         Weekly
                       </button>
                       <button 
@@ -529,7 +624,14 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         className={`text-sm font-medium transition-colors ${
                           timePeriod === 'monthly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
                         }`}
+                        style={isMobile ? {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px'
+                        } : {}}
                       >
+                        {isMobile && <span>📊</span>}
                         Monthly
                       </button>
                       <button 
@@ -537,19 +639,63 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         className={`text-sm font-medium transition-colors ${
                           timePeriod === 'alltime' ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
                         }`}
+                        style={isMobile ? {
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '8px 12px'
+                        } : {}}
                       >
+                        {isMobile && <span>🏆</span>}
                         All time
                       </button>
                       {/* Upload Card Icon */}
                       <button 
-                        className="ml-auto p-2 hover:bg-gray-100 rounded-md transition-colors"
+                        style={isMobile ? {
+                          /* Vector - Upload Icon CSS */
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: '0px',
+                          gap: '10px',
+                          width: '24px',
+                          height: '24px',
+                          flex: 'none',
+                          order: 3,
+                          flexGrow: 0,
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          cursor: 'pointer'
+                        } : {
+                          marginLeft: 'auto',
+                          padding: '8px',
+                          backgroundColor: 'transparent',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          transition: 'background-color 0.2s'
+                        }}
+                        className={isMobile ? "" : "hover:bg-gray-100"}
                         onClick={() => {
-                          // TODO: Implement upload card functionality
+                          if (isMobile) {
+                            setShowExportModal(true)
+                          } else {
+                            // TODO: Implement desktop upload functionality
                           console.log('Upload card clicked')
+                          }
                         }}
                       >
-                        <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10" />
+                        <svg 
+                          style={{
+                            width: '24px',
+                            height: '24px',
+                            color: '#000000'
+                          }}
+                          fill="currentColor"
+                          viewBox="0 0 512 512"
+                        >
+                          <path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/>
                         </svg>
                       </button>
                     </div>
@@ -724,6 +870,14 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
       </main>
 
       {showMobileFooter && <MobileFooter currentPage="profile" />}
+
+      {/* Export Card Modal */}
+      <ExportCardModal
+        isOpen={showExportModal}
+        onClose={() => setShowExportModal(false)}
+        profile={profile}
+        isPaidUser={userType === "upgraded"}
+      />
     </div>
   )
 }
