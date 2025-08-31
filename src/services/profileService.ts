@@ -37,6 +37,8 @@ export type ProfileData = {
   youtube?: string
   twitch?: string
   reddit?: string
+  facebook?: string
+  snapchat?: string
 }
 
 export interface ProfileWithMetadata extends ProfileData {
@@ -67,6 +69,8 @@ export interface PublicProfileData {
   youtube: string
   twitch: string
   reddit: string
+  facebook: string
+  snapchat: string
   created_at: string
   updated_at: string
   is_paid_user: boolean

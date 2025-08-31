@@ -57,5 +57,6 @@ export const SOCIAL_MEDIA = [
   { key: 'youtube', label: 'YouTube', placeholder: 'channel name or URL' },
   { key: 'twitch', label: 'Twitch', placeholder: 'username' },
   { key: 'reddit', label: 'Reddit', placeholder: 'u/username' },
+  { key: 'facebook', label: 'Facebook', placeholder: 'username or profile URL' },
   { key: 'snapchat', label: 'Snapchat', placeholder: '@username' }
 ]; 

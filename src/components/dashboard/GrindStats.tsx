@@ -1,8 +1,8 @@
 import { Crown } from "../icons/Crown"
-import { Button } from "../ui/button"
 import { dashboardService } from "../../services/dashboardService"
 import { useState, useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
+import { useNavigate } from "react-router-dom"
 
 interface GrindStatsProps {
   isMobile?: boolean
@@ -13,6 +13,7 @@ interface GrindStatsProps {
 
 export function GrindStats({ isMobile = false, viewMode = "public", userType = "trial", profile }: GrindStatsProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [backendStats, setBackendStats] = useState<any>(null)
   const [loading, setLoading] = useState(false)
   const showUpgradeButton = viewMode === "own" && userType === "trial" && !isMobile
@@ -94,12 +95,44 @@ export function GrindStats({ isMobile = false, viewMode = "public", userType = "
     >
       {/* Upgrade Button - Top Right */}
       {showUpgradeButton && (
-        <div style={{ position: 'absolute', top: '16px', right: '16px' }}>
-          <Button className="bg-red-500 hover:bg-red-600 text-white">
-            <Crown className="w-4 h-4 mr-1" />
+        <button
+          onClick={() => navigate('/upgrade')}
+          style={{
+            /* Upgrade button specifications */
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '0px',
+            gap: '8px',
+            position: 'absolute',
+            width: '130px',
+            height: '30px',
+            right: '16px',
+            top: '10px',
+            background: '#DC2627',
+            borderRadius: '8px',
+            border: 'none',
+            cursor: 'pointer',
+            transition: 'background-color 0.2s ease',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#B91C1C';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = '#DC2627';
+          }}
+        >
+          <Crown className="w-4 h-4" style={{ color: 'white' }} />
+          <span style={{ 
+            color: 'white', 
+            fontWeight: '600', 
+            fontSize: '16px',
+            fontFamily: 'system-ui, -apple-system, sans-serif'
+          }}>
             Upgrade
-          </Button>
-        </div>
+          </span>
+        </button>
       )}
 
       {/* Grind Stats Title - Left Side */}

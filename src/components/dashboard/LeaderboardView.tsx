@@ -1,10 +1,14 @@
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { Button } from "../ui/button"
 import { Crown } from "../icons/Crown"
 import { Trophy, ChevronDown, Upload } from "lucide-react"
 import { useMobile } from "../../hooks/useMobile"
 import { dashboardService, type LeaderboardEntry } from "../../services/dashboardService"
 import { useAuth } from "../../contexts/AuthContext"
+import { supabase } from "../../supabaseClient"
+import { getCountryFlag } from "../../utils/countryFlags"
+
 
 interface LeaderboardViewProps {
   userType: "trial" | "upgraded"
@@ -12,6 +16,7 @@ interface LeaderboardViewProps {
 
 export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState<"trainers" | "country" | "team">("trainers")
   const [timePeriod, setTimePeriod] = useState<"weekly" | "monthly" | "alltime">("monthly")
   const [sortBy, setSortBy] = useState<"xp" | "catches" | "distance" | "pokestops">("xp")
@@ -20,8 +25,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [exporting, setExporting] = useState(false)
   const isMobile = useMobile()
 
+
+  // Dropdown states
+  const [showTeamsDropdown, setShowTeamsDropdown] = useState(false)
+  const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+  const [showProxyDropdown, setShowProxyDropdown] = useState(false)
+  const [selectedTeam, setSelectedTeam] = useState<string>('All Teams')
+  const [selectedCountry, setSelectedCountry] = useState<string>('All Country')
+
+  
+  // Filter states
+  const [selectedTeamFilter, setSelectedTeamFilter] = useState<string | null>(null)
+  const [selectedCountryFilter, setSelectedCountryFilter] = useState<string | null>(null)
+  
+  // Dropdown data
+  const [teams, setTeams] = useState<Array<{id: string, name: string, color: string}>>([])
+  const [countries, setCountries] = useState<Array<{code: string, name: string, flag: string}>>([])
   // Removed unused tabs and timePeriods arrays
 
   const sortOptions = [
@@ -36,7 +58,32 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     if (user) {
       loadLeaderboardData()
     }
-  }, [user, activeTab, timePeriod, sortBy])
+  }, [user, activeTab, timePeriod, sortBy, selectedTeamFilter, selectedCountryFilter])
+
+  // Load dropdown data when component mounts
+  useEffect(() => {
+    if (user) {
+      fetchTeams()
+      fetchCountries()
+    }
+  }, [user])
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('[data-dropdown]')) {
+        setShowTeamsDropdown(false)
+        setShowCountryDropdown(false)
+        setShowProxyDropdown(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [])
 
   const loadLeaderboardData = async () => {
     if (!user) return
@@ -49,6 +96,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         period: timePeriod === 'alltime' ? 'all-time' as const : timePeriod,
         sortBy,
         view: activeTab === 'trainers' ? 'all' as const : activeTab,
+        filterValue: selectedTeamFilter || selectedCountryFilter || undefined
       }
 
       console.log('Loading leaderboard with params:', params)
@@ -58,14 +106,311 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         throw new Error(result.error.message || 'Failed to load leaderboard')
       }
 
-      console.log('Leaderboard data loaded:', result.data)
-      setLeaderboardData(result.data || [])
+      let filteredData = result.data || []
+
+      // Apply client-side filtering if needed
+      if (selectedTeamFilter && selectedTeamFilter !== 'all') {
+        filteredData = filteredData.filter(entry => 
+          entry.team_color && entry.team_color.toLowerCase() === selectedTeamFilter.toLowerCase()
+        )
+      }
+
+      if (selectedCountryFilter && selectedCountryFilter !== 'all') {
+        filteredData = filteredData.filter(entry => 
+          entry.country && entry.country.toLowerCase() === selectedCountryFilter.toLowerCase()
+        )
+      }
+
+      console.log('Leaderboard data loaded and filtered:', filteredData)
+      setLeaderboardData(filteredData)
     } catch (err) {
       console.error('Error loading leaderboard:', err)
       setError(err instanceof Error ? err.message : 'Failed to load leaderboard')
-      setLeaderboardData([])
+      // Don't clear existing data on error to prevent Live section from disappearing
+      // setLeaderboardData([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Fetch dropdown data functions
+  const fetchTeams = async () => {
+    try {
+      // Fetch unique teams from the database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('team_color')
+        .not('team_color', 'is', null)
+        .not('team_color', 'eq', '')
+      
+      if (error) throw error
+      
+      // Process teams data
+      const uniqueTeams = Array.from(new Set(data?.map(p => p.team_color) || []))
+      const teamsData = uniqueTeams.map(teamColor => ({
+        id: teamColor,
+        name: getTeamColor(teamColor),
+        color: getTeamColorHex(teamColor)
+      }))
+      
+      setTeams(teamsData)
+    } catch (error) {
+      console.error('Error fetching teams:', error)
+    }
+  }
+
+  const fetchCountries = async () => {
+    try {
+      // Fetch unique countries from the database
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('country')
+        .not('country', 'is', null)
+        .not('country', 'eq', '')
+      
+      if (error) throw error
+      
+      // Process countries data
+      const uniqueCountries = Array.from(new Set(data?.map(p => p.country) || []))
+      const countriesData = await Promise.all(
+        uniqueCountries.map(async (countryName) => {
+          try {
+            const countryInfo = await getCountryFlag(countryName)
+            return {
+              code: countryInfo.code,
+              name: countryInfo.name,
+              flag: countryInfo.flagUrl // Use the actual flag URL
+            }
+          } catch (error) {
+            return {
+              code: countryName,
+              name: countryName,
+              flag: 'https://flagcdn.com/w40/xx.png' // Fallback flag
+            }
+          }
+        })
+      )
+      
+      setCountries(countriesData.sort((a, b) => a.name.localeCompare(b.name)))
+    } catch (error) {
+      console.error('Error fetching countries:', error)
+    }
+  }
+
+
+
+
+
+  // Dropdown click handlers
+  const handleTeamsClick = () => {
+    setShowTeamsDropdown(!showTeamsDropdown)
+    setShowCountryDropdown(false)
+    setShowProxyDropdown(false)
+  }
+
+  const handleCountryClick = () => {
+    setShowCountryDropdown(!showCountryDropdown)
+    setShowTeamsDropdown(false)
+    setShowProxyDropdown(false)
+  }
+
+  const handleSortClick = () => {
+    setShowProxyDropdown(!showProxyDropdown)
+    setShowTeamsDropdown(false)
+    setShowCountryDropdown(false)
+  }
+
+  // Selection handlers
+  const handleTeamSelect = (team: {id: string, name: string, color: string}) => {
+    setSelectedTeam(team.name)
+    setShowTeamsDropdown(false)
+    
+    // Set filter value
+    if (team.id === 'all') {
+      setSelectedTeamFilter(null)
+    } else {
+      setSelectedTeamFilter(team.id)
+    }
+  }
+
+  const handleCountrySelect = (country: {code: string, name: string, flag: string}) => {
+    setSelectedCountry(country.name)
+    setShowCountryDropdown(false)
+    
+    // Set filter value
+    if (country.code === 'all') {
+      setSelectedCountryFilter(null)
+    } else {
+      setSelectedCountryFilter(country.name)
+    }
+  }
+
+  const handleSortSelect = (option: {id: string, label: string}) => {
+    setSortBy(option.id as "xp" | "catches" | "distance" | "pokestops")
+    setShowProxyDropdown(false)
+  }
+
+  // Clear filters function
+  const clearFilters = () => {
+    setSelectedTeamFilter(null)
+    setSelectedCountryFilter(null)
+    setSelectedTeam('All Teams')
+    setSelectedCountry('All Country')
+  }
+
+  // Update tab selection to clear filters
+  const handleTabChange = (tab: "trainers" | "country" | "team") => {
+    setActiveTab(tab)
+    clearFilters()
+  }
+
+  // Handle upgrade button click - redirect to upgrade page
+  const handleUpgrade = () => {
+    navigate('/upgrade')
+  }
+
+  const handleExport = async () => {
+    try {
+      setExporting(true)
+      
+      // Get the period name for the filename
+      const periodName = timePeriod === 'alltime' ? 'All-Time' : 
+                        timePeriod === 'weekly' ? 'Weekly' : 'Monthly'
+      
+      console.log('Starting image export for:', periodName)
+      
+      // Create simple leaderboard data export
+      const leaderboardData = processedData.slice(0, 10) // Top 10 players
+      
+      // Create canvas for the card
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
+      
+      if (!ctx) {
+        throw new Error('Canvas context not available')
+      }
+      
+      // Set canvas size
+      canvas.width = 600
+      canvas.height = 800
+      
+      // Create gradient background
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
+      gradient.addColorStop(0, '#667eea')
+      gradient.addColorStop(1, '#764ba2')
+      ctx.fillStyle = gradient
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      
+      // Draw card background
+      const cardX = 40
+      const cardY = 40
+      const cardWidth = canvas.width - 80
+      const cardHeight = canvas.height - 80
+      
+      // Card shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'
+      ctx.fillRect(cardX + 5, cardY + 5, cardWidth, cardHeight)
+      
+      // Card background
+      ctx.fillStyle = 'white'
+      ctx.fillRect(cardX, cardY, cardWidth, cardHeight)
+      
+      // Header
+      ctx.fillStyle = '#DC2627'
+      ctx.font = 'bold 28px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('🏆 PlayerZero Leaderboard', canvas.width / 2, cardY + 60)
+      
+      // Subtitle
+      ctx.fillStyle = '#666'
+      ctx.font = '16px Arial'
+      ctx.fillText(`${periodName} Rankings • ${new Date().toLocaleDateString()}`, canvas.width / 2, cardY + 90)
+      
+      // Header line
+      ctx.strokeStyle = '#DC2627'
+      ctx.lineWidth = 3
+      ctx.beginPath()
+      ctx.moveTo(cardX + 30, cardY + 110)
+      ctx.lineTo(cardX + cardWidth - 30, cardY + 110)
+      ctx.stroke()
+      
+      // Draw players
+      let yPos = cardY + 140
+      
+      leaderboardData.forEach((player, index) => {
+        const playerHeight = 50
+        const playerY = yPos + (index * 60)
+        
+        // Player background
+        let bgColor = '#f8f9fa'
+        if (index === 0) bgColor = '#FFD700'
+        else if (index === 1) bgColor = '#C0C0C0'
+        else if (index === 2) bgColor = '#CD7F32'
+        
+        ctx.fillStyle = bgColor
+        ctx.fillRect(cardX + 20, playerY, cardWidth - 40, playerHeight)
+        
+        // Left border
+        ctx.fillStyle = index < 3 ? bgColor : '#DC2627'
+        ctx.fillRect(cardX + 20, playerY, 4, playerHeight)
+        
+        // Rank
+        ctx.fillStyle = '#DC2627'
+        ctx.font = 'bold 20px Arial'
+        ctx.textAlign = 'left'
+        const rankText = index < 3 ? 
+          (index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉') : 
+          `#${index + 1}`
+        ctx.fillText(rankText, cardX + 35, playerY + 32)
+        
+        // Name
+        ctx.fillStyle = '#333'
+        ctx.font = '600 16px Arial'
+        ctx.fillText(player.name, cardX + 90, playerY + 32)
+        
+        // Stats
+        ctx.fillStyle = '#DC2627'
+        ctx.font = 'bold 16px Arial'
+        ctx.textAlign = 'right'
+        const statValue = typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue
+        ctx.fillText(`${statValue} ${getStatLabel()}`, cardX + cardWidth - 40, playerY + 32)
+      })
+      
+      // Footer
+      const footerY = yPos + (leaderboardData.length * 60) + 40
+      ctx.strokeStyle = '#eee'
+      ctx.lineWidth = 2
+      ctx.beginPath()
+      ctx.moveTo(cardX + 30, footerY)
+      ctx.lineTo(cardX + cardWidth - 30, footerY)
+      ctx.stroke()
+      
+      ctx.fillStyle = '#666'
+      ctx.font = '14px Arial'
+      ctx.textAlign = 'center'
+      ctx.fillText('Generated from PlayerZero App • Keep grinding! 🔥', canvas.width / 2, footerY + 30)
+      
+      // Convert canvas to image and download
+      const dataUrl = canvas.toDataURL('image/png', 1.0)
+      
+      // Create download link
+      const link = document.createElement('a')
+      const fileName = `PlayerZero-${periodName}-Leaderboard-${new Date().toISOString().split('T')[0]}.png`
+      link.download = fileName
+      link.href = dataUrl
+      
+      // Trigger download
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      console.log('Leaderboard image exported successfully:', fileName)
+      alert('Leaderboard image downloaded successfully!')
+    } catch (error) {
+      console.error('Failed to export leaderboard image:', error)
+      alert('Failed to export leaderboard image. Please try again.')
+    } finally {
+      setExporting(false)
     }
   }
 
@@ -80,63 +425,54 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     return distance.toFixed(1)
   }
 
-  const getCountryFlag = (countryCode: string) => {
-    // Comprehensive country code to flag mapping
-    const flags: { [key: string]: string } = {
-      // Major countries
-      'AU': '🇦🇺', 'US': '🇺🇸', 'CA': '🇨🇦', 'GB': '🇬🇧', 'UK': '🇬🇧',
-      'DE': '🇩🇪', 'FR': '🇫🇷', 'IT': '🇮🇹', 'ES': '🇪🇸', 'JP': '🇯🇵', 
-      'KR': '🇰🇷', 'CN': '🇨🇳', 'IN': '🇮🇳', 'BR': '🇧🇷', 'MX': '🇲🇽', 
-      'AR': '🇦🇷', 'RU': '🇷🇺', 'NL': '🇳🇱', 'SE': '🇸🇪', 'NO': '🇳🇴',
-      
-      // European countries
-      'DK': '🇩🇰', 'FI': '🇫🇮', 'CH': '🇨🇭', 'AT': '🇦🇹', 'BE': '🇧🇪',
-      'PT': '🇵🇹', 'PL': '🇵🇱', 'CZ': '🇨🇿', 'HU': '🇭🇺', 'RO': '🇷🇴',
-      'UA': '🇺🇦', 'HR': '🇭🇷', 'RS': '🇷🇸', 'SI': '🇸🇮', 'SK': '🇸🇰',
-      'BG': '🇧🇬', 'LT': '🇱🇹', 'LV': '🇱🇻', 'EE': '🇪🇪', 'GR': '🇬🇷',
-      'IE': '🇮🇪', 'IS': '🇮🇸',
-      
-      // Asian countries
-      'TH': '🇹🇭', 'SG': '🇸🇬', 'MY': '🇲🇾', 'PH': '🇵🇭', 'ID': '🇮🇩',
-      'VN': '🇻🇳', 'TW': '🇹🇼', 'HK': '🇭🇰', 'PK': '🇵🇰', 'BD': '🇧🇩',
-      'LK': '🇱🇰', 'MM': '🇲🇲', 'KH': '🇰🇭', 'LA': '🇱🇦',
-      
-      // Middle East & Africa
-      'TR': '🇹🇷', 'IL': '🇮🇱', 'AE': '🇦🇪', 'SA': '🇸🇦', 'EG': '🇪🇬',
-      'ZA': '🇿🇦', 'NG': '🇳🇬', 'KE': '🇰🇪', 'MA': '🇲🇦', 'TN': '🇹🇳',
-      'DZ': '🇩🇿', 'GH': '🇬🇭', 'ET': '🇪🇹', 'UG': '🇺🇬',
-      
-      // Americas
-      'CL': '🇨🇱', 'PE': '🇵🇪', 'CO': '🇨🇴', 'VE': '🇻🇪', 'EC': '🇪🇨',
-      'BO': '🇧🇴', 'PY': '🇵🇾', 'UY': '🇺🇾', 'CR': '🇨🇷', 'PA': '🇵🇦',
-      
-      // Oceania
-      'NZ': '🇳🇿', 'FJ': '🇫🇯', 'PG': '🇵🇬'
+  const getCountryFlagUrl = (countryName: string) => {
+    // Map country names to flag URLs using the same logic as countryFlags.ts
+    const countryToCode: { [key: string]: string } = {
+      'united states': 'us', 'usa': 'us', 'us': 'us',
+      'canada': 'ca', 'united kingdom': 'gb', 'uk': 'gb', 'england': 'gb',
+      'australia': 'au', 'germany': 'de', 'france': 'fr', 'spain': 'es',
+      'italy': 'it', 'japan': 'jp', 'china': 'cn', 'india': 'in',
+      'brazil': 'br', 'mexico': 'mx', 'argentina': 'ar', 'russia': 'ru',
+      'netherlands': 'nl', 'sweden': 'se', 'norway': 'no', 'denmark': 'dk',
+      'finland': 'fi', 'switzerland': 'ch', 'austria': 'at', 'belgium': 'be',
+      'portugal': 'pt', 'poland': 'pl', 'czech republic': 'cz', 'hungary': 'hu',
+      'romania': 'ro', 'ukraine': 'ua', 'croatia': 'hr', 'serbia': 'rs',
+      'greece': 'gr', 'turkey': 'tr', 'israel': 'il', 'egypt': 'eg',
+      'south africa': 'za', 'nigeria': 'ng', 'kenya': 'ke', 'morocco': 'ma',
+      'chile': 'cl', 'peru': 'pe', 'colombia': 'co', 'venezuela': 've',
+      'thailand': 'th', 'singapore': 'sg', 'malaysia': 'my', 'philippines': 'ph',
+      'indonesia': 'id', 'vietnam': 'vn', 'south korea': 'kr', 'korea': 'kr',
+      'new zealand': 'nz', 'ireland': 'ie'
     }
     
-    // Handle case variations and fallback
-    const upperCode = countryCode?.toUpperCase() || ''
-    return flags[upperCode] || flags[countryCode] || '🌍'
+    const lowerName = countryName?.toLowerCase() || ''
+    const countryCode = countryToCode[lowerName]
+    
+    if (countryCode) {
+      return `https://flagcdn.com/w40/${countryCode}.png`
+    }
+    
+    return 'https://flagcdn.com/w40/xx.png' // Fallback flag
   }
 
+  // Team colors matching ProfileInfo implementation
+  const TEAM_COLORS = [
+    { value: 'blue', label: 'Blue', color: '#0074D9', team: 'Blue Team' },
+    { value: 'red', label: 'Red', color: '#FF4136', team: 'Red Team' },
+    { value: 'yellow', label: 'Yellow', color: '#FFDC00', team: 'Yellow Team' },
+    { value: 'black', label: 'Black', color: '#111111', team: 'Black Team' },
+    { value: 'green', label: 'Green', color: '#2ECC40', team: 'Green Team' },
+    { value: 'orange', label: 'Orange', color: '#FF851B', team: 'Orange Team' },
+    { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Purple Team' },
+    { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Pink Team' }
+  ]
+
   const getTeamColor = (teamColor: string) => {
-    const teamNames: { [key: string]: string } = {
-      // Color names (primary database format)
-      'red': 'Valor',
-      'blue': 'Mystic',
-      'yellow': 'Instinct',
-      
-      // Team names
-      'valor': 'Valor',
-      'mystic': 'Mystic',
-      'instinct': 'Instinct',
-      
-      // Hex codes
-      '#FF0000': 'Valor',
-      '#0000FF': 'Mystic', 
-      '#FFFF00': 'Instinct'
+    if (teamColor) {
+      const team = TEAM_COLORS.find(t => t.value === teamColor.toLowerCase())
+      return team?.label || teamColor.charAt(0).toUpperCase() + teamColor.slice(1)
     }
-    return teamNames[teamColor?.toLowerCase()] || 'Valor'
+    return "Unknown"
   }
 
   const getStatValue = (entry: LeaderboardEntry) => {
@@ -168,7 +504,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const processedData = leaderboardData.map((entry, index) => ({
     rank: index + 1,
     name: entry.trainer_name,
-    country: getCountryFlag(entry.country),
+    countryName: entry.country,
+    countryFlag: getCountryFlagUrl(entry.country),
     team: getTeamColor(entry.team_color),
     teamColor: entry.team_color, // Keep raw team color for web view
     statValue: getStatValue(entry),
@@ -177,7 +514,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   }))
 
   const lockedResults = processedData.slice(0, 3)
-  const liveResults = processedData.slice(3)
+  // Responsive Live section: Mobile shows all users, Web shows only top 3
+  const liveResults = isMobile ? processedData : processedData.slice(0, 3)
+  
+  // Debug logging for Live section
+  console.log('Data processing - isMobile:', isMobile, 'leaderboardData length:', leaderboardData.length, 'processedData length:', processedData.length, 'liveResults length:', liveResults.length)
 
   const getMedalIcon = (medal: string | null) => {
     if (medal === "gold")
@@ -343,72 +684,26 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               </span>
             </button>
           </div>
-
-          {/* Export Button */}
-          <div style={{
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '0px',
-            gap: '8px',
-            margin: '0 auto',
-            width: '90px',
-            height: '36px',
-            border: '1px solid #DC2627',
-            borderRadius: '4px',
-            flex: 'none',
-            order: 1,
-            flexGrow: 0,
-            cursor: 'pointer',
-          }}>
-            <Upload style={{
-              width: '14px',
-              height: '15px',
-              color: '#DC2627',
-              flex: 'none',
-              order: 0,
-              flexGrow: 0,
-            }} />
-            <span style={{
-              width: '39px',
-              height: '18px',
-              fontFamily: 'Poppins',
-              fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '12px',
-              lineHeight: '18px',
-              color: '#DC2627',
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
-            }}>
-              Export
-            </span>
-          </div>
         </div>
 
-        {/* Frame 586 - Locked Results */}
-        {userType === "trial" && (
-          <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            padding: '12px 8px',
-            gap: '8px',
-            width: '826px',
-            height: '259px',
-            background: 'rgba(0, 0, 0, 0.1)',
-            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.05)',
-            borderRadius: '8px',
-            flex: 'none',
-            order: 2,
-            flexGrow: 0,
-          }}>
-            {renderWebLockedResults()}
-          </div>
-        )}
+        {/* Frame 586 - Live Results Section */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '12px 8px',
+          gap: '8px',
+          width: '826px',
+          height: '259px',
+          background: 'rgba(0, 0, 0, 0.1)',
+          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.05)',
+          borderRadius: '8px',
+          flex: 'none',
+          order: 2,
+          flexGrow: 0,
+        }}>
+          {renderWebLiveResults()}
+        </div>
 
         {/* Frame 605 - Monthly Results Container */}
         <div style={{
@@ -453,7 +748,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     )
   }
 
-  const renderWebLockedResults = () => {
+  const renderWebLiveResults = () => {
     return (
       <>
         {/* Header */}
@@ -477,7 +772,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             alignItems: 'center',
             padding: '0px',
             gap: '8px',
-            margin: '0 auto',
+            margin: '0',
             width: '104px',
             height: '24px',
             flex: 'none',
@@ -510,25 +805,27 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           </div>
         </div>
 
-        {/* Locked entries (placeholder) */}
+        {/* Top 3 Results */}
         <div style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'flex-start',
           padding: '0px',
           width: '812px',
-          height: '204px',
           flex: 'none',
           order: 1,
           flexGrow: 0,
+          gap: '8px',
         }}>
-          {[1, 2, 3].map(index => renderWebLockedPlayerCard(index))}
+          {liveResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))}
         </div>
       </>
     )
   }
 
   const renderWebMonthlyResults = () => {
+    const allMainResults = processedData.slice(3) // All players except top 3 (which go to Live)
+    
     return (
       <>
         {/* Frame 573 - Header */}
@@ -575,11 +872,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             order: 1,
             flexGrow: 0,
           }}>
-            Monthly Leaderboard
+            {timePeriod === 'alltime' ? 'All-Time Leaderboard' : 
+             timePeriod === 'weekly' ? 'Weekly Leaderboard' : 'Monthly Leaderboard'}
           </span>
         </div>
 
-        {/* Frame 574 - Results Container */}
+
+
+        {/* Frame 574 - Main Results Container */}
+        {allMainResults.length > 0 && (
         <div style={{
           /* Frame 574 */
           /* Auto layout */
@@ -588,15 +889,33 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           alignItems: 'flex-start',
           padding: '0px',
           width: '810px',
-          height: '591px',
           borderRadius: '8px',
           /* Inside auto layout */
           flex: 'none',
-          order: 1,
+            order: 2,
           flexGrow: 0,
         }}>
-          {processedData.slice(0, 8).map((player, index) => renderWebMonthlyPlayerCard(player, index))}
+            {/* Remaining Players Header */}
+            <div style={{
+              padding: '12px 0px',
+              marginBottom: '8px',
+              borderBottom: '2px solid #e9ecef',
+              width: '100%',
+            }}>
+              <span style={{
+                fontFamily: 'Poppins',
+                fontWeight: 600,
+                fontSize: '14px',
+                color: '#666',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Leaderboard Rankings
+              </span>
         </div>
+            {allMainResults.map((player, index) => renderWebMonthlyPlayerCard(player, index + 3))}
+          </div>
+        )}
       </>
     )
   }
@@ -625,6 +944,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         {/* Frame 578 - Player Card Content */}
         <div style={{
           /* Frame 578 */
+          boxSizing: 'border-box',
           /* Auto layout */
           display: 'flex',
           flexDirection: 'row',
@@ -635,6 +955,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           width: '780px',
           height: '58px',
           background: '#FFFFFF',
+          border: '4px solid #DC2627',
           borderRadius: '4px',
           /* Inside auto layout */
           flex: 'none',
@@ -677,21 +998,27 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               flexGrow: 0,
             }}>
               <span style={{
-                width: '6px',
+                width: player.rank <= 3 ? '24px' : '6px',
                 height: '21px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
-                fontSize: '14px',
+                fontSize: player.rank <= 3 ? '12px' : '14px',
                 lineHeight: '21px',
-                /* identical to box height */
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 color: '#FFFFFF',
                 /* Inside auto layout */
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
               }}>
-                {player.rank}
+                {player.rank <= 3 ? (
+                  player.rank === 1 ? '🥇' : 
+                  player.rank === 2 ? '🥈' : '🥉'
+                ) : player.rank}
               </span>
             </div>
 
@@ -761,15 +1088,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   order: 0,
                   flexGrow: 0,
                 }}>
-                  <span style={{
-                    fontSize: '16px',
-                    lineHeight: '15px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}>
-                    {player.country}
-                  </span>
+                  <img 
+                    src={player.countryFlag}
+                    alt={`Flag of ${player.countryName}`}
+                    style={{
+                      width: '20px',
+                      height: '15px',
+                      objectFit: 'cover',
+                      borderRadius: '2px',
+                      border: '1px solid #e0e0e0'
+                    }}
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const fallback = document.createElement('span');
+                      fallback.textContent = '🌍';
+                      fallback.style.cssText = 'font-size: 16px; line-height: 15px; display: flex; align-items: center; justify-content: center;';
+                      target.parentNode?.insertBefore(fallback, target);
+                    }}
+                  />
                 </div>
 
                 {/* Frame 584 - Team Info */}
@@ -876,7 +1213,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               order: 1,
               flexGrow: 0,
             }}>
-              Total XP
+              {getStatLabel()}
             </span>
           </div>
         </div>
@@ -886,142 +1223,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Removed unused renderWebPlayerCard function
 
-  const renderWebLockedPlayerCard = (index: number) => {
-    const badgeColor = index === 1 ? 'rgba(255, 225, 0, 0.6)' : 
-                      index === 2 ? 'rgba(208, 208, 208, 0.4)' : 
-                      'rgba(255, 162, 0, 0.5)'
-    const borderColor = index === 1 ? '#FFBF00' : 
-                        index === 2 ? '#616161' : 
-                        '#EA9400'
 
-    return (
-      <div key={index} style={{
-        display: 'flex',
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: '4px 16px',
-        width: '812px',
-        height: '68px',
-        filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))',
-        borderRadius: '8px',
-        flex: 'none',
-        order: index - 1,
-        flexGrow: 0,
-      }}>
-        {/* Frame 578 - Locked Player Card Content */}
-        <div style={{
-          /* Frame 578 */
-          /* Auto layout */
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '8px 24px',
-          gap: '15px',
-          width: '780px',
-          height: '58px',
-          background: '#FFFFFF',
-          borderRadius: '4px',
-          border: index === 1 ? `4px solid ${borderColor}` : 'none',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-        }}>
-          {/* Locked content placeholder */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '15px',
-            width: '100%',
-            height: '33px',
-          }}>
-            <div style={{
-              width: '30px',
-              height: '30px',
-              background: badgeColor,
-              border: `1px solid ${borderColor}`,
-              borderRadius: '1000px',
-            }} />
-            <span style={{
-              fontFamily: 'Poppins',
-              fontWeight: 600,
-              fontSize: '12px',
-              color: '#000000',
-            }}>
-              Mustafa Mashoor
-            </span>
-            <span style={{ marginLeft: 'auto' }}>🇦🇺</span>
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-            }}>
-              <div style={{
-                width: '10px',
-                height: '10px',
-                background: '#DC2627',
-                borderRadius: '50%',
-              }} />
-              <span style={{
-                fontFamily: 'Poppins',
-                fontSize: '10px',
-                color: '#DC2627',
-              }}>
-                Red Team
-              </span>
-            </div>
-            <div style={{
-              textAlign: 'center',
-              minWidth: '65px',
-            }}>
-              <div style={{
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                fontSize: '12px',
-              }}>
-                33,628,973
-              </div>
-              <div style={{
-                fontFamily: 'Poppins',
-                fontSize: '10px',
-                color: '#353535',
-              }}>
-                Total XP
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   // Removed unused getRankBadgeColor function
 
   const getTeamColorHex = (teamInput: string) => {
     if (!teamInput) return '#DC2627'
     
-    const input = teamInput.toLowerCase()
-    
-    // Direct hex color mapping
-    const hexMap: { [key: string]: string } = {
-      '#ff0000': '#DC2627',
-      '#0000ff': '#0075BE',
-      '#ffff00': '#FDB81E',
-    }
-    
-    // Color name mapping
-    const colorMap: { [key: string]: string } = {
-      'red': '#DC2627',
-      'blue': '#0075BE',
-      'yellow': '#FDB81E',
-      'valor': '#DC2627',
-      'mystic': '#0075BE', 
-      'instinct': '#FDB81E',
-    }
-    
-    // Try hex first, then color names
-    return hexMap[input] || colorMap[input] || '#DC2627'
+    const team = TEAM_COLORS.find(t => t.value === teamInput.toLowerCase())
+    return team?.color || '#DC2627'
   }
 
   return (
@@ -1095,7 +1305,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             }}>
               {/* All Trainers */}
               <button
-                onClick={() => setActiveTab('trainers')}
+                onClick={() => handleTabChange('trainers')}
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
@@ -1134,7 +1344,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               {/* By Country */}
               <button
-                onClick={() => setActiveTab('country')}
+                onClick={() => handleTabChange('country')}
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -1173,7 +1383,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               {/* By Team */}
               <button
-                onClick={() => setActiveTab('team')}
+                onClick={() => handleTabChange('team')}
                 style={{
                   display: 'flex',
                   flexDirection: 'row',
@@ -1213,7 +1423,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             {/* Upgrade Button - Web */}
             {userType === "trial" && (
-              <div style={{
+              <div 
+                onClick={handleUpgrade}
+                style={{
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'center',
@@ -1228,7 +1440,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 order: 2,
                 flexGrow: 0,
                 cursor: 'pointer',
-              }}>
+                  transition: 'background-color 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#DC2627';
+                }}
+              >
                 <Crown style={{
                   width: '24px',
                   height: '24px',
@@ -1286,8 +1506,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               alignSelf: 'stretch',
               flexGrow: 0,
             }}>
-              {/* First Dropdown */}
-              <div style={{
+              {/* All Teams Dropdown */}
+              <div 
+                data-dropdown
+                style={{
+                  position: 'relative',
+                  width: '180px',
+                  height: '36px',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                <div 
+                  onClick={handleTeamsClick}
+                  style={{
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'row',
@@ -1295,18 +1527,133 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 alignItems: 'center',
                 padding: '4px 8px',
                 gap: '8px',
-                margin: '0 auto',
-                width: '397px',
+                    width: '180px',
                 height: '36px',
                 border: '1px solid #000000',
                 borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: '#FFFFFF',
+                  }}>
+                  <span style={{
+                    width: '120px',
+                    height: '18px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                    color: selectedTeamFilter ? '#DC2627' : '#000000',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {selectedTeam}
+                  </span>
+                  <ChevronDown style={{
+                    width: '16px',
+                    height: '16px',
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0,
+                    transform: showTeamsDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </div>
+                
+                {/* Teams Dropdown Menu */}
+                {showTeamsDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '0',
+                    width: '180px',
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                    background: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                  }}>
+                    <div 
+                      onClick={() => handleTeamSelect({id: 'all', name: 'All Teams', color: '#000000'})}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f0f0f0',
+                        fontFamily: 'Poppins',
+                        fontSize: '12px',
+                        color: '#000000',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                    >
+                      All Teams
+                    </div>
+                    {teams.map((team) => (
+                      <div 
+                        key={team.id}
+                        onClick={() => handleTeamSelect(team)}
+                        style={{
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                          fontFamily: 'Poppins',
+                          fontSize: '12px',
+                          color: team.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                      >
+                        <div style={{
+                          width: '12px',
+                          height: '12px',
+                          backgroundColor: team.color,
+                          borderRadius: '50%',
+                        }} />
+                        {team.name}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Total XP Dropdown */}
+              <div 
+                data-dropdown
+                style={{
+                  position: 'relative',
+                  width: '180px',
+                  height: '36px',
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}>
+                <div 
+                  onClick={handleSortClick}
+                  style={{
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '4px 8px',
+                    gap: '8px',
+                    width: '180px',
+                    height: '36px',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    background: '#FFFFFF',
               }}>
                 <span style={{
-                  margin: '0 auto',
-                  width: '78px',
+                    width: '120px',
                   height: '18px',
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
@@ -1318,7 +1665,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   order: 0,
                   flexGrow: 0,
                 }}>
-                  All Trainers
+                    {sortOptions.find(opt => opt.id === sortBy)?.label || 'Total XP'}
                 </span>
                 <ChevronDown style={{
                   width: '16px',
@@ -1326,11 +1673,61 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   flex: 'none',
                   order: 1,
                   flexGrow: 0,
+                    transform: showProxyDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
                 }} />
               </div>
 
-              {/* Second Dropdown */}
+                {/* Sort Options Dropdown Menu */}
+                {showProxyDropdown && (
               <div style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '0',
+                    width: '180px',
+                    background: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                  }}>
+                    {sortOptions.map((option) => (
+                      <div 
+                        key={option.id}
+                        onClick={() => handleSortSelect(option)}
+                        style={{
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                          fontFamily: 'Poppins',
+                          fontSize: '12px',
+                          color: sortBy === option.id ? '#DC2627' : '#000000',
+                          fontWeight: sortBy === option.id ? 600 : 400,
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                      >
+                        {option.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* All Country Dropdown */}
+              <div 
+                data-dropdown
+                style={{
+                  position: 'relative',
+                  width: '180px',
+                  height: '36px',
+                  flex: 'none',
+                  order: 2,
+                  flexGrow: 0,
+                }}>
+                <div 
+                  onClick={handleCountryClick}
+                  style={{
                 boxSizing: 'border-box',
                 display: 'flex',
                 flexDirection: 'row',
@@ -1338,30 +1735,30 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 alignItems: 'center',
                 padding: '4px 8px',
                 gap: '8px',
-                margin: '0 auto',
-                width: '398px',
+                    width: '180px',
                 height: '36px',
                 border: '1px solid #000000',
                 borderRadius: '6px',
-                flex: 'none',
-                order: 1,
-                flexGrow: 0,
+                    cursor: 'pointer',
+                    background: '#FFFFFF',
               }}>
                 <span style={{
-                  margin: '0 auto',
-                  width: '50px',
+                    width: '120px',
                   height: '18px',
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',
                   lineHeight: '18px',
-                  color: '#000000',
+                    color: selectedCountryFilter ? '#DC2627' : '#000000',
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                 }}>
-                  {sortOptions.find(opt => opt.id === sortBy)?.label || 'Total XP'}
+                    {selectedCountry}
                 </span>
                 <ChevronDown style={{
                   width: '16px',
@@ -1369,7 +1766,140 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   flex: 'none',
                   order: 1,
                   flexGrow: 0,
+                    transform: showCountryDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease'
+                  }} />
+                </div>
+                
+                {/* Countries Dropdown Menu */}
+                {showCountryDropdown && (
+                  <div style={{
+                    position: 'absolute',
+                    top: '40px',
+                    left: '0',
+                    width: '180px',
+                    maxHeight: '300px',
+                    overflowY: 'auto',
+                    background: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                  }}>
+                    <div 
+                      onClick={() => handleCountrySelect({code: 'all', name: 'All Country', flag: 'https://flagcdn.com/w40/xx.png'})}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #f0f0f0',
+                        fontFamily: 'Poppins',
+                        fontSize: '12px',
+                        color: '#000000',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                    >
+                      <span style={{ fontSize: '14px' }}>🌍</span>
+                      All Country
+                    </div>
+                    {countries.map((country) => (
+                      <div 
+                        key={country.code}
+                        onClick={() => handleCountrySelect(country)}
+                        style={{
+                          padding: '8px 12px',
+                          cursor: 'pointer',
+                          borderBottom: '1px solid #f0f0f0',
+                          fontFamily: 'Poppins',
+                          fontSize: '12px',
+                          color: '#000000',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                      >
+                        <img 
+                          src={country.flag}
+                          alt={`Flag of ${country.name}`}
+                          style={{
+                            width: '20px',
+                            height: '15px',
+                            objectFit: 'cover',
+                            borderRadius: '2px',
+                            border: '1px solid #e0e0e0'
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = document.createElement('span');
+                            fallback.textContent = '🌍';
+                            fallback.style.cssText = 'font-size: 14px; width: 20px; height: 15px; display: flex; align-items: center; justify-content: center;';
+                            target.parentNode?.insertBefore(fallback, target);
+                          }}
+                        />
+                        <span style={{ 
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap'
+                        }}>
+                          {country.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Export Button */}
+              <div 
+                onClick={handleExport}
+                style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '8px',
+                  width: '180px',
+                  height: '36px',
+                  border: '1px solid #DC2627',
+                  borderRadius: '6px',
+                  flex: 'none',
+                  order: 3,
+                  flexGrow: 0,
+                  cursor: 'pointer',
+                  background: '#FFFFFF',
+                  opacity: exporting ? 0.7 : 1,
+                }}>
+                <Upload style={{
+                  width: '14px',
+                  height: '15px',
+                  color: '#DC2627',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
                 }} />
+                <span style={{
+                  width: '39px',
+                  height: '18px',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '18px',
+                  color: '#DC2627',
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}>
+                  {exporting ? 'Exporting...' : 'Export'}
+                </span>
               </div>
             </div>
 
@@ -1460,7 +1990,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       >
         {/* All Trainers */}
         <button
-          onClick={() => setActiveTab('trainers')}
+          onClick={() => handleTabChange('trainers')}
           style={{
             /* All Trainers */
             display: 'flex',
@@ -1497,13 +2027,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               flexGrow: 0,
             }}
           >
+          
             Trainers
           </span>
         </button>
 
         {/* By Country */}
         <button
-          onClick={() => setActiveTab('country')}
+          onClick={() => handleTabChange('country')}
           style={{
             /* By Country */
             display: 'flex',
@@ -1546,7 +2077,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         {/* By Team */}
         <button
-          onClick={() => setActiveTab('team')}
+          onClick={() => handleTabChange('team')}
           style={{
             /* By Team */
             display: 'flex',
@@ -1590,7 +2121,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       {/* Upgrade Button - Desktop */}
       {!isMobile && userType === "trial" && (
-        <Button className="w-full bg-red-500 hover:bg-red-600 text-white mb-6 h-12">
+        <Button 
+          onClick={handleUpgrade}
+          className="w-full bg-red-500 hover:bg-red-600 text-white mb-6 h-12"
+        >
           <Crown className="w-5 h-5 mr-2" />
           Upgrade
         </Button>
@@ -1722,7 +2256,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       {/* Upgrade Section - Mobile */}
       {isMobile && userType === "trial" && (
         <div className="mb-6">
-          <Button className="w-full bg-red-500 hover:bg-red-600 text-white h-12 mb-2">
+          <Button 
+            onClick={handleUpgrade}
+            className="w-full bg-red-500 hover:bg-red-600 text-white h-12 mb-2"
+          >
             <Crown className="w-5 h-5 mr-2" />
             Upgrade
           </Button>
@@ -1899,6 +2436,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         {/* Export Button */}
         <div 
+          onClick={handleExport}
           style={{
             boxSizing: 'border-box',
             display: 'flex',
@@ -1916,6 +2454,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             order: 1,
             flexGrow: 0,
             background: '#FFFFFF',
+            opacity: exporting ? 0.7 : 1,
           }}
         >
           <Upload 
@@ -1940,7 +2479,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               flexGrow: 0,
             }}
           >
-            Export
+            {exporting ? 'Exporting...' : 'Export'}
           </span>
         </div>
       </div>
@@ -2061,15 +2600,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       alignItems: 'center',
                       gap: '6px',
                     }}>
-                      <span style={{
-                        fontSize: '16px',
-                        lineHeight: '15px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}>
-                        {player.country}
-                      </span>
+                      <img 
+                        src={player.countryFlag}
+                        alt={`Flag of ${player.countryName}`}
+                        style={{
+                          width: '18px',
+                          height: '13px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                          border: '1px solid #e0e0e0'
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          const fallback = document.createElement('span');
+                          fallback.textContent = '🌍';
+                          fallback.style.cssText = 'font-size: 14px; line-height: 13px; display: flex; align-items: center; justify-content: center;';
+                          target.parentNode?.insertBefore(fallback, target);
+                        }}
+                      />
                       
                       {/* Team */}
                       <div style={{
@@ -2192,7 +2741,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
              gap: '8px',
              width: '100%',
            }}>
-             {liveResults.map((player, index) => (
+             {liveResults && liveResults.length > 0 ? (
+               liveResults.map((player, index) => (
                <div
                  key={index}
                  style={{
@@ -2263,15 +2813,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                        alignItems: 'center',
                        gap: '6px',
                      }}>
-                       <span style={{
-                         fontSize: '14px',
-                         lineHeight: '15px',
-                         display: 'flex',
-                         alignItems: 'center',
-                         justifyContent: 'center',
-                       }}>
-                         {player.country}
-                       </span>
+                       <img 
+                         src={player.countryFlag}
+                         alt={`Flag of ${player.countryName}`}
+                         style={{
+                           width: '16px',
+                           height: '12px',
+                           objectFit: 'cover',
+                           borderRadius: '2px',
+                           border: '1px solid #e0e0e0'
+                         }}
+                         onError={(e) => {
+                           const target = e.target as HTMLImageElement;
+                           target.style.display = 'none';
+                           const fallback = document.createElement('span');
+                           fallback.textContent = '🌍';
+                           fallback.style.cssText = 'font-size: 14px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
+                           target.parentNode?.insertBefore(fallback, target);
+                         }}
+                       />
                        
                        {/* Team */}
                        <div style={{
@@ -2326,7 +2886,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                    </span>
                  </div>
                </div>
-             ))}
+             ))
+             ) : (
+               <div style={{
+                 display: 'flex',
+                 justifyContent: 'center',
+                 alignItems: 'center',
+                 padding: '20px',
+                 color: '#666',
+                 fontFamily: 'Poppins',
+                 fontSize: '14px',
+               }}>
+                 {loading ? 'Loading top players...' : 'No data available'}
+               </div>
+             )}
            </div>
          )}
        </div>

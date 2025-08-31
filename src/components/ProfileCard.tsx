@@ -3,6 +3,32 @@ import { Crown } from "lucide-react";
 import { SnapchatIcon } from "./icons/SnapchatIcon";
 import { CountryFlag } from "./common/CountryFlag";
 
+// Utility function to generate social media links
+const getSocialLink = (platform: string, value: string): string | undefined => {
+  if (!value) return undefined
+  
+  switch (platform) {
+    case 'instagram':
+      return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
+    case 'facebook':
+      return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
+    case 'snapchat':
+      return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
+    case 'twitter':
+      return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
+    case 'tiktok':
+      return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
+    case 'youtube':
+      return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
+    case 'twitch':
+      return `https://twitch.tv/${value}`
+    case 'reddit':
+      return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+    default:
+      return value
+  }
+}
+
 interface ProfileCardProps {
   stats: any;
   user: any;
@@ -54,9 +80,56 @@ export default function ProfileCard({
 
             {/* Social Icons */}
             <div className="flex gap-2 mt-2">
-              <Facebook className="w-5 h-5 text-blue-600 cursor-pointer" />
-              <Instagram className="w-5 h-5 text-pink-600 cursor-pointer" />
-              <SnapchatIcon className="w-5 h-5 text-yellow-400 cursor-pointer" />
+              {/* Facebook Icon */}
+              {stats?.facebook ? (
+                <a 
+                  href={getSocialLink('facebook', stats.facebook)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Visit ${stats.facebook} on Facebook`}
+                >
+                  <Facebook className="w-5 h-5 text-blue-600 cursor-pointer" />
+                </a>
+              ) : (
+                <span title="No Facebook profile linked">
+                  <Facebook className="w-5 h-5 text-gray-400" />
+                </span>
+              )}
+              
+              {/* Instagram Icon */}
+              {stats?.instagram ? (
+                <a 
+                  href={getSocialLink('instagram', stats.instagram)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Visit ${stats.instagram} on Instagram`}
+                >
+                  <Instagram className="w-5 h-5 text-pink-600 cursor-pointer" />
+                </a>
+              ) : (
+                <span title="No Instagram profile linked">
+                  <Instagram className="w-5 h-5 text-gray-400" />
+                </span>
+              )}
+              
+              {/* Snapchat Icon */}
+              {stats?.snapchat ? (
+                <a 
+                  href={getSocialLink('snapchat', stats.snapchat)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Add ${stats.snapchat} on Snapchat`}
+                >
+                  <SnapchatIcon className="w-5 h-5 text-yellow-400 cursor-pointer" />
+                </a>
+              ) : (
+                <span title="No Snapchat profile linked">
+                  <SnapchatIcon className="w-5 h-5 text-gray-400" />
+                </span>
+              )}
             </div>
           </div>
         </div>
