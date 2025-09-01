@@ -513,7 +513,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
         <div style={{ 
           width: '100%', 
           height: '100%', 
-          maxWidth: isMobile ? '100%' : '800px',
+          maxWidth: isMobile ? '100%' : '900px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center'

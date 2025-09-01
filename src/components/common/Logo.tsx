@@ -1,4 +1,5 @@
 import { type CSSProperties } from 'react'
+import logoSvg from "/images/logo.svg"
 
 type LogoProps = {
   size?: 'small' | 'medium' | 'large'
@@ -25,7 +26,7 @@ export const Logo = ({ size = 'medium', className = '', style = {} }: LogoProps)
       display: 'inline-block',
     }}>
       <img 
-        src="/images/logo.png" 
+        src={logoSvg} 
         alt="PlayerZERO Logo" 
         style={{ 
           height,
