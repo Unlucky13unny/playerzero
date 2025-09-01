@@ -4,10 +4,11 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { NotificationBell } from '../common/NotificationBell'
-import { Menu, User, Trophy } from "lucide-react"
+import { User } from "lucide-react"
 import { Button } from "../ui/button"
 import { Crown } from "../icons/Crown"
 import { useMobile } from "../../hooks/useMobile"
+import logoSvg from "/images/logo.svg"
 
 type LayoutProps = {
   children: ReactNode
@@ -59,62 +60,73 @@ export const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="app-container">
-      {/* Header - Updated to match figma-ui design */}
-      <header className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
-        <div className="flex items-center">
-          <Link to="/UserProfile" className="text-xl font-bold text-black">
-            Player<span className="font-normal">ZER⊘</span>
-          </Link>
-        </div>
+      {/* Header - Frame 527 Mobile Responsive Design */}
+      <header className={`bg-white border-b border-gray-200 ${isMobile ? 'p-4' : 'p-4'}`}>
+        {isMobile ? (
+          // Mobile Header Layout - Frame 527
+          <div style={{
+            /* Frame 527 */
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px',
+            gap: '8px',
+            width: '100%',
+            maxWidth: '353px',
+            height: '45px',
+            margin: '0 auto',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            alignSelf: 'stretch',
+            flexGrow: 0
+          }}>
+            {/* Logo - Layer_1 */}
+            <Link to="/UserProfile" className="flex items-center hover:opacity-80 transition-opacity">
+              <img 
+                src={logoSvg} 
+                alt="PlayerZero" 
+                style={{
+                  /* Layer_1 */
+                  width: '81px',
+                  height: '16px',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0
+                }}
+              />
+            </Link>
 
-        <div className="flex items-center gap-3">
-          {!isMobile && user && (
-            <>
-              <Link to="/UserProfile">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent w-32"
-                >
-                  <User className="w-4 h-4 mr-1" />
-                  Profile
-                </Button>
-              </Link>
-              <Link to="/leaderboards">
-                <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50 w-32">
-                  <Trophy className="w-4 h-4 mr-1" />
-                  Leaderboard
-                </Button>
-              </Link>
-            </>
-          )}
-
-          {user && (
-            <>
-              {!trialStatus.isPaidUser && !isMobile && (
-                <button 
-                  onClick={() => navigate('/upgrade')}
-                  className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
-                  title="Upgrade to Premium"
-                >
-                  <Crown className="w-4 h-4 text-white" />
-                </button>
+            {/* Right Side - Same layout as desktop */}
+            <div className="flex items-center gap-3">
+              {user && (
+                <>
+                  {!trialStatus.isPaidUser && (
+                    <button 
+                      onClick={() => navigate('/upgrade')}
+                      className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
+                      title="Upgrade to Premium"
+                    >
+                      <Crown className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                  <NotificationBell />
+                </>
               )}
-              <NotificationBell />
-            </>
-          )}
 
-          {/* Features Dropdown */}
-          <div className="relative" id="features-dropdown">
-            <button
-              onClick={toggleFeaturesDropdown}
-              className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-              title="Menu"
-            >
-              <Menu className="w-5 h-5 text-gray-600" />
-            </button>
+              {/* Features Dropdown - Same as desktop */}
+              <div className="relative" id="features-dropdown">
+                <button
+                  onClick={toggleFeaturesDropdown}
+                  className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Menu"
+                >
+                  <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
+                </button>
 
-            {featuresDropdownOpen && (
+                {featuresDropdownOpen && (
               <div className="layout-menu-dropdown">
               
                 
@@ -169,8 +181,141 @@ export const Layout = ({ children }: LayoutProps) => {
                 </div>
               </div>
             )}
+              </div>
+            </div>
           </div>
-        </div>
+        ) : (
+          // Desktop Header Layout (existing)
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Link to="/UserProfile" className="flex items-center hover:opacity-80 transition-opacity">
+                <img 
+                  src={logoSvg} 
+                  alt="PlayerZero" 
+                  className="h-8 w-auto"
+                />
+              </Link>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {user && (
+                <>
+                  <Link to="/UserProfile">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent w-32"
+                    >
+                      <User className="w-4 h-4 mr-1" />
+                      Profile
+                    </Button>
+                  </Link>
+                  <Link to="/leaderboards">
+                    <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50 w-32">
+                      <div style={{
+                        position: 'relative',
+                        width: '24px',
+                        height: '24px',
+                        marginRight: '4px'
+                      }}>
+                        <img 
+                          src="/images/leaderboard.svg" 
+                          alt="Leaderboard" 
+                          style={{
+                            /* Vector */
+                            position: 'absolute',
+                            left: '12.5%',
+                            right: '12.5%',
+                            top: '12.5%',
+                            bottom: '12.5%'
+                          }}
+                        />
+                      </div>
+                      Leaderboard
+                    </Button>
+                  </Link>
+                </>
+              )}
+
+              {user && (
+                <>
+                  {!trialStatus.isPaidUser && (
+                    <button 
+                      onClick={() => navigate('/upgrade')}
+                      className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
+                      title="Upgrade to Premium"
+                    >
+                      <Crown className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                  <NotificationBell />
+                </>
+              )}
+
+              {/* Features Dropdown */}
+              <div className="relative" id="features-dropdown">
+                <button
+                  onClick={toggleFeaturesDropdown}
+                  className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                  title="Menu"
+                >
+                  <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
+                </button>
+
+                {featuresDropdownOpen && (
+                  <div className="layout-menu-dropdown">
+                    <Link
+                      to="/profile?edit=true"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                      className="layout-menu-item"
+                    >
+                      Profile Settings
+                    </Link>
+                    
+                    <Link
+                      to="/update-stats"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                      className="layout-menu-item"
+                    >
+                      Update Stats
+                    </Link>
+                    
+                    <Link
+                      to="/calculators"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                      className="layout-menu-item"
+                    >
+                      Calculators
+                    </Link>
+
+                    <Link
+                      to="/search"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                      className="layout-menu-item"
+                    >
+                      Search Users
+                    </Link>
+
+                    <Link
+                      to="/contact"
+                      onClick={() => setFeaturesDropdownOpen(false)}
+                      className="layout-menu-item"
+                    >
+                      Help & Support
+                    </Link>
+
+                    <button
+                      onClick={handleSignOut}
+                      className="layout-menu-item"
+                    >
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </header>
 
       {/* Old Header - Keep for backwards compatibility but hidden */}

@@ -5,6 +5,7 @@ import { ShareablesHub } from "../shareables/ShareablesHub"
 import { MobileFooter } from "../layout/MobileFooter"
 import { RadarChart } from "./RadarChart"
 import { ExportCardModal } from "./ExportCardModal"
+import { Crown } from "../icons/Crown"
 import { useMobile } from "../../hooks/useMobile"
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
@@ -27,6 +28,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   const [timePeriod, setTimePeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly')
   const [filteredStats, setFilteredStats] = useState<any>(null)
   const [showExportModal, setShowExportModal] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(false)
+  const [chartLoading, setChartLoading] = useState(false)
   const showMobileFooter = isMobile
 
   // Calculate header props - these are used in the conditional render
@@ -67,6 +70,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
     }
 
     try {
+      setStatsLoading(true)
       let statsResult
 
       switch (timePeriod) {
@@ -181,6 +185,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
           total_xp: 0
         })
       }
+    } finally {
+      setStatsLoading(false)
     }
   }, [user?.id, profile, timePeriod])
 
@@ -197,8 +203,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)
     setTimePeriod(period)
+    setChartLoading(true)
     // Don't clear filtered stats to prevent data vanishing - let new data overwrite
     // setFilteredStats(null) - REMOVED to fix vanishing issue
+    
+    // Clear chart loading after a delay to simulate chart re-rendering
+    setTimeout(() => setChartLoading(false), 1000)
   }
 
   const formatNumber = (num: number | null | undefined) => {
@@ -238,10 +248,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
 
   if (loading) {
     return (
-      <div className={showHeader ? " bg-gray-50" : "bg-gray-50"}>
+      <div className={showHeader ? " bg-white" : "bg-white"}>
         {showHeader && headerProps && (
           <PlayerHeader
-            viewMode={viewMode}
             userType={userType}
             showProfileButton={isMobile ? false : headerProps.showProfileButton}
             showLeaderboardButton={isMobile ? false : headerProps.showLeaderboardButton}
@@ -257,7 +266,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: '#f9fafb',
+            backgroundColor: '#ffffff',
             zIndex: 10
           }}
         >
@@ -291,10 +300,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   }
 
   return (
-    <div className={showHeader ? "min-h-screen bg-gray-50" : "bg-gray-50"}>
+    <div className={showHeader ? "min-h-screen bg-white" : "bg-white"}>
       {showHeader && headerProps && (
         <PlayerHeader
-          viewMode={viewMode}
           userType={userType}
           showProfileButton={isMobile ? false : headerProps.showProfileButton}
           showLeaderboardButton={isMobile ? false : headerProps.showLeaderboardButton}
@@ -306,11 +314,52 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
           className={isMobile ? "px-4" : "px-6"}
           style={{
             width: '100%',
-            maxWidth: '1400px',
-            margin: '0 auto',
-            overflow: 'hidden',
+            // Removed maxWidth constraint to match header full width behavior
+            position: 'relative' // Add relative positioning for absolute child
           }}
         >
+          {/* Upgrade Button - Top Right of Main Content */}
+          {viewMode === "own" && userType === "trial" && !isMobile && (
+            <button
+              onClick={() => navigate('/upgrade')}
+              style={{
+                /* Upgrade button specifications */
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '8px 16px',
+                gap: '8px',
+                position: 'absolute',
+                right: '24px',
+                top: '16px',
+                background: '#DC2627',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                transition: 'background-color 0.2s ease',
+                zIndex: 20,
+                boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.15)'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#B91C1C';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = '#DC2627';
+              }}
+            >
+              <Crown className="w-4 h-4" style={{ color: 'white' }} />
+              <span style={{ 
+                color: 'white', 
+                fontWeight: '600', 
+                fontSize: '14px',
+                fontFamily: 'system-ui, -apple-system, sans-serif'
+              }}>
+                Upgrade
+              </span>
+            </button>
+          )}
+
           <div 
             className={isMobile ? "space-y-6" : "flex gap-8"}
             style={{
@@ -319,84 +368,209 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
           >
             {/* Left Sidebar - Desktop only */}
             {!isMobile && (
-              <div className="w-80 flex-shrink-0 space-y-6">
+                <div style={{
+                  /* Frame 603 */
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0px',
+                
+                  width: '320px', // Reduced from 400px for better fit
+                  minWidth: '280px', // Minimum width for usability
+                  minHeight: '646px', // Changed from fixed height to minimum height
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0
+                }}>
                 <ProfileInfo viewMode={viewMode} userType={userType} profile={profile} />
 
                 <div className="bg-white rounded-lg p-6" style={{ position: 'relative', minHeight: '400px' }}>
-                  <div className="flex gap-4 mb-6">
+                  {/* Frame 541 - Time Period Buttons */}
+                  <div style={{
+                    /* Frame 541 */
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: '0px',
+                    width: '100%', // Make responsive to parent container
+                    maxWidth: '320px', // Match sidebar width
+                    height: '48px',
+                    borderRadius: '6px',
+                    flex: 'none',
+                    order: 0,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                
+                  }}>
+                    {/* Weekly Button */}
                     <button 
                       onClick={() => handleTimePeriodChange('weekly')}
-                      className={`text-sm font-medium transition-colors ${
-                        timePeriod === 'weekly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
-                      }`}
+                      style={{
+                        /* Weekly */
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: '0px 8px',
+                        gap: '10px',
+                        width: '80px',
+                        height: '36px',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer'
+                      }}
                     >
+                      <span style={{
+                        /* Weekly */
+                        width: '45px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: timePeriod === 'weekly' ? '#DC2627' : '#000000',
+                        textDecorationLine: timePeriod === 'weekly' ? 'underline' : 'none',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0
+                      }}>
                       Weekly
+                      </span>
                     </button>
+
+                    {/* Monthly Button */}
                     <button 
                       onClick={() => handleTimePeriodChange('monthly')}
-                      className={`text-sm font-medium transition-colors ${
-                        timePeriod === 'monthly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
-                      }`}
+                      style={{
+                        /* Monthly */
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
+                        padding: '0px 8px',
+                        width: '80px',
+                        height: '36px',
+                        borderRadius: '4px',
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer'
+                      }}
                     >
+                      <span style={{
+                        /* Monthly */
+                        width: '50px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        textDecorationLine: timePeriod === 'monthly' ? 'underline' : 'none',
+                        color: timePeriod === 'monthly' ? '#DC2627' : '#000000',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0
+                      }}>
                       Monthly
+                      </span>
                     </button>
+
+                    {/* All-time Button */}
                     <button 
                       onClick={() => handleTimePeriodChange('alltime')}
-                      className={`text-sm font-medium transition-colors ${
-                        timePeriod === 'alltime' ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-                      }`}
+                      style={{
+                        /* All-time */
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: '0px 8px',
+                        gap: '10px',
+                        width: '80px',
+                        height: '36px',
+                        flex: 'none',
+                        order: 2,
+                        flexGrow: 0,
+                        border: 'none',
+                        background: 'transparent',
+                        cursor: 'pointer'
+                      }}
                     >
+                      <span style={{
+                        /* All time */
+                        width: '47px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: timePeriod === 'alltime' ? '#DC2627' : '#000000',
+                        textDecorationLine: timePeriod === 'alltime' ? 'underline' : 'none',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0
+                      }}>
                       All time
+                      </span>
                     </button>
                   </div>
 
                   <div 
                     style={{
-                      /* Auto layout specifications */
+                      /* Frame 593 */
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'flex-start',
                       padding: '0px',
-                      gap: '1px',
-                      position: 'absolute',
-                      width: '200px',
-                      height: '200px',
-                      top: '50px',
+                      gap: '8px',
+                       // Make responsive
+                      maxWidth: '320px', // Match sidebar width
+                      minHeight: '361px', // Changed to minHeight for flexibility
+                      marginTop: '24px',
+                      width: '397px',
+                      height: '97px', // Professional gap after time period buttons
                     }}
                   >
-                    {/* Frame 590 - Distance Walked */}
+                    {/* Frame 589 - Distance Walked */}
                     <div 
                       style={{
-                        /* Frame 590 specifications */
+                        /* Frame 589 */
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                         padding: '20px 40px',
                         gap: '10px',
-                        width: '300px',
-                        height: '65px',
+                        width: '100%',
+                        height: '78px',
                         background: 'rgba(0, 0, 0, 0.02)',
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                         borderRadius: '6px',
                         /* Inside auto layout */
                         flex: 'none',
-                        order: 1,
+                        order: 0,
                         alignSelf: 'stretch',
                         flexGrow: 0,
                       }}
                     >
                       <div 
                         style={{
-                          /* Frame 515 specifications */
+                          /* Frame 515 */
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
                           gap: '8px',
-                          width: '300px',
-                          height: '65px',
+                          width: '100%',
+                          height: '68px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
@@ -404,25 +578,54 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flexGrow: 0,
                         }}
                       >
-                        <div className="text-2xl font-bold text-black">
+                        <div style={{
+                          /* Stat Value - 15 km */
+                          width: '141px',
+                          height: '36px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '24px',
+                          lineHeight: '36px',
+                          textAlign: 'center',
+                          color: '#000000',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
-                        <div className="text-sm text-black">Distance Walked</div>
+                        <div style={{
+                          /* Stat Label - Distance Walked */
+                          width: '101px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: '#353535',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>Distance Walked</div>
                       </div>
                     </div>
 
                     {/* Frame 590 - Pokémon Caught */}
                     <div 
                       style={{
-                        /* Frame 590 specifications */
+                        /* Frame 590 */
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                         padding: '20px 40px',
                         gap: '10px',
-                        width: '300px',
-                        height: '65px',
+                        width: '100%',
+                        height: '77px',
                         background: 'rgba(0, 0, 0, 0.02)',
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                         borderRadius: '6px',
@@ -435,15 +638,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                     >
                       <div 
                         style={{
-                          /* Frame 515 specifications */
+                          /* Frame 515 */
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
                           gap: '8px',
-                          width: '300px',
-                          height: '65px',
+                          width: '100%',
+                          height: '68px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
@@ -451,44 +654,73 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flexGrow: 0,
                         }}
                       >
-                        <div className="text-2xl font-bold text-black">{formatNumber(getStatValue('pokemon_caught'))}</div>
-                        <div className="text-sm text-black">Pokémon Caught</div>
+                        <div style={{
+                          /* Stat Value - 170,000 */
+                          width: '90px',
+                          height: '36px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '24px',
+                          lineHeight: '36px',
+                          textAlign: 'center',
+                          color: '#000000',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}>{formatNumber(getStatValue('pokemon_caught'))}</div>
+                        <div style={{
+                          /* Stat Label - Pokémon Caught */
+                          width: '105px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: '#353535',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>Pokémon Caught</div>
                       </div>
                     </div>
 
-                    {/* Frame 590 - Pokéstops Visited */}
+                    {/* Frame 591 - Pokéstops Visited */}
                     <div 
                       style={{
-                        /* Frame 590 specifications */
+                        /* Frame 591 */
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                         padding: '20px 40px',
                         gap: '10px',
-                        width: '300px',
-                        height: '65px',
+                        width: '100%',
+                        height: '77px',
                         background: 'rgba(0, 0, 0, 0.02)',
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                         borderRadius: '6px',
                         /* Inside auto layout */
                         flex: 'none',
-                        order: 1,
+                        order: 2,
                         alignSelf: 'stretch',
                         flexGrow: 0,
                       }}
                     >
                       <div 
                         style={{
-                          /* Frame 515 specifications */
+                          /* Frame 515 */
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
                           gap: '8px',
-                          width: '300px',
-                          height: '65px',
+                          width: '100%',
+                          height: '68px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
@@ -496,44 +728,73 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flexGrow: 0,
                         }}
                       >
-                        <div className="text-2xl font-bold text-black">{formatNumber(getStatValue('pokestops_visited'))}</div>
-                        <div className="text-sm text-black">Pokéstops Visited</div>
+                        <div style={{
+                          /* Stat Value - 109,000 */
+                          width: '92px',
+                          height: '36px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '24px',
+                          lineHeight: '36px',
+                          textAlign: 'center',
+                          color: '#000000',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}>{formatNumber(getStatValue('pokestops_visited'))}</div>
+                        <div style={{
+                          /* Stat Label - Pokéstops Visited */
+                          width: '105px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: '#353535',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>Pokéstops Visited</div>
                       </div>
                     </div>
 
-                    {/* Frame 590 - Total XP */}
+                    {/* Frame 592 - Total XP */}
                     <div 
                       style={{
-                        /* Frame 590 specifications */
+                        /* Frame 592 */
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'flex-start',
                         padding: '20px 40px',
                         gap: '10px',
-                        width: '300px',
-                        height: '65px',
+                        width: '100%',
+                        height: '78px',
                         background: 'rgba(0, 0, 0, 0.02)',
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                         borderRadius: '6px',
                         /* Inside auto layout */
                         flex: 'none',
-                        order: 1,
+                        order: 3,
                         alignSelf: 'stretch',
                         flexGrow: 0,
                       }}
                     >
                       <div 
                         style={{
-                          /* Frame 515 specifications */
+                          /* Frame 515 */
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
                           gap: '8px',
-                          width: '300px',
-                          height: '65px',
+                          width: '100%',
+                          height: '68px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
@@ -541,8 +802,37 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flexGrow: 0,
                         }}
                       >
-                        <div className="text-2xl font-bold text-black">{formatNumber(getStatValue('total_xp'))}</div>
-                        <div className="text-sm text-black">Total XP</div>
+                        <div style={{
+                          /* Stat Value - 33,628,973 */
+                          width: '129px',
+                          height: '36px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '24px',
+                          lineHeight: '36px',
+                          textAlign: 'center',
+                          color: '#000000',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}>{formatNumber(getStatValue('total_xp'))}</div>
+                        <div style={{
+                          /* Stat Label - Total XP */
+                          width: '48px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: '#353535',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>Total XP</div>
                       </div>
                     </div>
                   </div>
@@ -562,28 +852,95 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                 overflow: 'hidden',
               }}
             >
-              {/* Mobile Layout - New Organization */}
+              {/* Mobile Layout - Frame 522 Structure */}
               {isMobile ? (
-                <div className="space-y-6">
-                  {/* 1. Profile Info */}
+                <div style={{
+                  /* Frame 522 - Main mobile container */
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0px',
+                  gap: '16px',
+                  width: '353px',
+                  height: '1382px',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 1,
+                  alignSelf: 'stretch',
+                  flexGrow: 0,
+                  margin: '0 auto'
+                }}>
+                  {/* Frame 517 - Profile Info Container */}
+                  <div style={{
+                    /* Frame 517 */
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    padding: '8px 0px',
+                    gap: '8px',
+                    width: '312px',
+                    height: '249px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0
+                  }}>
                   <ProfileInfo viewMode={viewMode} userType={userType} profile={profile} />
+                  </div>
 
-                  {/* 2. Grind Stats */}
+                  {/* Frame 530 - Grind Stats Container */}
+                  <div style={{
+                    /* Frame 530 */
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'flex-start',
+                    padding: '12px 0px',
+                    gap: '8px',
+                    width: '353px',
+                    height: '124px',
+                    borderRadius: '8px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 1,
+                    alignSelf: 'stretch',
+                    flexGrow: 0
+                  }}>
+                    {statsLoading ? (
+                      <div className="bg-white rounded-lg p-6">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+                        <p className="text-center text-gray-600">Loading stats...</p>
+                      </div>
+                    ) : (
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
+                    )}
+                  </div>
 
-                  {/* 3. Time Period Controls + Upload Card Button */}
-                  <div className="bg-white rounded-lg p-4" style={{
-                    marginTop: isMobile ? '20px' : '0px',
-                    marginBottom: isMobile ? '20px' : '0px'
+                  {/* Frame 548 - Performance Overview Container */}
+                  <div style={{
+                    /* Frame 548 */
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    padding: '0px',
+                    gap: '9px',
+                    width: '351px',
+                    height: '205px',
+                    borderRadius: '12px',
+                    marginTop: '40px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 2,
+                    flexGrow: 0
                   }}>
-                    <div 
-                      style={isMobile ? {
-                        /* Frame 541 - Mobile CSS */
+                    {/* Frame 541 - Time Period Buttons */}
+                    <div style={{
+                      /* Frame 541 */
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -591,68 +948,141 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         width: '351px',
                         height: '48px',
                         borderRadius: '6px',
+                      /* Inside auto layout */
                         flex: 'none',
                         order: 0,
                         alignSelf: 'stretch',
-                        flexGrow: 0,
-                        marginBottom: '24px',
-                        justifyContent: 'space-between'
-                      } : {
-                        display: 'flex',
-                        gap: '16px',
-                        marginBottom: '24px',
-                        flexWrap: 'wrap'
-                      }}
-                    >
+                      flexGrow: 0
+                    }}>
+                      {/* Weekly Button */}
                       <button 
                         onClick={() => handleTimePeriodChange('weekly')}
-                        className={`text-sm font-medium transition-colors ${
-                          timePeriod === 'weekly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
-                        }`}
-                        style={isMobile ? {
+                        style={{
+                          /* Weekly Button */
                           display: 'flex',
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 12px'
-                        } : {}}
+                          padding: '0px 8px',
+                          gap: '10px',
+                          width: '80px',
+                          height: '36px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer'
+                        }}
                       >
-                        {isMobile && <span>📅</span>}
+                        <span style={{
+                          /* Weekly Text */
+                          width: '45px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: timePeriod === 'weekly' ? '#DC2627' : '#000000',
+                          textDecorationLine: timePeriod === 'weekly' ? 'underline' : 'none',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}>
                         Weekly
+                        </span>
                       </button>
+
+                      {/* Monthly Button */}
                       <button 
                         onClick={() => handleTimePeriodChange('monthly')}
-                        className={`text-sm font-medium transition-colors ${
-                          timePeriod === 'monthly' ? 'text-red-500' : 'text-gray-900 hover:text-red-500'
-                        }`}
-                        style={isMobile ? {
+                        style={{
+                          /* Monthly Button */
                           display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 12px'
-                        } : {}}
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          padding: '0px 8px',
+                          width: '80px',
+                          height: '36px',
+                          borderRadius: '4px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer'
+                        }}
                       >
-                        {isMobile && <span>📊</span>}
+                        <span style={{
+                          /* Monthly Text */
+                          width: '50px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          textDecorationLine: timePeriod === 'monthly' ? 'underline' : 'none',
+                          color: timePeriod === 'monthly' ? '#DC2627' : '#000000',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}>
                         Monthly
+                        </span>
                       </button>
+
+                      {/* All-time Button */}
                       <button 
                         onClick={() => handleTimePeriodChange('alltime')}
-                        className={`text-sm font-medium transition-colors ${
-                          timePeriod === 'alltime' ? 'text-red-500' : 'text-gray-500 hover:text-red-500'
-                        }`}
-                        style={isMobile ? {
+                        style={{
+                          /* All-time Button */
                           display: 'flex',
+                          flexDirection: 'row',
                           alignItems: 'center',
-                          gap: '8px',
-                          padding: '8px 12px'
-                        } : {}}
+                          padding: '0px 8px',
+                          gap: '10px',
+                          width: '80px',
+                          height: '36px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 2,
+                          flexGrow: 0,
+                          border: 'none',
+                          background: 'transparent',
+                          cursor: 'pointer'
+                        }}
                       >
-                        {isMobile && <span>🏆</span>}
+                        <span style={{
+                          /* All time Text */
+                          width: '47px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: timePeriod === 'alltime' ? '#DC2627' : '#000000',
+                          textDecorationLine: timePeriod === 'alltime' ? 'underline' : 'none',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}>
                         All time
+                        </span>
                       </button>
-                      {/* Upload Card Icon */}
+
+                      {/* Upload Card Icon - Vector */}
                       <button 
-                        style={isMobile ? {
-                          /* Vector - Upload Icon CSS */
+                        onClick={() => setShowExportModal(true)}
+                        style={{
+                          /* Vector - Upload Icon */
                           display: 'flex',
                           flexDirection: 'row',
                           justifyContent: 'center',
@@ -661,127 +1091,502 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           gap: '10px',
                           width: '24px',
                           height: '24px',
+                          /* Inside auto layout */
                           flex: 'none',
                           order: 3,
                           flexGrow: 0,
-                          backgroundColor: 'transparent',
+                          background: 'transparent',
                           border: 'none',
                           cursor: 'pointer'
-                        } : {
-                          marginLeft: 'auto',
-                          padding: '8px',
-                          backgroundColor: 'transparent',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          transition: 'background-color 0.2s'
-                        }}
-                        className={isMobile ? "" : "hover:bg-gray-100"}
-                        onClick={() => {
-                          if (isMobile) {
-                            setShowExportModal(true)
-                          } else {
-                            // TODO: Implement desktop upload functionality
-                          console.log('Upload card clicked')
-                          }
                         }}
                       >
-                        <svg 
-                          style={{
-                            width: '24px',
-                            height: '24px',
-                            color: '#000000'
-                          }}
-                          fill="currentColor"
-                          viewBox="0 0 512 512"
-                        >
-                          <path d="M288 109.3V352c0 17.7-14.3 32-32 32s-32-14.3-32-32V109.3l-73.4 73.4c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l128-128c12.5-12.5 32.8-12.5 45.3 0l128 128c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L288 109.3zM64 352H192c0 35.3 28.7 64 64 64s64-28.7 64-64H448c35.3 0 64 28.7 64 64v32c0 35.3-28.7 64-64 64H64c-35.3 0-64-28.7-64-64V416c0-35.3 28.7-64 64-64zM432 456a24 24 0 1 0 0-48 24 24 0 1 0 0 48z"/>
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M12 5.5V14M15 7.5L12 4.5L9 7.5M5 12.5V17.5C5 18.0304 5.21071 18.5391 5.58579 18.9142C5.96086 19.2893 6.46957 19.5 7 19.5H17C17.5304 19.5 18.0391 19.2893 18.4142 18.9142C18.7893 18.5391 19 18.0304 19 17.5V12.5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </button>
                     </div>
 
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3 mt-4">
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-lg font-bold text-black">
+                    {/* Frame 547 - Stats Grid Container */}
+                    <div style={{
+                      /* Frame 547 */
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      padding: '0px',
+                      gap: '8px',
+                      width: '348px',
+                      height: '148px',
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0
+                    }}>
+                      {/* Frame 546 - First Row Stats */}
+                      <div style={{
+                        /* Frame 546 */
+                        display: 'flex',
+                        flexDirection: 'row',
+                        alignItems: 'center',
+                        padding: '0px',
+                        gap: '8px',
+                        width: '348px',
+                        height: '70px',
+                        /* Inside auto layout */
+                        flex: 'none',
+                        order: 0,
+                        alignSelf: 'stretch',
+                        flexGrow: 0
+                      }}>
+                        {/* Frame 22 - Distance Walked */}
+                        <div style={{
+                          /* Frame 22 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          padding: '20px',
+                          gap: '10px',
+                          width: '166px',
+                          height: '70px',
+                          background: 'rgba(0, 0, 0, 0.02)',
+                          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                          borderRadius: '6px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}>
+                          <div style={{
+                            /* 15,526.3 km */
+                            width: '106px',
+                            height: '27px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '18px',
+                            lineHeight: '27px',
+                            textAlign: 'center',
+                            color: '#000000',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0
+                          }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
-                        <div className="text-xs text-gray-600">Distance Walked</div>
+                          <div style={{
+                            /* Distance Walked */
+                            width: '92px',
+                            height: '17px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '11px',
+                            lineHeight: '16px',
+                            color: '#353535',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0
+                          }}>
+                            Distance Walked
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-lg font-bold text-black">{formatNumber(getStatValue('pokemon_caught'))}</div>
-                        <div className="text-xs text-gray-600">Pokémon Caught</div>
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-lg font-bold text-black">{formatNumber(getStatValue('pokestops_visited'))}</div>
-                        <div className="text-xs text-gray-600">Pokéstops Visited</div>
+
+                        {/* Frame 542 - Pokemon Caught */}
+                        <div style={{
+                          /* Frame 542 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          padding: '20px',
+                          gap: '10px',
+                          width: '166px',
+                          height: '70px',
+                          background: 'rgba(0, 0, 0, 0.02)',
+                          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                          borderRadius: '6px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0
+                        }}>
+                          <div style={{
+                            /* 170,000 */
+                            width: '68px',
+                            height: '27px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '18px',
+                            lineHeight: '27px',
+                            textAlign: 'center',
+                            color: '#000000',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0
+                          }}>
+                            {formatNumber(getStatValue('pokemon_caught'))}
                       </div>
-                      <div className="bg-gray-50 rounded-lg p-3">
-                        <div className="text-lg font-bold text-black">{formatNumber(getStatValue('total_xp'))}</div>
-                        <div className="text-xs text-gray-600">Total XP</div>
+                          <div style={{
+                            /* Pokémon Caught */
+                            width: '96px',
+                            height: '17px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '11px',
+                            lineHeight: '16px',
+                            color: '#353535',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0
+                          }}>
+                            Pokémon Caught
                       </div>
                     </div>
                   </div>
 
-                  {/* 4. Radar Chart */}
-                  <div 
-                    style={{
+                      {/* Frame 545 - Second Row Stats */}
+                      <div style={{
+                        /* Frame 545 */
                       display: 'flex',
-                      flexDirection: 'column',
+                        flexDirection: 'row',
                       alignItems: 'center',
+                        padding: '0px',
+                        gap: '8px',
+                        width: '348px',
+                        height: '70px',
+                        /* Inside auto layout */
+                        flex: 'none',
+                        order: 1,
+                        alignSelf: 'stretch',
+                        flexGrow: 0
+                      }}>
+                        {/* Frame 544 - Pokestops Visited */}
+                        <div style={{
+                          /* Frame 544 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
                       padding: '20px',
-                      width: '100%',
-                      height: '400px',
+                          gap: '10px',
+                          width: '166px',
+                          height: '70px',
                       background: 'rgba(0, 0, 0, 0.02)',
                       boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                          borderRadius: '6px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}>
+                          <div style={{
+                            /* 109,000 */
+                            width: '69px',
+                            height: '27px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '18px',
+                            lineHeight: '27px',
+                            textAlign: 'center',
+                            color: '#000000',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0
+                          }}>
+                            {formatNumber(getStatValue('pokestops_visited'))}
+                          </div>
+                          <div style={{
+                            /* Pokéstops Visited */
+                            width: '96px',
+                            height: '17px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '11px',
+                            lineHeight: '16px',
+                            color: '#353535',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0
+                          }}>
+                            Pokéstops Visited
+                          </div>
+                        </div>
+
+                        {/* Frame 543 - Total XP */}
+                        <div style={{
+                          /* Frame 543 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
+                          padding: '20px',
+                          gap: '10px',
+                          width: '166px',
+                          height: '70px',
+                          background: 'rgba(0, 0, 0, 0.02)',
+                          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                          borderRadius: '6px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0
+                        }}>
+                          <div style={{
+                            /* 33,628,973 */
+                            width: '97px',
+                            height: '27px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '18px',
+                            lineHeight: '27px',
+                            textAlign: 'center',
+                            color: '#000000',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0
+                          }}>
+                            {formatNumber(getStatValue('total_xp'))}
+                          </div>
+                          <div style={{
+                            /* Total XP */
+                            width: '44px',
+                            height: '17px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '11px',
+                            lineHeight: '16px',
+                            color: '#353535',
+                            /* Inside auto layout */
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0
+                          }}>
+                            Total XP
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Frame 549 - Performance Overview Container */}
+                  <div style={{
+                    /* Frame 549 */
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    padding: '12px',
+                    gap: '8px',
+                    width: '353px',
+                    height: '442px',
                       borderRadius: '8px',
-                    }}
-                  >
+                    marginTop: '24px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 3,
+                    alignSelf: 'stretch',
+                    flexGrow: 0
+                  }}>
+                    {/* Performance Overview Heading */}
+                    <div style={{
+                      /* Performance Overview */
+                      width: '186px',
+                      height: '24px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 600,
+                      fontSize: '16px',
+                      lineHeight: '24px',
+                      textAlign: 'center',
+                      color: '#000000',
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}>
+                      Performance Overview
+                    </div>
+
+                    {/* Frame 559 - Radar Chart Container */}
+                    <div style={{
+                      /* Frame 559 */
+                      width: '320.4px',
+                      height: '338.89px',
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                      position: 'relative'
+                    }}>
+                      {/* Frame 458 - Chart Background */}
+                      <div style={{
+                        /* Frame 458 */
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '0px 0px 10px',
+                        position: 'absolute',
+                        width: '320.4px',
+                        height: '338.89px',
+                        left: '0px',
+                        top: '0px',
+                        background: 'rgba(0, 0, 0, 0.02)',
+                        boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                        borderRadius: '8px'
+                      }}>
                     <div style={{ width: '100%', height: '100%', position: 'relative' }}>
+                          {chartLoading ? (
+                            <div className="flex items-center justify-center h-64">
+                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4"></div>
+                              <p className="text-gray-600 ml-4">Loading chart...</p>
+                            </div>
+                          ) : (
                       <RadarChart 
                         profile={profile} 
                         isPaidUser={userType === "upgraded"} 
                         showHeader={false}
                       />
+                          )}
+                        </div>
                     </div>
                   </div>
 
-                  {/* 5. Upgrade Button (if needed) */}
+                    {/* Upgrade Button (if needed) */}
                   {viewMode === "own" && userType === "trial" && (
-                    <div 
-                      style={{
+                      <div style={{
+                        /* Upgrade button */
                         display: 'flex',
+                        flexDirection: 'row',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        padding: '12px',
-                        width: '100%',
+                        padding: '0px',
+                        gap: '8px',
+                        width: '320.4px',
+                        height: '48px',
                         background: '#DC2627',
                         borderRadius: '8px',
-                        cursor: 'pointer',
-                        transition: 'background-color 0.2s ease',
+                        /* Inside auto layout */
+                        flex: 'none',
+                        order: 2,
+                        flexGrow: 0,
+                        cursor: 'pointer'
                       }}
                       onClick={() => navigate('/upgrade')}
                     >
-                      <span style={{ color: 'white', fontWeight: 'bold', fontSize: '16px' }}>
-                        Upgrade to Premium
+                        <Crown style={{
+                          /* Crown icon */
+                          width: '24px',
+                          height: '24px',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                          color: '#FFFFFF'
+                        }} />
+                        <span style={{
+                          /* Upgrade */
+                          width: '63px',
+                          height: '21px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          lineHeight: '21px',
+                          color: '#FFFFFF',
+                          /* Inside auto layout */
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0
+                        }}>
+                          Upgrade
                       </span>
                     </div>
                   )}
+                  </div>
 
-                  {/* 6. Shareables Section */}
-                  <div style={{ position: 'relative', minHeight: '300px' }}>
+                  {/* Frame 599 - ShareablesHub Container */}
+                  <div style={{
+                    /* Frame 599 */
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '16px',
+                    width: '348px',
+                    height: '234px',
+                    
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 4,
+                    flexGrow: 0
+                  }}>
                     <ShareablesHub />
                   </div>
+
+
                 </div>
               ) : (
                 /* Desktop Layout - Keep existing */
                 <>
+                  {statsLoading ? (
+                    <div className="bg-white rounded-lg p-6">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
+                      <p className="text-center text-gray-600">Loading stats...</p>
+                    </div>
+                  ) : (
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
+                  )}
+              
+              {/* Performance Overview Heading - Aligned with weekly/monthly buttons */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                padding: '16px 20px',
+                width: '100%',
+                maxWidth: '100%',
+                background: '#FFFFFF',
+                borderRadius: '8px',
+                margin: '0 auto',
+                marginLeft: '0', // Align with weekly/monthly buttons
+              }}>
+                <span style={{
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '24px',
+                  lineHeight: '36px',
+                  color: '#000000',
+                  textAlign: 'left'
+                }}>
+                  Performance Overview
+                </span>
+              </div>
+
+              {/* 8px gap before RadarChart */}
+              <div style={{
+                height: '8px',
+                background: '#FFFFFF',
+                width: '100%'
+              }} />
               
               {/* Radar Chart Container - Frame 458 */}
               <div 
@@ -790,10 +1595,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
-                  padding: '0px 0px 10px',
+                  padding: '20px',
                   position: 'relative',
-                  width: isMobile ? '100%' : '838px',
-                  maxWidth: '838px',
+                  width: '100%',
+                  maxWidth: '100%',
                   height: isMobile ? '400px' : '487px',
                   background: 'rgba(0, 0, 0, 0.02)',
                   boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
@@ -801,6 +1606,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                   margin: '0 auto',
                 }}
               >
+
                 {/* Group - Radar Chart positioning */}
                 <div 
                   style={{
@@ -815,11 +1621,18 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                     justifyContent: 'center',
                   }}
                 >
+                  {chartLoading ? (
+                    <div className="flex items-center justify-center h-64">
+                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4"></div>
+                      <p className="text-gray-600 ml-4">Loading chart...</p>
+                    </div>
+                  ) : (
                   <RadarChart 
                     profile={profile} 
                     isPaidUser={userType === "upgraded"} 
                     showHeader={false}
                   />
+                  )}
                 </div>
               </div>
 

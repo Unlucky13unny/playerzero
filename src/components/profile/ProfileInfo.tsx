@@ -1,7 +1,4 @@
-import { Facebook, Instagram } from "lucide-react"
 import { Button } from "../ui/button"
-import { Crown } from "../icons/Crown"
-import { SnapchatIcon } from "../icons/SnapchatIcon"
 import { CountryFlag } from "../common/CountryFlag"
 import { useMobile } from "../../hooks/useMobile"
 
@@ -49,7 +46,7 @@ const getSocialLink = (platform: string, value: string): string | undefined => {
   }
 }
 
-export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
+export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
   const isMobile = useMobile()
   const getModeButton = () => {
     if (viewMode === "public") {
@@ -99,22 +96,204 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
   }
 
   return (
-    <div className="bg-white rounded-lg p-6">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="text-center">
-              <div className="text-4xl font-bold text-black">{profile?.trainer_level || 50}</div>
-              <div className="text-lg text-black">L V L</div>
+    <div style={{
+      /* Frame 517 - ProfileInfo Container */
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'flex-start',
+      padding: '8px 0px',
+      gap: '8px',
+      width: isMobile ? '312px' : '320px',
+      height: isMobile ? '249px' : 'auto',
+      /* Inside auto layout */
+      flex: 'none',
+      order: 0,
+      flexGrow: 0,
+      background: '#FFFFFF',
+      borderRadius: '8px'
+    }}>
+      {/* Frame 25 - Main Profile Container */}
+      <div style={{
+        /* Frame 25 */
+        display: 'flex',
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: '0px',
+        gap: '24px',
+        width: isMobile ? '312px' : '320px',
+        height: '101px',
+        /* Inside auto layout */
+        flex: 'none',
+        order: 0,
+        alignSelf: 'stretch',
+        flexGrow: 0,
+      }}>
+        {/* Frame 557 - Level Section */}
+        <div style={{
+          /* Frame 557 */
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '0px',
+          width: '76px',
+          height: '102px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+        }}>
+          <div style={{
+            /* Level Number - 50 */
+            width: '79px',
+            height: '66px',
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            fontSize: '60px',
+            lineHeight: '90px',
+            color: '#000000',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+          }}>{profile?.trainer_level || 50}</div>
+          <div style={{
+            /* LVL */
+            width: '65px',
+            height: '36px',
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            fontSize: '24px',
+            lineHeight: '36px',
+            textAlign: 'center',
+            letterSpacing: '0.5em',
+            color: '#000000',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 1,
+            flexGrow: 0,
+          }}>LVL</div>
+        </div>
+
+        {/* Frame 24 - Trainer Info Section */}
+        <div style={{
+          /* Frame 24 */
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          padding: '0px',
+          width: '212px',
+          height: '94.59px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          flexGrow: 0,
+        }}>
+          {/* Trainer Name */}
+          <div style={{
+            /* LumbrJackson */
+            width: '100%',
+            height: '36px',
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 600,
+            fontSize: '24px',
+            lineHeight: '36px',
+            color: '#000000',
+            textAlign: 'left', // Left align for both mobile and web
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            alignSelf: 'stretch',
+            flexGrow: 0,
+          }}>{profile?.trainer_name || "Unknown Trainer"}</div>
+
+          {/* Frame 22 - Country Section */}
+          <div style={{
+            /* Frame 22 */
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: '0px',
+            gap: '6px',
+            width: '81px',
+            height: '32px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 1,
+            flexGrow: 0,
+          }}>
+            {profile?.country && (
+              <>
+                <div style={{
+                  /* Flag */
+                  width: '20px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 500,
+                  fontSize: '20px',
+                  lineHeight: '20px',
+                  color: '#000000',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  <CountryFlag countryName={profile.country} size={20} />
             </div>
-            <div>
-              <h2 className="text-xl font-bold text-black" style={{ color: '#000000' }}>{profile?.trainer_name || "Unknown Trainer"}</h2>
-              <div className="flex items-center gap-1 text-sm text-black">
-                {profile?.country && <CountryFlag countryName={profile.country} size={24} />}
-                <span style={{ color: '#000000' }}>{profile?.country || "Unknown Country"}</span>
+                <span style={{
+                  /* Country Name */
+                  width: '55px',
+                  height: '20px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 500,
+                  fontSize: '12px',
+                  lineHeight: '20px',
+                  color: '#353535',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}>{profile?.country || "Unknown Country"}</span>
+              </>
+            )}
               </div>
-              <div className="flex gap-2 mt-2">
+
+          {/* Frame 518 - Social Icons */}
+          <div style={{
+            /* Frame 518 */
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'flex-start',
+            padding: '0px',
+            gap: '8px',
+            width: '131px',
+            height: '26.59px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 2,
+            flexGrow: 0,
+          }}>
                 {/* Facebook Icon */}
+            <div style={{
+              /* Group 396 */
+              width: '26.59px',
+              height: '26.59px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              position: 'relative',
+            }}>
                 {profile?.facebook ? (
                   <a 
                     href={getSocialLink('facebook', profile.facebook)} 
@@ -123,15 +302,24 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
                     className="hover:opacity-80 transition-opacity"
                     title={`Visit ${profile.facebook} on Facebook`}
                   >
-                    <Facebook className="w-5 h-5 text-blue-600 cursor-pointer" />
+                  <img src="/images/facebook.svg" alt="Facebook" style={{ width: '26.59px', height: '26.59px' }} />
                   </a>
                 ) : (
-                  <span title="No Facebook profile linked">
-                    <Facebook className="w-5 h-5 text-gray-400" />
-                  </span>
+                <img src="/images/facebook.svg" alt="Facebook" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
                 )}
+            </div>
                 
                 {/* Instagram Icon */}
+            <div style={{
+              /* Group 397 */
+              width: '26.59px',
+              height: '26.59px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              position: 'relative',
+            }}>
                 {profile?.instagram ? (
                   <a 
                     href={getSocialLink('instagram', profile.instagram)} 
@@ -140,15 +328,24 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
                     className="hover:opacity-80 transition-opacity"
                     title={`Visit ${profile.instagram} on Instagram`}
                   >
-                    <Instagram className="w-5 h-5 text-pink-600 cursor-pointer" />
+                  <img src="/images/instagram.svg" alt="Instagram" style={{ width: '26.59px', height: '26.59px' }} />
                   </a>
                 ) : (
-                  <span title="No Instagram profile linked">
-                    <Instagram className="w-5 h-5 text-gray-400" />
-                  </span>
+                <img src="/images/instagram.svg" alt="Instagram" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
                 )}
+            </div>
                 
                 {/* Snapchat Icon */}
+            <div style={{
+              /* Group 398 */
+              width: '26.59px',
+              height: '26.59px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 2,
+              flexGrow: 0,
+              position: 'relative',
+            }}>
                 {profile?.snapchat ? (
                   <a 
                     href={getSocialLink('snapchat', profile.snapchat)} 
@@ -157,50 +354,106 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
                     className="hover:opacity-80 transition-opacity"
                     title={`Add ${profile.snapchat} on Snapchat`}
                   >
-                    <SnapchatIcon className="w-5 h-5 text-yellow-400 cursor-pointer" />
+                  <img src="/images/snapchat.svg" alt="Snapchat" style={{ width: '26.59px', height: '26.59px' }} />
                   </a>
                 ) : (
-                  <span title="No Snapchat profile linked">
-                    <SnapchatIcon className="w-5 h-5 text-gray-400" />
-                  </span>
+                <img src="/images/snapchat.svg" alt="Snapchat" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
                 )}
-              </div>
             </div>
           </div>
-          {getModeButton()}
         </div>
-        {viewMode === "own" && userType === "trial" && (
-          <Button className="bg-red-500 hover:bg-red-600 text-white md:hidden">
-            <Crown className="w-4 h-4 mr-1" />
-            Upgrade
-          </Button>
-        )}
       </div>
 
-      <div 
-        className="mt-4 text-sm"
-        style={{
-          /* Frame 517 specifications */
+      {/* Mode Button */}
+      <div style={{ 
+        marginTop: '8px', 
+        display: 'flex', 
+        justifyContent: 'flex-start',
+        alignItems: 'flex-start'
+      }}>
+        {getModeButton()}
+      </div>
+
+            {/* Frame 515 - Details Section */}
+      <div style={{
+        /* Frame 515 */
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        padding: '0px',
+        gap: '8px',
+        width: isMobile ? '312px' : '320px',
+        height: isMobile ? '126px' : '120px',
+        /* Inside auto layout */
+        flex: 'none',
+        order: 1,
+        alignSelf: 'stretch',
+        flexGrow: 0,
+        marginTop: '8px'
+      }}>
+        {/* Details in Column Layout - Left Aligned */}
+        <div style={{
           display: 'flex',
           flexDirection: 'column',
-          alignItems: 'flex-start',
-          padding: '8px 0px',
-          gap: '16px',
-          width: '300px',
-          height: isMobile ? '150px' : '200px',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-        }}
-      >
-        <div className="flex justify-between w-full">
-          <span className="text-black">Team:</span>
-          <span className="font-medium text-black">{getTeamName()}</span>
+          gap: '8px',
+          width: '100%',
+        }}>
+          {/* Team Row */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            gap: '100px'
+          }}>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              color: '#353535',
+              textAlign: 'left',
+              minWidth: '80px'
+            }}>Team:</span>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: '18px',
+              color: '#DC2627',
+              textAlign: 'left',
+            }}>{getTeamName()}</span>
         </div>
-        <div className="flex justify-between w-full">
-          <span className="text-black">Start Date:</span>
-          <span className="text-black">
+
+          {/* Start Date Row */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            gap: '100px'
+          }}>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              color: '#353535',
+              textAlign: 'left',
+              minWidth: '80px'
+            }}>Start Date:</span>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: '18px',
+              color: '#000000',
+              textAlign: 'left',
+            }}>
             {profile?.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', {
               month: '2-digit',
               day: '2-digit',
@@ -208,19 +461,87 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
             }) : 'N/A'}
           </span>
         </div>
-        <div className="flex justify-between w-full">
-          <span className="text-black">Summit Date:</span>
-          <span className="text-black">{(profile?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}</span>
+
+          {/* Summit Date Row */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            gap: '100px'
+          }}>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              color: '#353535',
+              textAlign: 'left',
+              minWidth: '80px'
+            }}>Summit Date:</span>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: '18px',
+              color: '#000000',
+              textAlign: 'left',
+            }}>
+              {(profile?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+            </span>
         </div>
-        <div className="flex justify-between w-full">
-          <span className="text-black">Trainer Code:</span>
-          <div className="flex items-center gap-2">
-            <span className="text-black">{getTrainerCode()}</span>
+
+          {/* Trainer Code Row */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            gap: '100px'
+          }}>
+            <span style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              color: '#353535',
+              textAlign: 'left',
+              minWidth: '80px'
+            }}>Trainer Code:</span>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <span style={{
+                fontFamily: 'Poppins',
+                fontStyle: 'normal',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: '18px',
+                color: '#848282',
+                textAlign: 'left',
+              }}>{getTrainerCode()}</span>
             {profile?.trainer_code && !profile?.trainer_code_private && (
               <button 
-                className="text-gray-400 hover:text-gray-600"
                 onClick={copyTrainerCode}
                 title="Copy trainer code"
+                  style={{
+                    width: '14px',
+                    height: '14px',
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: '#636874',
+                    padding: '0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -235,6 +556,9 @@ export function ProfileInfo({ viewMode, userType, profile }: ProfileInfoProps) {
           </div>
         </div>
       </div>
+      </div>
+
+
     </div>
   )
 }

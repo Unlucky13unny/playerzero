@@ -8,6 +8,9 @@ import { dashboardService, type LeaderboardEntry } from "../../services/dashboar
 import { useAuth } from "../../contexts/AuthContext"
 import { supabase } from "../../supabaseClient"
 import { getCountryFlag } from "../../utils/countryFlags"
+import firstPlaceSvg from "/images/1st.svg"
+import secondPlaceSvg from "/images/2nd.svg"
+import thirdPlaceSvg from "/images/3rd.svg"
 
 
 interface LeaderboardViewProps {
@@ -22,10 +25,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [sortBy, setSortBy] = useState<"xp" | "catches" | "distance" | "pokestops">("xp")
   const [lockedExpanded, setLockedExpanded] = useState(false)
   const [liveExpanded, setLiveExpanded] = useState(true)
+  const [webLiveExpanded, setWebLiveExpanded] = useState(true)
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [exporting, setExporting] = useState(false)
+
   const isMobile = useMobile()
 
 
@@ -132,6 +137,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       setLoading(false)
     }
   }
+
+
 
   // Fetch dropdown data functions
   const fetchTeams = async () => {
@@ -317,13 +324,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       
       // Header
       ctx.fillStyle = '#DC2627'
-      ctx.font = 'bold 28px Arial'
+      ctx.font = 'bold 28px Poppins'
       ctx.textAlign = 'center'
       ctx.fillText('🏆 PlayerZero Leaderboard', canvas.width / 2, cardY + 60)
       
       // Subtitle
       ctx.fillStyle = '#666'
-      ctx.font = '16px Arial'
+      ctx.font = '16px Poppins'
       ctx.fillText(`${periodName} Rankings • ${new Date().toLocaleDateString()}`, canvas.width / 2, cardY + 90)
       
       // Header line
@@ -356,21 +363,26 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         
         // Rank
         ctx.fillStyle = '#DC2627'
-        ctx.font = 'bold 20px Arial'
+        ctx.font = 'bold 20px Poppins'
         ctx.textAlign = 'left'
-        const rankText = index < 3 ? 
-          (index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉') : 
-          `#${index + 1}`
-        ctx.fillText(rankText, cardX + 35, playerY + 32)
+        if (index < 3) {
+          // For SVG medals, we would need to load and draw the SVG
+          // For now, keeping emojis in export to maintain functionality
+          const rankText = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'
+          ctx.fillText(rankText, cardX + 35, playerY + 32)
+        } else {
+          const rankText = `#${index + 1}`
+          ctx.fillText(rankText, cardX + 35, playerY + 32)
+        }
         
         // Name
         ctx.fillStyle = '#333'
-        ctx.font = '600 16px Arial'
+        ctx.font = '600 16px Poppins'
         ctx.fillText(player.name, cardX + 90, playerY + 32)
         
         // Stats
         ctx.fillStyle = '#DC2627'
-        ctx.font = 'bold 16px Arial'
+        ctx.font = 'bold 16px Poppins'
         ctx.textAlign = 'right'
         const statValue = typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue
         ctx.fillText(`${statValue} ${getStatLabel()}`, cardX + cardWidth - 40, playerY + 32)
@@ -386,7 +398,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       ctx.stroke()
       
       ctx.fillStyle = '#666'
-      ctx.font = '14px Arial'
+      ctx.font = '14px Poppins'
       ctx.textAlign = 'center'
       ctx.fillText('Generated from PlayerZero App • Keep grinding! 🔥', canvas.width / 2, footerY + 30)
       
@@ -523,19 +535,45 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const getMedalIcon = (medal: string | null) => {
     if (medal === "gold")
       return (
-        <div className="w-8 h-8 bg-yellow-400 rounded-full flex items-center justify-center text-white font-bold">
-          👑
-        </div>
+        <img 
+          src={firstPlaceSvg} 
+          alt="1st place" 
+          style={{ 
+            width: '30px', 
+            height: '30px',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0
+          }} 
+        />
       )
     if (medal === "silver")
       return (
-        <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center text-white font-bold">🥈</div>
+        <img 
+          src={secondPlaceSvg} 
+          alt="2nd place" 
+          style={{ 
+            width: '30px', 
+            height: '30px',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0
+          }} 
+        />
       )
     if (medal === "bronze")
       return (
-        <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center text-white font-bold">
-          🥉
-        </div>
+        <img 
+          src={thirdPlaceSvg} 
+          alt="3rd place" 
+          style={{ 
+            width: '30px', 
+            height: '30px',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0
+          }} 
+        />
       )
     return null
   }
@@ -687,23 +725,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         </div>
 
         {/* Frame 586 - Live Results Section */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          padding: '12px 8px',
-          gap: '8px',
-          width: '826px',
-          height: '259px',
-          background: 'rgba(0, 0, 0, 0.1)',
-          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.05)',
-          borderRadius: '8px',
-          flex: 'none',
-          order: 2,
-          flexGrow: 0,
-        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '12px 8px',
+            gap: '8px',
+            width: '826px',
+            height: '259px',
+            background: 'rgba(0, 0, 0, 0.1)',
+            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.05)',
+            borderRadius: '8px',
+            flex: 'none',
+            order: 2,
+            flexGrow: 0,
+          }}>
           {renderWebLiveResults()}
-        </div>
+          </div>
 
         {/* Frame 605 - Monthly Results Container */}
         <div style={{
@@ -803,22 +841,74 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               Live
             </span>
           </div>
+
+          {/* Dropdown Button */}
+          <div 
+            style={{
+              cursor: 'pointer'
+            }}
+            onClick={() => setWebLiveExpanded(!webLiveExpanded)}
+          >
+            <svg 
+              width="38" 
+              height="24" 
+              viewBox="0 0 38 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                transform: webLiveExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+            </svg>
+          </div>
         </div>
 
-        {/* Top 3 Results */}
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          padding: '0px',
-          width: '812px',
-          flex: 'none',
-          order: 1,
-          flexGrow: 0,
-          gap: '8px',
-        }}>
-          {liveResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))}
-        </div>
+        {/* Top 3 Results - Conditionally Rendered */}
+        {webLiveExpanded && (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            padding: '0px',
+            width: '812px',
+            flex: 'none',
+            order: 1,
+            flexGrow: 0,
+            gap: '8px',
+          }}>
+            {liveResults && liveResults.length > 0 ? (
+              liveResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))
+            ) : (
+              // No Data State
+              <div style={{
+                display: 'flex',
+                justifyContent: 'center',
+                alignItems: 'center',
+                width: '100%',
+                height: '100px',
+                flexDirection: 'column',
+                gap: '8px'
+              }}>
+                <Trophy style={{
+                  width: '32px',
+                  height: '32px',
+                  color: '#cccccc'
+                }} />
+                <span style={{
+                  fontFamily: 'Poppins',
+                  fontSize: '14px',
+                  color: '#999999',
+                  fontWeight: 400
+                }}>
+                  No live data available
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </>
     )
   }
@@ -895,26 +985,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             order: 2,
           flexGrow: 0,
         }}>
-            {/* Remaining Players Header */}
-            <div style={{
-              padding: '12px 0px',
-              marginBottom: '8px',
-              borderBottom: '2px solid #e9ecef',
-              width: '100%',
-            }}>
-              <span style={{
-                fontFamily: 'Poppins',
-                fontWeight: 600,
-                fontSize: '14px',
-                color: '#666',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Leaderboard Rankings
-              </span>
-        </div>
+
             {allMainResults.map((player, index) => renderWebMonthlyPlayerCard(player, index + 3))}
-          </div>
+        </div>
         )}
       </>
     )
@@ -925,37 +998,36 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     
     return (
       <div key={index} style={{
-        /* Frame 611/612/613/etc - Player Row Container */
+        /* Frame 612 */
         /* Auto layout */
         display: 'flex',
         flexDirection: 'row',
         alignItems: 'center',
-        padding: '4px 16px',
-        gap: '8px',
+        padding: '0px',
         width: '812px',
         height: '68px',
         filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))',
         borderRadius: '8px',
         /* Inside auto layout */
         flex: 'none',
-        order: index,
+        order: 0,
         flexGrow: 0,
+        ...(index === 0 && {
+          border: '4px solid #DC2627'
+        })
       }}>
         {/* Frame 578 - Player Card Content */}
         <div style={{
           /* Frame 578 */
-          boxSizing: 'border-box',
           /* Auto layout */
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'space-between',
           alignItems: 'center',
-          padding: '8px 24px',
-          gap: '15px',
-          width: '780px',
+          padding: '8px 16px',
+          width: '100%',
           height: '58px',
           background: '#FFFFFF',
-          border: '4px solid #DC2627',
           borderRadius: '4px',
           /* Inside auto layout */
           flex: 'none',
@@ -971,8 +1043,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             alignItems: 'center',
             padding: '0px',
             gap: '15px',
-            margin: '0 auto',
-            width: '159px',
             height: '33px',
             /* Inside auto layout */
             flex: 'none',
@@ -997,29 +1067,40 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               order: 0,
               flexGrow: 0,
             }}>
+              {player.rank <= 3 ? (
+                <img 
+                  src={player.rank === 1 ? firstPlaceSvg : 
+                       player.rank === 2 ? secondPlaceSvg : thirdPlaceSvg} 
+                  alt={`${player.rank === 1 ? '1st' : player.rank === 2 ? '2nd' : '3rd'} place`}
+                  style={{
+                    width: '30px',
+                    height: '30px',
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0
+                  }}
+                />
+              ) : (
               <span style={{
-                width: player.rank <= 3 ? '24px' : '6px',
+                width: '6px',
                 height: '21px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
-                fontSize: player.rank <= 3 ? '12px' : '14px',
+                fontSize: '14px',
                 lineHeight: '21px',
-                textAlign: 'center',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
+                  textAlign: 'center',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                 color: '#FFFFFF',
-                /* Inside auto layout */
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
               }}>
-                {player.rank <= 3 ? (
-                  player.rank === 1 ? '🥇' : 
-                  player.rank === 2 ? '🥈' : '🥉'
-                ) : player.rank}
+                {player.rank}
               </span>
+              )}
             </div>
 
             {/* Frame 580 - Player Info */}
@@ -1048,6 +1129,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 fontSize: '12px',
                 lineHeight: '18px',
                 /* identical to box height */
+                textAlign: 'left',
                 color: '#000000',
                 /* Inside auto layout */
                 flex: 'none',
@@ -1144,6 +1226,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     fontWeight: 400,
                     fontSize: '9px',
                     lineHeight: '15px',
+                    textAlign: 'left',
                     color: teamColorHex,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
@@ -1167,9 +1250,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             /* Auto layout */
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'flex-start',
+            alignItems: 'flex-end',
             padding: '0px',
-            margin: '0 auto',
             width: '65px',
             height: '33px',
             /* Inside auto layout */
@@ -1187,7 +1269,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               fontSize: '12px',
               lineHeight: '18px',
               /* identical to box height */
-              textAlign: 'center',
+              textAlign: 'right',
               color: '#000000',
               /* Inside auto layout */
               flex: 'none',
@@ -1199,7 +1281,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             {/* Stat Label */}
             <span style={{
-              width: '40px',
+              width: '65px',
               height: '15px',
               fontFamily: 'Poppins',
               fontStyle: 'normal',
@@ -1207,6 +1289,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               fontSize: '10px',
               lineHeight: '15px',
               /* identical to box height */
+              textAlign: 'right',
               color: '#353535',
               /* Inside auto layout */
               flex: 'none',
@@ -1272,7 +1355,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             <h1 style={{
               width: '826px',
               height: '31px',
-              fontFamily: 'Geist',
+              fontFamily: 'Poppins',
               fontStyle: 'normal',
               fontWeight: 600,
               fontSize: '24px',
@@ -1432,7 +1515,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 alignItems: 'center',
                 padding: '0px',
                 gap: '8px',
-                width: '838px',
+                width: '100%',
                 height: '48px',
                 background: '#DC2627',
                 borderRadius: '8px',
@@ -2888,16 +2971,30 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                </div>
              ))
              ) : (
+               // No Data State
                <div style={{
                  display: 'flex',
                  justifyContent: 'center',
                  alignItems: 'center',
-                 padding: '20px',
-                 color: '#666',
-                 fontFamily: 'Poppins',
-                 fontSize: '14px',
+                 width: '100%',
+                 height: '80px',
+                 flexDirection: 'column',
+                 gap: '8px'
                }}>
-                 {loading ? 'Loading top players...' : 'No data available'}
+                 <Trophy style={{
+                   width: '24px',
+                   height: '24px',
+                   color: '#cccccc'
+                 }} />
+                 <span style={{
+                   fontFamily: 'Poppins',
+                   fontSize: '12px',
+                   color: '#999999',
+                   fontWeight: 400,
+                   textAlign: 'center'
+                 }}>
+                   No live data available
+                 </span>
                </div>
              )}
            </div>

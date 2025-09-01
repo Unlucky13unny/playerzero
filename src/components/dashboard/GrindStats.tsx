@@ -1,8 +1,6 @@
-import { Crown } from "../icons/Crown"
 import { dashboardService } from "../../services/dashboardService"
 import { useState, useEffect } from "react"
 import { useAuth } from "../../contexts/AuthContext"
-import { useNavigate } from "react-router-dom"
 
 interface GrindStatsProps {
   isMobile?: boolean
@@ -11,12 +9,11 @@ interface GrindStatsProps {
   profile?: any
 }
 
-export function GrindStats({ isMobile = false, viewMode = "public", userType = "trial", profile }: GrindStatsProps) {
+export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [backendStats, setBackendStats] = useState<any>(null)
   const [loading, setLoading] = useState(false)
-  const showUpgradeButton = viewMode === "own" && userType === "trial" && !isMobile
+
 
   // Load all-time stats from backend when component mounts (ignore time period changes)
   useEffect(() => {
@@ -88,268 +85,597 @@ export function GrindStats({ isMobile = false, viewMode = "public", userType = "
     <div 
       className="bg-white rounded-lg p-6"
       style={{
+        /* Frame 561 */
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0px',
+        gap: '15px',
         width: '100%',
-        maxWidth: '1200px',
+        maxWidth: '100%',
+        height: '167px',
+        /* Inside auto layout */
+        flex: 'none',
+        order: 1,
+        flexGrow: 0,
         position: 'relative',
+        marginTop: isMobile ? '94px' : '94px', // Add 20px margin on mobile, keep 94px on desktop
       }}
     >
-      {/* Upgrade Button - Top Right */}
-      {showUpgradeButton && (
-        <button
-          onClick={() => navigate('/upgrade')}
-          style={{
-            /* Upgrade button specifications */
+      {/* Frame 530 - Main Content Container */}
+      <div style={{
+        /* Frame 530 */
             display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '0px',
+        flexDirection: 'column',
+        alignItems: 'flex-start',
+        padding: '12px 0px',
             gap: '8px',
-            position: 'absolute',
-            width: '130px',
-            height: '30px',
-            right: '16px',
-            top: '10px',
-            background: '#DC2627',
+        width: '100%',
+        maxWidth: '100%',
+        height: '167px',
             borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'background-color 0.2s ease',
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#B91C1C';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#DC2627';
-          }}
-        >
-          <Crown className="w-4 h-4" style={{ color: 'white' }} />
-          <span style={{ 
-            color: 'white', 
-            fontWeight: '600', 
-            fontSize: '16px',
-            fontFamily: 'system-ui, -apple-system, sans-serif'
-          }}>
-            Upgrade
-          </span>
-        </button>
-      )}
+        /* Inside auto layout */
+        flex: 'none',
+        order: 0,
+        alignSelf: 'stretch',
+        flexGrow: 0,
+        position: 'relative',
+      }}>
 
-      {/* Grind Stats Title - Left Side */}
-      <div
-        style={{
+
+        {/* Grind Stats Title */}
+        <div style={{
+          /* Grind Stats */
+          width: '91px',
+          height: '24px',
           fontFamily: 'Poppins',
           fontStyle: 'normal',
           fontWeight: 600,
-          fontSize: '24px',
-          lineHeight: '36px',
+          fontSize: '16px',
+          lineHeight: '24px',
+          textAlign: 'center',
           color: '#000000',
-          marginBottom: isMobile ? '8px' : '10px',
-          textAlign: 'left',
-        }}
-      >
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+        }}>
         Grind Stats
       </div>
 
-      {/* Loading Indicator */}
-      {loading && (
-        <div className="text-center py-4">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500 mx-auto mb-2"></div>
-          <p className="text-sm text-gray-600">Loading grind stats...</p>
-        </div>
-      )}
-
-      {/* Mobile: Single Stats Container */}
+      {/* Frame 535 - Stats Container */}
       {isMobile ? (
-        <div
-          style={{
+        <div style={{
+          /* Frame 535 */
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'flex-start',
+          padding: '0px',
+          gap: '21px',
+          width: '353px',
+          height: '74px',
+          background: 'rgba(0, 0, 0, 0.02)',
+          boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+          borderRadius: '4px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          alignSelf: 'stretch',
+          flexGrow: 0,
+          opacity: loading ? 0.5 : 1,
+        }}>
+          {/* Frame 531 - Distance Stat */}
+          <div style={{
+            /* Frame 531 */
             display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
+            flexDirection: 'column',
+            justifyContent: 'center',
             alignItems: 'center',
-            padding: '16px',
-            width: '100%',
-            background: 'rgba(0, 0, 0, 0.02)',
-            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-            borderRadius: '8px',
-            opacity: loading ? 0.5 : 1,
-          }}
-        >
-          {/* Distance Stat */}
-          <div 
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: '1',
-            }}
-          >
-            <div className="font-bold text-black text-lg">
+            padding: '8px',
+            gap: '8px',
+            width: '63px',
+            height: '73px',
+            borderRadius: '2px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            flexGrow: 0
+          }}>
+            <div style={{
+              /* 4.6 */
+              width: '38px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '24px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0
+            }}>
               {formatDistance(getStatValue('distance_walked'))}
             </div>
-            <div className="text-gray-600 text-xs">Km</div>
+            <div style={{
+              /* Km */
+              width: '18px',
+              height: '17px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0
+            }}>
+              Km
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="w-px h-8 bg-gray-300 mx-2"></div>
-
-          {/* Pokemon Caught Stat */}
-          <div 
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: '1',
-            }}
-          >
-            <div className="font-bold text-black text-lg">
+          {/* Frame 532 - Pokemon Caught Stat */}
+          <div style={{
+            /* Frame 532 */
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px',
+            gap: '8px',
+            width: '78px',
+            height: '73px',
+            borderRadius: '2px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 1,
+            flexGrow: 0
+          }}>
+            <div style={{
+              /* 52.1 */
+              width: '44px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '24px',
+              lineHeight: '31px',
+              letterSpacing: '-0.01em',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0
+            }}>
               {formatNumber(getStatValue('pokemon_caught'))}
             </div>
-            <div className="text-gray-600 text-xs">Caught</div>
+            <div style={{
+              /* Caught */
+              width: '42px',
+              height: '17px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0
+            }}>
+              Caught
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="w-px h-8 bg-gray-300 mx-2"></div>
-
-          {/* Pokestops Stat */}
-          <div 
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: '1',
-            }}
-          >
-            <div className="font-bold text-black text-lg">
+          {/* Frame 533 - Pokestops Stat */}
+          <div style={{
+            /* Frame 533 */
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px',
+            gap: '8px',
+            width: '72px',
+            height: '73px',
+            borderRadius: '2px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 2,
+            flexGrow: 0
+          }}>
+            <div style={{
+              /* 46.8 */
+              width: '53px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '24px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0
+            }}>
               {formatNumber(getStatValue('pokestops_visited'))}
             </div>
-            <div className="text-gray-600 text-xs">Stops</div>
+            <div style={{
+              /* Stops */
+              width: '31px',
+              height: '17px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '11px',
+              lineHeight: '16px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0
+            }}>
+              Stops
+            </div>
           </div>
 
-          {/* Divider */}
-          <div className="w-px h-8 bg-gray-300 mx-2"></div>
-
-          {/* XP Stat */}
-          <div 
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              flex: '1',
-            }}
-          >
-            <div className="font-bold text-black text-lg">
+          {/* Frame 534 - XP Stat */}
+          <div style={{
+            /* Frame 534 */
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px',
+            gap: '8px',
+            width: '65px',
+            height: '74px',
+            borderRadius: '2px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 3,
+            flexGrow: 0
+          }}>
+            <div style={{
+              /* 33.4K */
+              width: '67px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '24px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0
+            }}>
               {formatNumber(getStatValue('total_xp'))}
             </div>
-            <div className="text-gray-600 text-xs">XP</div>
+            <div style={{
+              /* XP */
+              width: '15px',
+              height: '18px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '12px',
+              lineHeight: '18px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0
+            }}>
+              XP
+            </div>
           </div>
         </div>
       ) : (
-        /* Web: Separate Stats Containers */
-        <div
-          style={{
+        /* Frame 535 - Desktop Stats Container */
+        <div style={{
+          /* Frame 535 */
             display: 'flex',
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-            gap: '20px',
+          padding: '10px 0px',
+          gap: '21px',
             width: '100%',
+        maxWidth: '100%',
+          height: '111px',
+          borderRadius: '4px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          alignSelf: 'stretch',
+          flexGrow: 0,
             opacity: loading ? 0.5 : 1,
-          }}
-        >
-          {/* Distance Stat Card */}
+        }}>
+          {/* Distance Stat Card - Frame 531 */}
           <div 
             style={{
+              /* Frame 531 */
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '16px',
-              minWidth: '180px',
-              height: '80px',
+              padding: '20px 0px',
+              gap: '8px',
+              margin: '0 auto',
+              width: '200px',
+              height: '100px',
               background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: '8px',
-              flex: '1',
+              borderRadius: '4px',
+              position: 'relative',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
             }}
           >
-            <div className="font-bold text-black text-2xl">
+            {/* Loading Overlay */}
+            {loading && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1
+              }}>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+              </div>
+            )}
+            <div style={{
+              /* Stat Value - 4.6 */
+              width: '57px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '36px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>
               {formatDistance(getStatValue('distance_walked'))}
             </div>
-            <div className="text-gray-600 text-sm">Km</div>
+            <div style={{
+              /* Km */
+              width: '23px',
+              height: '21px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '21px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>Km</div>
           </div>
 
-          {/* Pokemon Caught Stat Card */}
+          {/* Pokemon Caught Stat Card - Frame 531 */}
           <div 
             style={{
+              /* Frame 531 */
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '16px',
-              minWidth: '180px',
-              height: '80px',
+              padding: '20px 0px',
+              gap: '8px',
+              margin: '0 auto',
+              width: '200px',
+              height: '100px',
               background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: '8px',
-              flex: '1',
+              borderRadius: '4px',
+              position: 'relative',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
             }}
           >
-            <div className="font-bold text-black text-2xl">
+            {/* Loading Overlay */}
+            {loading && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1
+              }}>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+              </div>
+            )}
+            <div style={{
+              /* Stat Value - 52.1 */
+              width: '67px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '36px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>
               {formatNumber(getStatValue('pokemon_caught'))}
             </div>
-            <div className="text-gray-600 text-sm">Caught</div>
+            <div style={{
+              /* Caught */
+              width: '53px',
+              height: '21px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '21px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>Caught</div>
           </div>
 
-          {/* Pokestops Stat Card */}
+          {/* Pokestops Stat Card - Frame 531 */}
           <div 
             style={{
+              /* Frame 531 */
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '16px',
-              minWidth: '180px',
-              height: '80px',
+              padding: '20px 0px',
+              gap: '8px',
+              margin: '0 auto',
+              width: '200px',
+              height: '100px',
               background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: '8px',
-              flex: '1',
+              borderRadius: '4px',
+              position: 'relative',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 2,
+              flexGrow: 0,
             }}
           >
-            <div className="font-bold text-black text-2xl">
+            {/* Loading Overlay */}
+            {loading && (
+              <div style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                zIndex: 1
+              }}>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
+              </div>
+            )}
+            <div style={{
+              /* Stat Value - 46.8 */
+              width: '80px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '36px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>
               {formatNumber(getStatValue('pokestops_visited'))}
             </div>
-            <div className="text-gray-600 text-sm">Stops</div>
+            <div style={{
+              /* Stops */
+              width: '40px',
+              height: '21px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '21px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>Stops</div>
           </div>
 
-          {/* XP Stat Card */}
+          {/* XP Stat Card - Frame 531 */}
           <div 
             style={{
+              /* Frame 531 */
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'center',
-              padding: '16px',
-              minWidth: '180px',
-              height: '80px',
+              padding: '20px 0px',
+              gap: '8px',
+              margin: '0 auto',
+              width: '200px',
+              height: '100px',
               background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
-              borderRadius: '8px',
-              flex: '1',
+              borderRadius: '4px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 3,
+              flexGrow: 0,
             }}
           >
-            <div className="font-bold text-black text-2xl">
+            <div style={{
+              /* Stat Value - 33.4K */
+              width: '101px',
+              height: '32px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '36px',
+              lineHeight: '31px',
+              color: '#000000',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>
               {formatNumber(getStatValue('total_xp'))}
             </div>
-            <div className="text-gray-600 text-sm">XP</div>
+            <div style={{
+              /* XP */
+              width: '17px',
+              height: '21px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 400,
+              fontSize: '14px',
+              lineHeight: '21px',
+              textTransform: 'capitalize',
+              color: '#353535',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              textAlign: 'center',
+            }}>XP</div>
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }
