@@ -1,6 +1,4 @@
-import { Facebook, Instagram } from "lucide-react";
 import { Crown } from "lucide-react";
-import { SnapchatIcon } from "./icons/SnapchatIcon";
 import { CountryFlag } from "./common/CountryFlag";
 
 // Utility function to generate social media links
@@ -80,8 +78,8 @@ export default function ProfileCard({
 
             {/* Social Icons */}
             <div className="flex gap-2 mt-2">
-              {/* Facebook Icon */}
-              {stats?.facebook ? (
+              {/* Facebook Icon - Only show if linked */}
+              {stats?.facebook && (
                 <a 
                   href={getSocialLink('facebook', stats.facebook)} 
                   target="_blank" 
@@ -89,16 +87,12 @@ export default function ProfileCard({
                   className="hover:opacity-80 transition-opacity"
                   title={`Visit ${stats.facebook} on Facebook`}
                 >
-                  <Facebook className="w-5 h-5 text-blue-600 cursor-pointer" />
+                  <img src="/images/facebook.svg" alt="Facebook" className="w-5 h-5 cursor-pointer" />
                 </a>
-              ) : (
-                <span title="No Facebook profile linked">
-                  <Facebook className="w-5 h-5 text-gray-400" />
-                </span>
               )}
               
-              {/* Instagram Icon */}
-              {stats?.instagram ? (
+              {/* Instagram Icon - Only show if linked */}
+              {stats?.instagram && (
                 <a 
                   href={getSocialLink('instagram', stats.instagram)} 
                   target="_blank" 
@@ -106,16 +100,12 @@ export default function ProfileCard({
                   className="hover:opacity-80 transition-opacity"
                   title={`Visit ${stats.instagram} on Instagram`}
                 >
-                  <Instagram className="w-5 h-5 text-pink-600 cursor-pointer" />
+                  <img src="/images/instagram.svg" alt="Instagram" className="w-5 h-5 cursor-pointer" />
                 </a>
-              ) : (
-                <span title="No Instagram profile linked">
-                  <Instagram className="w-5 h-5 text-gray-400" />
-                </span>
               )}
               
-              {/* Snapchat Icon */}
-              {stats?.snapchat ? (
+              {/* Snapchat Icon - Only show if linked */}
+              {stats?.snapchat && (
                 <a 
                   href={getSocialLink('snapchat', stats.snapchat)} 
                   target="_blank" 
@@ -123,12 +113,8 @@ export default function ProfileCard({
                   className="hover:opacity-80 transition-opacity"
                   title={`Add ${stats.snapchat} on Snapchat`}
                 >
-                  <SnapchatIcon className="w-5 h-5 text-yellow-400 cursor-pointer" />
+                  <img src="/images/snapchat.svg" alt="Snapchat" className="w-5 h-5 cursor-pointer" />
                 </a>
-              ) : (
-                <span title="No Snapchat profile linked">
-                  <SnapchatIcon className="w-5 h-5 text-gray-400" />
-                </span>
               )}
             </div>
           </div>
@@ -136,7 +122,7 @@ export default function ProfileCard({
 
         {/* Upgrade Button */}
         {viewMode === "own" && userType === "trial" && (
-          <button className="bg-red-500 hover:bg-red-600 text-white md:hidden px-4 py-2 rounded-md flex items-center">
+          <button className="bg-red-500 hover:bg-red-600 text-white md:hidden px-4 rounded-md flex items-center h-12">
             <Crown className="w-4 h-4 mr-1" />
             Upgrade
           </button>

@@ -212,13 +212,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   }
 
   const formatNumber = (num: number | null | undefined) => {
-    if (!num || num === 0) return '0'
+    if (!num || num === 0) return '0.0'
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M'
     } else if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K'
     }
-    return Math.round(num).toString()
+    return num.toFixed(1)
   }
 
   const formatDistance = (distance: number | null | undefined) => {
@@ -414,7 +414,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         padding: '0px 8px',
                         gap: '10px',
                         width: '80px',
-                        height: '36px',
+                        height: '48px',
                         flex: 'none',
                         order: 0,
                         flexGrow: 0,
@@ -453,7 +453,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         alignItems: 'flex-start',
                         padding: '0px 8px',
                         width: '80px',
-                        height: '36px',
+                        height: '48px',
                         borderRadius: '4px',
                         flex: 'none',
                         order: 1,
@@ -493,7 +493,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         padding: '0px 8px',
                         gap: '10px',
                         width: '80px',
-                        height: '36px',
+                        height: '48px',
                         flex: 'none',
                         order: 2,
                         flexGrow: 0,
@@ -581,7 +581,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         <div style={{
                           /* Stat Value - 15 km */
                           width: '141px',
-                          height: '36px',
+                          height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
@@ -657,7 +657,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         <div style={{
                           /* Stat Value - 170,000 */
                           width: '90px',
-                          height: '36px',
+                          height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
@@ -731,7 +731,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         <div style={{
                           /* Stat Value - 109,000 */
                           width: '92px',
-                          height: '36px',
+                          height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
@@ -804,8 +804,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <div style={{
                           /* Stat Value - 33,628,973 */
-                          width: '129px',
-                          height: '36px',
+                          width: '100px',
+                          height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
@@ -965,7 +965,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           padding: '0px 8px',
                           gap: '10px',
                           width: '80px',
-                          height: '36px',
+                          height: '48px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
@@ -1006,7 +1006,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           alignItems: 'flex-start',
                           padding: '0px 8px',
                           width: '80px',
-                          height: '36px',
+                          height: '48px',
                           borderRadius: '4px',
                           /* Inside auto layout */
                           flex: 'none',
@@ -1048,7 +1048,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           padding: '0px 8px',
                           gap: '10px',
                           width: '80px',
-                          height: '36px',
+                          height: '48px',
                           /* Inside auto layout */
                           flex: 'none',
                           order: 2,
@@ -1387,11 +1387,11 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'flex-start',
-                    padding: '12px',
+                    padding: '0px', // Remove padding to align with time period buttons
                     gap: '8px',
-                    width: '353px',
+                    width: '351px', // Match time period buttons container width
                     height: '442px',
-                      borderRadius: '8px',
+                    borderRadius: '8px',
                     marginTop: '24px',
                     /* Inside auto layout */
                     flex: 'none',
@@ -1409,8 +1409,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       fontWeight: 600,
                       fontSize: '16px',
                       lineHeight: '24px',
-                      textAlign: 'center',
+                      textAlign: 'left', // Align left to match time period buttons
                       color: '#000000',
+                      marginLeft: '0px', // Align with time period buttons
                       /* Inside auto layout */
                       flex: 'none',
                       order: 0,
@@ -1560,13 +1561,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
-                padding: '16px 20px',
+                padding: '0px', // Remove padding as requested
                 width: '100%',
                 maxWidth: '100%',
                 background: '#FFFFFF',
                 borderRadius: '8px',
                 margin: '0 auto',
-                marginLeft: '0', // Align with weekly/monthly buttons
+                marginLeft: '0', 
+                marginTop: '36px',// Align with weekly/monthly buttons
+                 // Add bottom margin as requested
               }}>
                 <span style={{
                   fontFamily: 'Poppins',

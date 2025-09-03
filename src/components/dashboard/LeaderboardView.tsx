@@ -37,6 +37,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   // Dropdown states
   const [showTeamsDropdown, setShowTeamsDropdown] = useState(false)
   const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+  const [showStatsDropdown, setShowStatsDropdown] = useState(false)
   const [showProxyDropdown, setShowProxyDropdown] = useState(false)
   const [selectedTeam, setSelectedTeam] = useState<string>('All Teams')
   const [selectedCountry, setSelectedCountry] = useState<string>('All Country')
@@ -80,6 +81,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       if (!target.closest('[data-dropdown]')) {
         setShowTeamsDropdown(false)
         setShowCountryDropdown(false)
+        setShowStatsDropdown(false)
         setShowProxyDropdown(false)
       }
     }
@@ -1397,7 +1399,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   padding: '0px 8px',
                   gap: '10px',
                   margin: '0 auto',
-                  width: '100px',
+                  width: '90px',
                   height: '36px',
                   flex: 'none',
                   order: 0,
@@ -1435,7 +1437,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   alignItems: 'center',
                   padding: '0px 8px',
                   margin: '0 auto',
-                  width: '100px',
+                  width: '90px',
                   height: '36px',
                   borderRadius: '4px',
                   flex: 'none',
@@ -1475,7 +1477,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   padding: '0px 8px',
                   gap: '10px',
                   margin: '0 auto',
-                  width: '100px',
+                  width: '90px',
                   height: '36px',
                   flex: 'none',
                   order: 2,
@@ -1638,6 +1640,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   <ChevronDown style={{
                     width: '16px',
                     height: '16px',
+                    color: '#000000',
                     flex: 'none',
                     order: 1,
                     flexGrow: 0,
@@ -1661,46 +1664,67 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                     zIndex: 1000,
                   }}>
-                    <div 
-                      onClick={() => handleTeamSelect({id: 'all', name: 'All Teams', color: '#000000'})}
-                      style={{
-                        padding: '8px 12px',
-                        cursor: 'pointer',
-                        borderBottom: '1px solid #f0f0f0',
-                        fontFamily: 'Poppins',
-                        fontSize: '12px',
-                        color: '#000000',
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-                    >
-                      All Teams
-                    </div>
-                    {teams.map((team) => (
+                                         <div 
+                       onClick={() => handleTeamSelect({id: 'all', name: 'All Teams', color: '#000000'})}
+                       style={{
+                         /* Frame 527 */
+                         display: 'flex',
+                         flexDirection: 'column',
+                         justifyContent: 'center',
+                         alignItems: 'flex-start',
+                         padding: '8px 12px',
+                         width: '144px',
+                         height: '26px',
+                         flex: 'none',
+                         order: 0,
+                         alignSelf: 'stretch',
+                         flexGrow: 0,
+                         cursor: 'pointer',
+                         borderBottom: '1px solid #f0f0f0',
+                         fontFamily: 'Poppins',
+                         fontSize: '12px',
+                         color: '#000000',
+                       }}
+                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
+                     >
+                       All Teams
+                     </div>
+                    {teams.map((team, index) => (
                       <div 
                         key={team.id}
                         onClick={() => handleTeamSelect(team)}
                         style={{
+                          /* Frame 527 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
                           padding: '8px 12px',
+                          width: '144px',
+                          height: '26px',
+                          flex: 'none',
+                          order: index + 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
                           cursor: 'pointer',
                           borderBottom: '1px solid #f0f0f0',
                           fontFamily: 'Poppins',
                           fontSize: '12px',
                           color: team.color,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
                       >
-                        <div style={{
-                          width: '12px',
-                          height: '12px',
-                          backgroundColor: team.color,
-                          borderRadius: '50%',
-                        }} />
-                        {team.name}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '12px',
+                            height: '12px',
+                            backgroundColor: team.color,
+                            borderRadius: '50%',
+                          }} />
+                          {team.name}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1753,6 +1777,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 <ChevronDown style={{
                   width: '16px',
                   height: '16px',
+                  color: '#000000',
                   flex: 'none',
                   order: 1,
                   flexGrow: 0,
@@ -1774,12 +1799,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
                     zIndex: 1000,
                   }}>
-                    {sortOptions.map((option) => (
+                    {sortOptions.map((option, index) => (
                       <div 
                         key={option.id}
                         onClick={() => handleSortSelect(option)}
                         style={{
+                          /* Frame 527 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
                           padding: '8px 12px',
+                          width: '144px',
+                          height: '26px',
+                          flex: 'none',
+                          order: index + 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
                           cursor: 'pointer',
                           borderBottom: '1px solid #f0f0f0',
                           fontFamily: 'Poppins',
@@ -1846,6 +1882,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 <ChevronDown style={{
                   width: '16px',
                   height: '16px',
+                  color: '#000000',
                   flex: 'none',
                   order: 1,
                   flexGrow: 0,
@@ -1872,66 +1909,86 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     <div 
                       onClick={() => handleCountrySelect({code: 'all', name: 'All Country', flag: 'https://flagcdn.com/w40/xx.png'})}
                       style={{
+                        /* Frame 527 */
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        alignItems: 'flex-start',
                         padding: '8px 12px',
+                        width: '144px',
+                        height: '26px',
+                        flex: 'none',
+                        order: 0,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
                         cursor: 'pointer',
                         borderBottom: '1px solid #f0f0f0',
                         fontFamily: 'Poppins',
                         fontSize: '12px',
                         color: '#000000',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
                       }}
                       onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                       onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
                     >
-                      <span style={{ fontSize: '14px' }}>🌍</span>
-                      All Country
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14px' }}>🌍</span>
+                        All Country
+                      </div>
                     </div>
-                    {countries.map((country) => (
+                    {countries.map((country, index) => (
                       <div 
                         key={country.code}
                         onClick={() => handleCountrySelect(country)}
                         style={{
+                          /* Frame 527 */
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'center',
+                          alignItems: 'flex-start',
                           padding: '8px 12px',
+                          width: '144px',
+                          height: '26px',
+                          flex: 'none',
+                          order: index + 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
                           cursor: 'pointer',
                           borderBottom: '1px solid #f0f0f0',
                           fontFamily: 'Poppins',
                           fontSize: '12px',
                           color: '#000000',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '8px',
                         }}
                         onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
                         onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
                       >
-                        <img 
-                          src={country.flag}
-                          alt={`Flag of ${country.name}`}
-                          style={{
-                            width: '20px',
-                            height: '15px',
-                            objectFit: 'cover',
-                            borderRadius: '2px',
-                            border: '1px solid #e0e0e0'
-                          }}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const fallback = document.createElement('span');
-                            fallback.textContent = '🌍';
-                            fallback.style.cssText = 'font-size: 14px; width: 20px; height: 15px; display: flex; align-items: center; justify-content: center;';
-                            target.parentNode?.insertBefore(fallback, target);
-                          }}
-                        />
-                        <span style={{ 
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap'
-                        }}>
-                          {country.name}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <img 
+                            src={country.flag}
+                            alt={`Flag of ${country.name}`}
+                            style={{
+                              width: '20px',
+                              height: '15px',
+                              objectFit: 'cover',
+                              borderRadius: '2px',
+                              border: '1px solid #e0e0e0'
+                            }}
+                            onError={(e) => {
+                              const target = e.target as HTMLImageElement;
+                              target.style.display = 'none';
+                              const fallback = document.createElement('span');
+                              fallback.textContent = '🌍';
+                              fallback.style.cssText = 'font-size: 14px; width: 20px; height: 15px; display: flex; align-items: center; justify-content: center;';
+                              target.parentNode?.insertBefore(fallback, target);
+                            }}
+                          />
+                          <span style={{ 
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}>
+                            {country.name}
+                          </span>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -2084,7 +2141,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             gap: '10px',
             margin: '0 auto',
             width: '100px',
-            height: '36px',
+            height: '48px',
             flex: 'none',
             order: 0,
             flexGrow: 0,
@@ -2110,7 +2167,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               flexGrow: 0,
             }}
           >
-          
             Trainers
           </span>
         </button>
@@ -2127,7 +2183,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             padding: '0px 8px',
             margin: '0 auto',
             width: '100px',
-            height: '36px',
+            height: '48px',
             borderRadius: '4px',
             flex: 'none',
             order: 1,
@@ -2171,7 +2227,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             gap: '10px',
             margin: '0 auto',
             width: '100px',
-            height: '36px',
+            height: '48px',
             flex: 'none',
             order: 2,
             flexGrow: 0,
@@ -2213,7 +2269,47 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         </Button>
       )}
 
-      {/* Frame 623 - Filter Buttons */}
+      {/* Frame 590 - Main Container */}
+      <div 
+        style={{
+          /* Frame 590 */
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          padding: '0px 8px',
+          gap: '20px',
+          width: '100%',
+          minWidth: '353px',
+          maxWidth: '100vw',
+          height: 'auto',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          alignSelf: 'stretch',
+          flexGrow: 0,
+        }}
+      >
+        {/* Frame 625 - Sub Container */}
+        <div 
+          style={{
+            /* Frame 625 */
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px',
+            gap: '16px',
+            width: '100%',
+            maxWidth: '353px',
+            height: 'auto',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            alignSelf: 'stretch',
+            flexGrow: 0,
+          }}
+        >
+          {/* Frame 623 - First Row with All Teams and All Countries */}
       <div 
         style={{
           /* Frame 623 */
@@ -2222,98 +2318,349 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           justifyContent: 'space-between',
           alignItems: 'flex-start',
           padding: '0px',
-          gap: '16px',
-          width: '333px',
+              gap: '8px',
+              width: '100%',
+              maxWidth: '353px',
           height: '36px',
+              /* Inside auto layout */
           flex: 'none',
-          order: 1,
+              order: 0,
           alignSelf: 'stretch',
           flexGrow: 0,
         }}
       >
-        {/* All Teams/Countries/Trainers Dropdown */}
+            {/* All Teams Dropdown */}
         <div 
+              data-dropdown
           style={{
+                /* Overall */
             boxSizing: 'border-box',
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between',
+                justifyContent: 'flex-start',
             alignItems: 'center',
             padding: '4px 8px',
             gap: '8px',
-            width: '160px',
+                width: 'calc(50% - 4px)',
+                minWidth: '140px',
             height: '36px',
             border: '1px solid #000000',
             borderRadius: '6px',
             cursor: 'pointer',
+                /* Inside auto layout */
             flex: 'none',
             order: 0,
             flexGrow: 0,
             background: '#FFFFFF',
+                position: 'relative',
           }}
+              onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
         >
           <span 
             style={{
+                  /* All Teams */
               fontFamily: 'Poppins',
+                  fontStyle: 'normal',
               fontWeight: 600,
               fontSize: '12px',
               lineHeight: '18px',
               color: '#000000',
+                  /* Inside auto layout */
               flex: 'none',
               order: 0,
               flexGrow: 0,
             }}
           >
-            All {activeTab === "trainers" ? "Trainers" : activeTab === "country" ? "Countries" : "Teams"}
+                {selectedTeam}
           </span>
+              {/* Dropdown Icon */}
           <ChevronDown 
             style={{ 
-              width: '6.14px', 
-              height: '10.61px', 
-              background: '#000000',
-              border: '1px solid #000000',
-              transform: 'matrix(0, 1, 1, 0, 0, 0)',
+                  width: '16px', 
+                  height: '16px', 
+                  color: '#000000',
+                  marginLeft: 'auto',
               flex: 'none',
               order: 1,
               flexGrow: 0,
             }} 
           />
+              
+              {/* Dropdown Menu */}
+              {showTeamsDropdown && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '0',
+                    right: '0',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  <div 
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontFamily: 'Poppins',
+                      borderBottom: selectedTeamFilter === null ? 'none' : '1px solid #f0f0f0',
+                      backgroundColor: selectedTeamFilter === null ? '#f8f9fa' : 'transparent',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedTeam('All Teams');
+                      setSelectedTeamFilter(null);
+                      setShowTeamsDropdown(false);
+                    }}
+                  >
+                    All Teams
+                  </div>
+                  {teams.map((team) => (
+                    <div 
+                      key={team.id}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontFamily: 'Poppins',
+                        borderBottom: '1px solid #f0f0f0',
+                        backgroundColor: selectedTeamFilter === team.id ? '#f8f9fa' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTeam(team.name);
+                        setSelectedTeamFilter(team.id);
+                        setShowTeamsDropdown(false);
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = selectedTeamFilter === team.id ? '#f8f9fa' : 'transparent';
+                      }}
+                    >
+                      <div 
+                        style={{
+                          width: '12px',
+                          height: '12px',
+                          borderRadius: '50%',
+                          backgroundColor: team.color,
+                        }}
+                      />
+                      {team.name}
+                    </div>
+                  ))}
+                </div>
+              )}
         </div>
 
-        {/* Total XP/Stats Dropdown */}
+            {/* All Countries Dropdown */}
         <div 
+              data-dropdown
           style={{
+                /* Overall */
             boxSizing: 'border-box',
             display: 'flex',
             flexDirection: 'row',
-            justifyContent: 'space-between',
+                justifyContent: 'flex-start',
             alignItems: 'center',
             padding: '4px 8px',
             gap: '8px',
-            width: '160px',
+                width: 'calc(50% - 4px)',
+                minWidth: '140px',
             height: '36px',
             border: '1px solid #000000',
             borderRadius: '6px',
             cursor: 'pointer',
+                /* Inside auto layout */
             flex: 'none',
             order: 1,
             flexGrow: 0,
             background: '#FFFFFF',
-          }}
-          onClick={() => {
-            // Cycle through sort options
-            const currentIndex = sortOptions.findIndex(opt => opt.id === sortBy);
-            const nextIndex = (currentIndex + 1) % sortOptions.length;
-            setSortBy(sortOptions[nextIndex].id);
-          }}
+                position: 'relative',
+              }}
+              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
+            >
+              <span 
+                style={{
+                  /* All Countries */
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '18px',
+                  color: '#000000',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}
+              >
+                {selectedCountry}
+              </span>
+              {/* Dropdown Icon */}
+              <ChevronDown 
+                style={{ 
+                  width: '16px', 
+                  height: '16px', 
+                  color: '#000000',
+                  marginLeft: 'auto',
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }} 
+              />
+              
+              {/* Dropdown Menu */}
+              {showCountryDropdown && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '0',
+                    right: '0',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  <div 
+                    style={{
+                      padding: '8px 12px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      fontFamily: 'Poppins',
+                      borderBottom: selectedCountryFilter === null ? 'none' : '1px solid #f0f0f0',
+                      backgroundColor: selectedCountryFilter === null ? '#f8f9fa' : 'transparent',
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedCountry('All Country');
+                      setSelectedCountryFilter(null);
+                      setShowCountryDropdown(false);
+                    }}
+                  >
+                    All Country
+                  </div>
+                  {countries.map((country) => (
+                    <div 
+                      key={country.code}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontFamily: 'Poppins',
+                        borderBottom: '1px solid #f0f0f0',
+                        backgroundColor: selectedCountryFilter === country.name ? '#f8f9fa' : 'transparent',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedCountry(country.name);
+                        setSelectedCountryFilter(country.name);
+                        setShowCountryDropdown(false);
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = selectedCountryFilter === country.name ? '#f8f9fa' : 'transparent';
+                      }}
+                    >
+                      <img 
+                        src={country.flag}
+                        alt={country.name}
+                        style={{
+                          width: '16px',
+                          height: '12px',
+                          objectFit: 'cover',
+                          borderRadius: '2px',
+                        }}
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                        }}
+                      />
+                      {country.name}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Frame 624 - Second Row with Total XP and Export */}
+          <div 
+            style={{
+              /* Frame 624 */
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'space-between',
+              alignItems: 'flex-start',
+              padding: '0px',
+              gap: '8px',
+              width: '100%',
+              maxWidth: '353px',
+              height: '36px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              alignSelf: 'stretch',
+              flexGrow: 0,
+            }}
+          >
+            {/* Total XP Dropdown */}
+            <div 
+              data-dropdown
+              style={{
+                /* Scores */
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'flex-start',
+                alignItems: 'center',
+                padding: '4px 8px',
+                gap: '8px',
+                width: 'calc(50% - 4px)',
+                minWidth: '140px',
+                height: '36px',
+                border: '1px solid #000000',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                /* Inside auto layout */
+                flex: 'none',
+                order: 0,
+                flexGrow: 0,
+                background: '#FFFFFF',
+                position: 'relative',
+              }}
+              onClick={() => setShowStatsDropdown(!showStatsDropdown)}
         >
           <span 
             style={{
+                  /* Total XP */
               fontFamily: 'Poppins',
+                  fontStyle: 'normal',
               fontWeight: 600,
               fontSize: '12px',
               lineHeight: '18px',
               color: '#000000',
+                  /* Inside auto layout */
               flex: 'none',
               order: 0,
               flexGrow: 0,
@@ -2321,24 +2668,149 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           >
             {sortOptions.find(opt => opt.id === sortBy)?.label || 'Total XP'}
           </span>
+              {/* Dropdown Icon */}
           <ChevronDown 
             style={{ 
-              width: '6.14px', 
-              height: '10.61px', 
-              background: '#000000',
-              border: '1px solid #000000',
-              transform: 'matrix(0, 1, 1, 0, 0, 0)',
+                  width: '16px', 
+                  height: '16px', 
+                  color: '#000000',
+                  marginLeft: 'auto',
               flex: 'none',
               order: 1,
               flexGrow: 0,
             }} 
           />
+              
+              {/* Dropdown Menu */}
+              {showStatsDropdown && (
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    left: '0',
+                    right: '0',
+                    backgroundColor: '#FFFFFF',
+                    border: '1px solid #000000',
+                    borderRadius: '6px',
+                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                    zIndex: 1000,
+                    maxHeight: '200px',
+                    overflowY: 'auto',
+                  }}
+                >
+                  {sortOptions.map((option) => (
+                    <div 
+                      key={option.id}
+                      style={{
+                        padding: '8px 12px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        fontFamily: 'Poppins',
+                        borderBottom: '1px solid #f0f0f0',
+                        backgroundColor: sortBy === option.id ? '#f8f9fa' : 'transparent',
+                      }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSortBy(option.id);
+                        setShowStatsDropdown(false);
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.backgroundColor = sortBy === option.id ? '#f8f9fa' : 'transparent';
+                      }}
+                    >
+                      {option.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Export Button */}
+            <div 
+              onClick={handleExport}
+              style={{
+                /* Export */
+                boxSizing: 'border-box',
+                display: 'flex',
+                flexDirection: 'row',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0px',
+                gap: '8px',
+                width: 'auto',
+                minWidth: '80px',
+                height: '36px',
+                border: '1px solid #DC2627',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                /* Inside auto layout */
+                flex: '0 0 auto',
+                order: 1,
+                flexGrow: 0,
+                background: '#FFFFFF',
+                opacity: exporting ? 0.7 : 1,
+              }}
+            >
+              {/* Vector Container */}
+              <div 
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '10px',
+                  width: '24px',
+                  height: '24px',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}
+              >
+                <Upload 
+                  style={{ 
+                    /* Vector */
+                    width: '14px',
+                    height: '15px',
+                    color: '#DC2627',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                  }} 
+                />
+              </div>
+              <span 
+                style={{
+                  /* Export */
+                  width: '39px',
+                  height: '18px',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '18px',
+                  color: '#DC2627',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}
+              >
+                {exporting ? 'Export...' : 'Export'}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Upgrade Section - Mobile */}
       {isMobile && userType === "trial" && (
-        <div className="mb-6">
+        <div className="mb-6" style={{ marginTop: '16px', marginBottom: '16px' }}>
           <Button 
             onClick={handleUpgrade}
             className="w-full bg-red-500 hover:bg-red-600 text-white h-12 mb-2"
@@ -2378,10 +2850,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           /* Frame 588 */
           display: 'flex',
           flexDirection: 'row',
-          justifyContent: 'space-between',
+          justifyContent: 'center',
           alignItems: 'center',
-          padding: '0px',
-          width: '353px',
+          padding: '0px 8px',
+          width: '100%',
+          minWidth: '353px',
+          maxWidth: '100vw',
           height: '48px',
           borderRadius: '6px',
           flex: 'none',
@@ -2409,6 +2883,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             style={{
               display: 'flex',
               flexDirection: 'row',
+              justifyContent: 'center',
               alignItems: 'center',
               padding: '0px 8px',
               gap: '10px',
@@ -2423,8 +2898,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           >
             <span 
               style={{
-                width: '45px',
-                height: '18px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
@@ -2432,6 +2905,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 lineHeight: '18px',
                 color: timePeriod === 'weekly' ? '#DC2627' : '#000000',
                 textDecorationLine: timePeriod === 'weekly' ? 'underline' : 'none',
+                textAlign: 'center',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
@@ -2447,7 +2921,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              alignItems: 'flex-start',
+              alignItems: 'center',
               padding: '0px 8px',
               width: '80px',
               height: '36px',
@@ -2461,8 +2935,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           >
             <span 
               style={{
-                width: '50px',
-                height: '18px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
@@ -2470,6 +2942,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 lineHeight: '18px',
                 color: timePeriod === 'monthly' ? '#DC2627' : '#000000',
                 textDecorationLine: timePeriod === 'monthly' ? 'underline' : 'none',
+                textAlign: 'center',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
@@ -2484,6 +2957,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             style={{
               display: 'flex',
               flexDirection: 'row',
+              justifyContent: 'center',
               alignItems: 'center',
               padding: '0px 8px',
               gap: '10px',
@@ -2498,8 +2972,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           >
             <span 
               style={{
-                width: '47px',
-                height: '18px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
@@ -2507,6 +2979,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 lineHeight: '18px',
                 color: timePeriod === 'alltime' ? '#DC2627' : '#000000',
                 textDecorationLine: timePeriod === 'alltime' ? 'underline' : 'none',
+                textAlign: 'center',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
@@ -2517,54 +2990,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           </div>
         </div>
 
-        {/* Export Button */}
-        <div 
-          onClick={handleExport}
-          style={{
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: '0px',
-            gap: '8px',
-            width: '90px',
-            height: '36px',
-            border: '1px solid #DC2627',
-            borderRadius: '4px',
-            cursor: 'pointer',
-            flex: 'none',
-            order: 1,
-            flexGrow: 0,
-            background: '#FFFFFF',
-            opacity: exporting ? 0.7 : 1,
-          }}
-        >
-          <Upload 
-            style={{ 
-              width: '14px', 
-              height: '15px', 
-              color: '#DC2627' 
-            }} 
-          />
-          <span 
-            style={{
-              width: '39px',
-              height: '18px',
-              fontFamily: 'Poppins',
-              fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '12px',
-              lineHeight: '18px',
-              color: '#DC2627',
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
-            }}
-          >
-            {exporting ? 'Exporting...' : 'Export'}
-          </span>
-        </div>
+
       </div>
 
       {/* Component 5 - Locked Results */}
@@ -2576,7 +3002,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           alignItems: 'center',
           padding: '12px 8px',
           gap: '8px',
-          width: '353px',
+          width: '100%',
+          minWidth: '353px',
+          maxWidth: '100vw',
           height: '213px',
           background: 'rgba(0, 0, 0, 0.1)',
           boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.05)',
@@ -2612,13 +3040,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               Locked Results
             </span>
           </div>
-          <ChevronDown style={{
-            width: '20px',
-            height: '20px',
-            color: '#000000',
+          <svg 
+            width="38" 
+            height="24" 
+            viewBox="0 0 38 24" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
             transform: lockedExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
             transition: 'transform 0.2s ease'
-          }} />
+            }}
+          >
+            <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+            <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+          </svg>
         </button>
 
         {lockedExpanded && (
@@ -2771,7 +3206,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
            alignItems: 'flex-start',
            padding: '12px 8px',
            gap: '8px',
-           width: '353px',
+                    width: '100%',
+         minWidth: '353px',
+         maxWidth: '100vw',
            height: '661px',
            overflowY: 'scroll',
            background: 'rgba(0, 0, 0, 0.1)',

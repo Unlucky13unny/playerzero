@@ -64,9 +64,46 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       )
     }
     return (
-      <Button size="sm" className="bg-red-100 text-red-700 hover:bg-red-200">
-        Private mode
-      </Button>
+      <div style={{
+        /* Private mode button */
+        boxSizing: 'border-box',
+        /* Auto layout */
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '4px 8px',
+        gap: '10px',
+        width: '100px',
+        height: '28px',
+        background: 'rgba(220, 38, 39, 0.05)',
+        border: '1px solid #DC2627',
+        borderRadius: '20px',
+        /* Inside auto layout */
+        flex: 'none',
+        order: 0,
+        flexGrow: 0,
+        cursor: 'default'
+      }}>
+        <span style={{
+          /* Private mode text */
+          width: '68px',
+          height: '15px',
+          fontFamily: 'Poppins',
+          fontStyle: 'normal',
+          fontWeight: 600,
+          fontSize: '10px',
+          lineHeight: '15px',
+          /* identical to box height */
+          color: '#DC2627',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+        }}>
+          Private mode
+        </span>
+      </div>
     )
   }
 
@@ -283,83 +320,77 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
             order: 2,
             flexGrow: 0,
           }}>
-                {/* Facebook Icon */}
-            <div style={{
-              /* Group 396 */
-              width: '26.59px',
-              height: '26.59px',
-              /* Inside auto layout */
-              flex: 'none',
-              order: 0,
-              flexGrow: 0,
-              position: 'relative',
-            }}>
-                {profile?.facebook ? (
-                  <a 
-                    href={getSocialLink('facebook', profile.facebook)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:opacity-80 transition-opacity"
-                    title={`Visit ${profile.facebook} on Facebook`}
-                  >
+                {/* Facebook Icon - Only show if linked */}
+            {profile?.facebook && (
+              <div style={{
+                /* Group 396 */
+                width: '26.59px',
+                height: '26.59px',
+                /* Inside auto layout */
+                flex: 'none',
+                order: 0,
+                flexGrow: 0,
+                position: 'relative',
+              }}>
+                <a 
+                  href={getSocialLink('facebook', profile.facebook)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Visit ${profile.facebook} on Facebook`}
+                >
                   <img src="/images/facebook.svg" alt="Facebook" style={{ width: '26.59px', height: '26.59px' }} />
-                  </a>
-                ) : (
-                <img src="/images/facebook.svg" alt="Facebook" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
-                )}
-            </div>
+                </a>
+              </div>
+            )}
                 
-                {/* Instagram Icon */}
-            <div style={{
-              /* Group 397 */
-              width: '26.59px',
-              height: '26.59px',
-              /* Inside auto layout */
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
-              position: 'relative',
-            }}>
-                {profile?.instagram ? (
-                  <a 
-                    href={getSocialLink('instagram', profile.instagram)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:opacity-80 transition-opacity"
-                    title={`Visit ${profile.instagram} on Instagram`}
-                  >
+                {/* Instagram Icon - Only show if linked */}
+            {profile?.instagram && (
+              <div style={{
+                /* Group 397 */
+                width: '26.59px',
+                height: '26.59px',
+                /* Inside auto layout */
+                flex: 'none',
+                order: 1,
+                flexGrow: 0,
+                position: 'relative',
+              }}>
+                <a 
+                  href={getSocialLink('instagram', profile.instagram)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Visit ${profile.instagram} on Instagram`}
+                >
                   <img src="/images/instagram.svg" alt="Instagram" style={{ width: '26.59px', height: '26.59px' }} />
-                  </a>
-                ) : (
-                <img src="/images/instagram.svg" alt="Instagram" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
-                )}
-            </div>
+                </a>
+              </div>
+            )}
                 
-                {/* Snapchat Icon */}
-            <div style={{
-              /* Group 398 */
-              width: '26.59px',
-              height: '26.59px',
-              /* Inside auto layout */
-              flex: 'none',
-              order: 2,
-              flexGrow: 0,
-              position: 'relative',
-            }}>
-                {profile?.snapchat ? (
-                  <a 
-                    href={getSocialLink('snapchat', profile.snapchat)} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="hover:opacity-80 transition-opacity"
-                    title={`Add ${profile.snapchat} on Snapchat`}
-                  >
+                {/* Snapchat Icon - Only show if linked */}
+            {profile?.snapchat && (
+              <div style={{
+                /* Group 398 */
+                width: '26.59px',
+                height: '26.59px',
+                /* Inside auto layout */
+                flex: 'none',
+                order: 2,
+                flexGrow: 0,
+                position: 'relative',
+              }}>
+                <a 
+                  href={getSocialLink('snapchat', profile.snapchat)} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="hover:opacity-80 transition-opacity"
+                  title={`Add ${profile.snapchat} on Snapchat`}
+                >
                   <img src="/images/snapchat.svg" alt="Snapchat" style={{ width: '26.59px', height: '26.59px' }} />
-                  </a>
-                ) : (
-                <img src="/images/snapchat.svg" alt="Snapchat" style={{ width: '26.59px', height: '26.59px', opacity: 0.4 }} />
-                )}
-            </div>
+                </a>
+              </div>
+            )}
           </div>
         </div>
       </div>
