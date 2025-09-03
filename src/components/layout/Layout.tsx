@@ -1,11 +1,8 @@
 import { type ReactNode, useState, useEffect } from 'react'
-import { Logo } from '../common/Logo'
-import { Link, useNavigate, useLocation } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { NotificationBell } from '../common/NotificationBell'
-import { User } from "lucide-react"
-import { Button } from "../ui/button"
 import { Crown } from "../icons/Crown"
 import { useMobile } from "../../hooks/useMobile"
 import logoSvg from "/images/logo.svg"
@@ -18,32 +15,32 @@ export const Layout = ({ children }: LayoutProps) => {
   const { user, signOut } = useAuth()
   const trialStatus = useTrialStatus()
   const navigate = useNavigate()
-  const location = useLocation()
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  // const location = useLocation()
+  // const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [featuresDropdownOpen, setFeaturesDropdownOpen] = useState(false)
   const isMobile = useMobile()
   
   const handleSignOut = async () => {
     await signOut()
     navigate('/login')
-    setMobileMenuOpen(false)
+    // setMobileMenuOpen(false)
   }
 
   const toggleFeaturesDropdown = () => {
     setFeaturesDropdownOpen(!featuresDropdownOpen)
   }
 
-  const formatTrialTime = () => {
-    const { timeRemaining } = trialStatus
-    if (timeRemaining.days > 0) {
-      return `${timeRemaining.days} day${timeRemaining.days !== 1 ? 's' : ''} remaining`
-    }
-    return 'Less than a day remaining'
-  }
+  // const formatTrialTime = () => {
+  //   const { timeRemaining } = trialStatus
+  //   if (timeRemaining.days > 0) {
+  //     return `${timeRemaining.days} day${timeRemaining.days !== 1 ? 's' : ''} remaining`
+  //   }
+  //   return 'Less than a day remaining'
+  // }
 
-  const isActiveRoute = (path: string) => {
-    return location.pathname === path
-  }
+  // const isActiveRoute = (path: string) => {
+  //   return location.pathname === path
+  // }
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -59,37 +56,30 @@ export const Layout = ({ children }: LayoutProps) => {
   }, [])
 
   return (
-    <div className="app-container">
-      {/* Header - Frame 527 Mobile Responsive Design */}
-      <header className={`bg-white border-b border-gray-200 ${isMobile ? 'p-4' : 'p-4'}`}>
+    <div className="app-container" style={{
+      width: '100%',
+      minWidth: isMobile ? '353px' : 'auto',
+      maxWidth: '100vw',
+      overflowX: 'hidden',
+    }}>
+      <header className={`bg-white border-b border-gray-200 ${isMobile ? 'p-4' : 'p-4'}`} style={{
+        width: '100%',
+        minWidth: isMobile ? '353px' : 'auto',
+        maxWidth: '100vw',
+      }}>
         {isMobile ? (
-          // Mobile Header Layout - Frame 527
-          <div style={{
-            /* Frame 527 */
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '0px',
-            gap: '8px',
+          // Mobile Header Layout
+          <div className="flex items-center justify-between" style={{
             width: '100%',
-            maxWidth: '353px',
-            height: '45px',
-            margin: '0 auto',
-            /* Inside auto layout */
-            flex: 'none',
-            order: 0,
-            alignSelf: 'stretch',
-            flexGrow: 0
+            minWidth: '337px', // 353px - 2*8px padding
+            maxWidth: '100%',
           }}>
-            {/* Logo - Layer_1 */}
             <Link to="/UserProfile" className="flex items-center hover:opacity-80 transition-opacity">
               <img 
                 src={logoSvg} 
                 alt="PlayerZero" 
                 style={{
-                  /* Layer_1 */
-                  width: '81px',
+                  width: '93px',
                   height: '16px',
                   /* Inside auto layout */
                   flex: 'none',
@@ -100,14 +90,15 @@ export const Layout = ({ children }: LayoutProps) => {
             </Link>
 
             {/* Right Side - Same layout as desktop */}
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-0">
               {user && (
                 <>
                   {!trialStatus.isPaidUser && (
                     <button 
                       onClick={() => navigate('/upgrade')}
-                      className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
+                      className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
                       title="Upgrade to Premium"
+                      style={{ width: '30px', height: '30px' }}
                     >
                       <Crown className="w-4 h-4 text-white" />
                     </button>
@@ -117,142 +108,6 @@ export const Layout = ({ children }: LayoutProps) => {
               )}
 
               {/* Features Dropdown - Same as desktop */}
-              <div className="relative" id="features-dropdown">
-                <button
-                  onClick={toggleFeaturesDropdown}
-                  className="p-1 hover:bg-gray-100 rounded-md transition-colors"
-                  title="Menu"
-                >
-                  <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
-                </button>
-
-                {featuresDropdownOpen && (
-              <div className="layout-menu-dropdown">
-              
-                
-                <Link
-                  to="/profile?edit=true"
-                  onClick={() => setFeaturesDropdownOpen(false)}
-                  className="layout-menu-item"
-                >
-                
-                  Profile Settings
-                </Link>
-                
-                <Link
-                  to="/update-stats"
-                  onClick={() => setFeaturesDropdownOpen(false)}
-                  className="layout-menu-item"
-                >
-                  Update Stats
-                </Link>
-                
-                <Link
-                  to="/calculators"
-                  onClick={() => setFeaturesDropdownOpen(false)}
-                  className="layout-menu-item"
-                >
-                 Calculators
-                </Link>
-                
-                <Link
-                  to="/search"
-                  onClick={() => setFeaturesDropdownOpen(false)}
-                  className="layout-menu-item"
-                >
-                  Search Users
-                </Link>
-                
-                <Link
-                  to="/contact"
-                  onClick={() => setFeaturesDropdownOpen(false)}
-                  className="layout-menu-item"
-                >
-                  Help & Support
-                </Link>
-
-                <div className="layout-menu-separator">
-                  <button
-                    onClick={handleSignOut}
-                    className="layout-menu-item"
-                  >
-                     Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-              </div>
-            </div>
-          </div>
-        ) : (
-          // Desktop Header Layout (existing)
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Link to="/UserProfile" className="flex items-center hover:opacity-80 transition-opacity">
-                <img 
-                  src={logoSvg} 
-                  alt="PlayerZero" 
-                  className="h-8 w-auto"
-                />
-              </Link>
-            </div>
-
-            <div className="flex items-center gap-3">
-              {user && (
-                <>
-                  <Link to="/UserProfile">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-red-500 border-red-500 hover:bg-red-50 bg-transparent w-32"
-                    >
-                      <User className="w-4 h-4 mr-1" />
-                      Profile
-                    </Button>
-                  </Link>
-                  <Link to="/leaderboards">
-                    <Button variant="outline" size="sm" className="text-black border-black hover:bg-gray-50 w-32">
-                      <div style={{
-                        position: 'relative',
-                        width: '24px',
-                        height: '24px',
-                        marginRight: '4px'
-                      }}>
-                        <img 
-                          src="/images/leaderboard.svg" 
-                          alt="Leaderboard" 
-                          style={{
-                            /* Vector */
-                            position: 'absolute',
-                            left: '12.5%',
-                            right: '12.5%',
-                            top: '12.5%',
-                            bottom: '12.5%'
-                          }}
-                        />
-                      </div>
-                      Leaderboard
-                    </Button>
-                  </Link>
-                </>
-              )}
-
-              {user && (
-                <>
-                  {!trialStatus.isPaidUser && (
-                    <button 
-                      onClick={() => navigate('/upgrade')}
-                      className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center hover:bg-red-600 transition-colors cursor-pointer"
-                      title="Upgrade to Premium"
-                    >
-                      <Crown className="w-4 h-4 text-white" />
-                    </button>
-                  )}
-                  <NotificationBell />
-                </>
-              )}
-
-              {/* Features Dropdown */}
               <div className="relative" id="features-dropdown">
                 <button
                   onClick={toggleFeaturesDropdown}
@@ -315,390 +170,333 @@ export const Layout = ({ children }: LayoutProps) => {
               </div>
             </div>
           </div>
-        )}
-      </header>
+        ) : (
+          // Desktop Header Layout - Horizontal Layout with Specific Gaps
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            width: '100%',
+            minWidth: '353px',
+            height: '48px',
+          }}>
+            {/* Logo - 179x35 */}
+            <Link to="/UserProfile" style={{
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+            }}>
+              <img 
+                src={logoSvg} 
+                alt="PlayerZero" 
+                style={{
+                  width: '179px',
+                  height: '35px',
+                }}
+              />
+            </Link>
 
-      {/* Old Header - Keep for backwards compatibility but hidden */}
-      <header className="header" style={{ display: 'none' }}>
-        {/* Mobile Layout */}
-        <div className="mobile-header-container mobile-only">
-          <div className="mobile-header-left">
-            {user && (
-              <button 
-                className="mobile-menu-toggle"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle navigation menu"
-              >
-                {mobileMenuOpen ? (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
-                ) : (
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <line x1="3" y1="12" x2="21" y2="12"></line>
-                    <line x1="3" y1="18" x2="21" y2="18"></line>
-                  </svg>
-                )}
-              </button>
-            )}
-          </div>
+            {/* Horizontal Gap - 1269px */}
+            <div style={{
+              width: '550px',
+              height: '1px',
           
-          <Link to="/UserProfile" className="logo mobile-logo">
-            <Logo style={{ width: '93%', marginRight: '45%', marginLeft: '-1%', marginTop: "3%", color: '#000000' }} />
-          </Link>
+              order: 1,
+              flexGrow: 0,
+            }} />
 
-          <div className="mobile-header-right">
-            {user && <NotificationBell />}
-          </div>
-        </div>
-
-        {/* Desktop Logo */}
-        <Link to="/UserProfile" className="logo desktop-only">
-          <Logo style={{ color: '#000000' }} />
-        </Link>
-        
-        {/* Private Mode Countdown - Only for active private mode users */}
-        {user && !trialStatus.isPaidUser && trialStatus.isInTrial && !trialStatus.loading && (
-          <div className="private-mode-countdown desktop-only">
-            <span className="private-mode-text">Private Mode: {formatTrialTime()}</span>
-          </div>
-        )}
-
-        {/* Desktop Navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between' }}>
-          {user && (
-            <>
-              <div style={{ marginRight: 'auto' }}>
-                {/* Left side - empty or can be used for logo/branding */}
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <Link 
-                  to="/UserProfile" 
-                  className={`nav-button ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
-                  style={{
-                    color: '#ef4444',
-                    border: '1px solid #ef4444',
-                    backgroundColor: 'transparent',
-                    borderRadius: '0.375rem',
-                    padding: '0.375rem 0.75rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    textDecoration: 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = '#fef2f2';
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = 'transparent';
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem' }}>
-                    <circle cx="12" cy="7" r="4" />
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  </svg>
-                  Profile
-                </Link>
-                <Link 
-                  to="/leaderboards" 
-                  className={`nav-button ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
-                  style={{
-                    color: '#6b7280',
-                    border: '1px solid #d1d5db',
-                    backgroundColor: 'transparent',
-                    borderRadius: '0.375rem',
-                    padding: '0.375rem 0.75rem',
-                    fontSize: '0.875rem',
-                    fontWeight: '500',
-                    transition: 'all 0.2s ease',
-                    textDecoration: 'none'
-                  }}
-                  onMouseEnter={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = '#f9fafb';
-                    target.style.borderColor = '#9ca3af';
-                  }}
-                  onMouseLeave={(e) => {
-                    const target = e.target as HTMLElement;
-                    target.style.backgroundColor = 'transparent';
-                    target.style.borderColor = '#d1d5db';
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" style={{ marginRight: '0.25rem' }}>
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"></path>
-                    <path d="M14 9h1.5a2.5 2.5 0 0 1 0 5H14"></path>
-                    <path d="M6 9v6"></path>
-                    <path d="M14 9v6"></path>
-                    <path d="M6 15h8"></path>
-                    <path d="M8 9h4"></path>
-                    <path d="M8 15v6"></path>
-                    <path d="M12 15v6"></path>
-                  </svg>
-                  Leaderboard
-                </Link>
-                <NotificationBell />
-                
-                {/* Features Dropdown */}
-                <div className="features-dropdown-container" id="features-dropdown">
-                  <button 
-                    className="nav-button icon-only"
-                    onClick={toggleFeaturesDropdown}
-                    title="Features"
-                    style={{
-                      border: 'none',
-                      background: 'transparent',
-                      marginLeft: '0.25rem'
-                    }}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="3">
-                      <path d="M3 6h18M3 12h18M3 18h18"></path>
+            {user && (
+              <>
+                {/* Profile Button */}
+                <Link to="/UserProfile" style={{
+                  /* profile */
+                  boxSizing: 'border-box',
+                  /* Auto layout */
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '8px',
+                  width: '171px',
+                  height: '48px',
+                  border: '1px solid #DC2627',
+                  borderRadius: '12px',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 2,
+                  flexGrow: 0,
+                  textDecoration: 'none',
+                }}>
+                  {/* iconamoon:profile */}
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                    position: 'relative',
+                  }}>
+                    {/* Profile Icon with vectors */}
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      {/* Vector - Body */}
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" 
+                            stroke="#DC2627" 
+                            strokeWidth="2" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"/>
+                      {/* Vector - Head */}
+                      <circle cx="12" cy="7" r="4" 
+                              stroke="#DC2627" 
+                              strokeWidth="2"/>
                     </svg>
-                  </button>
+                  </div>
                   
+                  {/* Profile Text */}
+                  <span style={{
+                    /* Profile */
+                    width: '45px',
+                    height: '21px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    lineHeight: '21px',
+                    /* identical to box height */
+                    color: '#DC2627',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0,
+                  }}>
+                    Profile
+                  </span>
+                </Link>
+
+                {/* 8px Gap */}
+                <div style={{
+                  width: '8px',
+                  height: '1px',
+                  flex: 'none',
+                  order: 3,
+                  flexGrow: 0,
+                }} />
+
+                {/* Leaderboard Button */}
+                <Link to="/leaderboards" style={{
+                  /* leaderboard */
+                  boxSizing: 'border-box',
+                  /* Auto layout */
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '8px',
+                  width: '171px',
+                  height: '48px',
+                  border: '1px solid #000000',
+                  borderRadius: '12px',
+                  /* Inside auto layout */
+                  flex: 'none',
+                  order: 4,
+                  flexGrow: 0,
+                  textDecoration: 'none',
+                }}>
+                  {/* iconoir:leaderboard-star */}
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                    position: 'relative',
+                  }}>
+                    {/* Vector */}
+                    <svg 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 6 6" 
+                      fill="none" 
+                      xmlns="http://www.w3.org/2000/svg"
+                      style={{
+                        position: 'absolute',
+                        left: '12.5%',
+                        right: '12.5%',
+                        top: '12.5%',
+                        bottom: '12.5%',
+                      }}
+                    >
+                      <path d="M3.78575 5.42857H2.07146M3.78575 5.42857V3.02857C3.78575 2.9831 3.76769 2.9395 3.73554 2.90735C3.70339 2.8752 3.65979 2.85714 3.61432 2.85714H2.24289C2.19743 2.85714 2.15382 2.8752 2.12167 2.90735C2.08952 2.9395 2.07146 2.9831 2.07146 3.02857V5.42857M3.78575 5.42857H5.32861C5.37407 5.42857 5.41768 5.41051 5.44982 5.37836C5.48197 5.34621 5.50003 5.30261 5.50003 5.25714V4.6C5.50003 4.55453 5.48197 4.51093 5.44982 4.47878C5.41768 4.44663 5.37407 4.42857 5.32861 4.42857H3.95718C3.91171 4.42857 3.86811 4.44663 3.83596 4.47878C3.80381 4.51093 3.78575 4.55453 3.78575 4.6V5.42857ZM2.07146 5.42857V4.02857C2.07146 3.9831 2.0534 3.9395 2.02125 3.90735C1.9891 3.8752 1.9455 3.85714 1.90003 3.85714H0.528606C0.483141 3.85714 0.439537 3.8752 0.407388 3.90735C0.375239 3.9395 0.357178 3.9831 0.357178 4.02857V5.25714C0.357178 5.30261 0.375239 5.34621 0.407388 5.37836C0.439537 5.41051 0.483141 5.42857 0.528606 5.42857H2.07146ZM2.58746 0.889428L2.84718 0.338856C2.85419 0.323117 2.86561 0.309747 2.88006 0.300364C2.89451 0.290981 2.91138 0.285988 2.92861 0.285988C2.94584 0.285988 2.9627 0.290981 2.97715 0.300364C2.9916 0.309747 3.00302 0.323117 3.01003 0.338856L3.27003 0.889428L3.85061 0.978285C3.92518 0.989713 3.95489 1.08571 3.90089 1.14057L3.48089 1.56914L3.58003 2.17428C3.59261 2.252 3.51489 2.31143 3.44803 2.27457L2.92861 1.98886L2.40918 2.27457C2.34261 2.31114 2.26461 2.252 2.27718 2.17428L2.37632 1.56914L1.95632 1.14057C1.90203 1.08571 1.93203 0.989713 2.00632 0.978285L2.58746 0.889428Z" 
+                            stroke="#000000" 
+                            strokeWidth="0.428571" 
+                            strokeLinecap="round" 
+                            strokeLinejoin="round"
+                      />
+                    </svg>
+                  </div>
+                  
+                  {/* Leaderboard Text */}
+                  <span style={{
+                    /* Leaderboard */
+                    width: '92px',
+                    height: '21px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    lineHeight: '21px',
+                    /* identical to box height */
+                    color: '#000000',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0,
+                  }}>
+                    Leaderboard
+                  </span>
+                </Link>
+
+                {/* 24px Gap */}
+                <div style={{
+                  width: '24px',
+                  height: '1px',
+                  flex: 'none',
+                  order: 5,
+                  flexGrow: 0,
+                }} />
+
+                {/* Icons Section */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: '0px',
+                  flex: 'none',
+                  order: 6,
+                  flexGrow: 0,
+                }}>
+                  {/* Upgrade Button */}
+                  {!trialStatus.isPaidUser && (
+                    <button 
+                      onClick={() => navigate('/upgrade')}
+                      style={{
+                        width: '30px',
+                        height: '30px',
+                        background: '#DC2627',
+                        borderRadius: '1000px',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                      }}
+                      title="Upgrade to Premium"
+                    >
+                      <Crown className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                  
+                  {/* Notification Bell */}
+                  <NotificationBell />
+                </div>
+
+                {/* Features Dropdown */}
+                <div className="relative" id="features-dropdown" style={{
+                  flex: 'none',
+                  order: 7,
+                  flexGrow: 0,
+                  marginLeft: '8px'
+                }}>
+                  <button
+                    onClick={toggleFeaturesDropdown}
+                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                    title="Menu"
+                  >
+                    <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
+                  </button>
+
                   {featuresDropdownOpen && (
-                    <div className="features-dropdown-menu">
-                      <Link 
-                        to="/profile?edit=true" 
-                        className="dropdown-item"
+                    <div className="layout-menu-dropdown">
+                      <Link
+                        to="/profile?edit=true"
                         onClick={() => setFeaturesDropdownOpen(false)}
+                        className="layout-menu-item"
                       >
-                        ✏️ Edit Profile
+                        Profile Settings
                       </Link>
-                      <Link 
-                        to="/update-stats" 
-                        className="dropdown-item"
+                      
+                      <Link
+                        to="/update-stats"
                         onClick={() => setFeaturesDropdownOpen(false)}
+                        className="layout-menu-item"
                       >
-                        📊 Update Stats
+                        Update Stats
                       </Link>
-                      <Link 
-                        to="/calculators" 
-                        className="dropdown-item"
+                      
+                      <Link
+                        to="/calculators"
                         onClick={() => setFeaturesDropdownOpen(false)}
+                        className="layout-menu-item"
                       >
-                        🧮 Calculators
+                        Calculators
                       </Link>
-                      <Link 
-                        to="/search" 
-                        className="dropdown-item"
+
+                      <Link
+                        to="/search"
                         onClick={() => setFeaturesDropdownOpen(false)}
+                        className="layout-menu-item"
                       >
-                        🔍 Search Users
+                        Search Users
                       </Link>
-                      <Link 
-                        to="/contact" 
-                        className="dropdown-item"
+
+                      <Link
+                        to="/contact"
                         onClick={() => setFeaturesDropdownOpen(false)}
+                        className="layout-menu-item"
                       >
-                        💬 Help & Support
+                        Help & Support
                       </Link>
+
                       <button
                         onClick={handleSignOut}
-                        className="dropdown-item"
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
+                        className="layout-menu-item"
                       >
-                        🚪 Sign Out
+                        Logout
                       </button>
                     </div>
                   )}
                 </div>
-              </div>
-            </>
-          )}
-        </div>
-        
-        {/* Desktop Actions */}
-        <div className="nav-actions desktop-only">
-          {user ? (
-            <div className="quick-nav-buttons">
-              {/* Profile and Leaderboard buttons removed */}
-            </div>
-          ) : (
-            <>
-              <Link to="/login" className="nav-link">
-                Sign in
-              </Link>
-              <Link to="/signup" className="nav-link button">
-                Sign up
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile Menu */}
-        {user && (
-          <>
-            {mobileMenuOpen && (
-              <div className="mobile-menu-overlay" onClick={() => setMobileMenuOpen(false)}></div>
+              </>
             )}
-            
-            <div className={`mobile-menu ${mobileMenuOpen ? 'mobile-menu-open' : ''}`}>
-              <div className="mobile-menu-header">
-                {!trialStatus.loading && (
-                  trialStatus.isPaidUser ? (
-                    <span className="badge">PRO</span>
-                  ) : trialStatus.isInTrial ? (
-                    <div className="trial-info">
-                      Private Mode: {formatTrialTime()}
-                    </div>
-                  ) : null
-                )}
-              </div>
-
-              <div className="mobile-menu-section">
-                <Link 
-                  to="/UserProfile" 
-                  className={`mobile-menu-item ${isActiveRoute('/UserProfile') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="7" r="4" />
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  </svg>
-                  Home
-                </Link>
-
-                <Link 
-                  to="/leaderboards" 
-                  className={`mobile-menu-item ${isActiveRoute('/leaderboards') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                    <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                  </svg>
-                  Leaderboards
-                </Link>
-
-                <Link 
-                  to="/search" 
-                  className={`mobile-menu-item ${isActiveRoute('/search') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <path d="m21 21-4.35-4.35"></path>
-                  </svg>
-                  Search Users
-                </Link>
-
-                <Link 
-                  to="/profile?edit=true" 
-                  className={`mobile-menu-item ${location.search.includes('edit=true') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                  Edit Profile
-                </Link>
-
-                <Link 
-                  to="/update-stats" 
-                  className={`mobile-menu-item ${isActiveRoute('/update-stats') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <line x1="12" y1="20" x2="12" y2="10"></line>
-                    <line x1="18" y1="20" x2="18" y2="4"></line>
-                    <line x1="6" y1="20" x2="6" y2="16"></line>
-                  </svg>
-                  Update Stats
-                </Link>
-
-                <Link 
-                  to="/calculators" 
-                  className={`mobile-menu-item ${isActiveRoute('/calculators') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <rect x="4" y="4" width="16" height="16" rx="2" ry="2"></rect>
-                    <rect x="9" y="9" width="6" height="6"></rect>
-                    <line x1="9" y1="1" x2="9" y2="4"></line>
-                    <line x1="15" y1="1" x2="15" y2="4"></line>
-                    <line x1="9" y1="20" x2="9" y2="23"></line>
-                    <line x1="15" y1="20" x2="15" y2="23"></line>
-                  </svg>
-                  Calculators
-                </Link>
-
-                <Link 
-                  to="/contact" 
-                  className={`mobile-menu-item ${isActiveRoute('/contact') ? 'active' : ''}`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  Help & Support
-                </Link>
-              </div>
-
-              <div className="mobile-menu-section">
-                {!trialStatus.loading && !trialStatus.isPaidUser && (
-                  <Link 
-                    to="/upgrade" 
-                    className="mobile-menu-item button"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                    </svg>
-                    Upgrade to Premium
-                  </Link>
-                )}
-
-                <button
-                  onClick={handleSignOut}
-                  className="mobile-menu-item"
-                >
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                    <polyline points="16 17 21 12 16 7"></polyline>
-                    <line x1="21" y1="12" x2="9" y2="12"></line>
-                  </svg>
-                  Sign Out
-                </button>
-              </div>
-            </div>
-          </>
+          </div>
         )}
       </header>
-      
-      {/* Main content */}
-      <main className="main-content">
+
+      <main className="main-content" style={{
+        width: '100%',
+        minWidth: isMobile ? '353px' : 'auto',
+        maxWidth: '100vw',
+        overflowX: 'hidden',
+      }}>
         {children}
       </main>
-      
-      {/* Footer - Hide on leaderboard page in web view */}
-      {!(location.pathname === '/leaderboards' && !isMobile) && (
-        <footer className="footer">
-          <div className="footer-content">
-            <div className="footer-info">
-              <p className="footer-copyright">
-                © {new Date().getFullYear()} PlayerZERO. All rights reserved.
-              </p>
-            </div>
-            <div className="footer-links">
-              <a href="#" className="footer-link">
-                Terms
-              </a>
-              <a href="#" className="footer-link">
-                Privacy
-              </a>
-              <Link to="/contact" className="footer-link">
-                Contact
-              </Link>
-            </div>
-          </div>
-        </footer>
+
+      {/* Bottom Navigation for Mobile */}
+      {isMobile && (
+        <div className="bottom-nav mobile-only" style={{
+          width: '100%',
+          minWidth: '353px',
+          maxWidth: '100vw',
+        }}>
+          {/* Mobile navigation content would go here */}
+        </div>
       )}
     </div>
   )
-} 
+}

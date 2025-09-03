@@ -42,13 +42,13 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   }
 
   const formatNumber = (num: number | null | undefined) => {
-    if (!num || num === 0) return '0'
+    if (!num || num === 0) return '0.0'
     if (num >= 1000000) {
       return (num / 1000000).toFixed(1) + 'M'
     } else if (num >= 1000) {
       return (num / 1000).toFixed(1) + 'K'
     }
-    return Math.round(num).toString()
+    return num.toFixed(1)
   }
 
   const formatDistance = (distance: number | null | undefined) => {
@@ -99,7 +99,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         order: 1,
         flexGrow: 0,
         position: 'relative',
-        marginTop: isMobile ? '94px' : '94px', // Add 20px margin on mobile, keep 94px on desktop
+        marginTop: isMobile ? '94px' : '100px', // Increased top margin to 100px
       }}
     >
       {/* Frame 530 - Main Content Container */}
@@ -126,13 +126,13 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         {/* Grind Stats Title */}
         <div style={{
           /* Grind Stats */
-          width: '91px',
-          height: '24px',
+          width: '136px',
+          height: '36px',
           fontFamily: 'Poppins',
           fontStyle: 'normal',
           fontWeight: 600,
-          fontSize: '16px',
-          lineHeight: '24px',
+          fontSize: '24px',
+          lineHeight: '36px',
           textAlign: 'center',
           color: '#000000',
           /* Inside auto layout */

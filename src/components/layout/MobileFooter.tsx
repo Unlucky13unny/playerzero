@@ -16,8 +16,14 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3">
-      <div className="flex gap-4 justify-center max-w-md mx-auto">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3" style={{
+      width: '100%',
+      minWidth: '353px',
+      maxWidth: '100vw',
+    }}>
+      <div className="flex gap-4 justify-center max-w-md mx-auto" style={{
+        minWidth: '329px', // 353px - 2*12px padding
+      }}>
         <Link to="/UserProfile" className="flex-1">
           <Button
             variant="outline"

@@ -10,6 +10,20 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 100%;
+  min-width: 353px;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+#root {
+  width: 100%;
+  min-width: 353px;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
 body {
   background: #000000;
   color: #ffffff;
@@ -18,12 +32,37 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
+  width: 100%;
+  min-width: 353px;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
   color: #ffffff;
   font-weight: 600;
   line-height: 1.2;
+}
+
+/* App Container Responsive Styles */
+.app-container,
+.main-content {
+  width: 100%;
+  min-width: 353px;
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile Responsive Base */
+@media (max-width: 768px) {
+  .app-container,
+  .main-content,
+  header,
+  main {
+    min-width: 353px;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
 }
 
 /* ProfileSetup Custom Styles */
