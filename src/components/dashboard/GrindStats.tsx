@@ -126,7 +126,8 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         {/* Grind Stats Title */}
         <div style={{
           /* Grind Stats */
-          width: '136px',
+          width: 'auto',
+          minWidth: '136px',
           height: '36px',
           fontFamily: 'Poppins',
           fontStyle: 'normal',
@@ -139,6 +140,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
           flex: 'none',
           order: 0,
           flexGrow: 0,
+          whiteSpace: 'nowrap',
         }}>
         Grind Stats
       </div>

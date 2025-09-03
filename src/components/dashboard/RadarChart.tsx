@@ -555,7 +555,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Your stats</span>
           </div>
@@ -577,7 +577,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Country Avg</span>
           </div>
@@ -599,7 +599,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Team Avg</span>
           </div>
@@ -621,7 +621,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Overall Avg</span>
           </div>
@@ -659,7 +659,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Own stats</span>
           </div>
@@ -681,7 +681,7 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
               fontSize: isMobile ? '8px' : '10px',
               fontWeight: '500',
               color: '#000000', // Black text as requested
-              fontFamily: 'system-ui, -apple-system, sans-serif',
+              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
               whiteSpace: 'nowrap'
             }}>Community stats</span>
           </div>

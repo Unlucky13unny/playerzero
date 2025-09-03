@@ -74,7 +74,7 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
@@ -2870,13 +2870,13 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: #111827;
-  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
 }
 
 .layout-menu-header .user-status {
   font-size: 12px;
   color: #6b7280;
-  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-family: 'Poppins', system-ui, -apple-system, sans-serif;
 }
 
 .layout-menu-item {
@@ -2888,7 +2888,7 @@ body {
   text-decoration: none;
   border-radius: 6px;
   transition: background-color 0.2s ease;
-  font-family: 'Geist', system-ui, -apple-system, sans-serif;
+  font-family: 'Poppins';
   background: transparent;
   border: none;
   cursor: pointer;
@@ -2921,6 +2921,19 @@ body {
   font-size: var(--font-sm);
   transition: all var(--transition-fast);
   border-bottom: 1px solid var(--gray-darker);
+}
+
+/* Mobile dropdown text color override */
+@media (max-width: 1024px) {
+  .dropdown-item {
+    color: #000000 !important;
+  }
+  
+  /* Ensure all dropdown menus have black text on mobile */
+  [data-dropdown] + div,
+  [data-dropdown] + div * {
+    color: #000000 !important;
+  }
 }
 
 .dropdown-item:last-child {
@@ -6012,7 +6025,7 @@ body {
   background-color: var(--black-card);
   border-radius: 24px;
   color: var(--white-pure);
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   position: relative;
   overflow: hidden;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
@@ -6919,6 +6932,21 @@ body {
     top: -6px;
     right: -6px;
   }
+  
+  /* Ensure dropdown text is properly colored on mobile */
+  .notification-dropdown,
+  .notification-dropdown * {
+    color: #374151 !important;
+  }
+  
+  .notification-dropdown .notification-header h3 {
+    color: #111827 !important;
+  }
+  
+  .notification-dropdown .notification-time,
+  .notification-dropdown .no-notifications {
+    color: #6b7280 !important;
+  }
 }
 
 @media (max-width: 480px) {
@@ -6947,8 +6975,9 @@ body {
   top: calc(100% + 10px);
   right: -10px;
   width: 320px;
-  background: var(--black-card);
-  border: 1px solid var(--gray-dark);
+  background: rgba(247, 247, 247, 0.64);
+  backdrop-filter: blur(50px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 8px;
   box-shadow: var(--shadow-strong);
   z-index: 1000;
@@ -6968,7 +6997,7 @@ body {
 .notification-header h3 {
   font-size: var(--font-md);
   font-weight: 600;
-  color: var(--white-pure);
+  color: #111827;
   margin: 0;
 }
 
@@ -7020,7 +7049,7 @@ body {
 
 .notification-content p {
   margin: 0;
-  color: var(--white-pure);
+  color: #374151;
   font-size: var(--font-sm);
   line-height: 1.4;
 }
@@ -7028,7 +7057,7 @@ body {
 .notification-time {
   display: block;
   font-size: var(--font-xs);
-  color: var(--gray-light);
+  color: #6b7280;
   margin-top: 4px;
 }
 
@@ -7060,7 +7089,7 @@ body {
 .no-notifications {
   padding: 24px;
   text-align: center;
-  color: var(--gray-light);
+  color: #6b7280;
   font-size: var(--font-sm);
 }
 
@@ -7075,11 +7104,12 @@ body {
     max-width: none;
     max-height: calc(100vh - var(--header-height) - 2rem);
     border-radius: 12px;
-    border: 1px solid var(--gray-dark);
+    background: rgba(247, 247, 247, 0.64);
+    backdrop-filter: blur(50px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
     z-index: 1200; /* Above hamburger menu */
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(50px);
   }
 
   .notification-header {
@@ -9999,3 +10029,5 @@ body {
 }
 
 /* Profile Card Table Layout */
+
+

@@ -74,7 +74,8 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
         alignItems: 'center',
         padding: '4px 8px',
         gap: '10px',
-        width: '100px',
+        width: 'auto',
+        minWidth: '100px',
         height: '28px',
         background: 'rgba(220, 38, 39, 0.05)',
         border: '1px solid #DC2627',
@@ -87,7 +88,8 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       }}>
         <span style={{
           /* Private mode text */
-          width: '68px',
+          width: 'auto',
+          minWidth: '68px',
           height: '15px',
           fontFamily: 'Poppins',
           fontStyle: 'normal',
@@ -100,6 +102,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
           flex: 'none',
           order: 0,
           flexGrow: 0,
+          whiteSpace: 'nowrap',
         }}>
           Private mode
         </span>
