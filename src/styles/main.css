@@ -92,7 +92,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  position: relative;
+  
 }
 
 /* Ensure proper mobile scrolling */
@@ -6926,11 +6926,11 @@ body {
   }
 
   .notification-badge {
-    width: 20px;
-    height: 20px;
-    font-size: 12px;
-    top: -6px;
-    right: -6px;
+    width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: 0px;
+    right: -1px;
   }
   
   /* Ensure dropdown text is properly colored on mobile */
@@ -6962,11 +6962,11 @@ body {
   }
 
   .notification-badge {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     font-size: 10px;
-    top: -4px;
-    right: -4px;
+    top: 0px;
+    right: -1px;
   }
 }
 

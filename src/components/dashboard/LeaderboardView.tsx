@@ -5985,7 +5985,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             >
 
-              All time
+              All-time
 
             </span>
 

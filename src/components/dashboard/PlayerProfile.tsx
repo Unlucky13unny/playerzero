@@ -353,7 +353,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                 color: 'white', 
                 fontWeight: '600', 
                 fontSize: '14px',
-                fontFamily: 'system-ui, -apple-system, sans-serif'
+                fontFamily: 'Poppins, system-ui, -apple-system, sans-serif'
               }}>
                 Upgrade
               </span>
@@ -504,7 +504,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                     >
                       <span style={{
                         /* All time */
-                        width: '47px',
+                        width: 'auto',
+                        minWidth: '47px',
                         height: '18px',
                         fontFamily: 'Poppins',
                         fontStyle: 'normal',
@@ -515,9 +516,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         textDecorationLine: timePeriod === 'alltime' ? 'underline' : 'none',
                         flex: 'none',
                         order: 0,
-                        flexGrow: 0
+                        flexGrow: 0,
+                        whiteSpace: 'nowrap'
                       }}>
+
                       All time
+
                       </span>
                     </button>
                   </div>
@@ -580,7 +584,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <div style={{
                           /* Stat Value - 15 km */
-                          width: '141px',
+                          width: 'auto',
+                          
                           height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -593,12 +598,14 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 0,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
                         <div style={{
                           /* Stat Label - Distance Walked */
-                          width: '101px',
+                          width: 'auto',
+                  
                           height: '18px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -610,6 +617,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 1,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>Distance Walked</div>
                       </div>
                     </div>
@@ -656,7 +664,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <div style={{
                           /* Stat Value - 170,000 */
-                          width: '90px',
+                          width: 'auto',
+                          
                           height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -669,10 +678,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 0,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('pokemon_caught'))}</div>
                         <div style={{
                           /* Stat Label - Pokémon Caught */
-                          width: '105px',
+                          width: 'auto',
+                        
                           height: '18px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -684,6 +695,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 1,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>Pokémon Caught</div>
                       </div>
                     </div>
@@ -730,7 +742,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <div style={{
                           /* Stat Value - 109,000 */
-                          width: '92px',
+                          width: 'auto',
+                        
                           height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -743,10 +756,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 0,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('pokestops_visited'))}</div>
                         <div style={{
                           /* Stat Label - Pokéstops Visited */
-                          width: '105px',
+                          width: 'auto',
+                        
                           height: '18px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -758,6 +773,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 1,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>Pokéstops Visited</div>
                       </div>
                     </div>
@@ -804,7 +820,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <div style={{
                           /* Stat Value - 33,628,973 */
-                          width: '100px',
+                          width: 'auto',
+                        
                           height: '48px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -817,10 +834,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 0,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('total_xp'))}</div>
                         <div style={{
                           /* Stat Label - Total XP */
-                          width: '48px',
+                          width: 'auto',
+                         
                           height: '18px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -832,6 +851,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           flex: 'none',
                           order: 1,
                           flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>Total XP</div>
                       </div>
                     </div>
@@ -1060,7 +1080,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       >
                         <span style={{
                           /* All time Text */
-                          width: '47px',
+                          width: 'auto',
                           height: '18px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
@@ -1072,7 +1092,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                           /* Inside auto layout */
                           flex: 'none',
                           order: 0,
-                          flexGrow: 0
+                          flexGrow: 0,
+                          whiteSpace: 'nowrap'
                         }}>
                         All time
                         </span>
@@ -1158,7 +1179,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         }}>
                           <div style={{
                             /* 15,526.3 km */
-                            width: '106px',
+                            width: 'auto',
+                            minWidth: '106px',
                             height: '27px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1170,13 +1192,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 0,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
                           <div style={{
                             /* Distance Walked */
-                            width: '92px',
+                            width: 'auto',
+                            minWidth: '92px',
                             height: '17px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1187,9 +1211,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 1,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
-                            Distance Walked
+                            Distance-Walked
                       </div>
                       </div>
 
@@ -1214,7 +1239,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         }}>
                           <div style={{
                             /* 170,000 */
-                            width: '68px',
+                            width: 'auto',
+                            minWidth: '68px',
                             height: '27px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1226,13 +1252,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 0,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                             {formatNumber(getStatValue('pokemon_caught'))}
                       </div>
                           <div style={{
                             /* Pokémon Caught */
-                            width: '96px',
+                            width: 'auto',
+                            minWidth: '96px',
                             height: '17px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1243,9 +1271,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 1,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
-                            Pokémon Caught
+                            Pokémon-Caught
                       </div>
                     </div>
                   </div>
@@ -1287,7 +1316,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         }}>
                           <div style={{
                             /* 109,000 */
-                            width: '69px',
+                            width: 'auto',
+                            minWidth: '69px',
                             height: '27px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1299,13 +1329,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 0,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                             {formatNumber(getStatValue('pokestops_visited'))}
                           </div>
                           <div style={{
                             /* Pokéstops Visited */
-                            width: '96px',
+                            width: 'auto',
+                            minWidth: '96px',
                             height: '17px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1316,7 +1348,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 1,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                             Pokéstops Visited
                           </div>
@@ -1343,7 +1376,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                         }}>
                           <div style={{
                             /* 33,628,973 */
-                            width: '97px',
+                            width: 'auto',
+                            minWidth: '97px',
                             height: '27px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1355,13 +1389,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 0,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                             {formatNumber(getStatValue('total_xp'))}
                           </div>
                           <div style={{
                             /* Total XP */
-                            width: '44px',
+                            width: 'auto',
+                            minWidth: '44px',
                             height: '17px',
                             fontFamily: 'Poppins',
                             fontStyle: 'normal',
@@ -1372,7 +1408,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                             /* Inside auto layout */
                             flex: 'none',
                             order: 1,
-                            flexGrow: 0
+                            flexGrow: 0,
+                            whiteSpace: 'nowrap'
                           }}>
                             Total XP
                           </div>
@@ -1402,7 +1439,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                     {/* Performance Overview Heading */}
                     <div style={{
                       /* Performance Overview */
-                      width: '186px',
+                      width: 'auto',
+                      minWidth: '186px',
                       height: '24px',
                       fontFamily: 'Poppins',
                       fontStyle: 'normal',
@@ -1415,7 +1453,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                       /* Inside auto layout */
                       flex: 'none',
                       order: 0,
-                      flexGrow: 0
+                      flexGrow: 0,
+                      whiteSpace: 'nowrap'
                     }}>
                       Performance Overview
                     </div>
@@ -1578,7 +1617,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
                   fontSize: '24px',
                   lineHeight: '36px',
                   color: '#000000',
-                  textAlign: 'left'
+                  textAlign: 'left',
+                  whiteSpace: 'nowrap'
                 }}>
                   Performance Overview
                 </span>
