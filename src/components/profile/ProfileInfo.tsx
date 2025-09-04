@@ -598,7 +598,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
                 color: '#848282',
                 textAlign: 'left',
               }}>{getTrainerCode()}</span>
-            {profile?.trainer_code && !profile?.trainer_code_private && (
+            {profile?.trainer_code && !profile?.trainer_code_private && viewMode !== "public" && (
               <button 
                 onClick={copyTrainerCode}
                 title="Copy trainer code"
