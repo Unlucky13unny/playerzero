@@ -51,9 +51,47 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
   const getModeButton = () => {
     if (viewMode === "public") {
       return (
-        <Button size="sm" className="bg-green-100 text-green-700 hover:bg-green-200">
-          Public mode
-        </Button>
+        <div style={{
+          /* Public mode button */
+          boxSizing: 'border-box',
+          /* Auto layout */
+          display: 'flex',
+          flexDirection: 'row',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: '4px 8px',
+          gap: '10px',
+          width: '100px',
+          height: '28px',
+          background: 'rgba(43, 196, 156, 0.09)',
+          border: '1px solid #2BC49C',
+          borderRadius: '20px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+          cursor: 'default'
+        }}>
+          <span style={{
+            /* Public mode text */
+            width: '64px',
+            height: '15px',
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 600,
+            fontSize: '10px',
+            lineHeight: '15px',
+            /* identical to box height */
+            color: '#2BC49C',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+            whiteSpace: 'nowrap',
+          }}>
+            Public mode
+          </span>
+        </div>
       )
     }
     if (viewMode === "team") {
