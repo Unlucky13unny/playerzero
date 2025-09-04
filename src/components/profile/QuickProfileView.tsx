@@ -72,7 +72,7 @@ export const QuickProfileView = ({
       showValueProp('profile');
       return;
     }
-    navigate(`/profile/${profileId}`);
+    navigate(`/player/${profileId}`);
   };
 
   // Helper function to get team color with proper type checking

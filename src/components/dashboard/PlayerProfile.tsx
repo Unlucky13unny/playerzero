@@ -12,14 +12,16 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { dashboardService } from '../../services/dashboardService'
+import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 
 interface PlayerProfileProps {
   viewMode: "public" | "private" | "team" | "own"
   userType: "trial" | "upgraded"
   showHeader?: boolean
+  profile?: any // Optional profile prop for viewing other users' profiles
 }
 
-export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerProfileProps) {
+export function PlayerProfile({ viewMode, userType, showHeader = true, profile: externalProfile }: PlayerProfileProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const isMobile = useMobile()
@@ -30,6 +32,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   const [showExportModal, setShowExportModal] = useState(false)
   const [statsLoading, setStatsLoading] = useState(false)
   const [chartLoading, setChartLoading] = useState(false)
+  const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
+  const [screenshotsLoading, setScreenshotsLoading] = useState(false)
+  const [showScreenshots, setShowScreenshots] = useState(false)
   const showMobileFooter = isMobile
 
   // Calculate header props - these are used in the conditional render
@@ -39,8 +44,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
   } : null
 
   useEffect(() => {
-    loadUserProfile()
-  }, [user])
+    if (externalProfile) {
+      // If external profile is provided (for viewing other users), use it directly
+      setProfile(externalProfile)
+      setLoading(false)
+    } else {
+      // Otherwise load current user's profile
+      loadUserProfile()
+    }
+  }, [user, externalProfile])
 
   const loadUserProfile = async () => {
     if (!user?.id) return
@@ -244,7 +256,46 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
     return 0
   }
 
+  // Load verification screenshots for public mode
+  const loadVerificationScreenshots = async () => {
+    if (!profile?.user_id) return
+    setScreenshotsLoading(true)
 
+    try {
+      const screenshots = await dashboardService.getVerificationScreenshots(profile.user_id, 20)
+      setVerificationScreenshots(screenshots)
+    } catch (err: any) {
+      console.error('Error loading verification screenshots:', err)
+    } finally {
+      setScreenshotsLoading(false)
+    }
+  }
+
+  // Get social media links
+  const getSocialLink = (platform: string, value: string): string | undefined => {
+    if (!value) return undefined
+    
+    switch (platform) {
+      case 'instagram':
+        return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
+      case 'tiktok':
+        return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
+      case 'twitter':
+        return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
+      case 'youtube':
+        return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
+      case 'twitch':
+        return `https://twitch.tv/${value}`
+      case 'reddit':
+        return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+      case 'facebook':
+        return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
+      case 'snapchat':
+        return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
+      default:
+        return value
+    }
+  }
 
   if (loading) {
     return (
@@ -1723,6 +1774,164 @@ export function PlayerProfile({ viewMode, userType, showHeader = true }: PlayerP
             </div>
           </div>
         </div>
+
+        {/* Social Links Section - Only show in public mode */}
+        {viewMode === "public" && (
+          <>
+            <div className="section-header">
+              <h2>Social Links</h2>
+            </div>
+            <div className="social-links-container">
+              {profile?.is_paid_user ? (
+                <div className="social-links-grid">
+                  {SOCIAL_MEDIA.map(platform => {
+                    const value = profile[platform.key as keyof typeof profile];
+                    if (value && value !== '' && typeof value === 'string') {
+                      return (
+                        <a 
+                          key={platform.key}
+                          href={getSocialLink(platform.key, value)} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="social-link"
+                        >
+                          <SocialIcon platform={platform.key} size={24} color="currentColor" />
+                          <span>{value}</span>
+                        </a>
+                      );
+                    }
+                    return null;
+                  })}
+                </div>
+              ) : (
+                <p className="private-notice">This user's social links are private</p>
+              )}
+            </div>
+
+            {/* Verification Screenshots */}
+            <div className="verification-screenshots-section">
+              <div className="screenshots-section-header">
+                <div className="screenshots-title-group">
+                  <div className="screenshots-icon">📸</div>
+                  <div>
+                    <h2>Verification Screenshots</h2>
+                    <p className="screenshots-subtitle">
+                      View stat update verification history
+                      {!screenshotsLoading && verificationScreenshots.length > 0 && (
+                        <span className="screenshot-count"> • {verificationScreenshots.length} screenshot{verificationScreenshots.length !== 1 ? 's' : ''}</span>
+                      )}
+                    </p>
+                  </div>
+                </div>
+                <button 
+                  className={`toggle-screenshots-button ${showScreenshots ? 'active' : ''}`}
+                  onClick={() => {
+                    if (!showScreenshots && verificationScreenshots.length === 0 && profile) {
+                      loadVerificationScreenshots()
+                    }
+                    setShowScreenshots(!showScreenshots)
+                  }}
+                >
+                  <span className="toggle-icon">
+                    {showScreenshots ? '👁️‍🗨️' : '👁️'}
+                  </span>
+                  <span className="toggle-text">
+                    {showScreenshots ? 'Hide' : 'View'}
+                  </span>
+                  <span className="toggle-arrow">
+                    {showScreenshots ? '▲' : '▼'}
+                  </span>
+                </button>
+              </div>
+              
+              <div className={`screenshots-content ${showScreenshots ? 'expanded' : 'collapsed'}`}>
+                {showScreenshots && (
+                  <>
+                    {screenshotsLoading ? (
+                      <div className="screenshots-loading-state">
+                        <div className="loading-spinner-large"></div>
+                        <h3>Loading Screenshots</h3>
+                        <p>Fetching verification history...</p>
+                      </div>
+                    ) : verificationScreenshots.length > 0 ? (
+                      <div className="screenshots-grid">
+                        {verificationScreenshots.map((screenshot, index) => (
+                          <div key={screenshot.id} className="screenshot-card screenshot-protected">
+                            <div className="screenshot-card-header">
+                              <div className="screenshot-date-badge">
+                                <span className="date-icon">📅</span>
+                                <span className="date-text">
+                                  {new Date(screenshot.entry_date).toLocaleDateString('en-US', {
+                                    month: 'short',
+                                    day: 'numeric',
+                                    year: 'numeric'
+                                  })}
+                                </span>
+                              </div>
+                              <div className="screenshot-index">#{verificationScreenshots.length - index}</div>
+                            </div>
+                            
+                            <div className="screenshot-image-container">
+                              <img 
+                                src={screenshot.screenshot_url} 
+                                alt={`Stats verification for ${screenshot.entry_date}`}
+                                className="verification-screenshot"
+                                onContextMenu={(e) => e.preventDefault()}
+                                onDragStart={(e) => e.preventDefault()}
+                                style={{ userSelect: 'none', pointerEvents: 'none' }}
+                              />
+                              <div className="screenshot-overlay">
+                                <div className="protection-notice">
+                                  <span className="shield-icon">🛡️</span>
+                                  <span>Screenshot Protected</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="screenshot-stats-footer">
+                              <div className="stat-badges">
+                                <div className="stat-badge xp-badge">
+                                  <span className="stat-icon">⚡</span>
+                                  <span className="stat-label">XP</span>
+                                  <span className="stat-value">{screenshot.stat_entries.total_xp?.toLocaleString()}</span>
+                                </div>
+                                <div className="stat-badge caught-badge">
+                                  <span className="stat-icon">🔴</span>
+                                  <span className="stat-label">Caught</span>
+                                  <span className="stat-value">{screenshot.stat_entries.pokemon_caught?.toLocaleString()}</span>
+                                </div>
+                                <div className="stat-badge distance-badge">
+                                  <span className="stat-icon">👣</span>
+                                  <span className="stat-label">Distance</span>
+                                  <span className="stat-value">{screenshot.stat_entries.distance_walked?.toFixed(1)}km</span>
+                                </div>
+                                <div className="stat-badge stops-badge">
+                                  <span className="stat-icon">🔵</span>
+                                  <span className="stat-label">Stops</span>
+                                  <span className="stat-value">{screenshot.stat_entries.pokestops_visited?.toLocaleString()}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="no-screenshots-state">
+                        <div className="empty-state-icon">📷</div>
+                        <h3>No Verification Screenshots</h3>
+                        <p>This trainer hasn't uploaded any stat verification screenshots yet.</p>
+                        <div className="empty-state-hint">
+                          <span className="hint-icon">💡</span>
+                          <span>Screenshots are required when updating stats to maintain leaderboard integrity</span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       {showMobileFooter && <MobileFooter currentPage="profile" />}

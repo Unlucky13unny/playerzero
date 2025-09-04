@@ -16,6 +16,7 @@ import { ProfileGuard } from './components/auth/ProfileGuard'
 import { ProfileSetupGuard } from './components/auth/ProfileSetupGuard'
 import { Layout } from './components/layout/Layout'
 import { PublicProfile } from './components/profile/PublicProfile'
+import { PublicPlayerProfile } from './components/profile/PublicPlayerProfile'
 import { AdminLogin } from './components/auth/AdminLogin'
 import { AdminProtectedRoute } from './components/auth/AdminProtectedRoute'
 import { AdminLayout } from './components/admin/AdminLayout'
@@ -152,6 +153,20 @@ const AppRoutes = () => {
             <ProtectedRoute>
               <ProfileSetupGuard>
                 <PublicProfile />
+              </ProfileSetupGuard>
+            </ProtectedRoute>
+          </Layout>
+        } 
+      />
+
+      {/* Public Player Profile Route - Shows PlayerProfile in public mode */}
+      <Route 
+        path="/player/:id" 
+        element={
+          <Layout>
+            <ProtectedRoute>
+              <ProfileSetupGuard>
+                <PublicPlayerProfile />
               </ProfileSetupGuard>
             </ProtectedRoute>
           </Layout>
