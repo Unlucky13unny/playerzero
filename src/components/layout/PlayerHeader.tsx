@@ -50,7 +50,7 @@ export function PlayerHeader({
   }
 
   return (
-    <header className="bg-white border-b border-gray-200" style={{ 
+    <header className="bg-white" style={{ 
       position: 'relative',
       minHeight: '108px', // 30px top + 48px height + 30px bottom
       display: 'flex',
@@ -341,21 +341,32 @@ export function PlayerHeader({
           </div>
         )}
 
-        {/* Frame 20 - Icon Section (Already implemented) */}
+        {/* Right Section Container */}
         <div style={{
-          /* Frame 20 */
           display: 'flex',
           flexDirection: 'row',
           alignItems: 'center',
-          padding: '0px',
           gap: '8px',
-          width: isMobile ? 'auto' : '109px',
-          height: '45px',
           /* Inside auto layout */
           flex: 'none',
           order: 2,
           flexGrow: 0,
         }}>
+          {/* Frame 20 - Icon Section (Already implemented) */}
+          <div style={{
+            /* Frame 20 */
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: '0px',
+            gap: '8px',
+            width: isMobile ? 'auto' : '109px',
+            height: '45px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+          }}>
           {/* Crown Upgrade Badge */}
           {userType === "trial" && (
           <button 
@@ -460,6 +471,7 @@ export function PlayerHeader({
               <NotificationBell />
             </div>
           )}
+          </div>
 
           {/* Hamburger Menu */}
           <div style={{
@@ -469,7 +481,7 @@ export function PlayerHeader({
             position: 'relative',
             /* Inside auto layout */
             flex: 'none',
-            order: 2,
+            order: 1,
             flexGrow: 0,
           }}>
             {/* Line 1 */}

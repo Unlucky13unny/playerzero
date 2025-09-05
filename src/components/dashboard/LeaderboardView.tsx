@@ -6,7 +6,7 @@ import { Button } from "../ui/button"
 
 import { Crown } from "../icons/Crown"
 
-import { Trophy, ChevronDown, Upload } from "lucide-react"
+import { ChevronDown, Upload } from "lucide-react"
 
 import { useMobile } from "../../hooks/useMobile"
 
@@ -1214,7 +1214,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             margin: '0 auto',
 
-            width: '240px',
+            width: '-webkit-fill-available',
 
             height: '36px',
 
@@ -1641,21 +1641,22 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-            <Trophy style={{
-
-              width: '24px',
-
-              height: '24px',
-
-              color: '#DC2627',
-
-              flex: 'none',
-
-              order: 0,
-
-              flexGrow: 0,
-
-            }} />
+            <svg 
+              width="18" 
+              height="18" 
+              viewBox="0 0 18 18" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                flex: 'none',
+                order: 0,
+                flexGrow: 0,
+              }}
+            >
+              <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                fill="#DC2627"
+              />
+            </svg>
 
             <span style={{
 
@@ -1693,47 +1694,60 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           {/* Dropdown Button */}
 
-          <div 
-
-            style={{
-
-              cursor: 'pointer'
-
-            }}
-
-            onClick={() => setWebLiveExpanded(!webLiveExpanded)}
-
-          >
-
-            <svg 
-
-              width="38" 
-
-              height="24" 
-
-              viewBox="0 0 38 24" 
-
-              fill="none" 
-
-              xmlns="http://www.w3.org/2000/svg"
+          {webLiveExpanded ? (
+            <div 
 
               style={{
 
-                transform: webLiveExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-
-                transition: 'transform 0.2s ease'
+                cursor: 'pointer'
 
               }}
 
+              onClick={() => setWebLiveExpanded(!webLiveExpanded)}
+
             >
 
-              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+              <svg 
 
-              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+                width="50" 
 
-            </svg>
+                height="24" 
 
-          </div>
+                viewBox="0 0 50 24" 
+
+                fill="none" 
+
+                xmlns="http://www.w3.org/2000/svg"
+
+              >
+
+                <rect x="0.5" y="0.5" width="49" height="23" rx="11.5" stroke="black"/>
+
+                <path d="M24.764 14.4707C24.8265 14.5332 24.912 14.5684 25.0004 14.5684C25.0886 14.5683 25.1733 14.5331 25.2357 14.4707L29.5961 10.1094L29.1244 9.63867L25.3539 13.4102L25.0004 13.7637L20.8754 9.63867L20.4037 10.1104L24.764 14.4707Z" fill="black" stroke="black"/>
+
+              </svg>
+
+            </div>
+          ) : (
+            <div 
+
+              style={{
+
+                cursor: 'pointer'
+
+              }}
+
+              onClick={() => setWebLiveExpanded(!webLiveExpanded)}
+
+            >
+
+              <svg width="50" height="24" viewBox="0 0 50 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="0.5" y="0.5" width="49" height="23" rx="11.5" stroke="black"/>
+                <path d="M25.236 9.5293C25.1735 9.46681 25.088 9.43164 24.9996 9.43164C24.9114 9.43174 24.8267 9.46693 24.7643 9.5293L20.4039 13.8906L20.8756 14.3613L24.6461 10.5898L24.9996 10.2363L29.1246 14.3613L29.5963 13.8896L25.236 9.5293Z" fill="black" stroke="black"/>
+              </svg>
+
+            </div>
+          )}
 
         </div>
 
@@ -1791,15 +1805,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               }}>
 
-                <Trophy style={{
-
-                  width: '32px',
-
-                  height: '32px',
-
-                  color: '#cccccc'
-
-                }} />
+                <svg 
+                  width="32" 
+                  height="32" 
+                  viewBox="0 0 18 18" 
+                  fill="none" 
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                    fill="#cccccc"
+                  />
+                </svg>
 
                 <span style={{
 
@@ -1877,27 +1893,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           {/* material-symbols:trophy-outline */}
 
-          <Trophy style={{
-
-            width: '24px',
-
-            height: '24px',
-
-            /* Inside auto layout */
-
-            flex: 'none',
-
-            order: 0,
-
-            flexGrow: 0,
-
-            /* Vector */
-
-            position: 'relative',
-
-            background: '#000000',
-
-          }} />
+          <svg 
+            width="20" 
+            height="20" 
+            viewBox="0 0 18 18" 
+            fill="none" 
+            xmlns="http://www.w3.org/2000/svg"
+            style={{
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+              position: 'relative',
+            }}
+          >
+            <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+              fill="black"
+            />
+          </svg>
 
           {/* Monthly Leaderboard */}
 
@@ -6073,7 +6085,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-            <Trophy style={{ width: '24px', height: '24px', color: '#DC2627' }} />
+            <svg 
+              width="24" 
+              height="24" 
+              viewBox="0 0 18 18" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                fill="#DC2627"
+              />
+            </svg>
 
             <span style={{
 
@@ -6483,7 +6505,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-             <Trophy style={{ width: '24px', height: '24px', color: '#DC2627' }} />
+             <svg 
+               width="24" 
+               height="24" 
+               viewBox="0 0 18 18" 
+               fill="none" 
+               xmlns="http://www.w3.org/2000/svg"
+             >
+               <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                 fill="#DC2627"
+               />
+             </svg>
 
              <span style={{
 
@@ -6505,19 +6537,35 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
            </div>
 
-           <ChevronDown style={{
+           {liveExpanded ? (
+             <ChevronDown style={{
 
-             width: '20px',
+               width: '20px',
 
-             height: '20px',
+               height: '20px',
 
-             color: '#000000',
+               color: '#000000'
 
-             transform: liveExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
+             }} />
+           ) : (
+             <span style={{
 
-             transition: 'transform 0.2s ease'
+               fontSize: '12px',
 
-           }} />
+               color: '#666',
+
+               padding: '4px 8px',
+
+               border: '1px solid #ccc',
+
+               borderRadius: '4px'
+
+             }}>
+
+               Show
+
+             </span>
+           )}
 
          </button>
 
@@ -6851,15 +6899,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                }}>
 
-                 <Trophy style={{
-
-                   width: '24px',
-
-                   height: '24px',
-
-                   color: '#cccccc'
-
-                 }} />
+                 <svg 
+                   width="24" 
+                   height="24" 
+                   viewBox="0 0 18 18" 
+                   fill="none" 
+                   xmlns="http://www.w3.org/2000/svg"
+                 >
+                   <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                     fill="#cccccc"
+                   />
+                 </svg>
 
                  <span style={{
 
