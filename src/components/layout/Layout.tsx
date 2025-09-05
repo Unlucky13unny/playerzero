@@ -62,7 +62,7 @@ export const Layout = ({ children }: LayoutProps) => {
       maxWidth: '100vw',
       overflowX: 'hidden',
     }}>
-      <header className={`bg-white border-b border-gray-200 ${isMobile ? 'p-4' : 'p-4'}`} style={{
+      <header className={`bg-white ${isMobile ? 'p-4' : 'p-4'}`} style={{
         width: '100%',
         minWidth: isMobile ? '353px' : 'auto',
         maxWidth: '100vw',
@@ -111,10 +111,10 @@ export const Layout = ({ children }: LayoutProps) => {
               <div className="relative" id="features-dropdown">
                 <button
                   onClick={toggleFeaturesDropdown}
-                  className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                  //className="p-1 hover:bg-gray-100 rounded-md transition-colors"
                   title="Menu"
                 >
-                  <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
+                  <img src="/images/threelinea.svg" alt="Menu" className="w-11 h-11" />
                 </button>
 
                 {featuresDropdownOpen && (
@@ -191,7 +191,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 alt="PlayerZero" 
                 style={{
                   width: '179px',
-                  height: '35px',
+                  height: '48px',
                 }}
               />
             </Link>
@@ -418,7 +418,7 @@ export const Layout = ({ children }: LayoutProps) => {
                     className="p-1 hover:bg-gray-100 rounded-md transition-colors"
                     title="Menu"
                   >
-                    <img src="/images/threelinea.svg" alt="Menu" className="w-8 h-8" />
+                    <img src="/images/threelinea.svg" alt="Menu" className="w-11 h-11" />
                   </button>
 
                   {featuresDropdownOpen && (

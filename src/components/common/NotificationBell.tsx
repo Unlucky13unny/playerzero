@@ -42,12 +42,24 @@ export const NotificationBell: React.FC = () => {
           background: 'transparent'
         }}
       >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" strokeWidth="2" style={{ color: '#ef4444' }}>
-          <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-          <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-        </svg>
-        {unreadCount > 0 && (
-          <span className="notification-badge">{unreadCount}</span>
+        {unreadCount > 0 ? (
+          // Bell icon with notification (red dot)
+          <svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21.8569 11V13.4211V11Z" fill="#616161" fillOpacity="0.11"/>
+            <path d="M21.8569 11V13.4211" stroke="#616161" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21.8571 13.421C17.8502 13.421 14.5939 16.6773 14.5939 20.6842V27.9473C13.3834 27.9473 12.1729 29.1579 12.1729 30.3684H21.8571M21.8571 13.421C25.8639 13.421 29.1202 16.6773 29.1202 20.6842V27.9473C30.3307 27.9473 31.5413 29.1579 31.5413 30.3684H21.8571" fill="#616161" fillOpacity="0.11"/>
+            <path d="M21.8571 13.421C17.8502 13.421 14.5939 16.6773 14.5939 20.6842V27.9473C13.3834 27.9473 12.1729 29.1579 12.1729 30.3684H21.8571H31.5413C31.5413 29.1579 30.3307 27.9473 29.1202 27.9473V20.6842C29.1202 16.6773 25.8639 13.421 21.8571 13.421Z" stroke="#616161" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M19.436 31.5789C19.436 32.9105 20.5255 34 21.8571 34C23.1887 34 24.2781 32.9105 24.2781 31.5789" fill="#616161" fillOpacity="0.11"/>
+            <path d="M19.436 31.5789C19.436 32.9105 20.5255 34 21.8571 34C23.1887 34 24.2781 32.9105 24.2781 31.5789" stroke="#616161" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <circle cx="27" cy="15" r="3.5" fill="#DC2627" stroke="white"/>
+          </svg>
+        ) : (
+          // Bell icon without notification
+          <svg width="45" height="45" viewBox="0 0 45 45" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M21.8569 11V13.4211" stroke="#DC2627" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M21.8571 13.4211C17.8502 13.4211 14.5939 16.6774 14.5939 20.6842V27.9474C13.3834 27.9474 12.1729 29.1579 12.1729 30.3684H21.8571M21.8571 13.4211C25.8639 13.4211 29.1202 16.6774 29.1202 20.6842V27.9474C30.3307 27.9474 31.5413 29.1579 31.5413 30.3684H21.8571" stroke="#DC2627" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M19.436 31.5789C19.436 32.9105 20.5255 34 21.8571 34C23.1887 34 24.2781 32.9105 24.2781 31.5789" stroke="#DC2627" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         )}
       </button>
 

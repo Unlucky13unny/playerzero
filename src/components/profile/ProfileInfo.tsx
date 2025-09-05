@@ -301,6 +301,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
             /* Inside auto layout */
             flex: 'none',
             order: 1,
+            whiteSpace: 'nowrap',
             flexGrow: 0,
           }}>
             {profile?.country && (
