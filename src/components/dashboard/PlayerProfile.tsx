@@ -616,6 +616,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <div 
+                        className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
                         style={{
                           /* Frame 515 */
                           display: 'flex',
@@ -633,7 +634,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                         }}
                       >
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Value - 15 km */
                           width: 'auto',
                           
@@ -653,7 +656,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Label - Distance Walked */
                           width: 'auto',
                   
@@ -696,6 +701,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <div 
+                        className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
                         style={{
                           /* Frame 515 */
                           display: 'flex',
@@ -713,7 +719,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                         }}
                       >
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Value - 170,000 */
                           width: 'auto',
                           
@@ -731,7 +739,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                           whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('pokemon_caught'))}</div>
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Label - Pokémon Caught */
                           width: 'auto',
                         
@@ -774,6 +784,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <div 
+                        className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
                         style={{
                           /* Frame 515 */
                           display: 'flex',
@@ -791,7 +802,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                         }}
                       >
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Value - 109,000 */
                           width: 'auto',
                         
@@ -809,7 +822,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                           whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('pokestops_visited'))}</div>
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Label - Pokéstops Visited */
                           width: 'auto',
                         
@@ -852,6 +867,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <div 
+                        className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
                         style={{
                           /* Frame 515 */
                           display: 'flex',
@@ -869,7 +885,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                         }}
                       >
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Value - 33,628,973 */
                           width: 'auto',
                         
@@ -887,7 +905,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                           whiteSpace: 'nowrap'
                         }}>{formatNumber(getStatValue('total_xp'))}</div>
-                        <div style={{
+                        <div 
+                          className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                          style={{
                           /* Stat Label - Total XP */
                           width: 'auto',
                          
@@ -1210,7 +1230,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         flexGrow: 0
                       }}>
                         {/* Frame 22 - Distance Walked */}
-                        <div style={{
+                        <div 
+                          className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
+                          style={{
                           /* Frame 22 */
                           display: 'flex',
                           flexDirection: 'column',
@@ -1228,7 +1250,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 0,
                           flexGrow: 0
                         }}>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* 15,526.3 km */
                             width: 'auto',
                             minWidth: '106px',
@@ -1248,7 +1272,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           }}>
                           {formatDistance(getStatValue('distance_walked'))} km
                         </div>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* Distance Walked */
                             width: 'auto',
                             minWidth: '92px',
@@ -1270,7 +1296,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       </div>
 
                         {/* Frame 542 - Pokemon Caught */}
-                        <div style={{
+                        <div 
+                          className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
+                          style={{
                           /* Frame 542 */
                           display: 'flex',
                           flexDirection: 'column',
@@ -1288,7 +1316,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 1,
                           flexGrow: 0
                         }}>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* 170,000 */
                             width: 'auto',
                             minWidth: '68px',
@@ -1308,7 +1338,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           }}>
                             {formatNumber(getStatValue('pokemon_caught'))}
                       </div>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* Pokémon Caught */
                             width: 'auto',
                             minWidth: '96px',
@@ -1347,7 +1379,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         flexGrow: 0
                       }}>
                         {/* Frame 544 - Pokestops Visited */}
-                        <div style={{
+                        <div 
+                          className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
+                          style={{
                           /* Frame 544 */
                           display: 'flex',
                           flexDirection: 'column',
@@ -1365,7 +1399,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 0,
                           flexGrow: 0
                         }}>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* 109,000 */
                             width: 'auto',
                             minWidth: '69px',
@@ -1385,7 +1421,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           }}>
                             {formatNumber(getStatValue('pokestops_visited'))}
                           </div>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* Pokéstops Visited */
                             width: 'auto',
                             minWidth: '96px',
@@ -1407,7 +1445,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         </div>
 
                         {/* Frame 543 - Total XP */}
-                        <div style={{
+                        <div 
+                          className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer group"
+                          style={{
                           /* Frame 543 */
                           display: 'flex',
                           flexDirection: 'column',
@@ -1425,7 +1465,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 1,
                           flexGrow: 0
                         }}>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* 33,628,973 */
                             width: 'auto',
                             minWidth: '97px',
@@ -1445,7 +1487,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           }}>
                             {formatNumber(getStatValue('total_xp'))}
                           </div>
-                          <div style={{
+                          <div 
+                            className="group-hover:scale-110 transition-transform duration-200 ease-in-out"
+                            style={{
                             /* Total XP */
                             width: 'auto',
                             minWidth: '44px',

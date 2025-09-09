@@ -2013,7 +2013,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     return (
 
-      <div key={index} style={{
+      <div 
+        key={index} 
+        className="hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer"
+        style={{
 
         /* Frame 612 */
 
@@ -2539,7 +2542,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             {/* Stat Value */}
 
-            <span style={{
+            <span 
+              className="hover:scale-110 transition-transform duration-200 ease-in-out"
+              style={{
 
               width: '65px',
 
@@ -6170,6 +6175,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               <div
 
                 key={index}
+                className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
 
                 style={{
 
@@ -6379,7 +6385,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
-                  <span style={{
+                  <span 
+                    className="hover:scale-110 transition-transform duration-200 ease-in-out"
+                    style={{
 
                     fontFamily: 'Poppins',
 
@@ -6592,6 +6600,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                <div
 
                  key={index}
+                 className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
 
                  style={{
 
@@ -6835,7 +6844,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                  }}>
 
-                   <span style={{
+                   <span 
+                     className="hover:scale-110 transition-transform duration-200 ease-in-out"
+                     style={{
 
                      fontFamily: 'Poppins',
 

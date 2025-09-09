@@ -73,7 +73,7 @@ export const ValuePropModal = ({ isOpen, onClose, daysRemaining }: ValuePropModa
           </button>
           <button
             onClick={onClose}
-            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+            className="w-full bg-gray-100 text-gray-700 py-3 px-4 rounded-lg font-medium hover:bg-gray-300 transition-colors"
           >
             Keep Exploring
           </button>

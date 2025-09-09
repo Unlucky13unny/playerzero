@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
-import { GrindChart } from '../dashboard/GrindChart'
-import { SOCIAL_MEDIA } from '../common/SocialIcons'
+import { LogOut, Upload } from 'lucide-react'
 import './UserProfile.css'
 
 const TEAM_COLORS = [
@@ -31,25 +30,20 @@ export const UserProfile = () => {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
-  const [isEditing, setIsEditing] = useState(false)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const [newScreenshot, setNewScreenshot] = useState<File | null>(null)
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
-  const { isOpen, showValueProp, closeValueProp, daysRemaining } = useValuePropModal()
+  const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
   const [daysUntilNameChange, setDaysUntilNameChange] = useState<number | null>(null);
+  
+  // New stats state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     loadProfile()
   }, [])
 
-  useEffect(() => {
-    // Enter edit mode if edit=true is in the URL
-    if (searchParams.get('edit') === 'true') {
-      setIsEditing(true)
-    }
-  }, [searchParams])
 
   const loadProfile = async () => {
     setLoading(true)
@@ -91,14 +85,8 @@ export const UserProfile = () => {
     }
   }
   
-  const handleEdit = () => {
-    setIsEditing(true)
-    setError(null)
-    setSuccess(null)
-  }
 
   const handleCancelEdit = () => {
-    setIsEditing(false)
     setEditData(profile)
     setNewScreenshot(null)
     setError(null)
@@ -111,9 +99,10 @@ export const UserProfile = () => {
     }
   }
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null
-    setNewScreenshot(file)
+
+  const handleStatsFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] || null
+    setSelectedFile(file)
   }
 
   const handleSave = async () => {
@@ -162,7 +151,6 @@ export const UserProfile = () => {
 
       setProfile(data);
       setEditData(data);
-      setIsEditing(false);
       setNewScreenshot(null);
       setSuccess('Profile updated successfully!');
       
@@ -175,220 +163,9 @@ export const UserProfile = () => {
     }
   };
   
-  const isPaid = profile?.is_paid_user === true
 
-  const renderSocialSection = () => {
-    if (!profile) return null;
 
-    const showPrivateNotice = !isPaid;
 
-    const handleSocialUpgrade = () => {
-      showValueProp('social');
-    };
-
-    return (
-      <div className="form-section">
-        <h3 className="form-section-header">
-          <span className="form-section-icon" style={{background: '#2563eb'}}>
-          </span>
-          Social Media Links
-          {showPrivateNotice && (
-            <span className="private-badge">Private</span>
-          )}
-        </h3>
-        
-        {showPrivateNotice && isEditing && (
-          <div className="premium-upgrade-notice">
-            <div className="premium-upgrade-content">
-              <div className="premium-upgrade-icon">
-                <span>✨</span>
-              </div>
-              <div className="premium-upgrade-text">
-                <h4>Unlock Social Media Features</h4>
-                <p>Upgrade to edit and share your social media profiles with the Pokémon GO community</p>
-              </div>
-            </div>
-            <button onClick={handleSocialUpgrade} className="premium-upgrade-button">
-              <span>Upgrade to Premium</span>
-              <svg className="arrow-icon" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        )}
-        
-        <div className="form-grid form-grid-2">
-          {SOCIAL_MEDIA.map(platform => (
-            <div key={platform.key} className="form-group">
-              <label className="form-label">
-                {platform.label}
-              </label>
-              {isEditing ? (
-                <div className="input-group-with-notice">
-                  <input
-                    type="text"
-                    value={editData?.[platform.key as keyof ProfileData] as string || ''}
-                    onChange={(e) => handleInputChange(platform.key as keyof ProfileData, e.target.value)}
-                    className={`form-input ${!isPaid ? 'disabled' : ''}`}
-                    placeholder={platform.placeholder}
-                    disabled={!isPaid}
-                  />
-                  {!isPaid && (
-                    <div className="private-notice-inline">
-                      Private field
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                  {profile[platform.key as keyof ProfileData] || 'Not set'}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderTrainerCodeSection = () => {
-    if (!profile) return null;
-
-    return (
-      <div className="form-group" style={{marginTop: '1rem'}}>
-        <label className="form-label">
-          Trainer Code
-        </label>
-        {isEditing ? (
-          <div className="input-group-with-notice">
-            <input
-              type="text"
-              value={editData?.trainer_code || ''}
-              onChange={(e) => handleInputChange('trainer_code', e.target.value)}
-              className="form-input"
-              placeholder="1234 5678 9012"
-            />
-            <div className="checkbox-group">
-              <input
-                type="checkbox"
-                id="trainer_code_private_edit"
-                checked={editData?.trainer_code_private || false}
-                onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
-                className="checkbox-input"
-              />
-              <label htmlFor="trainer_code_private_edit" className="checkbox-label">
-                Keep trainer code private
-              </label>
-            </div>
-          </div>
-        ) : (
-          <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-            {profile.trainer_code_private ? (
-              <span className="private-text">
-                <span className="private-icon">🔒</span> Hidden
-              </span>
-            ) : (
-              profile.trainer_code || 'Not set'
-            )}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  const renderTrainerInfoSection = () => {
-    if (!profile) return null;
-
-    const isNameChangeDisabled = daysUntilNameChange !== null && daysUntilNameChange > 0;
-    const nameChangeTooltip = isNameChangeDisabled 
-      ? `Changes allowed in ${daysUntilNameChange} days` 
-      : '';
-
-    return (
-      <div className="form-section">
-        <h3 className="form-section-header">
-          <span className="form-section-icon" style={{background: '#dc2626'}}>
-            👤
-          </span>
-          Trainer Information
-        </h3>
-        <div className="form-grid form-grid-2">
-          <div className="form-group">
-            <label className="form-label">
-              Trainer Name
-              {isNameChangeDisabled && isEditing && (
-                <span className="help-text" style={{color: '#666'}}>
-                  ({nameChangeTooltip})
-                </span>
-              )}
-            </label>
-            {isEditing ? (
-              <input
-                type="text"
-                value={editData?.trainer_name || ''}
-                onChange={(e) => handleInputChange('trainer_name', e.target.value)}
-                className={`form-input ${isNameChangeDisabled ? 'disabled' : ''}`}
-                disabled={isNameChangeDisabled}
-                title={nameChangeTooltip}
-              />
-            ) : (
-              <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                {profile.trainer_name}
-              </div>
-            )}
-          </div>
-          <div className="form-group">
-            <label className="form-label">Trainer Level</label>
-            {isEditing ? (
-              <input
-                type="number"
-                min="1"
-                max="50"
-                value={editData?.trainer_level || 1}
-                onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
-                className="form-input"
-              />
-            ) : (
-              <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                Level {profile.trainer_level}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {renderTrainerCodeSection()}
-
-        <div className="form-group" style={{marginTop: '1rem'}}>
-          <label className="form-label">
-            Country
-            {isNameChangeDisabled && isEditing && (
-              <span className="help-text" style={{color: '#666'}}>
-                ({nameChangeTooltip})
-              </span>
-            )}
-          </label>
-          {isEditing ? (
-            <select
-              value={editData?.country || ''}
-              onChange={(e) => handleInputChange('country', e.target.value)}
-              className={`form-input ${isNameChangeDisabled ? 'disabled' : ''}`}
-              disabled={isNameChangeDisabled}
-              title={nameChangeTooltip}
-            >
-              <option value="">Select a country</option>
-              {COUNTRIES.map(country => (
-                <option key={country} value={country}>{country}</option>
-              ))}
-            </select>
-          ) : (
-            <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-              {profile.country || 'Not set'}
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  };
 
   if (loading && !profile) {
     return (
@@ -427,294 +204,1254 @@ export const UserProfile = () => {
     )
   }
 
-  const selectedTeam = TEAM_COLORS.find(team => team.value === profile.team_color)
 
   return (
-    <div className="profile-setup-container">
+    <div className="profile-settings-container">
       <ValuePropModal 
         isOpen={isOpen} 
         onClose={closeValueProp} 
         daysRemaining={daysRemaining} 
       />
-      <div className="profile-setup-wrapper">
-        <div className="profile-setup-card">
-          <div className="profile-setup-content">
-            {/* Header */}
-            <div className="profile-setup-header">
-              <h1 className="profile-setup-title">
-                {isEditing ? 'Edit Profile' : 'Your Profile'}
-                {isPaid && (
-                  <span className="pro-badge" style={{ marginLeft: '1rem', fontSize: '0.75rem' }}>
-                    PRO
-                  </span>
-                )}
-              </h1>
-              <p className="profile-setup-subtitle">
-                {isEditing ? 'Update your Pokémon GO profile information' : 'Your complete Pokémon GO trainer profile'}
-              </p>
-            </div>
 
             {/* Messages */}
             {error && (
-              <div className="error-message">
-                <svg className="error-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+        <div className="profile-error-message">
                 <span>{error}</span>
               </div>
             )}
 
             {success && (
-              <div className="upload-success" style={{ marginBottom: '2rem' }}>
-                <div className="upload-success-icon">
-                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{width: '100%', height: '100%'}}>
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <span className="upload-filename">{success}</span>
+        <div className="profile-success-message">
+          <span>{success}</span>
               </div>
             )}
 
-            {/* Account Information */}
-            <div className="form-section">
-              <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#dc2626'}}>
-                  🔐
-                </span>
-                Account Information
-              </h3>
-              <div className="form-grid form-grid-2">
-                <div className="form-group">
-                  <label className="form-label">Email</label>
-                  <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)', color: '#888' }}>
-                    {user?.email}
-                  </div>
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "13px",
+          width: "838px",
+          maxWidth: "100%",
+          fontFamily: "Poppins, sans-serif",
+          color: "#000000",
+          margin: "0 auto",
+        }}
+      >
+        {/* Profile Settings Header */}
+        <h1
+          style={{
+            fontFamily: "Poppins",
+            fontStyle: "normal",
+            fontWeight: 600,
+            fontSize: "24px",
+            lineHeight: "36px",
+            color: "#000000",
+            width: "838px",
+            textAlign: "center",
+          }}
+        >
+          Profile Settings
+        </h1>
+
+        {/* Profile Form */}
+        <form
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "13px",
+            width: "838px",
+          }}
+        >
+          {/* Basic Info Section */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "13px",
+              width: "838px",
+            }}
+          >
+            {/* Email Address */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "2px",
+                width: "838px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "11px",
+                  lineHeight: "16px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
+              >
+                Email Address
+              </label>
+              <input
+                type="email"
+                value={user?.email || ''}
+                readOnly
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: "9px",
+                  gap: "10px",
+                  width: "838px",
+                  height: "36px",
+                  background: "#FFFFFF",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "18px",
+                  color: "#000000",
+                  boxSizing: "border-box",
+                }}
+              />
                 </div>
-                <div className="form-group">
-                  <label className="form-label">Account Type</label>
-                  <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)', color: isPaid ? '#00d4aa' : '#888' }}>
-                    {isPaid ? 'Paid' : 'Free'}
+
+            {/* Trainer Name */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "2px",
+                width: "838px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "11px",
+                  lineHeight: "16px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
+              >
+                Trainer Name
+              </label>
+              <input
+                type="text"
+                value={editData?.trainer_name || ''}
+                onChange={(e) => handleInputChange('trainer_name', e.target.value)}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: "9px",
+                  gap: "10px",
+                  width: "838px",
+                  height: "36px",
+                  background: "#FFFFFF",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "18px",
+                  color: "#000000",
+                  boxSizing: "border-box",
+                }}
+              />
                   </div>
+
+            {/* Trainer Level */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "2px",
+                width: "838px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "11px",
+                  lineHeight: "16px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
+              >
+                Trainer Level
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="50"
+                value={editData?.trainer_level || 1}
+                onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  padding: "9px",
+                  gap: "10px",
+                  width: "838px",
+                  height: "36px",
+                  background: "#FFFFFF",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "18px",
+                  color: "#000000",
+                  boxSizing: "border-box",
+                }}
+              />
                 </div>
-              </div>
+
+            {/* Trainer Code with Toggle */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "4px",
+                width: "838px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Trainer Code
+                </label>
+                <input
+                  type="text"
+                  value={editData?.trainer_code || ''}
+                  onChange={(e) => handleInputChange('trainer_code', e.target.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "9px",
+                    gap: "10px",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px solid #848282",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                    boxSizing: "border-box",
+                  }}
+                />
             </div>
 
-            {/* Trainer Information */}
-            {renderTrainerInfoSection()}
+              {/* Keep trainer code private toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  width: "838px",
+                  height: "28px",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                  }}
+                >
+                  Keep trainer code private
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('trainer_code_private', !editData?.trainer_code_private)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "2px",
+                    width: "44px",
+                    height: "24px",
+                    background: editData?.trainer_code_private ? "#DC2627" : "#E5E7EB",
+                    borderRadius: "12px",
+                    border: "none",
+                    cursor: "pointer",
+                    justifyContent: editData?.trainer_code_private ? "flex-end" : "flex-start",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      background: "#FFFFFF",
+                      borderRadius: "50%",
+                    }}
+                  />
+                </button>
+                        </div>
+                        </div>
+                    </div>
+
+          {/* Location Section */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "13px",
+              width: "838px",
+            }}
+          >
+            {/* Country */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "2px",
+                width: "838px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "11px",
+                  lineHeight: "16px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
+              >
+                Country
+              </label>
+              <select
+                value={editData?.country || ''}
+                onChange={(e) => handleInputChange('country', e.target.value)}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "9px",
+                  gap: "10px",
+                  width: "838px",
+                  height: "36px",
+                  background: "#FFFFFF",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  boxSizing: "border-box",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "18px",
+                  color: "#000000",
+                }}
+              >
+                <option value="">Choose your country</option>
+                {COUNTRIES.map(country => (
+                  <option key={country} value={country}>{country}</option>
+                ))}
+              </select>
+                  </div>
 
             {/* Team Affiliation */}
-            <div style={{marginTop: '1.5rem'}}>
-              <label className="form-label">Team Affiliation</label>
-              {isEditing ? (
-                <div className="team-grid">
-                  {TEAM_COLORS.map(team => (
-                    <button
-                      key={team.value}
-                      type="button"
-                      onClick={() => handleInputChange('team_color', team.value)}
-                      className={`team-button ${editData?.team_color === team.value ? 'selected' : ''}`}
-                    >
-                      <div 
-                        className="team-color-dot"
-                        style={{ backgroundColor: team.color }}
-                      />
-                      <span className="team-label">{team.label}</span>
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <div className="team-grid">
-                  <div className={`team-button selected`} style={{ cursor: 'default' }}>
-                    <div 
-                      className="team-color-dot"
-                      style={{ backgroundColor: selectedTeam?.color || '#666' }}
-                    />
-                    <span className="team-label">{selectedTeam?.label || 'Unknown'}</span>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Core Statistics */}
-            <div className="form-section">
-              <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#2563eb'}}>
-                  📊
-                </span>
-                Core Statistics
-              </h3>
-              <div className="stat-cards">
-                {[
-                  { key: 'distance_walked', label: 'Distance Walked', icon: '🚶', unit: 'km' },
-                  { key: 'pokemon_caught', label: 'Pokémon Caught', icon: '⚡' },
-                  { key: 'pokestops_visited', label: 'PokéStops Visited', icon: '📍' },
-                  { key: 'total_xp', label: 'Total XP', icon: '🎯' },
-                  { key: 'unique_pokedex_entries', label: 'Pokédex Entries', icon: '📖' }
-                ].map((stat) => (
-                  <div key={stat.key} className="stat-card">
-                    <div className="stat-icon">
-                      <span>{stat.icon}</span>
-                    </div>
-                    <div className="stat-content">
-                      <label className="form-label">{stat.label}</label>
-                      {isEditing ? (
-                        <div className="stat-input-group">
-                          <input
-                            type="number"
-                            min="0"
-                            step={stat.key === 'distance_walked' ? '0.1' : '1'}
-                            value={editData?.[stat.key as keyof ProfileData] as number || 0}
-                            onChange={(e) => handleInputChange(stat.key as keyof ProfileData, 
-                              stat.key === 'distance_walked' ? parseFloat(e.target.value) || 0 : parseInt(e.target.value) || 0)}
-                            className="form-input"
-                          />
-                          {stat.unit && (
-                            <div className="stat-unit">{stat.unit}</div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="form-input" style={{ backgroundColor: 'rgba(0,0,0,0.2)' }}>
-                          {(profile[stat.key as keyof ProfileData] as number || 0).toLocaleString()}
-                          {stat.unit && ` ${stat.unit}`}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Profile Screenshot */}
-            <div className="form-section">
-              <h3 className="form-section-header">
-                <span className="form-section-icon" style={{background: '#dc2626'}}>
-                  📸
-                </span>
-                Profile Screenshot
-              </h3>
-              
-              {profile.profile_screenshot_url && (
-                <div className="screenshot-container">
-                  <img 
-                    src={profile.profile_screenshot_url} 
-                    alt="Profile Screenshot" 
-                    style={{ 
-                      maxWidth: '300px', 
-                      maxHeight: '400px', 
-                      borderRadius: '0.75rem',
-                      border: '2px solid rgba(139, 0, 0, 0.4)'
-                    }} 
-                  />
-                </div>
-              )}
-
-              {isEditing && (
-                <div className="upload-area">
-                  <input
-                    id="newProfileScreenshot"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                    style={{display: 'none'}}
-                  />
-                  <label htmlFor="newProfileScreenshot" style={{display: 'block', cursor: 'pointer'}}>
-                    <div className="upload-icon-container">
-                      <svg className="upload-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                    </div>
-                    <h3 className="upload-title">Upload new screenshot (optional)</h3>
-                    <p className="upload-description">
-                      {profile.profile_screenshot_url ? 'Upload a new screenshot to replace the current one' : 'Upload a screenshot of your trainer profile'}
-                    </p>
-                  </label>
-                </div>
-              )}
-              
-              {newScreenshot && (
-                <div className="upload-success">
-                  <div className="upload-success-icon">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{width: '100%', height: '100%'}}>
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                  <span className="upload-filename">{newScreenshot.name}</span>
-                </div>
-              )}
-              
-              {!profile.profile_screenshot_url && !isEditing && (
-                <div className="info-box blue">
-                  <div className="info-icon">📸</div>
-                  <div className="info-content">
-                    <p>No profile screenshot uploaded. Click "Edit Profile" to add one.</p>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Grind Progress Chart */}
-            <div className="form-section">
-              <GrindChart />
-            </div>
-
-            {/* Social Media */}
-            {renderSocialSection()}
-
-            {/* Navigation */}
-            <div className="navigation">
-              <button
-                onClick={handleSignOut}
-                disabled={loading || saving}
-                className="nav-button secondary"
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "2px",
+                width: "838px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "11px",
+                  lineHeight: "16px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
               >
-                Sign Out
-              </button>
-              
-              <div style={{ display: 'flex', gap: '1rem' }}>
-                {isEditing ? (
-                  <>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={saving}
-                      className="nav-button secondary"
-                    >
-                      Cancel
-                    </button>
-                    <button
-                      onClick={handleSave}
-                      disabled={saving}
-                      className="nav-button primary"
-                    >
-                      {saving ? (
-                        <>
-                          <div className="loading-spinner"></div>
-                          Saving...
-                        </>
-                      ) : (
-                        <>
-                          Save Changes
-                          <svg className="nav-button-icon right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </>
-                      )}
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={handleEdit}
-                    disabled={loading}
-                    className="nav-button primary"
+                Team Affiliation
+              </label>
+              <select
+                value={editData?.team_color || ''}
+                onChange={(e) => handleInputChange('team_color', e.target.value)}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "9px",
+                  gap: "10px",
+                  width: "838px",
+                  height: "36px",
+                  background: "#FFFFFF",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  cursor: "pointer",
+                  boxSizing: "border-box",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "18px",
+                  color: "#000000",
+                }}
+              >
+                <option value="">Choose your team</option>
+                {TEAM_COLORS.map(team => (
+                  <option key={team.value} value={team.value}>{team.label}</option>
+                ))}
+              </select>
+              </div>
+
+            {/* Core Stats Section */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "13px",
+                width: "838px",
+              }}
+            >
+              {/* Core Stats Header */}
+              <h2
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 600,
+                  fontSize: "24px",
+                  lineHeight: "36px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "center",
+                }}
+              >
+                Core Stats
+              </h2>
+
+              {/* Distance Walked */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Distance Walked
+                </label>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: "838px",
+                    gap: "8px",
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={editData?.distance_walked || 0}
+                    onChange={(e) => handleInputChange('distance_walked', e.target.value)}
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      padding: "9px",
+                      gap: "10px",
+                      flex: 1,
+                      height: "36px",
+                      background: "#FFFFFF",
+                      border: "1px solid #848282",
+                      borderRadius: "6px",
+                      fontFamily: "Poppins",
+                      fontStyle: "normal",
+                      fontWeight: 400,
+                      fontSize: "12px",
+                      lineHeight: "18px",
+                      color: "#000000",
+                      boxSizing: "border-box",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontFamily: "Poppins",
+                      fontStyle: "normal",
+                      fontWeight: 400,
+                      fontSize: "12px",
+                      lineHeight: "18px",
+                      color: "#000000",
+                    }}
                   >
-                    Edit Profile
-                    <svg className="nav-button-icon right" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                    </svg>
-                  </button>
-                )}
+                    km
+                  </span>
+                </div>
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#666666",
+                  }}
+                >
+                  Last update: {profile?.distance_walked || 0}
+                </span>
+              </div>
+
+              {/* Pokémon Caught */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Pokémon Caught
+                </label>
+                <input
+                  type="text"
+                  value={editData?.pokemon_caught || 0}
+                  onChange={(e) => handleInputChange('pokemon_caught', e.target.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "9px",
+                    gap: "10px",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px solid #848282",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#666666",
+                  }}
+                >
+                  Last update: {profile?.pokemon_caught || 0}
+                </span>
+              </div>
+
+              {/* Pokéstops Visited */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Pokéstops Visited
+                </label>
+                <input
+                  type="text"
+                  value={editData?.pokestops_visited || 0}
+                  onChange={(e) => handleInputChange('pokestops_visited', e.target.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "9px",
+                    gap: "10px",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px solid #848282",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#666666",
+                  }}
+                >
+                  Last update: {profile?.pokestops_visited || 0}
+                </span>
+              </div>
+
+              {/* Total XP */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Total XP
+                </label>
+                <input
+                  type="text"
+                  value={editData?.total_xp || 0}
+                  onChange={(e) => handleInputChange('total_xp', e.target.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "9px",
+                    gap: "10px",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px solid #848282",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                    boxSizing: "border-box",
+                  }}
+                />
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#666666",
+                  }}
+                >
+                  Last update: {profile?.total_xp || 0}
+                </span>
               </div>
             </div>
+
+            {/* Secondary Stats Section */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "13px",
+                width: "838px",
+              }}
+            >
+              {/* Secondary Stats Header */}
+              <h2
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 600,
+                  fontSize: "24px",
+                  lineHeight: "36px",
+                  color: "#000000",
+                  width: "838px",
+                  textAlign: "left",
+                }}
+              >
+                Secondary Stats
+              </h2>
+
+              {/* Pokédex Entries */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Pokédex Entries
+                </label>
+                <input
+                  type="text"
+                  value={editData?.unique_pokedex_entries || 0}
+                  onChange={(e) => handleInputChange('unique_pokedex_entries', e.target.value)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "9px",
+                    gap: "10px",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px solid #848282",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                    boxSizing: "border-box",
+                  }}
+                />
+              </div>
+
+              {/* Upload new screenshot */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "2px",
+                  width: "838px",
+                }}
+              >
+                <label
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                    width: "838px",
+                    textAlign: "left",
+                  }}
+                >
+                  Upload new screenshot
+                </label>
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    width: "838px",
+                    height: "36px",
+                    background: "#FFFFFF",
+                    border: "1px dashed #848282",
+                    borderRadius: "6px",
+                    padding: "9px",
+                    gap: "10px",
+                    boxSizing: "border-box",
+                  }}
+                >
+                  <input
+                    type="file"
+                    id="screenshot-upload"
+                    onChange={handleStatsFileChange}
+                    accept="image/*"
+                    style={{ display: "none" }}
+                  />
+                  <label
+                    htmlFor="screenshot-upload"
+                    style={{
+                      display: "flex",
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: "8px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    <Upload style={{ width: "16px", height: "16px", color: "#000000" }} />
+                    <span
+                      style={{
+                        fontFamily: "Poppins",
+                        fontStyle: "normal",
+                        fontWeight: 400,
+                        fontSize: "12px",
+                        lineHeight: "18px",
+                        color: "#000000",
+                      }}
+                    >
+                      Choose file
+                    </span>
+                  </label>
+                  <span
+                    style={{
+                      fontFamily: "Poppins",
+                      fontStyle: "normal",
+                      fontWeight: 400,
+                      fontSize: "12px",
+                      lineHeight: "18px",
+                      color: "#666666",
+                      marginLeft: "auto",
+                    }}
+                  >
+                    {selectedFile ? selectedFile.name : "No file chosen"}
+                  </span>
+                </div>
+              </div>
+            </div>
+            </div>
+
+          {/* Social Platforms Section */}
+          <div
+                    style={{ 
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              gap: "8px",
+              width: "838px",
+            }}
+          >
+            {/* Social Platforms Header */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "838px",
+                height: "22px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "22px",
+                    height: "22px",
+                    //border: "1px solid #000000",
+                    borderRadius: "4px",
+                    padding: "4px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 14 14"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      d="M4.8 6.13333L9.2 3.86667M4.8 7.86667L9.2 10.1333M1 7C1 7.53043 1.21071 8.03914 1.58579 8.41421C1.96086 8.78929 2.46957 9 3 9C3.53043 9 4.03914 8.78929 4.41421 8.41421C4.78929 8.03914 5 7.53043 5 7C5 6.46957 4.78929 5.96086 4.41421 5.58579C4.03914 5.21071 3.53043 5 3 5C2.46957 5 1.96086 5.21071 1.58579 5.58579C1.21071 5.96086 1 6.46957 1 7ZM9 3C9 3.53043 9.21071 4.03914 9.58579 4.41421C9.96086 4.78929 10.4696 5 11 5C11.5304 5 12.0391 4.78929 12.4142 4.41421C12.7893 4.03914 13 3.53043 13 3C13 2.46957 12.7893 1.96086 12.4142 1.58579C12.0391 1.21071 11.5304 1 11 1C10.4696 1 9.96086 1.21071 9.58579 1.58579C9.21071 1.96086 9 2.46957 9 3ZM9 11C9 11.5304 9.21071 12.0391 9.58579 12.4142C9.96086 12.7893 10.4696 13 11 13C11.5304 13 12.0391 12.7893 12.4142 12.4142C12.7893 12.0391 13 11.5304 13 11C13 10.4696 12.7893 9.96086 12.4142 9.58579C12.0391 9.21071 11.5304 9 11 9C10.4696 9 9.96086 9.21071 9.58579 9.58579C9.21071 9.96086 9 10.4696 9 11Z"
+                      stroke="black"
+                      strokeWidth="1.33333"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                </div>
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "11px",
+                    lineHeight: "16px",
+                    color: "#000000",
+                  }}
+                >
+                  Social Platforms
+                </span>
+                </div>
+            </div>
+
+            {/* Instagram Connection */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "center",
+                width: "838px",
+                height: "40px",
+              }}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: "9px",
+                }}
+              >
+                <div
+                  style={{
+                    width: "20.77px",
+                    height: "20.77px",
+                    background: "#000000",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "13.84px",
+                      height: "13.84px",
+                      background: "#FFFFFF",
+                      borderRadius: "2px",
+                    }}
+                  />
+                    </div>
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    fontSize: "12px",
+                    lineHeight: "18px",
+                    color: "#000000",
+                  }}
+                >
+                  Instagram
+                </span>
+                </div>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  gap: "4px",
+                }}
+              >
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: "4px 8px",
+                    width: "62px",
+                    height: "18px",
+                    background: "#FEF2F2",
+                    border: "1px solid #EF4444",
+                    borderRadius: "6px",
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "8px",
+                    lineHeight: "12px",
+                    color: "#EF4444",
+                    cursor: "pointer",
+                  }}
+                >
+                  Disconnect
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    padding: "4px 8px",
+                    width: "62px",
+                    height: "18px",
+                    background: "#FFFFFF",
+                    border: "1px solid #000000",
+                    borderRadius: "6px",
+                    gap: "4px",
+                    cursor: "pointer",
+                  }}
+                >
+                  <svg style={{ width: "14px", height: "14px" }} viewBox="0 0 14 14" fill="none">
+                    <path
+                      d="M2 10L10 2M10 2H4M10 2V8"
+                      stroke="black"
+                      strokeWidth="1"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    </svg>
+                  <span
+                    style={{
+                      fontFamily: "Poppins",
+                      fontStyle: "normal",
+                      fontWeight: 500,
+                      fontSize: "12px",
+                      lineHeight: "18px",
+                      color: "#000000",
+                    }}
+                  >
+                    Edit
+                  </span>
+                </button>
+                  </div>
+                </div>
+
+            {/* Connect New Platform Button */}
+              <button
+              type="button"
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "9px 60px",
+                width: "838px",
+                height: "36px",
+                background: "#F9FAFB",
+                border: "1px solid #6B7280",
+                borderRadius: "6px",
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 500,
+                fontSize: "12px",
+                lineHeight: "18px",
+                color: "#000000",
+                cursor: "pointer",
+              }}
+            >
+              + Connect New Social Platform
+              </button>
           </div>
+        </form>
+
+        {/* Profile Actions */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "8px",
+            width: "838px",
+          }}
+        >
+          {/* Save and Cancel buttons */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              gap: "8px",
+              width: "838px",
+            }}
+          >
+                    <button
+              type="button"
+              onClick={handleSave}
+                      disabled={saving}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "12px 24px",
+                width: "415px",
+                height: "48px",
+                background: "#000000",
+                borderRadius: "6px",
+                border: "none",
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 600,
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#FFFFFF",
+                cursor: "pointer",
+                opacity: saving ? 0.7 : 1,
+              }}
+            >
+              {saving ? 'Saving...' : 'Save'}
+                    </button>
+                    <button
+              type="button"
+              onClick={handleCancelEdit}
+              style={{
+                display: "flex",
+                flexDirection: "row",
+                justifyContent: "center",
+                alignItems: "center",
+                padding: "12px 24px",
+                width: "415px",
+                height: "48px",
+                background: "#FFFFFF",
+                border: "1px solid #000000",
+                borderRadius: "6px",
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 600,
+                fontSize: "16px",
+                lineHeight: "24px",
+                color: "#000000",
+                cursor: "pointer",
+              }}
+            >
+              Cancel
+                    </button>
+          </div>
+
+          {/* Log out button */}
+                  <button
+            type="button"
+            onClick={handleSignOut}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              justifyContent: "center",
+              alignItems: "center",
+              padding: "12px 24px",
+              width: "838px",
+              height: "48px",
+              background: "#FFFFFF",
+              border: "1px solid #000000",
+              borderRadius: "6px",
+              gap: "8px",
+              fontFamily: "Poppins",
+              fontStyle: "normal",
+              fontWeight: 600,
+              fontSize: "16px",
+              lineHeight: "24px",
+              color: "#000000",
+              cursor: "pointer",
+            }}
+          >
+            <LogOut style={{ width: "24px", height: "24px", color: "#000000" }} />
+            Log out
+                  </button>
         </div>
       </div>
     </div>

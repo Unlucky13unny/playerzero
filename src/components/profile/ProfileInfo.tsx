@@ -590,7 +590,9 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               alignItems: 'center',
               gap: '8px',
             }}>
-              <span style={{
+              <span 
+                //className="hover:scale-110 transition-transform duration-200 ease-in-out cursor-pointer"
+                style={{
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 400,
