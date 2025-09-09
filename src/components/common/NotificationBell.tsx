@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { formatDistanceToNow } from 'date-fns';
 
 export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,9 +26,6 @@ export const NotificationBell: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formatNotificationTime = (timestamp: string) => {
-    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-  };
 
   return (
     <div className="notification-container" ref={dropdownRef}>
