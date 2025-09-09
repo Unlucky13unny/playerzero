@@ -2897,7 +2897,7 @@ body {
 }
 
 .layout-menu-item:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+  background-color: #d1d5db; /* bg-gray-300 equivalent */
 }
 
 .layout-menu-item svg {

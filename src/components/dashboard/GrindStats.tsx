@@ -403,6 +403,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         }}>
           {/* Distance Stat Card - Frame 531 */}
           <div 
+            className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"
             style={{
               /* Frame 531 */
               display: 'flex',
@@ -414,7 +415,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               margin: '0 auto',
               width: '200px',
               height: '100px',
-              background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: '4px',
               position: 'relative',
@@ -475,6 +475,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
 
           {/* Pokemon Caught Stat Card - Frame 531 */}
           <div 
+            className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"
             style={{
               /* Frame 531 */
               display: 'flex',
@@ -486,7 +487,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               margin: '0 auto',
               width: '200px',
               height: '100px',
-              background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: '4px',
               position: 'relative',
@@ -547,6 +547,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
 
           {/* Pokestops Stat Card - Frame 531 */}
           <div 
+            className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"
             style={{
               /* Frame 531 */
               display: 'flex',
@@ -558,7 +559,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               margin: '0 auto',
               width: '200px',
               height: '100px',
-              background: 'rgba(0, 0, 0, 0.02)',
+           
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: '4px',
               position: 'relative',
@@ -619,6 +620,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
 
           {/* XP Stat Card - Frame 531 */}
           <div 
+            className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"
             style={{
               /* Frame 531 */
               display: 'flex',
@@ -630,7 +632,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               margin: '0 auto',
               width: '200px',
               height: '100px',
-              background: 'rgba(0, 0, 0, 0.02)',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: '4px',
               /* Inside auto layout */

@@ -111,7 +111,7 @@ export const Layout = ({ children }: LayoutProps) => {
               <div className="relative" id="features-dropdown">
                 <button
                   onClick={toggleFeaturesDropdown}
-                  //className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                  className="p-1 hover:bg-gray-400 cursor-pointer rounded-md transition-colors"
                   title="Menu"
                 >
                   <img src="/images/threelinea.svg" alt="Menu" className="w-11 h-11" />
@@ -303,6 +303,19 @@ export const Layout = ({ children }: LayoutProps) => {
                   order: 4,
                   flexGrow: 0,
                   textDecoration: 'none',
+                  transition: 'all 0.2s ease-in-out',
+                }}
+                onMouseEnter={(e) => {
+                  const svg = e.currentTarget.querySelector('svg path') as SVGPathElement
+                  const text = e.currentTarget.querySelector('span') as HTMLSpanElement
+                  if (svg) svg.style.stroke = '#DC2627'
+                  if (text) text.style.color = '#DC2627'
+                }}
+                onMouseLeave={(e) => {
+                  const svg = e.currentTarget.querySelector('svg path') as SVGPathElement
+                  const text = e.currentTarget.querySelector('span') as HTMLSpanElement
+                  if (svg) svg.style.stroke = '#000000'
+                  if (text) text.style.color = '#000000'
                 }}>
                   {/* iconoir:leaderboard-star */}
                   <div style={{
@@ -415,7 +428,7 @@ export const Layout = ({ children }: LayoutProps) => {
                 }}>
                   <button
                     onClick={toggleFeaturesDropdown}
-                    className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+                    className="p-1 hover:bg-gray-400 cursor-pointer rounded-md transition-colors"
                     title="Menu"
                   >
                     <img src="/images/threelinea.svg" alt="Menu" className="w-11 h-11" />

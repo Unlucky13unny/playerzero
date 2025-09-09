@@ -81,6 +81,7 @@ export function PlayerHeader({
           /* Layer_1 */
           width: isMobile ? '120px' : '179px',
           height: isMobile ? '24px' : '35px',
+          marginTop: isMobile ? '0px' : '2px',
           /* Inside auto layout */
           flex: 'none',
           order: 0,
@@ -260,26 +261,41 @@ export function PlayerHeader({
                 {/* Leaderboard Button */}
             {showLeaderboardButton && (
                   <Link to="/leaderboards" style={{ textDecoration: 'none' }}>
-                    <div style={{
-                      /* leaderboard */
-                      boxSizing: 'border-box',
-                      display: 'flex',
-                      flexDirection: 'row',
-                      justifyContent: 'center',
-                      alignItems: 'center',
-                      padding: '0px',
-                      gap: '8px',
-                      width: '171px',
-                      height: '48px',
-                      border: '1px solid #000000',
-                      borderRadius: '12px',
-                      /* Inside auto layout */
-                      flex: 'none',
-                      order: 1,
-                      flexGrow: 0,
-                      cursor: 'pointer',
-                      background: 'transparent',
-                    }}>
+                    <div 
+                      style={{
+                        /* leaderboard */
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        padding: '0px',
+                        gap: '8px',
+                        width: '171px',
+                        height: '48px',
+                        border: '1px solid #000000',
+                        borderRadius: '12px',
+                        /* Inside auto layout */
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0,
+                        cursor: 'pointer',
+                        background: 'transparent',
+                        transition: 'all 0.2s ease-in-out',
+                      }}
+                      onMouseEnter={(e) => {
+                        const svg = e.currentTarget.querySelector('svg path') as SVGPathElement
+                        const text = e.currentTarget.querySelector('span') as HTMLSpanElement
+                        if (svg) svg.style.stroke = '#DC2627'
+                        if (text) text.style.color = '#DC2627'
+                      }}
+                      onMouseLeave={(e) => {
+                        const svg = e.currentTarget.querySelector('svg path') as SVGPathElement
+                        const text = e.currentTarget.querySelector('span') as HTMLSpanElement
+                        if (svg) svg.style.stroke = '#000000'
+                        if (text) text.style.color = '#000000'
+                      }}
+                    >
                       {/* iconoir:leaderboard-star */}
                   <div style={{
                     width: '24px',
@@ -514,7 +530,7 @@ export function PlayerHeader({
         <div className="relative" id="player-header-menu">
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className="p-1 hover:bg-gray-100 rounded-md transition-colors"
+            className="p-1 hover:bg-gray-400 cursor-pointer rounded-md transition-colors"
             title="Menu"
                 style={{
                   background: 'transparent',

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNotifications } from '../../contexts/NotificationContext';
-import { formatDistanceToNow } from 'date-fns';
 
 export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,9 +26,6 @@ export const NotificationBell: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const formatNotificationTime = (timestamp: string) => {
-    return formatDistanceToNow(new Date(timestamp), { addSuffix: true });
-  };
 
   return (
     <div className="notification-container" ref={dropdownRef}>
@@ -88,11 +84,12 @@ export const NotificationBell: React.FC = () => {
                   className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
                   onClick={() => handleMarkAsRead(notification.id)}
                 >
-                  <div className="notification-content">
-                    <p>{notification.message}</p>
-                    <span className="notification-time">
+                  <div className="notification-content hover:bg-gray-400 cursor-pointer transition-colors duration-200">
+                    <h4 className="font-bold text-left mb-1" style={{ fontSize: '12px', color: '#000000', fontFamily: 'Poppins' }}>Reminder</h4>
+                    <p className="text-left" style={{ fontSize: '11px', fontFamily: 'Poppins' }}>{notification.message}</p>
+                   { /*<span className="notification-time text-left" style={{ fontSize: '10px' }}>
                       {formatNotificationTime(notification.created_at)}
-                    </span>
+                    </span>  */}
                   </div>
                   <button 
                     className="envelope-icon"

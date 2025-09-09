@@ -31,7 +31,7 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
             className={`w-full h-10 text-xs font-medium ${
               currentPage === "profile"
                 ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
-                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-white"
+                : "text-gray-700 border-gray-300 hover:bg-gray-300 bg-white"
             }`}
           >
             <User className="w-3.5 h-3.5 mr-1.5" />
@@ -45,7 +45,7 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
             className={`w-full h-10 text-xs font-medium ${
               currentPage === "leaderboard"
                 ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
-                : "text-gray-700 border-gray-300 hover:bg-gray-50 bg-white"
+                : "text-gray-700 border-gray-300 hover:bg-gray-300 bg-white"
             }`}
           >
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 mr-1.5">
