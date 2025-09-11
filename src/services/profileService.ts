@@ -39,6 +39,11 @@ export type ProfileData = {
   reddit?: string
   facebook?: string
   snapchat?: string
+  github?: string
+  vimeo?: string
+  discord?: string
+  telegram?: string
+  whatsapp?: string
 }
 
 export interface ProfileWithMetadata extends ProfileData {
@@ -71,6 +76,11 @@ export interface PublicProfileData {
   reddit: string
   facebook: string
   snapchat: string
+  github: string
+  vimeo: string
+  discord: string
+  telegram: string
+  whatsapp: string
   created_at: string
   updated_at: string
   is_paid_user: boolean
@@ -372,6 +382,13 @@ export const profileService = {
           youtube,
           twitch,
           reddit,
+          facebook,
+          snapchat,
+          github,
+          vimeo,
+          discord,
+          telegram,
+          whatsapp,
           created_at,
           updated_at,
           is_paid_user,
