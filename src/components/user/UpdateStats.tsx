@@ -260,11 +260,8 @@ export const UpdateStats = () => {
               </label>
               <div
                 style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
+                  position: "relative",
                   width: "100%",
-                  gap: "8px",
                 }}
               >
                 <input
@@ -275,9 +272,8 @@ export const UpdateStats = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    padding: isMobile ? "10px" : "9px",
-                    gap: "10px",
-                    flex: 1,
+                    padding: isMobile ? "10px 40px 10px 10px" : "9px 35px 9px 9px",
+                    width: "100%",
                     height: isMobile ? "44px" : "36px",
                     background: "#FFFFFF",
                     border: "1px solid #848282",
@@ -293,12 +289,17 @@ export const UpdateStats = () => {
                 />
                 <span
                   style={{
+                    position: "absolute",
+                    right: isMobile ? "12px" : "10px",
+                    top: "50%",
+                    transform: "translateY(-50%)",
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 400,
                     fontSize: isMobile ? "14px" : "12px",
                     lineHeight: isMobile ? "20px" : "18px",
-                    color: "#000000",
+                    color: "#666666",
+                    pointerEvents: "none",
                   }}
                 >
                   km
