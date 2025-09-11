@@ -2857,8 +2857,36 @@ body {
   border-radius: 12px;
   border: 1px solid rgba(255, 255, 255, 0.2);
   padding: 8px;
-  z-index: 50;
+  z-index: 1000;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Mobile responsive styles for layout menu dropdown */
+@media (max-width: 768px) {
+  .layout-menu-dropdown {
+    right: -8px; /* Adjust to account for container padding */
+    width: 200px; /* Smaller width for mobile */
+    max-width: calc(100vw - 32px); /* Ensure it doesn't exceed viewport */
+    margin-top: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-menu-dropdown {
+    right: -16px;
+    width: 180px;
+    max-width: calc(100vw - 24px);
+  }
+}
+
+/* For very small screens, position from the right edge */
+@media (max-width: 360px) {
+  .layout-menu-dropdown {
+    right: 0;
+    width: 160px;
+    max-width: calc(100vw - 16px);
+    transform: translateX(-8px); /* Slight adjustment to prevent edge clipping */
+  }
 }
 
 .layout-menu-header {
@@ -2898,6 +2926,21 @@ body {
 
 .layout-menu-item:hover {
   background-color: #d1d5db; /* bg-gray-300 equivalent */
+}
+
+/* Mobile responsive styles for menu items */
+@media (max-width: 768px) {
+  .layout-menu-item {
+    padding: 14px 12px; /* Larger touch targets for mobile */
+    font-size: 15px; /* Slightly larger text for mobile */
+  }
+}
+
+@media (max-width: 480px) {
+  .layout-menu-item {
+    padding: 16px 12px; /* Even larger touch targets for small screens */
+    font-size: 16px; /* Larger text for small screens */
+  }
 }
 
 .layout-menu-item svg {

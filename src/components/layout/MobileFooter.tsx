@@ -1,5 +1,3 @@
-import { User } from "lucide-react"
-import { Button } from "../ui/button"
 import { Link } from "react-router-dom"
 import { useMobile } from "../../hooks/useMobile"
 
@@ -16,45 +14,201 @@ export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {
   }
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3" style={{
-      width: '100%',
+    /* Frame 549 */
+    <div style={{
+      /* Auto layout */
+      display: 'flex',
+      flexDirection: 'row',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: '0px',
+      gap: '8px',
+      
+      position: 'fixed',
+      width: '393px',
+      height: '88px',
+      left: 'calc(50% - 393px/2)',
+      bottom: '0px',
+      
+      background: '#FFFFFF',
+      zIndex: 1000,
+      
+      /* Responsive fallback for smaller screens */
       minWidth: '353px',
       maxWidth: '100vw',
     }}>
-      <div className="flex gap-4 justify-center max-w-md mx-auto" style={{
-        minWidth: '329px', // 353px - 2*12px padding
+      
+      {/* Profile Button */}
+      <Link to="/UserProfile" style={{
+        /* profile */
+        boxSizing: 'border-box',
+        
+        /* Auto layout */
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '0px',
+        gap: '8px',
+        
+        width: '171px',
+        height: '48px',
+        
+        border: currentPage === "profile" ? '1px solid #DC2627' : '1px solid #000000',
+        borderRadius: '12px',
+        
+        /* Inside auto layout */
+        flex: 'none',
+        order: 0,
+        flexGrow: 0,
+        
+        textDecoration: 'none',
       }}>
-        <Link to="/UserProfile" className="flex-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className={`w-full h-10 text-xs font-medium ${
-              currentPage === "profile"
-                ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
-                : "text-gray-700 border-gray-300 hover:bg-gray-300 bg-white"
-            }`}
-          >
-            <User className="w-3.5 h-3.5 mr-1.5" />
+        
+        {/* iconamoon:profile */}
+        <div style={{
+          width: '24px',
+          height: '24px',
+          
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+          
+          position: 'relative',
+        }}>
+          
+          {/* Profile Icon SVG */}
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            {/* Vector - Body */}
+            <path 
+              d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" 
+              stroke={currentPage === "profile" ? "#DC2627" : "#000000"}
+              strokeWidth="2" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
+            {/* Vector - Head */}
+            <circle 
+              cx="12" 
+              cy="7" 
+              r="4" 
+              stroke={currentPage === "profile" ? "#DC2627" : "#000000"}
+              strokeWidth="2"
+            />
+          </svg>
+          
+        </div>
+        
+        {/* Profile Text */}
+        <span style={{
+          /* Profile */
+          width: '45px',
+          height: '21px',
+          
+          fontFamily: 'Poppins',
+          fontStyle: 'normal',
+          fontWeight: 600,
+          fontSize: '14px',
+          lineHeight: '21px',
+          /* identical to box height */
+          
+          color: currentPage === "profile" ? "#DC2627" : "#000000",
+          
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          flexGrow: 0,
+        }}>
             Profile
-          </Button>
+        </span>
+        
         </Link>
-        <Link to="/leaderboards" className="flex-1">
-          <Button
-            variant="outline"
-            size="sm"
-            className={`w-full h-10 text-xs font-medium ${
-              currentPage === "leaderboard"
-                ? "text-red-500 border-red-500 hover:bg-red-50 bg-white"
-                : "text-gray-700 border-gray-300 hover:bg-gray-300 bg-white"
-            }`}
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-3.5 h-3.5 mr-1.5">
-              <path d="M13 19H7M13 19V10.6C13 10.4409 12.9368 10.2883 12.8243 10.1758C12.7117 10.0632 12.5591 10 12.4 10H7.6C7.44087 10 7.28826 10.0632 7.17574 10.1758C7.06321 10.2883 7 10.4409 7 10.6V19M13 19H18.4C18.5591 19 18.7117 18.9368 18.8243 18.8243C18.9368 18.7118 19 18.5591 19 18.4V16.1C19 15.9409 18.9368 15.7883 18.8243 15.6758C18.7117 15.5632 18.5591 15.5 18.4 15.5H13.6C13.4409 15.5 13.2883 15.5632 13.1757 15.6758C13.0632 15.7883 13 15.9409 13 16.1V19ZM7 19V14.1C7 13.9409 6.93679 13.7883 6.82426 13.6758C6.71174 13.5632 6.55913 13.5 6.4 13.5H1.6C1.44087 13.5 1.28826 13.5632 1.17574 13.6758C1.06321 13.7883 1 13.9409 1 14.1V18.4C1 18.5591 1.06321 18.7118 1.17574 18.8243C1.28826 18.9368 1.44087 19 1.6 19H7ZM8.806 3.11302L9.715 1.18602C9.73954 1.13093 9.77952 1.08413 9.8301 1.05129C9.88068 1.01845 9.93969 1.00098 10 1.00098C10.0603 1.00098 10.1193 1.01845 10.1699 1.05129C10.2205 1.08413 10.2605 1.13093 10.285 1.18602L11.195 3.11302L13.227 3.42402C13.488 3.46402 13.592 3.80002 13.403 3.99202L11.933 5.49202L12.28 7.61002C12.324 7.88202 12.052 8.09002 11.818 7.96102L10 6.96102L8.182 7.96102C7.949 8.08902 7.676 7.88202 7.72 7.61002L8.067 5.49202L6.597 3.99202C6.407 3.80002 6.512 3.46402 6.772 3.42402L8.806 3.11302Z" stroke="#DC2627" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      
+      {/* Leaderboard Button */}
+      <Link to="/leaderboards" style={{
+        /* leaderboard */
+        boxSizing: 'border-box',
+        
+        /* Auto layout */
+        display: 'flex',
+        flexDirection: 'row',
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: '0px',
+        gap: '8px',
+        
+        width: '171px',
+        height: '48px',
+        
+        border: '1px solid #DC2627',
+        borderRadius: '12px',
+        
+        /* Inside auto layout */
+        flex: 'none',
+        order: 1,
+        flexGrow: 0,
+        
+        textDecoration: 'none',
+      }}>
+        
+        {/* iconoir:leaderboard-star */}
+        <div style={{
+          width: '24px',
+          height: '24px',
+          
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+          
+          position: 'relative',
+        }}>
+          
+          {/* Leaderboard Icon SVG */}
+          <svg width="24" height="24" viewBox="0 0 6 6" fill="none" xmlns="http://www.w3.org/2000/svg" style={{
+            position: 'absolute',
+            left: '12.5%',
+            right: '12.5%',
+            top: '12.5%',
+            bottom: '12.5%',
+          }}>
+            <path 
+              d="M3.78575 5.42857H2.07146M3.78575 5.42857V3.02857C3.78575 2.9831 3.76769 2.9395 3.73554 2.90735C3.70339 2.8752 3.65979 2.85714 3.61432 2.85714H2.24289C2.19743 2.85714 2.15382 2.8752 2.12167 2.90735C2.08952 2.9395 2.07146 2.9831 2.07146 3.02857V5.42857M3.78575 5.42857H5.32861C5.37407 5.42857 5.41768 5.41051 5.44982 5.37836C5.48197 5.34621 5.50003 5.30261 5.50003 5.25714V4.6C5.50003 4.55453 5.48197 4.51093 5.44982 4.47878C5.41768 4.44663 5.37407 4.42857 5.32861 4.42857H3.95718C3.91171 4.42857 3.86811 4.44663 3.83596 4.47878C3.80381 4.51093 3.78575 4.55453 3.78575 4.6V5.42857ZM2.07146 5.42857V4.02857C2.07146 3.9831 2.0534 3.9395 2.02125 3.90735C1.9891 3.8752 1.9455 3.85714 1.90003 3.85714H0.528606C0.483141 3.85714 0.439537 3.8752 0.407388 3.90735C0.375239 3.9395 0.357178 3.9831 0.357178 4.02857V5.25714C0.357178 5.30261 0.375239 5.34621 0.407388 5.37836C0.439537 5.41051 0.483141 5.42857 0.528606 5.42857H2.07146ZM2.58746 0.889428L2.84718 0.338856C2.85419 0.323117 2.86561 0.309747 2.88006 0.300364C2.89451 0.290981 2.91138 0.285988 2.92861 0.285988C2.94584 0.285988 2.9627 0.290981 2.97715 0.300364C2.9916 0.309747 3.00302 0.323117 3.01003 0.338856L3.27003 0.889428L3.85061 0.978285C3.92518 0.989713 3.95489 1.08571 3.90089 1.14057L3.48089 1.56914L3.58003 2.17428C3.59261 2.252 3.51489 2.31143 3.44803 2.27457L2.92861 1.98886L2.40918 2.27457C2.34261 2.31114 2.26461 2.252 2.27718 2.17428L2.37632 1.56914L1.95632 1.14057C1.90203 1.08571 1.93203 0.989713 2.00632 0.978285L2.58746 0.889428Z" 
+              stroke="#DC2627"
+              strokeWidth="0.428571" 
+              strokeLinecap="round" 
+              strokeLinejoin="round"
+            />
             </svg>
+          
+        </div>
+        
+        {/* Leaderboard Text */}
+        <span style={{
+          /* Leaderboard */
+          width: '92px',
+          height: '21px',
+          
+          fontFamily: 'Poppins',
+          fontStyle: 'normal',
+          fontWeight: 600,
+          fontSize: '14px',
+          lineHeight: '21px',
+          /* identical to box height */
+          
+          color: "#DC2627",
+          
+          /* Inside auto layout */
+          flex: 'none',
+          order: 1,
+          flexGrow: 0,
+        }}>
             Leaderboard
-          </Button>
+        </span>
+        
         </Link>
-      </div>
+      
     </div>
   )
 }
