@@ -5,6 +5,7 @@ import { ForgotPassword } from './components/auth/ForgotPassword'
 import { ResetPassword } from './components/auth/ResetPassword'
 import { SignupSuccess } from './components/auth/SignupSuccess'
 import { UserProfile } from './components/user/UserProfile'
+import { UpdateStats } from './components/user/UpdateStats'
 import { ProfileSetup } from './components/user/ProfileSetup'
 import { PostProfileTutorial } from './components/user/PostProfileTutorial'
 import { UserHome } from './components/dashboard/UserHome'
@@ -78,6 +79,19 @@ const AppRoutes = () => {
             <ProfileSetupGuard>
               <ProfileGuard>
                 <UserHome />
+              </ProfileGuard>
+            </ProfileSetupGuard>
+          </ProtectedRoute>
+        </Layout>
+      } />
+      
+      {/* Update Stats - Protected */}
+      <Route path="/update-stats" element={
+        <Layout>
+          <ProtectedRoute>
+            <ProfileSetupGuard>
+              <ProfileGuard>
+                <UpdateStats />
               </ProfileGuard>
             </ProfileSetupGuard>
           </ProtectedRoute>

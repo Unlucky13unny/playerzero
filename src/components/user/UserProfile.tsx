@@ -3,8 +3,10 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
+import { useMobile } from '../../hooks/useMobile'
+import { MobileFooter } from '../layout/MobileFooter'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
-import { LogOut, Upload } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import './UserProfile.css'
 
 const TEAM_COLORS = [
@@ -32,18 +34,13 @@ export const UserProfile = () => {
   const [success, setSuccess] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [editData, setEditData] = useState<ProfileData | null>(null)
-  const [newScreenshot, setNewScreenshot] = useState<File | null>(null)
   const navigate = useNavigate()
+  const isMobile = useMobile()
   const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
-  const [daysUntilNameChange, setDaysUntilNameChange] = useState<number | null>(null);
-  
-  // New stats state
-  const [selectedFile, setSelectedFile] = useState<File | null>(null)
 
   useEffect(() => {
     loadProfile()
   }, [])
-
 
   const loadProfile = async () => {
     setLoading(true)
@@ -56,15 +53,6 @@ export const UserProfile = () => {
       setProfile(data)
       if (data) {
         setEditData(data)
-        // Calculate days until name change is allowed
-        if (data.last_name_change_date) {
-          const lastChange = new Date(data.last_name_change_date);
-          const daysSinceChange = Math.floor((Date.now() - lastChange.getTime()) / (1000 * 60 * 60 * 24));
-          const daysRemaining = Math.max(30 - daysSinceChange, 0);
-          setDaysUntilNameChange(daysRemaining);
-        } else {
-          setDaysUntilNameChange(0);
-        }
       }
     } catch (err: any) {
       setError(err.message || 'Failed to load profile')
@@ -84,14 +72,6 @@ export const UserProfile = () => {
       setLoading(false)
     }
   }
-  
-
-  const handleCancelEdit = () => {
-    setEditData(profile)
-    setNewScreenshot(null)
-    setError(null)
-    setSuccess(null)
-  }
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     if (editData) {
@@ -99,10 +79,10 @@ export const UserProfile = () => {
     }
   }
 
-
-  const handleStatsFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0] || null
-    setSelectedFile(file)
+  const handleCancelEdit = () => {
+    setEditData(profile)
+    setError(null)
+    setSuccess(null)
   }
 
   const handleSave = async () => {
@@ -119,12 +99,6 @@ export const UserProfile = () => {
       const isNameChanged = profile.trainer_name !== editData.trainer_name;
       const isCountryChanged = profile.country !== editData.country;
 
-      if ((isNameChanged || isCountryChanged) && daysUntilNameChange && daysUntilNameChange > 0) {
-        setError(`Trainer name and country can only be changed once every 30 days. Days remaining: ${daysUntilNameChange}`);
-        setSaving(false);
-        return;
-      }
-
       // If only trainer name or country is changed, update last_name_change_date
       if (isNameChanged || isCountryChanged) {
         updatedData.last_name_change_date = new Date().toISOString();
@@ -132,15 +106,6 @@ export const UserProfile = () => {
 
       // Ensure trainer code privacy is properly set
       updatedData.trainer_code_private = editData.trainer_code_private || false;
-
-      // Upload new screenshot if provided
-      if (newScreenshot) {
-        const { data: uploadData, error: uploadError } = await profileService.uploadProfileScreenshot(newScreenshot);
-        if (uploadError) {
-          throw new Error('Failed to upload screenshot: ' + uploadError.message);
-        }
-        updatedData.profile_screenshot_url = uploadData || '';
-      }
 
       // Update profile in database
       const { data, error } = await profileService.updateProfile(updatedData);
@@ -151,21 +116,14 @@ export const UserProfile = () => {
 
       setProfile(data);
       setEditData(data);
-      setNewScreenshot(null);
       setSuccess('Profile updated successfully!');
       
-      // Navigate to home page after successful save
-      navigate('/UserProfile');
     } catch (err: any) {
       setError(err.message || 'Failed to update profile');
     } finally {
       setSaving(false);
     }
   };
-  
-
-
-
 
   if (loading && !profile) {
     return (
@@ -204,39 +162,49 @@ export const UserProfile = () => {
     )
   }
 
-
   return (
-    <div className="profile-settings-container">
+    <div 
+      className="profile-settings-container"
+      style={{
+        padding: isMobile ? "0px" : "2rem", // Remove padding on mobile
+        alignItems: isMobile ? "flex-start" : "center", // Top align on mobile
+        justifyContent: isMobile ? "flex-start" : "center", // Top align on mobile
+      }}
+    >
       <ValuePropModal 
         isOpen={isOpen} 
         onClose={closeValueProp} 
         daysRemaining={daysRemaining} 
       />
 
-            {/* Messages */}
-            {error && (
-        <div className="profile-error-message">
-                <span>{error}</span>
-              </div>
-            )}
+      {/* Messages */}
+      {error && (
+        <div className="profile-error-message" style={{ marginBottom: isMobile ? "2px" : "1rem" }}>
+          <span>{error}</span>
+        </div>
+      )}
 
-            {success && (
-        <div className="profile-success-message">
+      {success && (
+        <div className="profile-success-message" style={{ marginBottom: isMobile ? "2px" : "1rem" }}>
           <span>{success}</span>
-              </div>
-            )}
+        </div>
+      )}
 
       <div
         style={{
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          gap: "13px",
-          width: "838px",
-          maxWidth: "100%",
+          gap: isMobile ? "8px" : "13px",
+          width: isMobile ? "100%" : "838px",
+          minWidth: isMobile ? "350px" : "auto", // Reduced for 414px devices
+          maxWidth: isMobile ? "390px" : "100%", // Max width to fit in 414px viewport
           fontFamily: "Poppins, sans-serif",
           color: "#000000",
           margin: "0 auto",
+          marginTop: isMobile ? "8px" : "20px", // Minimal top spacing for mobile header
+          padding: "0px", // Removed padding
+          boxSizing: "border-box",
         }}
       >
         {/* Profile Settings Header */}
@@ -245,11 +213,12 @@ export const UserProfile = () => {
             fontFamily: "Poppins",
             fontStyle: "normal",
             fontWeight: 600,
-            fontSize: "24px",
-            lineHeight: "36px",
+            fontSize: isMobile ? "20px" : "24px",
+            lineHeight: isMobile ? "30px" : "36px",
             color: "#000000",
-            width: "838px",
+            width: "100%",
             textAlign: "center",
+            margin: "0", // Remove default h1 margin
           }}
         >
           Profile Settings
@@ -261,8 +230,9 @@ export const UserProfile = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
-            gap: "13px",
-            width: "838px",
+            gap: isMobile ? "8px" : "13px",
+            width: "100%",
+            minWidth: isMobile ? "296px" : "auto", // 320px container - 24px padding
           }}
         >
           {/* Basic Info Section */}
@@ -271,8 +241,9 @@ export const UserProfile = () => {
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
-              gap: "13px",
-              width: "838px",
+              gap: isMobile ? "8px" : "13px",
+              width: "100%",
+              minWidth: isMobile ? "296px" : "auto",
             }}
           >
             {/* Email Address */}
@@ -282,7 +253,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "2px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <label
@@ -290,10 +262,10 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "11px",
-                  lineHeight: "16px",
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
                   color: "#000000",
-                  width: "838px",
+                  width: "100%",
                   textAlign: "left",
                 }}
               >
@@ -307,23 +279,24 @@ export const UserProfile = () => {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  padding: "9px",
+                  padding: isMobile ? "10px" : "9px",
                   gap: "10px",
-                  width: "838px",
-                  height: "36px",
+                  width: "100%",
+                  height: isMobile ? "44px" : "36px",
                   background: "#FFFFFF",
                   border: "1px solid #848282",
                   borderRadius: "6px",
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "18px",
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
                   color: "#000000",
                   boxSizing: "border-box",
+                  outline: "none",
                 }}
               />
-                </div>
+            </div>
 
             {/* Trainer Name */}
             <div
@@ -332,7 +305,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "2px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <label
@@ -340,10 +314,10 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "11px",
-                  lineHeight: "16px",
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
                   color: "#000000",
-                  width: "838px",
+                  width: "100%",
                   textAlign: "left",
                 }}
               >
@@ -357,23 +331,24 @@ export const UserProfile = () => {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  padding: "9px",
+                  padding: isMobile ? "10px" : "9px",
                   gap: "10px",
-                  width: "838px",
-                  height: "36px",
+                  width: "100%",
+                  height: isMobile ? "44px" : "36px",
                   background: "#FFFFFF",
                   border: "1px solid #848282",
                   borderRadius: "6px",
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "18px",
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
                   color: "#000000",
                   boxSizing: "border-box",
+                  outline: "none",
                 }}
               />
-                  </div>
+            </div>
 
             {/* Trainer Level */}
             <div
@@ -382,7 +357,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "2px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <label
@@ -390,10 +366,10 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "11px",
-                  lineHeight: "16px",
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
                   color: "#000000",
-                  width: "838px",
+                  width: "100%",
                   textAlign: "left",
                 }}
               >
@@ -409,23 +385,24 @@ export const UserProfile = () => {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "center",
-                  padding: "9px",
+                  padding: isMobile ? "10px" : "9px",
                   gap: "10px",
-                  width: "838px",
-                  height: "36px",
+                  width: "100%",
+                  height: isMobile ? "44px" : "36px",
                   background: "#FFFFFF",
                   border: "1px solid #848282",
                   borderRadius: "6px",
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "18px",
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
                   color: "#000000",
                   boxSizing: "border-box",
+                  outline: "none",
                 }}
               />
-                </div>
+            </div>
 
             {/* Trainer Code with Toggle */}
             <div
@@ -434,7 +411,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "4px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <div
@@ -443,7 +421,7 @@ export const UserProfile = () => {
                   flexDirection: "column",
                   alignItems: "flex-start",
                   gap: "2px",
-                  width: "838px",
+                  width: "100%",
                 }}
               >
                 <label
@@ -451,10 +429,10 @@ export const UserProfile = () => {
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
+                    fontSize: isMobile ? "12px" : "11px",
+                    lineHeight: isMobile ? "18px" : "16px",
                     color: "#000000",
-                    width: "838px",
+                    width: "100%",
                     textAlign: "left",
                   }}
                 >
@@ -468,23 +446,24 @@ export const UserProfile = () => {
                     display: "flex",
                     flexDirection: "row",
                     alignItems: "center",
-                    padding: "9px",
+                    padding: isMobile ? "10px" : "9px",
                     gap: "10px",
-                    width: "838px",
-                    height: "36px",
+                    width: "100%",
+                    height: isMobile ? "44px" : "36px",
                     background: "#FFFFFF",
                     border: "1px solid #848282",
                     borderRadius: "6px",
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "18px",
+                    fontSize: isMobile ? "14px" : "12px",
+                    lineHeight: isMobile ? "20px" : "18px",
                     color: "#000000",
                     boxSizing: "border-box",
+                    outline: "none",
                   }}
                 />
-            </div>
+              </div>
 
               {/* Keep trainer code private toggle */}
               <div
@@ -493,7 +472,7 @@ export const UserProfile = () => {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  width: "838px",
+                  width: "100%",
                   height: "28px",
                 }}
               >
@@ -502,8 +481,8 @@ export const UserProfile = () => {
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 500,
-                    fontSize: "11px",
-                    lineHeight: "16px",
+                    fontSize: isMobile ? "12px" : "11px",
+                    lineHeight: isMobile ? "18px" : "16px",
                     color: "#000000",
                   }}
                 >
@@ -527,7 +506,7 @@ export const UserProfile = () => {
                     transition: "all 0.2s ease",
                   }}
                 >
-                  <div
+                  <div 
                     style={{
                       width: "20px",
                       height: "20px",
@@ -536,9 +515,9 @@ export const UserProfile = () => {
                     }}
                   />
                 </button>
-                        </div>
-                        </div>
-                    </div>
+              </div>
+            </div>
+          </div>
 
           {/* Location Section */}
           <div
@@ -547,7 +526,8 @@ export const UserProfile = () => {
               flexDirection: "column",
               alignItems: "flex-start",
               gap: "13px",
-              width: "838px",
+              width: "100%",
+              minWidth: isMobile ? "296px" : "auto",
             }}
           >
             {/* Country */}
@@ -557,7 +537,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "2px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <label
@@ -565,10 +546,10 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "11px",
-                  lineHeight: "16px",
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
                   color: "#000000",
-                  width: "838px",
+                  width: "100%",
                   textAlign: "left",
                 }}
               >
@@ -582,10 +563,10 @@ export const UserProfile = () => {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "9px",
+                  padding: isMobile ? "10px" : "9px",
                   gap: "10px",
-                  width: "838px",
-                  height: "36px",
+                  width: "100%",
+                  height: isMobile ? "44px" : "36px",
                   background: "#FFFFFF",
                   border: "1px solid #848282",
                   borderRadius: "6px",
@@ -594,8 +575,8 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "18px",
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
                   color: "#000000",
                 }}
               >
@@ -604,7 +585,7 @@ export const UserProfile = () => {
                   <option key={country} value={country}>{country}</option>
                 ))}
               </select>
-                  </div>
+            </div>
 
             {/* Team Affiliation */}
             <div
@@ -613,7 +594,8 @@ export const UserProfile = () => {
                 flexDirection: "column",
                 alignItems: "flex-start",
                 gap: "2px",
-                width: "838px",
+                width: "100%",
+                minWidth: isMobile ? "296px" : "auto",
               }}
             >
               <label
@@ -621,10 +603,10 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "11px",
-                  lineHeight: "16px",
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
                   color: "#000000",
-                  width: "838px",
+                  width: "100%",
                   textAlign: "left",
                 }}
               >
@@ -638,10 +620,10 @@ export const UserProfile = () => {
                   flexDirection: "row",
                   justifyContent: "space-between",
                   alignItems: "center",
-                  padding: "9px",
+                  padding: isMobile ? "10px" : "9px",
                   gap: "10px",
-                  width: "838px",
-                  height: "36px",
+                  width: "100%",
+                  height: isMobile ? "44px" : "36px",
                   background: "#FFFFFF",
                   border: "1px solid #848282",
                   borderRadius: "6px",
@@ -650,8 +632,8 @@ export const UserProfile = () => {
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: "12px",
-                  lineHeight: "18px",
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
                   color: "#000000",
                 }}
               >
@@ -660,477 +642,17 @@ export const UserProfile = () => {
                   <option key={team.value} value={team.value}>{team.label}</option>
                 ))}
               </select>
-              </div>
-
-            {/* Core Stats Section */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: "13px",
-                width: "838px",
-              }}
-            >
-              {/* Core Stats Header */}
-              <h2
-                style={{
-                  fontFamily: "Poppins",
-                  fontStyle: "normal",
-                  fontWeight: 600,
-                  fontSize: "24px",
-                  lineHeight: "36px",
-                  color: "#000000",
-                  width: "838px",
-                  textAlign: "center",
-                }}
-              >
-                Core Stats
-              </h2>
-
-              {/* Distance Walked */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Distance Walked
-                </label>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    width: "838px",
-                    gap: "8px",
-                  }}
-                >
-                  <input
-                    type="text"
-                    value={editData?.distance_walked || 0}
-                    onChange={(e) => handleInputChange('distance_walked', e.target.value)}
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      padding: "9px",
-                      gap: "10px",
-                      flex: 1,
-                      height: "36px",
-                      background: "#FFFFFF",
-                      border: "1px solid #848282",
-                      borderRadius: "6px",
-                      fontFamily: "Poppins",
-                      fontStyle: "normal",
-                      fontWeight: 400,
-                      fontSize: "12px",
-                      lineHeight: "18px",
-                      color: "#000000",
-                      boxSizing: "border-box",
-                    }}
-                  />
-                  <span
-                    style={{
-                      fontFamily: "Poppins",
-                      fontStyle: "normal",
-                      fontWeight: 400,
-                      fontSize: "12px",
-                      lineHeight: "18px",
-                      color: "#000000",
-                    }}
-                  >
-                    km
-                  </span>
-                </div>
-                <span
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#666666",
-                  }}
-                >
-                  Last update: {profile?.distance_walked || 0}
-                </span>
-              </div>
-
-              {/* Pokémon Caught */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Pokémon Caught
-                </label>
-                <input
-                  type="text"
-                  value={editData?.pokemon_caught || 0}
-                  onChange={(e) => handleInputChange('pokemon_caught', e.target.value)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: "9px",
-                    gap: "10px",
-                    width: "838px",
-                    height: "36px",
-                    background: "#FFFFFF",
-                    border: "1px solid #848282",
-                    borderRadius: "6px",
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "18px",
-                    color: "#000000",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#666666",
-                  }}
-                >
-                  Last update: {profile?.pokemon_caught || 0}
-                </span>
-              </div>
-
-              {/* Pokéstops Visited */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Pokéstops Visited
-                </label>
-                <input
-                  type="text"
-                  value={editData?.pokestops_visited || 0}
-                  onChange={(e) => handleInputChange('pokestops_visited', e.target.value)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: "9px",
-                    gap: "10px",
-                    width: "838px",
-                    height: "36px",
-                    background: "#FFFFFF",
-                    border: "1px solid #848282",
-                    borderRadius: "6px",
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "18px",
-                    color: "#000000",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#666666",
-                  }}
-                >
-                  Last update: {profile?.pokestops_visited || 0}
-                </span>
-              </div>
-
-              {/* Total XP */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Total XP
-                </label>
-                <input
-                  type="text"
-                  value={editData?.total_xp || 0}
-                  onChange={(e) => handleInputChange('total_xp', e.target.value)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: "9px",
-                    gap: "10px",
-                    width: "838px",
-                    height: "36px",
-                    background: "#FFFFFF",
-                    border: "1px solid #848282",
-                    borderRadius: "6px",
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "18px",
-                    color: "#000000",
-                    boxSizing: "border-box",
-                  }}
-                />
-                <span
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#666666",
-                  }}
-                >
-                  Last update: {profile?.total_xp || 0}
-                </span>
-              </div>
             </div>
-
-            {/* Secondary Stats Section */}
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: "13px",
-                width: "838px",
-              }}
-            >
-              {/* Secondary Stats Header */}
-              <h2
-                style={{
-                  fontFamily: "Poppins",
-                  fontStyle: "normal",
-                  fontWeight: 600,
-                  fontSize: "24px",
-                  lineHeight: "36px",
-                  color: "#000000",
-                  width: "838px",
-                  textAlign: "left",
-                }}
-              >
-                Secondary Stats
-              </h2>
-
-              {/* Pokédex Entries */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Pokédex Entries
-                </label>
-                <input
-                  type="text"
-                  value={editData?.unique_pokedex_entries || 0}
-                  onChange={(e) => handleInputChange('unique_pokedex_entries', e.target.value)}
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    padding: "9px",
-                    gap: "10px",
-                    width: "838px",
-                    height: "36px",
-                    background: "#FFFFFF",
-                    border: "1px solid #848282",
-                    borderRadius: "6px",
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "12px",
-                    lineHeight: "18px",
-                    color: "#000000",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              {/* Upload new screenshot */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                  gap: "2px",
-                  width: "838px",
-                }}
-              >
-                <label
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
-                    color: "#000000",
-                    width: "838px",
-                    textAlign: "left",
-                  }}
-                >
-                  Upload new screenshot
-                </label>
-                <div
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    width: "838px",
-                    height: "36px",
-                    background: "#FFFFFF",
-                    border: "1px dashed #848282",
-                    borderRadius: "6px",
-                    padding: "9px",
-                    gap: "10px",
-                    boxSizing: "border-box",
-                  }}
-                >
-                  <input
-                    type="file"
-                    id="screenshot-upload"
-                    onChange={handleStatsFileChange}
-                    accept="image/*"
-                    style={{ display: "none" }}
-                  />
-                  <label
-                    htmlFor="screenshot-upload"
-                    style={{
-                      display: "flex",
-                      flexDirection: "row",
-                      alignItems: "center",
-                      gap: "8px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <Upload style={{ width: "16px", height: "16px", color: "#000000" }} />
-                    <span
-                      style={{
-                        fontFamily: "Poppins",
-                        fontStyle: "normal",
-                        fontWeight: 400,
-                        fontSize: "12px",
-                        lineHeight: "18px",
-                        color: "#000000",
-                      }}
-                    >
-                      Choose file
-                    </span>
-                  </label>
-                  <span
-                    style={{
-                      fontFamily: "Poppins",
-                      fontStyle: "normal",
-                      fontWeight: 400,
-                      fontSize: "12px",
-                      lineHeight: "18px",
-                      color: "#666666",
-                      marginLeft: "auto",
-                    }}
-                  >
-                    {selectedFile ? selectedFile.name : "No file chosen"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            </div>
+          </div>
 
           {/* Social Platforms Section */}
           <div
-                    style={{ 
+            style={{ 
               display: "flex",
               flexDirection: "column",
               alignItems: "flex-start",
               gap: "8px",
-              width: "838px",
+              width: "100%",
             }}
           >
             {/* Social Platforms Header */}
@@ -1140,7 +662,7 @@ export const UserProfile = () => {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                width: "838px",
+                width: "100%",
                 height: "22px",
               }}
             >
@@ -1156,7 +678,6 @@ export const UserProfile = () => {
                   style={{
                     width: "22px",
                     height: "22px",
-                    //border: "1px solid #000000",
                     borderRadius: "4px",
                     padding: "4px",
                     display: "flex",
@@ -1185,14 +706,14 @@ export const UserProfile = () => {
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 400,
-                    fontSize: "11px",
-                    lineHeight: "16px",
+                    fontSize: isMobile ? "12px" : "11px",
+                    lineHeight: isMobile ? "18px" : "16px",
                     color: "#000000",
                   }}
                 >
                   Social Platforms
                 </span>
-                </div>
+              </div>
             </div>
 
             {/* Instagram Connection */}
@@ -1202,7 +723,7 @@ export const UserProfile = () => {
                 flexDirection: "row",
                 justifyContent: "space-between",
                 alignItems: "center",
-                width: "838px",
+                width: "100%",
                 height: "40px",
               }}
             >
@@ -1233,20 +754,20 @@ export const UserProfile = () => {
                       borderRadius: "2px",
                     }}
                   />
-                    </div>
+                </div>
                 <span
                   style={{
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 500,
-                    fontSize: "12px",
-                    lineHeight: "18px",
+                    fontSize: isMobile ? "14px" : "12px",
+                    lineHeight: isMobile ? "20px" : "18px",
                     color: "#000000",
                   }}
                 >
                   Instagram
                 </span>
-                </div>
+              </div>
 
               <div
                 style={{
@@ -1305,25 +826,25 @@ export const UserProfile = () => {
                       strokeLinecap="round"
                       strokeLinejoin="round"
                     />
-                    </svg>
+                  </svg>
                   <span
                     style={{
                       fontFamily: "Poppins",
                       fontStyle: "normal",
                       fontWeight: 500,
-                      fontSize: "12px",
-                      lineHeight: "18px",
+                      fontSize: isMobile ? "14px" : "12px",
+                      lineHeight: isMobile ? "20px" : "18px",
                       color: "#000000",
                     }}
                   >
                     Edit
                   </span>
                 </button>
-                  </div>
-                </div>
+              </div>
+            </div>
 
             {/* Connect New Platform Button */}
-              <button
+            <button
               type="button"
               style={{
                 display: "flex",
@@ -1331,129 +852,228 @@ export const UserProfile = () => {
                 justifyContent: "center",
                 alignItems: "center",
                 padding: "9px 60px",
-                width: "838px",
-                height: "36px",
+                width: "100%",
+                height: isMobile ? "44px" : "36px",
                 background: "#F9FAFB",
                 border: "1px solid #6B7280",
                 borderRadius: "6px",
                 fontFamily: "Poppins",
                 fontStyle: "normal",
                 fontWeight: 500,
-                fontSize: "12px",
-                lineHeight: "18px",
+                fontSize: isMobile ? "14px" : "12px",
+                lineHeight: isMobile ? "20px" : "18px",
                 color: "#000000",
                 cursor: "pointer",
               }}
             >
               + Connect New Social Platform
-              </button>
+            </button>
           </div>
         </form>
 
-        {/* Profile Actions */}
+        {/* Profile Actions - Frame 666 */}
         <div
           style={{
+            /* Frame 666 */
             display: "flex",
             flexDirection: "column",
             alignItems: "flex-start",
+            padding: "0px",
             gap: "8px",
-            width: "838px",
+            
+            width: isMobile ? "353px" : "100%",
+            height: isMobile ? "84px" : "auto",
+            
+            /* Inside auto layout */
+            flex: "none",
+            order: 1,
+            alignSelf: "stretch",
+            flexGrow: 0,
+            
+            /* Gap from social platforms section */
+            marginTop: "8px",
           }}
         >
-          {/* Save and Cancel buttons */}
+          {/* Save and Cancel buttons - Frame 665 */}
           <div
             style={{
+              /* Frame 665 */
               display: "flex",
               flexDirection: "row",
+              justifyContent: "space-between",
               alignItems: "center",
+              padding: "0px",
               gap: "8px",
-              width: "838px",
+              
+              width: isMobile ? "353px" : "100%",
+              height: isMobile ? "38px" : "auto",
+              
+              /* Inside auto layout */
+              flex: "none",
+              order: 0,
+              alignSelf: "stretch",
+              flexGrow: 0,
             }}
           >
-                    <button
+            <button
               type="button"
               onClick={handleSave}
-                      disabled={saving}
+              disabled={saving}
               style={{
+                /* Component 47 */
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: "12px 24px",
-                width: "415px",
-                height: "48px",
+                padding: isMobile ? "4px 8px" : "12px 24px",
+                gap: "8px",
+                
+                margin: isMobile ? "0 auto" : "0",
+                width: isMobile ? "170px" : "415px",
+                height: isMobile ? "38px" : "48px",
+                
                 background: "#000000",
                 borderRadius: "6px",
+                
+                /* Inside auto layout */
+                flex: "none",
+                order: 0,
+                flexGrow: 0,
+                
                 border: "none",
                 fontFamily: "Poppins",
                 fontStyle: "normal",
-                fontWeight: 600,
-                fontSize: "16px",
-                lineHeight: "24px",
+                fontWeight: isMobile ? 500 : 600,
+                fontSize: isMobile ? "14px" : "16px",
+                lineHeight: isMobile ? "21px" : "24px",
                 color: "#FFFFFF",
                 cursor: "pointer",
                 opacity: saving ? 0.7 : 1,
               }}
             >
               {saving ? 'Saving...' : 'Save'}
-                    </button>
-                    <button
+            </button>
+            <button
               type="button"
               onClick={handleCancelEdit}
               style={{
+                /* Component 48 */
+                boxSizing: "border-box",
+                
+                /* Auto layout */
                 display: "flex",
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: "12px 24px",
-                width: "415px",
-                height: "48px",
-                background: "#FFFFFF",
+                padding: isMobile ? "4px 8px" : "12px 24px",
+                gap: "8px",
+                
+                margin: isMobile ? "0 auto" : "0",
+                width: isMobile ? "170px" : "415px",
+                height: isMobile ? "38px" : "48px",
+                
                 border: "1px solid #000000",
                 borderRadius: "6px",
+                
+                /* Inside auto layout */
+                flex: "none",
+                order: 1,
+                flexGrow: 0,
+                
+                background: "#FFFFFF",
                 fontFamily: "Poppins",
                 fontStyle: "normal",
-                fontWeight: 600,
-                fontSize: "16px",
-                lineHeight: "24px",
+                fontWeight: isMobile ? 500 : 600,
+                fontSize: isMobile ? "14px" : "16px",
+                lineHeight: isMobile ? "21px" : "24px",
                 color: "#000000",
                 cursor: "pointer",
               }}
             >
               Cancel
-                    </button>
+            </button>
           </div>
 
-          {/* Log out button */}
-                  <button
+          {/* Log out button - Component 46 */}
+          <button
             type="button"
             onClick={handleSignOut}
             style={{
+              /* Component 46 */
+              boxSizing: "border-box",
+              
+              /* Auto layout */
               display: "flex",
               flexDirection: "row",
               justifyContent: "center",
               alignItems: "center",
-              padding: "12px 24px",
-              width: "838px",
-              height: "48px",
-              background: "#FFFFFF",
+              padding: isMobile ? "8px 24px" : "12px 24px",
+              gap: "8px",
+              
+              width: isMobile ? "353px" : "100%",
+              height: isMobile ? "38px" : "48px",
+              
               border: "1px solid #000000",
               borderRadius: "6px",
-              gap: "8px",
+              
+              /* Inside auto layout */
+              flex: "none",
+              order: 1,
+              alignSelf: "stretch",
+              flexGrow: 0,
+              
+              background: "#FFFFFF",
               fontFamily: "Poppins",
               fontStyle: "normal",
-              fontWeight: 600,
-              fontSize: "16px",
-              lineHeight: "24px",
+              fontWeight: isMobile ? 600 : 600,
+              fontSize: isMobile ? "14px" : "16px",
+              lineHeight: isMobile ? "21px" : "24px",
               color: "#000000",
               cursor: "pointer",
             }}
           >
-            <LogOut style={{ width: "24px", height: "24px", color: "#000000" }} />
-            Log out
-                  </button>
+            <LogOut 
+              style={{ 
+                /* material-symbols:logout */
+                width: "24px", 
+                height: "24px",
+                
+                /* Inside auto layout */
+                flex: "none",
+                order: 0,
+                flexGrow: 0,
+                
+                color: "#000000" 
+              }} 
+            />
+            <span
+              style={{
+                /* Log out */
+                width: isMobile ? "52px" : "auto",
+                height: isMobile ? "21px" : "auto",
+                
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 600,
+                fontSize: isMobile ? "14px" : "16px",
+                lineHeight: isMobile ? "21px" : "24px",
+                color: "#000000",
+                
+                /* Inside auto layout */
+                flex: "none",
+                order: 1,
+                flexGrow: 0,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Log out
+            </span>
+          </button>
         </div>
       </div>
+      
+      {/* Mobile Footer */}
+      <MobileFooter currentPage="profile" />
     </div>
   )
-} 
+}

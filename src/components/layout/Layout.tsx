@@ -66,6 +66,9 @@ export const Layout = ({ children }: LayoutProps) => {
         width: '100%',
         minWidth: isMobile ? '353px' : 'auto',
         maxWidth: '100vw',
+        position: 'relative',
+        overflow: 'visible',
+        zIndex: 100,
       }}>
         {isMobile ? (
           // Mobile Header Layout
@@ -73,6 +76,8 @@ export const Layout = ({ children }: LayoutProps) => {
             width: '100%',
             minWidth: '337px', // 353px - 2*8px padding
             maxWidth: '100%',
+            position: 'relative',
+            overflow: 'visible',
           }}>
             <Link to="/UserProfile" className="flex items-center hover:opacity-80 transition-opacity">
               <img 
@@ -107,18 +112,19 @@ export const Layout = ({ children }: LayoutProps) => {
                 </>
               )}
 
-              {/* Features Dropdown - Same as desktop */}
-              <div className="relative" id="features-dropdown">
+              {/* Features Dropdown - Mobile optimized */}
+              <div className="relative" id="features-dropdown" style={{ zIndex: 1000 }}>
                 <button
                   onClick={toggleFeaturesDropdown}
                   className="p-1 hover:bg-gray-400 cursor-pointer rounded-md transition-colors"
                   title="Menu"
+                  style={{ position: 'relative', zIndex: 1001 }}
                 >
                   <img src="/images/threelinea.svg" alt="Menu" className="w-11 h-11" />
                 </button>
 
                 {featuresDropdownOpen && (
-                  <div className="layout-menu-dropdown">
+                  <div className="layout-menu-dropdown" style={{ zIndex: 1002 }}>
                     <Link
                       to="/profile?edit=true"
                       onClick={() => setFeaturesDropdownOpen(false)}

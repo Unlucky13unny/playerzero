@@ -72,17 +72,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Dropdown states
 
-  const [showTeamsDropdown, setShowTeamsDropdown] = useState(false)
-
-  const [showCountryDropdown, setShowCountryDropdown] = useState(false)
+  const [showDynamicDropdown, setShowDynamicDropdown] = useState(false)
 
   const [showStatsDropdown, setShowStatsDropdown] = useState(false)
 
   const [showProxyDropdown, setShowProxyDropdown] = useState(false)
 
-  const [selectedTeam, setSelectedTeam] = useState<string>('All Teams')
-
-  const [selectedCountry, setSelectedCountry] = useState<string>('All Country')
+  const [selectedDynamicValue, setSelectedDynamicValue] = useState<string>('All Trainers')
 
 
 
@@ -94,6 +90,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string | null>(null)
 
+  const [selectedTrainerFilter, setSelectedTrainerFilter] = useState<string | null>(null)
+
   
 
   // Dropdown data
@@ -101,6 +99,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [teams, setTeams] = useState<Array<{id: string, name: string, color: string}>>([])
 
   const [countries, setCountries] = useState<Array<{code: string, name: string, flag: string}>>([])
+
+  const [trainers, setTrainers] = useState<Array<{id: string, name: string}>>([])
 
   // Removed unused tabs and timePeriods arrays
 
@@ -130,7 +130,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     }
 
-  }, [user, activeTab, timePeriod, sortBy, selectedTeamFilter, selectedCountryFilter])
+  }, [user, activeTab, timePeriod, sortBy, selectedTeamFilter, selectedCountryFilter, selectedTrainerFilter])
 
 
 
@@ -160,9 +160,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       if (!target.closest('[data-dropdown]')) {
 
-        setShowTeamsDropdown(false)
-
-        setShowCountryDropdown(false)
+        setShowDynamicDropdown(false)
 
         setShowStatsDropdown(false)
 
@@ -232,6 +230,26 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
+      // Extract unique trainers for dropdown (before filtering)
+
+      const uniqueTrainers = Array.from(
+
+        new Set(filteredData.map(entry => entry.trainer_name).filter(Boolean))
+
+      ).map(trainerName => ({
+
+        id: trainerName!.toLowerCase(),
+
+        name: trainerName!
+
+      })).sort((a, b) => a.name.localeCompare(b.name))
+
+
+
+      setTrainers(uniqueTrainers)
+
+
+
       // Apply client-side filtering if needed
 
       if (selectedTeamFilter && selectedTeamFilter !== 'all') {
@@ -257,6 +275,18 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       }
 
 
+
+      // Apply trainer filtering if needed
+
+      if (selectedTrainerFilter && selectedTrainerFilter !== 'all') {
+
+        filteredData = filteredData.filter(entry => 
+
+          entry.trainer_name && entry.trainer_name.toLowerCase() === selectedTrainerFilter.toLowerCase()
+
+        )
+
+      }
 
       console.log('Leaderboard data loaded and filtered:', filteredData)
 
@@ -424,23 +454,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Dropdown click handlers
 
-  const handleTeamsClick = () => {
+  const handleDynamicDropdownClick = () => {
 
-    setShowTeamsDropdown(!showTeamsDropdown)
-
-    setShowCountryDropdown(false)
-
-    setShowProxyDropdown(false)
-
-  }
-
-
-
-  const handleCountryClick = () => {
-
-    setShowCountryDropdown(!showCountryDropdown)
-
-    setShowTeamsDropdown(false)
+    setShowDynamicDropdown(!showDynamicDropdown)
 
     setShowProxyDropdown(false)
 
@@ -452,57 +468,73 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     setShowProxyDropdown(!showProxyDropdown)
 
-    setShowTeamsDropdown(false)
-
-    setShowCountryDropdown(false)
+    setShowDynamicDropdown(false)
 
   }
 
 
 
-  // Selection handlers
+  // Dynamic selection handler
 
-  const handleTeamSelect = (team: {id: string, name: string, color: string}) => {
+  const handleDynamicSelect = (item: {id: string, name: string, color?: string, flag?: string}) => {
 
-    setSelectedTeam(team.name)
+    setSelectedDynamicValue(item.name)
 
-    setShowTeamsDropdown(false)
-
-    
-
-    // Set filter value
-
-    if (team.id === 'all') {
-
-      setSelectedTeamFilter(null)
-
-    } else {
-
-      setSelectedTeamFilter(team.id)
-
-    }
-
-  }
-
-
-
-  const handleCountrySelect = (country: {code: string, name: string, flag: string}) => {
-
-    setSelectedCountry(country.name)
-
-    setShowCountryDropdown(false)
+    setShowDynamicDropdown(false)
 
     
 
-    // Set filter value
+    // Set appropriate filter based on active tab
 
-    if (country.code === 'all') {
+    if (activeTab === 'team') {
+
+      if (item.id === 'all') {
+
+        setSelectedTeamFilter(null)
+
+      } else {
+
+        setSelectedTeamFilter(item.id)
+
+      }
 
       setSelectedCountryFilter(null)
 
+      setSelectedTrainerFilter(null)
+
+    } else if (activeTab === 'country') {
+
+      if (item.id === 'all') {
+
+        setSelectedCountryFilter(null)
+
     } else {
 
-      setSelectedCountryFilter(country.name)
+        setSelectedCountryFilter(item.name)
+
+    }
+
+      setSelectedTeamFilter(null)
+
+      setSelectedTrainerFilter(null)
+
+    } else {
+
+      // trainers tab - set trainer filter
+
+      if (item.id === 'all') {
+
+        setSelectedTrainerFilter(null)
+
+      } else {
+    
+        setSelectedTrainerFilter(item.name)
+
+      }
+
+      setSelectedTeamFilter(null)
+
+      setSelectedCountryFilter(null)
 
     }
 
@@ -528,9 +560,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     setSelectedCountryFilter(null)
 
-    setSelectedTeam('All Teams')
+    setSelectedTrainerFilter(null)
 
-    setSelectedCountry('All Country')
+    // Update dynamic dropdown value based on tab
+
+    if (activeTab === 'trainers') {
+
+      setSelectedDynamicValue('All Trainers')
+
+    } else if (activeTab === 'team') {
+
+      setSelectedDynamicValue('All Teams')
+
+    } else if (activeTab === 'country') {
+
+      setSelectedDynamicValue('All Country')
+
+    }
 
   }
 
@@ -555,6 +601,33 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     navigate('/upgrade')
 
   }
+
+
+
+  // Helper functions for dynamic dropdown
+
+  const getDynamicDropdownData = () => {
+
+    if (activeTab === 'team') {
+
+      return [{id: 'all', name: 'All Teams', color: '#000000'}, ...teams]
+
+    } else if (activeTab === 'country') {
+
+      return [{id: 'all', name: 'All Country', flag: 'https://flagcdn.com/w40/xx.png'}, 
+
+              ...countries.map(country => ({id: country.code, name: country.name, flag: country.flag}))]
+
+    } else {
+
+      return [{id: 'all', name: 'All Trainers'}, ...trainers]
+
+    }
+
+  }
+
+
+
 
 
 
@@ -1212,17 +1285,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             padding: '0px',
 
-            margin: '0 auto',
+            margin: '0px auto',
 
-            width: '-webkit-fill-available',
+            width: '690px',
 
             height: '36px',
 
-            flex: 'none',
+            flex: '0 0 auto',
 
             order: 0,
-
-            flexGrow: 0,
 
           }}>
 
@@ -1448,6 +1519,118 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               </span>
 
             </button>
+
+          </div>
+
+          {/* Export Button */}
+
+          <div 
+
+            onClick={handleExport}
+
+            style={{
+
+              /* Export */
+
+              boxSizing: 'border-box',
+
+              display: 'flex',
+
+              flexDirection: 'row',
+
+              justifyContent: 'center',
+
+              alignItems: 'center',
+
+              padding: '0px',
+
+              gap: '8px',
+
+              margin: '0 auto',
+
+              width: '90px',
+
+              height: '36px',
+
+              border: '1px solid #DC2627',
+
+              borderRadius: '4px',
+
+              flex: 'none',
+
+              order: 1,
+
+              flexGrow: 0,
+
+              cursor: 'pointer',
+
+              background: '#FFFFFF',
+
+              opacity: exporting ? 0.7 : 1,
+
+            }}>
+
+            <Upload style={{
+
+              /* Vector */
+
+              display: 'flex',
+
+              flexDirection: 'row',
+
+              justifyContent: 'center',
+
+              alignItems: 'center',
+
+              padding: '0px',
+
+              gap: '10px',
+
+              width: '24px',
+
+              height: '24px',
+
+              flex: 'none',
+
+              order: 0,
+
+              flexGrow: 0,
+
+              color: '#DC2627',
+
+            }} />
+
+            <span style={{
+
+              /* Export */
+
+              width: '39px',
+
+              height: '18px',
+
+              fontFamily: 'Poppins',
+
+              fontStyle: 'normal',
+
+              fontWeight: 600,
+
+              fontSize: '12px',
+
+              lineHeight: '18px',
+
+              color: '#DC2627',
+
+              flex: 'none',
+
+              order: 1,
+
+              flexGrow: 0,
+
+            }}>
+
+              {exporting ? 'Exporting...' : 'Export'}
+
+            </span>
 
           </div>
 
@@ -1682,9 +1865,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               flexGrow: 0,
 
+              whiteSpace: 'nowrap',
+
             }}>
 
-              Live
+              Locked Results
 
             </span>
 
@@ -1942,10 +2127,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             flexGrow: 0,
 
+            textAlign: 'left',
+
           }}>
 
-            {timePeriod === 'alltime' ? 'All-Time Leaderboard' : 
-             timePeriod === 'weekly' ? 'Weekly Leaderboard' : 'Monthly Leaderboard'}
+            {timePeriod === 'alltime' ? 'Live' : 
+             timePeriod === 'weekly' ? 'Live' : 'Live'}
 
           </span>
 
@@ -3202,7 +3389,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             }}>
 
-              {/* All Teams Dropdown */}
+              {/* Dynamic Dropdown */}
 
               <div 
 
@@ -3212,7 +3399,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   position: 'relative',
 
-                  width: '180px',
+                  width: '397px',
 
                   height: '36px',
 
@@ -3226,7 +3413,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 <div 
 
-                  onClick={handleTeamsClick}
+                  onClick={handleDynamicDropdownClick}
 
                   style={{
 
@@ -3244,7 +3431,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 gap: '8px',
 
-                    width: '180px',
+                margin: '0 auto',
+
+                width: '397px',
 
                 height: '36px',
 
@@ -3260,7 +3449,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   <span style={{
 
-                    width: '120px',
+                    /* All Trainers */
+
+                    width: 'auto',
+
+                    minWidth: '120px',
 
                     height: '18px',
 
@@ -3274,33 +3467,43 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     lineHeight: '18px',
 
-                    color: selectedTeamFilter ? '#DC2627' : '#000000',
+                    color: (selectedTeamFilter || selectedCountryFilter || selectedTrainerFilter) ? '#DC2627' : '#000000',
 
-                flex: 'none',
+                    flex: '1',
 
                 order: 0,
 
-                flexGrow: 0,
+                    flexGrow: 1,
 
-                    overflow: 'hidden',
-
-                    textOverflow: 'ellipsis',
+                    textAlign: 'left',
 
                     whiteSpace: 'nowrap',
 
                   }}>
 
-                    {selectedTeam}
+                    {selectedDynamicValue}
 
                   </span>
 
                   <ChevronDown style={{
 
+                    /* Dropdown */
+
+                    display: 'flex',
+
+                    flexDirection: 'column',
+
+                    justifyContent: 'center',
+
+                    alignItems: 'center',
+
+                    padding: '0px',
+
+                    gap: '10px',
+
                     width: '16px',
 
                     height: '16px',
-
-                    color: '#000000',
 
                     flex: 'none',
 
@@ -3308,9 +3511,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     flexGrow: 0,
 
-                    transform: showTeamsDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                    color: '#000000',
 
-                    transition: 'transform 0.2s ease'
+                    transform: showDynamicDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+
+                    transition: 'transform 0.2s ease',
+
+                    marginLeft: 'auto'
 
                   }} />
 
@@ -3318,9 +3525,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 
 
-                {/* Teams Dropdown Menu */}
+                {/* Dynamic Dropdown Menu */}
 
-                {showTeamsDropdown && (
+                {showDynamicDropdown && (
 
                   <div style={{
 
@@ -3348,9 +3555,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   }}>
 
+                    {getDynamicDropdownData().map((item, index) => (
+
                                          <div 
 
-                       onClick={() => handleTeamSelect({id: 'all', name: 'All Teams', color: '#000000'})}
+                        key={item.id}
+
+                        onClick={() => handleDynamicSelect(item)}
 
                        style={{
 
@@ -3372,7 +3583,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                          flex: 'none',
 
-                         order: 0,
+                          order: index + 1,
 
                          alignSelf: 'stretch',
 
@@ -3396,77 +3607,47 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                      >
 
-                       All Teams
-
-                     </div>
-
-                    {teams.map((team, index) => (
-
-                      <div 
-
-                        key={team.id}
-
-                        onClick={() => handleTeamSelect(team)}
-
-                        style={{
-
-                          /* Frame 527 */
-
-                          display: 'flex',
-
-                          flexDirection: 'column',
-
-                          justifyContent: 'center',
-
-                          alignItems: 'flex-start',
-
-                          padding: '8px 12px',
-
-                          width: '144px',
-
-                          height: '26px',
-
-                          flex: 'none',
-
-                          order: index + 1,
-
-                          alignSelf: 'stretch',
-
-                          flexGrow: 0,
-
-                          cursor: 'pointer',
-
-                          borderBottom: '1px solid #f0f0f0',
-
-                          fontFamily: 'Poppins',
-
-                          fontSize: '12px',
-
-                          color: '#000000',
-
-                        }}
-
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-
-                      >
-
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
 
-                          <div style={{
+                          {activeTab === 'team' && 'color' in item && item.color ? (
 
-                            width: '12px',
+                            <div style={{
 
-                            height: '12px',
+                              width: '12px',
 
-                            backgroundColor: team.color,
+                              height: '12px',
 
-                            borderRadius: '50%',
+                              backgroundColor: item.color as string,
 
-                          }} />
+                              borderRadius: '50%',
 
-                          {team.name}
+                            }} />
+
+                          ) : null}
+
+                          {activeTab === 'country' && 'flag' in item && item.flag && item.id !== 'all' ? (
+
+                            <img 
+
+                              src={item.flag} 
+
+                              alt={item.name}
+
+                              style={{
+
+                                width: '16px',
+
+                                height: '12px',
+
+                                objectFit: 'cover',
+
+                              }}
+
+                            />
+
+                          ) : null}
+
+                          {item.name}
 
                         </div>
 
@@ -3492,7 +3673,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   position: 'relative',
 
-                  width: '180px',
+                  width: '398px',
 
                   height: '36px',
 
@@ -3524,7 +3705,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     gap: '8px',
 
-                    width: '180px',
+                    margin: '0 auto',
+
+                    width: '398px',
 
                     height: '36px',
 
@@ -3540,7 +3723,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 <span style={{
 
-                    width: '120px',
+                    /* Total XP */
+
+                    width: 'auto',
+
+                    minWidth: '120px',
 
                   height: '18px',
 
@@ -3556,11 +3743,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   color: '#000000',
 
-                  flex: 'none',
+                    flex: '1',
 
                   order: 0,
 
-                  flexGrow: 0,
+                    flexGrow: 1,
+
+                    textAlign: 'left',
+
+                    whiteSpace: 'nowrap',
 
                 }}>
 
@@ -3570,11 +3761,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 <ChevronDown style={{
 
+                  /* Dropdown */
+
+                          display: 'flex',
+
+                          flexDirection: 'column',
+
+                          justifyContent: 'center',
+
+                alignItems: 'center',
+
+                  padding: '0px',
+
+                  gap: '10px',
+
                   width: '16px',
 
                   height: '16px',
-
-                  color: '#000000',
 
                   flex: 'none',
 
@@ -3582,21 +3785,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   flexGrow: 0,
 
+                  color: '#000000',
+
                     transform: showProxyDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
 
-                    transition: 'transform 0.2s ease'
+                    transition: 'transform 0.2s ease',
 
-                }} />
+                    marginLeft: 'auto'
 
-              </div>
+                  }} />
 
+                </div>
 
+                
 
                 {/* Sort Options Dropdown Menu */}
 
                 {showProxyDropdown && (
 
-              <div style={{
+                  <div style={{
 
                     position: 'absolute',
 
@@ -3686,421 +3893,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-              {/* All Country Dropdown */}
 
-              <div 
 
-                data-dropdown
 
-                style={{
-
-                  position: 'relative',
-
-                  width: '180px',
-
-                  height: '36px',
-
-                  flex: 'none',
-
-                  order: 2,
-
-                  flexGrow: 0,
-
-                }}>
-
-                <div 
-
-                  onClick={handleCountryClick}
-
-                  style={{
-
-                boxSizing: 'border-box',
-
-                display: 'flex',
-
-                flexDirection: 'row',
-
-                justifyContent: 'space-between',
-
-                alignItems: 'center',
-
-                padding: '4px 8px',
-
-                gap: '8px',
-
-                    width: '180px',
-
-                height: '36px',
-
-                border: '1px solid #000000',
-
-                borderRadius: '6px',
-
-                    cursor: 'pointer',
-
-                    background: '#FFFFFF',
-
-              }}>
-
-                <span style={{
-
-                    width: '120px',
-
-                  height: '18px',
-
-                  fontFamily: 'Poppins',
-
-                  fontStyle: 'normal',
-
-                  fontWeight: 600,
-
-                  fontSize: '12px',
-
-                  lineHeight: '18px',
-
-                    color: selectedCountryFilter ? '#DC2627' : '#000000',
-
-                  flex: 'none',
-
-                  order: 0,
-
-                  flexGrow: 0,
-
-                    overflow: 'hidden',
-
-                    textOverflow: 'ellipsis',
-
-                    whiteSpace: 'nowrap',
-
-                }}>
-
-                    {selectedCountry}
-
-                </span>
-
-                <ChevronDown style={{
-
-                  width: '16px',
-
-                  height: '16px',
-
-                  color: '#000000',
-
-                  flex: 'none',
-
-                  order: 1,
-
-                  flexGrow: 0,
-
-                    transform: showCountryDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-
-                    transition: 'transform 0.2s ease'
-
-                  }} />
-
-                </div>
-
-                
-
-                {/* Countries Dropdown Menu */}
-
-                {showCountryDropdown && (
-
-                  <div style={{
-
-                    position: 'absolute',
-
-                    top: '40px',
-
-                    left: '0',
-
-                    width: '180px',
-
-                    maxHeight: '300px',
-
-                    overflowY: 'auto',
-
-                    background: '#FFFFFF',
-
-                    border: '1px solid #000000',
-
-                    borderRadius: '6px',
-
-                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-
-                    zIndex: 1000,
-
-                  }}>
-
-                    <div 
-
-                      onClick={() => handleCountrySelect({code: 'all', name: 'All Country', flag: 'https://flagcdn.com/w40/xx.png'})}
-
-                      style={{
-
-                        /* Frame 527 */
-
-                        display: 'flex',
-
-                        flexDirection: 'column',
-
-                        justifyContent: 'center',
-
-                        alignItems: 'flex-start',
-
-                        padding: '8px 12px',
-
-                        width: '144px',
-
-                        height: '26px',
-
-                        flex: 'none',
-
-                        order: 0,
-
-                        alignSelf: 'stretch',
-
-                        flexGrow: 0,
-
-                        cursor: 'pointer',
-
-                        borderBottom: '1px solid #f0f0f0',
-
-                        fontFamily: 'Poppins',
-
-                        fontSize: '12px',
-
-                        color: '#000000',
-
-                      }}
-
-                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-
-                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-
-                    >
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                        <span style={{ fontSize: '14px' }}>🌍</span>
-
-                        All Country
-
-                      </div>
-
-                    </div>
-
-                    {countries.map((country, index) => (
-
-                      <div 
-
-                        key={country.code}
-
-                        onClick={() => handleCountrySelect(country)}
-
-                        style={{
-
-                          /* Frame 527 */
-
-                          display: 'flex',
-
-                          flexDirection: 'column',
-
-                          justifyContent: 'center',
-
-                          alignItems: 'flex-start',
-
-                          padding: '8px 12px',
-
-                          width: '144px',
-
-                          height: '26px',
-
-                          flex: 'none',
-
-                          order: index + 1,
-
-                          alignSelf: 'stretch',
-
-                          flexGrow: 0,
-
-                          cursor: 'pointer',
-
-                          borderBottom: '1px solid #f0f0f0',
-
-                          fontFamily: 'Poppins',
-
-                          fontSize: '12px',
-
-                          color: '#000000',
-
-                        }}
-
-                        onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-
-                        onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#FFFFFF'}
-
-                      >
-
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-
-                          <img 
-
-                            src={country.flag}
-
-                            alt={`Flag of ${country.name}`}
-
-                            style={{
-
-                              width: '20px',
-
-                              height: '15px',
-
-                              objectFit: 'cover',
-
-                              borderRadius: '2px',
-
-                              border: '1px solid #e0e0e0'
-
-                            }}
-
-                            onError={(e) => {
-
-                              const target = e.target as HTMLImageElement;
-
-                              target.style.display = 'none';
-
-                              const fallback = document.createElement('span');
-
-                              fallback.textContent = '🌍';
-
-                              fallback.style.cssText = 'font-size: 14px; width: 20px; height: 15px; display: flex; align-items: center; justify-content: center;';
-
-                              target.parentNode?.insertBefore(fallback, target);
-
-                            }}
-
-                          />
-
-                          <span style={{ 
-
-                            overflow: 'hidden',
-
-                            textOverflow: 'ellipsis',
-
-                            whiteSpace: 'nowrap'
-
-                          }}>
-
-                            {country.name}
-
-                          </span>
-
-                        </div>
-
-                      </div>
-
-                    ))}
-
-                  </div>
-
-                )}
-
-              </div>
-
-
-
-              {/* Export Button */}
-
-              <div 
-
-                onClick={handleExport}
-
-                style={{
-
-                  boxSizing: 'border-box',
-
-                  display: 'flex',
-
-                  flexDirection: 'row',
-
-                  justifyContent: 'center',
-
-                  alignItems: 'center',
-
-                  padding: '0px',
-
-                  gap: '8px',
-
-                  width: '180px',
-
-                  height: '36px',
-
-                  border: '1px solid #DC2627',
-
-                  borderRadius: '6px',
-
-                  flex: 'none',
-
-                  order: 3,
-
-                  flexGrow: 0,
-
-                  cursor: 'pointer',
-
-                  background: '#FFFFFF',
-
-                  opacity: exporting ? 0.7 : 1,
-
-                }}>
-
-                <Upload style={{
-
-                  width: '14px',
-
-                  height: '15px',
-
-                  color: '#DC2627',
-
-                  flex: 'none',
-
-                  order: 0,
-
-                  flexGrow: 0,
-
-                }} />
-
-                <span style={{
-
-                  width: '39px',
-
-                  height: '18px',
-
-                  fontFamily: 'Poppins',
-
-                  fontStyle: 'normal',
-
-                  fontWeight: 600,
-
-                  fontSize: '12px',
-
-                  lineHeight: '18px',
-
-                  color: '#DC2627',
-
-                  flex: 'none',
-
-                  order: 1,
-
-                  flexGrow: 0,
-
-                }}>
-
-                  {exporting ? 'Exporting...' : 'Export'}
-
-                </span>
-
-              </div>
 
             </div>
 
@@ -4656,19 +4451,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           padding: '0px',
 
-              gap: '8px',
+          gap: '16px',
 
-              width: '100%',
-
-              maxWidth: '353px',
+          width: '353px',
 
           height: '36px',
 
-              /* Inside auto layout */
-
           flex: 'none',
 
-              order: 0,
+          order: 1,
 
           alignSelf: 'stretch',
 
@@ -4678,7 +4469,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       >
 
-            {/* All Teams Dropdown */}
+            {/* Dynamic Dropdown */}
 
         <div 
 
@@ -4694,7 +4485,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             flexDirection: 'row',
 
-                justifyContent: 'flex-start',
+            justifyContent: 'space-between',
 
             alignItems: 'center',
 
@@ -4702,19 +4493,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             gap: '8px',
 
-                width: 'calc(50% - 4px)',
+            margin: '0 auto',
 
-                minWidth: '140px',
+            width: '160px',
 
             height: '36px',
 
             border: '1px solid #000000',
 
             borderRadius: '6px',
-
-            cursor: 'pointer',
-
-                /* Inside auto layout */
 
             flex: 'none',
 
@@ -4726,9 +4513,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 position: 'relative',
 
+            cursor: 'pointer',
+
           }}
 
-              onClick={() => setShowTeamsDropdown(!showTeamsDropdown)}
+              onClick={() => setShowDynamicDropdown(!showDynamicDropdown)}
 
         >
 
@@ -4736,7 +4525,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             style={{
 
-                  /* All Teams */
+                  /* All Countries */
+
+              width: 'auto',
+
+              minWidth: '100px',
+
+              height: '18px',
 
               fontFamily: 'Poppins',
 
@@ -4750,19 +4545,21 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               color: '#000000',
 
-                  /* Inside auto layout */
-
-              flex: 'none',
+              flex: '1',
 
               order: 0,
 
-              flexGrow: 0,
+              flexGrow: 1,
+
+              textAlign: 'left',
+
+              whiteSpace: 'nowrap',
 
             }}
 
           >
 
-                {selectedTeam}
+                {selectedDynamicValue}
 
           </span>
 
@@ -4772,19 +4569,33 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             style={{ 
 
-                  width: '16px', 
+                  /* Dropdown */
 
-                  height: '16px', 
+                  display: 'flex',
 
-                  color: '#000000',
+                  flexDirection: 'column',
 
-                  marginLeft: 'auto',
+                  justifyContent: 'center',
+
+                  alignItems: 'center',
+
+                  padding: '0px',
+
+                  gap: '10px',
+
+                  width: '16px',
+
+                  height: '16px',
 
               flex: 'none',
 
               order: 1,
 
               flexGrow: 0,
+
+                  color: '#000000',
+
+                  marginLeft: 'auto',
 
             }} 
 
@@ -4794,7 +4605,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               {/* Dropdown Menu */}
 
-              {showTeamsDropdown && (
+              {showDynamicDropdown && (
 
                 <div 
 
@@ -4826,49 +4637,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 >
 
-                  <div 
-
-                    style={{
-
-                      padding: '8px 12px',
-
-                      cursor: 'pointer',
-
-                      fontSize: '12px',
-
-                      fontFamily: 'Poppins',
-
-                      color: '#000000',
-
-                      borderBottom: selectedTeamFilter === null ? 'none' : '1px solid #f0f0f0',
-
-                      backgroundColor: selectedTeamFilter === null ? '#f8f9fa' : 'transparent',
-
-                    }}
-
-                    onClick={(e) => {
-
-                      e.stopPropagation();
-
-                      setSelectedTeam('All Teams');
-
-                      setSelectedTeamFilter(null);
-
-                      setShowTeamsDropdown(false);
-
-                    }}
-
-                  >
-
-                    All Teams
-
-                  </div>
-
-                  {teams.map((team) => (
+                  {getDynamicDropdownData().map((item) => (
 
                     <div 
 
-                      key={team.id}
+                      key={item.id}
 
                       style={{
 
@@ -4884,7 +4657,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                         borderBottom: '1px solid #f0f0f0',
 
-                        backgroundColor: selectedTeamFilter === team.id ? '#f8f9fa' : 'transparent',
+                        backgroundColor: (activeTab === 'team' && selectedTeamFilter === item.id) || 
+
+                                       (activeTab === 'country' && selectedCountryFilter === item.name) || 
+
+                                       (activeTab === 'trainers' && ((item.id === 'all' && !selectedTrainerFilter) || selectedTrainerFilter === item.name)) ? '#f8f9fa' : 'transparent',
 
                         display: 'flex',
 
@@ -4898,11 +4675,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                         e.stopPropagation();
 
-                        setSelectedTeam(team.name);
-
-                        setSelectedTeamFilter(team.id);
-
-                        setShowTeamsDropdown(false);
+                        handleDynamicSelect(item);
 
                       }}
 
@@ -4914,11 +4687,19 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                       onMouseLeave={(e) => {
 
-                        e.currentTarget.style.backgroundColor = selectedTeamFilter === team.id ? '#f8f9fa' : 'transparent';
+                        const isSelected = (activeTab === 'team' && selectedTeamFilter === item.id) || 
+
+                                         (activeTab === 'country' && selectedCountryFilter === item.name) || 
+
+                                         (activeTab === 'trainers' && ((item.id === 'all' && !selectedTrainerFilter) || selectedTrainerFilter === item.name));
+
+                        e.currentTarget.style.backgroundColor = isSelected ? '#f8f9fa' : 'transparent';
 
                       }}
 
                     >
+
+                      {activeTab === 'team' && 'color' in item && item.color ? (
 
                       <div 
 
@@ -4930,273 +4711,21 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                           borderRadius: '50%',
 
-                          backgroundColor: team.color,
+                            backgroundColor: item.color as string,
 
-                        }}
+                          }}
 
-                      />
+                        />
 
-                      {team.name}
+                      ) : null}
 
-                    </div>
+                      {activeTab === 'country' && 'flag' in item && item.flag && item.id !== 'all' ? (
 
-                  ))}
+                        <img 
 
-                </div>
+                          src={item.flag} 
 
-              )}
-
-        </div>
-
-
-
-            {/* All Countries Dropdown */}
-
-        <div 
-
-              data-dropdown
-
-          style={{
-
-                /* Overall */
-
-            boxSizing: 'border-box',
-
-            display: 'flex',
-
-            flexDirection: 'row',
-
-                justifyContent: 'flex-start',
-
-            alignItems: 'center',
-
-            padding: '4px 8px',
-
-            gap: '8px',
-
-                width: 'calc(50% - 4px)',
-
-                minWidth: '140px',
-
-            height: '36px',
-
-            border: '1px solid #000000',
-
-            borderRadius: '6px',
-
-            cursor: 'pointer',
-
-                /* Inside auto layout */
-
-            flex: 'none',
-
-            order: 1,
-
-            flexGrow: 0,
-
-            background: '#FFFFFF',
-
-                position: 'relative',
-
-              }}
-
-              onClick={() => setShowCountryDropdown(!showCountryDropdown)}
-
-            >
-
-              <span 
-
-                style={{
-
-                  /* All Countries */
-
-                  fontFamily: 'Poppins',
-
-                  fontStyle: 'normal',
-
-                  fontWeight: 600,
-
-                  fontSize: '12px',
-
-                  lineHeight: '18px',
-
-                  color: '#000000',
-
-                  /* Inside auto layout */
-
-                  flex: 'none',
-
-                  order: 0,
-
-                  flexGrow: 0,
-
-                }}
-
-              >
-
-                {selectedCountry}
-
-              </span>
-
-              {/* Dropdown Icon */}
-
-              <ChevronDown 
-
-                style={{ 
-
-                  width: '16px', 
-
-                  height: '16px', 
-
-                  color: '#000000',
-
-                  marginLeft: 'auto',
-
-                  flex: 'none',
-
-                  order: 1,
-
-                  flexGrow: 0,
-
-                }} 
-
-              />
-
-              
-
-              {/* Dropdown Menu */}
-
-              {showCountryDropdown && (
-
-                <div 
-
-                  style={{
-
-                    position: 'absolute',
-
-                    top: '100%',
-
-                    left: '0',
-
-                    right: '0',
-
-                    backgroundColor: '#FFFFFF',
-
-                    border: '1px solid #000000',
-
-                    borderRadius: '6px',
-
-                    boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
-
-                    zIndex: 1000,
-
-                    maxHeight: '200px',
-
-                    overflowY: 'auto',
-
-                  }}
-
-                >
-
-                  <div 
-
-                    style={{
-
-                      padding: '8px 12px',
-
-                      cursor: 'pointer',
-
-                      fontSize: '12px',
-
-                      fontFamily: 'Poppins',
-
-                      color: '#000000',
-
-                      borderBottom: selectedCountryFilter === null ? 'none' : '1px solid #f0f0f0',
-
-                      backgroundColor: selectedCountryFilter === null ? '#f8f9fa' : 'transparent',
-
-                    }}
-
-                    onClick={(e) => {
-
-                      e.stopPropagation();
-
-                      setSelectedCountry('All Country');
-
-                      setSelectedCountryFilter(null);
-
-                      setShowCountryDropdown(false);
-
-                    }}
-
-                  >
-
-                    All Country
-
-                  </div>
-
-                  {countries.map((country) => (
-
-                    <div 
-
-                      key={country.code}
-
-                      style={{
-
-                        padding: '8px 12px',
-
-                        cursor: 'pointer',
-
-                        fontSize: '12px',
-
-                        fontFamily: 'Poppins',
-
-                        color: '#000000',
-
-                        borderBottom: '1px solid #f0f0f0',
-
-                        backgroundColor: selectedCountryFilter === country.name ? '#f8f9fa' : 'transparent',
-
-                        display: 'flex',
-
-                        alignItems: 'center',
-
-                        gap: '8px',
-
-                      }}
-
-                      onClick={(e) => {
-
-                        e.stopPropagation();
-
-                        setSelectedCountry(country.name);
-
-                        setSelectedCountryFilter(country.name);
-
-                        setShowCountryDropdown(false);
-
-                      }}
-
-                      onMouseEnter={(e) => {
-
-                        e.currentTarget.style.backgroundColor = '#f8f9fa';
-
-                      }}
-
-                      onMouseLeave={(e) => {
-
-                        e.currentTarget.style.backgroundColor = selectedCountryFilter === country.name ? '#f8f9fa' : 'transparent';
-
-                      }}
-
-                    >
-
-                      <img 
-
-                        src={country.flag}
-
-                        alt={country.name}
+                          alt={item.name}
 
                         style={{
 
@@ -5206,21 +4735,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                           objectFit: 'cover',
 
-                          borderRadius: '2px',
+                          }}
 
-                        }}
+                        />
 
-                        onError={(e) => {
+                      ) : null}
 
-                          const target = e.target as HTMLImageElement;
-
-                          target.style.display = 'none';
-
-                        }}
-
-                      />
-
-                      {country.name}
+                      {item.name}
 
                     </div>
 
@@ -5231,50 +4752,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               )}
 
             </div>
-
-          </div>
-
-
-
-          {/* Frame 624 - Second Row with Total XP and Export */}
-
-          <div 
-
-            style={{
-
-              /* Frame 624 */
-
-              display: 'flex',
-
-              flexDirection: 'row',
-
-              justifyContent: 'space-between',
-
-              alignItems: 'flex-start',
-
-              padding: '0px',
-
-              gap: '8px',
-
-              width: '100%',
-
-              maxWidth: '353px',
-
-              height: '36px',
-
-              /* Inside auto layout */
-
-              flex: 'none',
-
-              order: 1,
-
-              alignSelf: 'stretch',
-
-              flexGrow: 0,
-
-            }}
-
-          >
 
             {/* Total XP Dropdown */}
 
@@ -5292,7 +4769,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 flexDirection: 'row',
 
-                justifyContent: 'flex-start',
+                justifyContent: 'space-between',
 
                 alignItems: 'center',
 
@@ -5300,9 +4777,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 gap: '8px',
 
-                width: 'calc(50% - 4px)',
+                margin: '0 auto',
 
-                minWidth: '140px',
+                width: '160px',
 
                 height: '36px',
 
@@ -5310,19 +4787,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 borderRadius: '6px',
 
-                cursor: 'pointer',
-
-                /* Inside auto layout */
-
                 flex: 'none',
 
-                order: 0,
+            order: 1,
 
                 flexGrow: 0,
 
                 background: '#FFFFFF',
 
                 position: 'relative',
+
+                cursor: 'pointer',
 
               }}
 
@@ -5336,6 +4811,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   /* Total XP */
 
+              width: 'auto',
+
+              minWidth: '100px',
+
+              height: '18px',
+
               fontFamily: 'Poppins',
 
                   fontStyle: 'normal',
@@ -5348,13 +4829,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               color: '#000000',
 
-                  /* Inside auto layout */
-
-              flex: 'none',
+              flex: '1',
 
               order: 0,
 
-              flexGrow: 0,
+              flexGrow: 1,
+
+              textAlign: 'left',
+
+              whiteSpace: 'nowrap',
 
             }}
 
@@ -5370,19 +4853,33 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             style={{ 
 
-                  width: '16px', 
+                  /* Dropdown */
 
-                  height: '16px', 
+                  display: 'flex',
 
-                  color: '#000000',
+                  flexDirection: 'column',
 
-                  marginLeft: 'auto',
+                  justifyContent: 'center',
+
+                  alignItems: 'center',
+
+                  padding: '0px',
+
+                  gap: '10px',
+
+                  width: '16px',
+
+                  height: '16px',
 
               flex: 'none',
 
               order: 1,
 
               flexGrow: 0,
+
+                  color: '#000000',
+
+                  marginLeft: 'auto',
 
             }} 
 
@@ -5484,165 +4981,55 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             </div>
 
+          </div>
 
 
-            {/* Export Button */}
+
+          {/* Frame 624 - Second Row with Total XP and Export */}
 
             <div 
 
-              onClick={handleExport}
-
               style={{
 
-                /* Export */
-
-                boxSizing: 'border-box',
+              /* Frame 624 */
 
                 display: 'flex',
 
                 flexDirection: 'row',
 
-                justifyContent: 'center',
+              justifyContent: 'space-between',
 
-                alignItems: 'center',
+              alignItems: 'flex-start',
 
                 padding: '0px',
 
                 gap: '8px',
 
-                width: 'auto',
+              width: '100%',
 
-                minWidth: '80px',
+              maxWidth: '353px',
 
-                height: '36px',
-
-                border: '1px solid #DC2627',
-
-                borderRadius: '4px',
-
-                cursor: 'pointer',
+              //height: '36px',
 
                 /* Inside auto layout */
 
-                flex: '0 0 auto',
+              flex: 'none',
 
                 order: 1,
 
-                flexGrow: 0,
-
-                background: '#FFFFFF',
-
-                opacity: exporting ? 0.7 : 1,
-
-              }}
-
-            >
-
-              {/* Vector Container */}
-
-              <div 
-
-                style={{
-
-                  display: 'flex',
-
-                  flexDirection: 'row',
-
-                  justifyContent: 'center',
-
-                  alignItems: 'center',
-
-                  padding: '0px',
-
-                  gap: '10px',
-
-                  width: '24px',
-
-                  height: '24px',
-
-                  /* Inside auto layout */
-
-                  flex: 'none',
-
-                  order: 0,
+              alignSelf: 'stretch',
 
                   flexGrow: 0,
 
                 }}
 
               >
-
-                <Upload 
-
-                  style={{ 
-
-                    /* Vector */
-
-                    width: '14px',
-
-                    height: '15px',
-
-                    color: '#DC2627',
-
-                    /* Inside auto layout */
-
-                    flex: 'none',
-
-                    order: 0,
-
-                    flexGrow: 0,
-
-                  }} 
-
-                />
 
               </div>
-
-              <span 
-
-                style={{
-
-                  /* Export */
-
-                  width: '39px',
-
-                  height: '18px',
-
-                  fontFamily: 'Poppins',
-
-                  fontStyle: 'normal',
-
-                  fontWeight: 600,
-
-                  fontSize: '12px',
-
-                  lineHeight: '18px',
-
-                  color: '#DC2627',
-
-                  /* Inside auto layout */
-
-                  flex: 'none',
-
-                  order: 1,
-
-                  flexGrow: 0,
-
-                }}
-
-              >
-
-                {exporting ? 'Export...' : 'Export'}
-
-              </span>
 
             </div>
 
           </div>
-
-        </div>
-
-      </div>
 
 
 
@@ -5730,7 +5117,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           flexDirection: 'row',
 
-          justifyContent: 'center',
+          justifyContent: 'space-between',
 
           alignItems: 'center',
 
@@ -6014,9 +5401,101 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
+        {/* Export Button */}
+
+        <div 
+
+          onClick={handleExport}
+
+          style={{
+
+            boxSizing: 'border-box',
+
+            display: 'flex',
+
+            flexDirection: 'row',
+
+            justifyContent: 'center',
+
+            alignItems: 'center',
+
+            padding: '0px',
+
+            gap: '8px',
+
+            width: '80px',
+
+            height: '36px',
+
+            border: '1px solid #DC2627',
+
+            borderRadius: '4px',
+
+            cursor: 'pointer',
+
+            flex: 'none',
+
+            order: 1,
+
+            flexGrow: 0,
+
+            background: '#FFFFFF',
+
+            opacity: exporting ? 0.7 : 1,
+
+          }}
+
+        >
+
+          <Upload style={{
+
+            width: '14px',
+
+            height: '15px',
+
+            color: '#DC2627',
+
+            flex: 'none',
+
+            order: 0,
+
+            flexGrow: 0,
+
+          }} />
+
+          <span style={{
+
+            width: '39px',
+
+            height: '18px',
+
+            fontFamily: 'Poppins',
+
+            fontStyle: 'normal',
+
+            fontWeight: 600,
+
+            fontSize: '12px',
+
+            lineHeight: '18px',
+
+            color: '#DC2627',
+
+            flex: 'none',
+
+            order: 1,
+
+            flexGrow: 0,
+
+          }}>
+
+            {exporting ? 'Export...' : 'Export'}
+
+          </span>
+
+        </div>
+
       </div>
-
-
 
       {/* Component 5 - Locked Results */}
 
@@ -6108,16 +5587,16 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               fontWeight: 600,
 
-              fontSize: '16px',
+              fontSize: '12px',
 
               lineHeight: '24px',
 
               color: '#DC2627',
 
+              whiteSpace: 'nowrap',
+
             }}>
-
               Locked Results
-
             </span>
 
           </div>
