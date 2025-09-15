@@ -111,16 +111,7 @@ export function ShareablesHub() {
         </button>
       </div>
 
-      <p className="text-xs justify-left" style={{ 
-        color: '#000000', 
-        fontSize: '9px',
-        marginTop: '16px',
-        marginBottom: '16px'
-      }}>
-        Create shareable cards of your achievements and stats. Show off your progress and let the community verify your
-        accomplishments.
-      </p>
-
+      
       {/* Frame 597 styling */}
       <div 
         style={{
@@ -217,17 +208,7 @@ export function ShareablesHub() {
         marginTop: '8px',
         order: 3 // Ensure it comes after the verified box
       }}>
-        <p style={{
-          fontFamily: 'Poppins',
-          fontSize: '11px',
-          fontWeight: 400,
-          color: '#666666',
-          textAlign: 'center',
-          margin: 0,
-          width: '100%'
-        }}>
-          Screenshots are publicly viewable for transparency and anti-cheat verification
-        </p>
+       
       </div>
 
       {/* Option Buttons Overlay */}

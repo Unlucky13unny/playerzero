@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../supabaseClient';
-import { RadarChart } from './RadarChart';
+import { PerformanceRadarChart } from './RadarChart';
 import { ExportCardModal } from './ExportCardModal';
 import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
@@ -667,7 +667,7 @@ export const UserHome = () => {
                 fontSize: "1.25rem",
                 fontWeight: "600"
               }}>Performance Overview</h2>
-          <RadarChart
+          <PerformanceRadarChart
             profile={stats}
             isPaidUser={trialStatus.isPaidUser}
             showHeader={false}
@@ -838,7 +838,7 @@ export const UserHome = () => {
                 fontSize: "1.5rem",
                 fontWeight: "600"
               }}>Performance Overview</h2>
-              <RadarChart
+              <PerformanceRadarChart
                 profile={stats}
                 isPaidUser={trialStatus.isPaidUser}
                 showHeader={false}

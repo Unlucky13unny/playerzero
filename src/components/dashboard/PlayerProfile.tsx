@@ -3,7 +3,7 @@ import { ProfileInfo } from "../profile/ProfileInfo"
 import { GrindStats } from "./GrindStats"
 import { ShareablesHub } from "../shareables/ShareablesHub"
 import { MobileFooter } from "../layout/MobileFooter"
-import { RadarChart } from "./RadarChart"
+import { PerformanceRadarChart } from "./RadarChart"
 import { ExportCardModal } from "./ExportCardModal"
 import { Crown } from "../icons/Crown"
 import { useMobile } from "../../hooks/useMobile"
@@ -326,7 +326,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            textAlign: 'center',
+            textAlign: isMobile ? 'left' : 'center',
             gap: '16px'
           }}>
             <div style={{
@@ -584,7 +584,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       flexDirection: 'column',
                       alignItems: 'flex-start',
                       padding: '0px',
-                      gap: '8px',
+                      gap: isMobile ? '16px' : '8px',
                        // Make responsive
                       maxWidth: '320px', // Match sidebar width
                       minHeight: '361px', // Changed to minHeight for flexibility
@@ -624,7 +624,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
-                          gap: '8px',
+                          gap: isMobile ? '16px' : '8px',
                           width: '100%',
                           height: '68px',
                           /* Inside auto layout */
@@ -640,13 +640,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           /* Stat Value - 15 km */
                           width: 'auto',
                           
-                          height: '48px',
+                          height: '36px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
                           fontSize: '24px',
                           lineHeight: '36px',
-                          textAlign: 'center',
+                          textAlign: isMobile ? 'left' : 'center',
                           color: '#000000',
                           /* Inside auto layout */
                           flex: 'none',
@@ -709,7 +709,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
-                          gap: '8px',
+                          gap: isMobile ? '16px' : '8px',
                           width: '100%',
                           height: '68px',
                           /* Inside auto layout */
@@ -725,13 +725,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           /* Stat Value - 170,000 */
                           width: 'auto',
                           
-                          height: '48px',
+                          height: '36px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
                           fontSize: '24px',
                           lineHeight: '36px',
-                          textAlign: 'center',
+                          textAlign: isMobile ? 'left' : 'center',
                           color: '#000000',
                           /* Inside auto layout */
                           flex: 'none',
@@ -792,7 +792,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
-                          gap: '8px',
+                          gap: isMobile ? '16px' : '8px',
                           width: '100%',
                           height: '68px',
                           /* Inside auto layout */
@@ -808,13 +808,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           /* Stat Value - 109,000 */
                           width: 'auto',
                         
-                          height: '48px',
+                          height: '36px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
                           fontSize: '24px',
                           lineHeight: '36px',
-                          textAlign: 'center',
+                          textAlign: isMobile ? 'left' : 'center',
                           color: '#000000',
                           /* Inside auto layout */
                           flex: 'none',
@@ -875,7 +875,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           justifyContent: 'center',
                           alignItems: 'flex-start',
                           padding: '0px',
-                          gap: '8px',
+                          gap: isMobile ? '16px' : '8px',
                           width: '100%',
                           height: '68px',
                           /* Inside auto layout */
@@ -891,13 +891,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           /* Stat Value - 33,628,973 */
                           width: 'auto',
                         
-                          height: '48px',
+                          height: '36px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
                           fontSize: '24px',
                           lineHeight: '36px',
-                          textAlign: 'center',
+                          textAlign: isMobile ? 'left' : 'center',
                           color: '#000000',
                           /* Inside auto layout */
                           flex: 'none',
@@ -1170,7 +1170,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         </span>
                       </button>
 
-                      {/* Upload Card Icon - Vector */}
+                      {/* Upload Card Icon - Hidden in mobile view */}
+                      {!isMobile && (
                       <button 
                         onClick={() => setShowExportModal(true)}
                         style={{
@@ -1196,6 +1197,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           <path d="M12 5.5V14M15 7.5L12 4.5L9 7.5M5 12.5V17.5C5 18.0304 5.21071 18.5391 5.58579 18.9142C5.96086 19.2893 6.46957 19.5 7 19.5H17C17.5304 19.5 18.0391 19.2893 18.4142 18.9142C18.7893 18.5391 19 18.0304 19 17.5V12.5" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
                         </svg>
                       </button>
+                      )}
                     </div>
 
                     {/* Frame 547 - Stats Grid Container */}
@@ -1205,7 +1207,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       flexDirection: 'column',
                       alignItems: 'flex-end',
                       padding: '0px',
-                      gap: '8px',
+                      gap: isMobile ? '16px' : '8px',
                       width: '348px',
                       height: '148px',
                       /* Inside auto layout */
@@ -1220,7 +1222,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         flexDirection: 'row',
                         alignItems: 'center',
                         padding: '0px',
-                        gap: '8px',
+                        gap: isMobile ? '16px' : '8px',
                         width: '348px',
                         height: '70px',
                         /* Inside auto layout */
@@ -1262,7 +1264,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             fontWeight: 600,
                             fontSize: '18px',
                             lineHeight: '27px',
-                            textAlign: 'center',
+                            textAlign: isMobile ? 'left' : 'center',
                             color: '#000000',
                             /* Inside auto layout */
                             flex: 'none',
@@ -1328,7 +1330,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             fontWeight: 600,
                             fontSize: '18px',
                             lineHeight: '27px',
-                            textAlign: 'center',
+                            textAlign: isMobile ? 'left' : 'center',
                             color: '#000000',
                             /* Inside auto layout */
                             flex: 'none',
@@ -1369,7 +1371,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         flexDirection: 'row',
                       alignItems: 'center',
                         padding: '0px',
-                        gap: '8px',
+                        gap: isMobile ? '16px' : '8px',
                         width: '348px',
                         height: '70px',
                         /* Inside auto layout */
@@ -1411,7 +1413,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             fontWeight: 600,
                             fontSize: '18px',
                             lineHeight: '27px',
-                            textAlign: 'center',
+                            textAlign: isMobile ? 'left' : 'center',
                             color: '#000000',
                             /* Inside auto layout */
                             flex: 'none',
@@ -1477,7 +1479,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             fontWeight: 600,
                             fontSize: '18px',
                             lineHeight: '27px',
-                            textAlign: 'center',
+                            textAlign: isMobile ? 'left' : 'center',
                             color: '#000000',
                             /* Inside auto layout */
                             flex: 'none',
@@ -1588,7 +1590,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                               <p className="text-gray-600 ml-4">Loading chart...</p>
                             </div>
                           ) : (
-                      <RadarChart 
+                      <PerformanceRadarChart 
                         profile={profile} 
                         isPaidUser={userType === "upgraded"} 
                         showHeader={false}
@@ -1607,11 +1609,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         justifyContent: 'center',
                         alignItems: 'center',
                         padding: '0px',
-                        gap: '8px',
+                        gap: isMobile ? '16px' : '8px',
                         width: '320.4px',
                         height: '48px',
                         background: '#DC2627',
                         borderRadius: '8px',
+                        marginTop: '32px',
                         /* Inside auto layout */
                         flex: 'none',
                         order: 2,
@@ -1719,7 +1722,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                 </span>
               </div>
 
-              {/* 8px gap before RadarChart */}
+              {/* 8px gap before PerformanceRadarChart */}
               <div style={{
                 height: '8px',
                 background: '#FFFFFF',
@@ -1765,7 +1768,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       <p className="text-gray-600 ml-4">Loading chart...</p>
                     </div>
                   ) : (
-                  <RadarChart 
+                  <PerformanceRadarChart 
                     profile={profile} 
                     isPaidUser={userType === "upgraded"} 
                     showHeader={false}
@@ -1784,7 +1787,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     justifyContent: 'center',
                     alignItems: 'center',
                     padding: '0px',
-                    gap: '8px',
+                    gap: '16px',
                     width: isMobile ? '100%' : '838px',
                     maxWidth: '838px',
                     height: '48px',
