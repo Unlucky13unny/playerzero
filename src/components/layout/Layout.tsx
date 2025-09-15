@@ -141,20 +141,14 @@ export const Layout = ({ children }: LayoutProps) => {
                       Update Stats
                     </Link>
                     
-                    <Link
-                      to="/calculators"
-                      onClick={() => setFeaturesDropdownOpen(false)}
-                      className="layout-menu-item"
-                    >
-                      Calculators
-                    </Link>
+                    
 
                     <Link
                       to="/search"
                       onClick={() => setFeaturesDropdownOpen(false)}
                       className="layout-menu-item"
                     >
-                      Search Users
+                      Trainers Directory
                     </Link>
 
                     <Link
@@ -458,20 +452,14 @@ export const Layout = ({ children }: LayoutProps) => {
                         Update Stats
                       </Link>
                       
-                      <Link
-                        to="/calculators"
-                        onClick={() => setFeaturesDropdownOpen(false)}
-                        className="layout-menu-item"
-                      >
-                        Calculators
-                      </Link>
+                      
 
                       <Link
                         to="/search"
                         onClick={() => setFeaturesDropdownOpen(false)}
                         className="layout-menu-item"
                       >
-                        Search Users
+                        Trainers Directory
                       </Link>
 
                       <Link

@@ -84,7 +84,7 @@ export const NotificationBell: React.FC = () => {
                   className={`notification-item ${!notification.is_read ? 'unread' : ''}`}
                   onClick={() => handleMarkAsRead(notification.id)}
                 >
-                  <div className="notification-content hover:bg-gray-400 cursor-pointer transition-colors duration-200">
+                  <div className="notification-content hover:bg-gray-400 hover:text-gray-600 cursor-pointer transition-colors duration-200">
                     <h4 className="font-bold text-left mb-1" style={{ fontSize: '12px', color: '#000000', fontFamily: 'Poppins' }}>Reminder</h4>
                     <p className="text-left" style={{ fontSize: '11px', fontFamily: 'Poppins' }}>{notification.message}</p>
                    { /*<span className="notification-time text-left" style={{ fontSize: '10px' }}>

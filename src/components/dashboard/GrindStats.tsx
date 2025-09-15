@@ -15,12 +15,12 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   const [loading, setLoading] = useState(false)
 
 
-  // Load all-time stats from backend when component mounts (ignore time period changes)
+  // Load all-time stats from backend when component mounts or profile changes
   useEffect(() => {
     if (user?.id) {
       loadBackendStats()
     }
-  }, [user?.id])
+  }, [user?.id, profile])
 
   const loadBackendStats = async () => {
     if (!user?.id) return
@@ -28,10 +28,11 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
     try {
       setLoading(true)
       
-      // Always load all-time stats for GrindStats table
+      // Always load all-time stats for GrindStats table (gets latest calculated values)
       const result = await dashboardService.calculateAllTimeGrindStats(user.id)
 
       console.log('All-time backend stats loaded for GrindStats:', result)
+      console.log('Profile data available:', profile ? 'Yes' : 'No')
       setBackendStats(result)
     } catch (error) {
       console.warn('Failed to load all-time backend stats for GrindStats:', error)
@@ -57,27 +58,37 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   }
 
   const getStatValue = (statType: 'distance_walked' | 'pokemon_caught' | 'pokestops_visited' | 'total_xp') => {
-    // Priority 1: Use backend all-time stats if available
+    // Always prioritize backend stats (calculated from latest stat_entries) for accuracy
     if (backendStats) {
       switch (statType) {
         case 'distance_walked':
-          return backendStats.distanceWalked || 0
+          const backendDistance = backendStats.distanceWalked || 0
+          console.log(`GrindStats using backend data for ${statType}:`, backendDistance)
+          return backendDistance
         case 'pokemon_caught':
-          return backendStats.pokemonCaught || 0
+          const backendCaught = backendStats.pokemonCaught || 0
+          console.log(`GrindStats using backend data for ${statType}:`, backendCaught)
+          return backendCaught
         case 'pokestops_visited':
-          return backendStats.pokestopsVisited || 0
+          const backendStops = backendStats.pokestopsVisited || 0
+          console.log(`GrindStats using backend data for ${statType}:`, backendStops)
+          return backendStops
         case 'total_xp':
-          return backendStats.totalXP || 0
+          const backendXP = backendStats.totalXP || 0
+          console.log(`GrindStats using backend data for ${statType}:`, backendXP)
+          return backendXP
         default:
           return 0
       }
     }
     
-    // Priority 2: Use profile data as fallback (always all-time totals)
-    if (profile && profile[statType]) {
+    // Fallback to profile data only if backend stats are not available
+    if (profile && profile[statType] !== undefined && profile[statType] !== null) {
+      console.log(`GrindStats using profile fallback for ${statType}:`, profile[statType])
       return profile[statType]
     }
 
+    console.log(`GrindStats no data available for ${statType}, returning 0`)
     return 0
   }
 

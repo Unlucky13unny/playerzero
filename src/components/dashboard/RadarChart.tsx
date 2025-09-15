@@ -1,47 +1,183 @@
-import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from 'chart.js'
-import { Radar } from 'react-chartjs-2'
+"use client"
+
+import { useState, useEffect } from "react"
+import { Radar, RadarChart as RechartsRadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts"
 import { type ProfileWithMetadata } from '../../services/profileService'
 import { dashboardService, type StatBounds } from '../../services/dashboardService'
-import { useAuth } from '../../contexts/AuthContext'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { useMobile } from '../../hooks/useMobile'
 
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-)
+export type FilterType = "you" | "country" | "team" | "global" | null
 
-interface RadarChartProps {
+interface PerformanceRadarChartProps {
   profile: ProfileWithMetadata | null
-  isPaidUser: boolean // This now represents if the VIEWING user is paid
-  showHeader?: boolean // Optional prop to control header visibility
+  isPaidUser: boolean
+  showHeader?: boolean
 }
 
-export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true }: RadarChartProps) => {
-  const navigate = useNavigate()
-  const { user } = useAuth() // Add this to get current user
-  const trialStatus = useTrialStatus() // Add this to get current user's trial status
+// Dynamic filter configuration based on user's actual country and team
+const getFilterConfig = (profile: ProfileWithMetadata | null) => {
+  const countryName = profile?.country || 'Unknown'
+  const teamName = profile?.team_color || 'Unknown'
+  
+  return {
+    you: { key: "You", color: "#DC2627", fillColor: "rgba(220, 38, 39, 0.3)", name: "You" },
+    country: {
+      key: "Country",
+      color: "#848282",
+      fillColor: "rgba(132, 130, 130, 0.3)",
+      name: countryName,
+    },
+    team: { key: "Team", color: "#353535", fillColor: "rgba(53, 53, 53, 0.5)", name: teamName },
+    global: { key: "Global", color: "#000000", fillColor: "transparent", name: "Global" },
+  }
+}
+
+const getFilterButtons = (profile: ProfileWithMetadata | null) => {
+  const countryName = profile?.country || 'Unknown'
+  const teamName = profile?.team_color || 'Unknown'
+  
+  return [
+    {
+      id: "you" as FilterType,
+      label: "You",
+      bgColor: "rgba(220, 38, 39, 0.3)",
+      borderColor: "#DC2627",
+    },
+    {
+      id: "country" as FilterType,
+      label: countryName,
+      bgColor: "rgba(132, 130, 130, 0.3)",
+      borderColor: "#848282",
+    },
+    {
+      id: "team" as FilterType,
+      label: teamName,
+      bgColor: "rgba(53, 53, 53, 0.5)",
+      borderColor: "#353535",
+    },
+    {
+      id: "global" as FilterType,
+      label: "Global",
+      bgColor: "transparent",
+      borderColor: "#000000",
+    },
+  ]
+}
+
+interface FilterButtonsProps {
+  activeFilter: FilterType
+  onFilterChange: (filter: FilterType) => void
+  profile: ProfileWithMetadata | null
+  isMobile: boolean
+}
+
+function FilterButtons({ activeFilter, onFilterChange, profile, isMobile }: FilterButtonsProps) {
+  const trialStatus = useTrialStatus()
+  const isPremiumUser = trialStatus.isPaidUser
+  
+  // Get all buttons but filter based on user type
+  const allFilterButtons = getFilterButtons(profile)
+  const filterButtons = isPremiumUser 
+    ? allFilterButtons // Premium users see all 4 buttons
+    : allFilterButtons.filter(button => button.id === 'you' || button.id === 'global') // Free trial users see only "You" and "Global"
+  
+  return (
+    <div style={{
+      /* Frame 639 */
+      display: 'flex',
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: isMobile ? 'space-between' : 'center',
+      padding: '0px',
+      gap: isMobile ? '8px' : '80px',
+      width: isMobile ? '269px' : '450px',
+      height: isMobile ? '14px' : '10px',
+      /* Inside auto layout */
+      flex: 'none',
+      order: 1,
+      flexGrow: 0,
+      flexWrap: 'wrap'
+    }}>
+      {filterButtons.map((button) => (
+        <div
+          key={button.id}
+          onClick={() => onFilterChange(activeFilter === button.id ? null : button.id)}
+          style={{
+            /* Frame 635/636/637/638 */
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            padding: '0px',
+            gap: isMobile ? '2.54px' : '4px',
+            cursor: 'pointer',
+            transition: 'opacity 0.2s ease',
+            background: 'transparent',
+            border: 'none',
+            /* Inside auto layout */
+            flex: 'none',
+            order: button.id === 'you' ? 0 : button.id === 'country' ? 1 : button.id === 'team' ? 2 : 3,
+            flexGrow: 0,
+            width: isMobile 
+              ? (button.id === 'you' ? '32.49px' : button.id === 'country' ? '58.49px' : button.id === 'team' ? '62.49px' : '46.49px')
+              : (button.id === 'you' ? '40px' : button.id === 'country' ? '59px' : button.id === 'team' ? '62px' : '49px'),
+            height: isMobile ? '14px' : '10px'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+        >
+          <div
+            style={{
+              /* Rectangle 18/19 */
+              boxSizing: 'border-box',
+              width: isMobile ? '13.95px' : '22px',
+              height: isMobile ? '6.34px' : '10px',
+              background: activeFilter === button.id ? button.bgColor : (activeFilter === null ? button.bgColor : 'rgba(200, 200, 200, 0.2)'),
+              border: isMobile ? `0.63424px solid ${activeFilter === button.id ? button.borderColor : (activeFilter === null ? button.borderColor : '#CCCCCC')}` : `1px solid ${activeFilter === button.id ? button.borderColor : (activeFilter === null ? button.borderColor : '#CCCCCC')}`,
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0
+            }}
+          />
+          <span
+            style={{
+              /* Your stats / Average Player from your County / Average Player Overall / Average Player from your Team */
+              width: isMobile 
+                ? (button.id === 'you' ? '16px' : button.id === 'country' ? '42px' : button.id === 'team' ? '46px' : '30px')
+                : (button.id === 'you' ? '14px' : button.id === 'country' ? '33px' : button.id === 'team' ? '36px' : '23px'),
+              height: isMobile ? '14px' : '10px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: isMobile ? (button.id === 'you' ? '8px' : '9px') : '6.93307px',
+              lineHeight: isMobile ? (button.id === 'you' ? '12px' : '14px') : '10px',
+              color: activeFilter === button.id ? button.borderColor : (activeFilter === null ? '#000000' : '#999999'),
+              whiteSpace: 'nowrap',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 1,
+              flexGrow: 0
+            }}
+          >
+            {button.label}
+          </span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export const PerformanceRadarChart = ({ profile, showHeader = true }: PerformanceRadarChartProps) => {
+  const trialStatus = useTrialStatus()
+  const isMobile = useMobile()
+  const [activeFilter, setActiveFilter] = useState<FilterType>(null)
   const [communityAverages, setCommunityAverages] = useState<any>(null)
   const [countryAverages, setCountryAverages] = useState<any>(null)
   const [teamAverages, setTeamAverages] = useState<any>(null)
   const [statBounds, setStatBounds] = useState<StatBounds | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768)
-  const [isVerySmallScreen, setIsVerySmallScreen] = useState(window.innerWidth <= 360)
 
   // Always show radar chart, but with different styling for free vs premium users
   const isPremiumUser = trialStatus.isPaidUser
@@ -63,12 +199,12 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
           setStatBounds(bounds)
         } else {
           // Free users get basic comparison only
-        const [averages, bounds] = await Promise.all([
-          dashboardService.getAverageStats(),
-          dashboardService.getPaidUserStatBounds()
-        ])
-        setCommunityAverages(averages)
-        setStatBounds(bounds)
+          const [averages, bounds] = await Promise.all([
+            dashboardService.getAverageStats(),
+            dashboardService.getPaidUserStatBounds()
+          ])
+          setCommunityAverages(averages)
+          setStatBounds(bounds)
         }
       } catch (err) {
         setError('Failed to load data')
@@ -81,19 +217,13 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
     loadData()
   }, [isPremiumUser, profile?.country, profile?.team_color])
 
-  // Handle window resize for mobile detection
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 768)
-      setIsVerySmallScreen(window.innerWidth <= 360)
-    }
-
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
-
-  const handleUpgradeClick = () => {
-    navigate('/upgrade')
+  // Normalize stats based on min/max values from paid users
+  const normalizeStats = (value: number, stat: keyof StatBounds) => {
+    if (!statBounds) return 0
+    const { min, max } = statBounds[stat]
+    // Clamp the value between min and max, then normalize to 0-100
+    const clampedValue = Math.max(min, Math.min(max, value))
+    return ((clampedValue - min) / (max - min)) * 100
   }
 
   if (!profile || loading || !communityAverages || !statBounds || (isPremiumUser && (!countryAverages || !teamAverages))) {
@@ -135,558 +265,232 @@ export const RadarChart = ({ profile, isPaidUser: _isPaidUser, showHeader = true
 
   if (error) {
     return (
-      <div className="radar-chart-error">
-        <p>❌ {error}</p>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '20px',
+        color: '#dc2626',
+        fontSize: '14px'
+      }}>
+        ❌ {error}
       </div>
     )
   }
 
-  // Normalize stats based on min/max values from paid users
-  const normalizeStats = (value: number, stat: keyof StatBounds) => {
-    const { min, max } = statBounds[stat]
-    // Clamp the value between min and max, then normalize to 0-100
-    const clampedValue = Math.max(min, Math.min(max, value))
-    return ((clampedValue - min) / (max - min)) * 100
-  }
+  // Create performance data for the radar chart
+  const performanceData = [
+    {
+      metric: "XP",
+      You: normalizeStats(profile.total_xp || 0, 'total_xp'),
+      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.total_xp, 'total_xp') : 0,
+      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.total_xp, 'total_xp') : 0,
+      Global: normalizeStats(communityAverages.total_xp, 'total_xp'),
+    },
+    {
+      metric: "Caught",
+      You: normalizeStats(profile.pokemon_caught || 0, 'pokemon_caught'),
+      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokemon_caught, 'pokemon_caught') : 0,
+      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokemon_caught, 'pokemon_caught') : 0,
+      Global: normalizeStats(communityAverages.pokemon_caught, 'pokemon_caught'),
+    },
+    {
+      metric: "Stops",
+      You: normalizeStats(profile.pokestops_visited || 0, 'pokestops_visited'),
+      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokestops_visited, 'pokestops_visited') : 0,
+      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokestops_visited, 'pokestops_visited') : 0,
+      Global: normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
+    },
+    {
+      metric: "Dex",
+      You: normalizeStats(profile.unique_pokedex_entries || 0, 'unique_pokedex_entries'),
+      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
+      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
+      Global: normalizeStats(communityAverages.unique_pokedex_entries, 'unique_pokedex_entries'),
+    },
+    {
+      metric: "Distance",
+      You: normalizeStats(profile.distance_walked || 0, 'distance_walked'),
+      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.distance_walked, 'distance_walked') : 0,
+      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.distance_walked, 'distance_walked') : 0,
+      Global: normalizeStats(communityAverages.distance_walked, 'distance_walked'),
+    },
+  ]
 
-  // Create shorter labels for mobile to prevent text wrapping issues
-  const labels = isMobile 
-    ? isVerySmallScreen
-      ? [
-          'Pokémon\nCaught',
-          'Stops', 
-          'Distance\nWalked',
-          'XP',
-          'Dex'
-        ]
-      : [
-          'Pokémon\nCaught',
-          'PokéStops', 
-          'Distance\nWalked',
-          'Total XP',
-          'Pokédex'
-        ]
-    : [
-        'Pokémon Caught',
-        'PokéStops Visited',
-        'Distance Walked (km)',
-        'Total XP',
-        'Pokédex Entries'
-      ];
-
-  // Create datasets based on user type
-  const createDatasets = () => {
-    const userStatsData = [
-          normalizeStats(profile.pokemon_caught || 0, 'pokemon_caught'),
-          normalizeStats(profile.pokestops_visited || 0, 'pokestops_visited'),
-          normalizeStats(profile.distance_walked || 0, 'distance_walked'),
-          normalizeStats(profile.total_xp || 0, 'total_xp'),
-          normalizeStats(profile.unique_pokedex_entries || 0, 'unique_pokedex_entries')
-    ]
-
-    const communityStatsData = [
-          normalizeStats(communityAverages.pokemon_caught, 'pokemon_caught'),
-          normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
-          normalizeStats(communityAverages.distance_walked, 'distance_walked'),
-          normalizeStats(communityAverages.total_xp, 'total_xp'),
-          normalizeStats(communityAverages.unique_pokedex_entries, 'unique_pokedex_entries')
-    ]
-
-    const countryStatsData = isPremiumUser && countryAverages ? [
-          normalizeStats(countryAverages.pokemon_caught, 'pokemon_caught'),
-          normalizeStats(countryAverages.pokestops_visited, 'pokestops_visited'),
-          normalizeStats(countryAverages.distance_walked, 'distance_walked'),
-          normalizeStats(countryAverages.total_xp, 'total_xp'),
-          normalizeStats(countryAverages.unique_pokedex_entries, 'unique_pokedex_entries')
-    ] : []
-
-    const teamStatsData = isPremiumUser && teamAverages ? [
-          normalizeStats(teamAverages.pokemon_caught, 'pokemon_caught'),
-          normalizeStats(teamAverages.pokestops_visited, 'pokestops_visited'),
-          normalizeStats(teamAverages.distance_walked, 'distance_walked'),
-          normalizeStats(teamAverages.total_xp, 'total_xp'),
-          normalizeStats(teamAverages.unique_pokedex_entries, 'unique_pokedex_entries')
-    ] : []
-
+  const getRadarElements = () => {
+    const filterConfig = getFilterConfig(profile)
+    
+    // For premium users: show all 4 series with dominant filtering
     if (isPremiumUser) {
-      // Figma design: 4 overlapping data areas with specific colors
-      return [
-        // 1. Your stats - Red fill with ~60% opacity
-        {
-          label: 'Your stats',
-          data: userStatsData,
-          backgroundColor: 'rgba(230, 57, 70, 0.6)', // #E63946 at 0.6 opacity
-          borderColor: '#E63946',
-          borderWidth: 2,
-          pointBackgroundColor: '#E63946',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
-        },
-        // 2. Average Player from your Country - Orange fill with ~50% opacity
-        {
-          label: 'Average Player from your Country',
-          data: countryStatsData,
-          backgroundColor: 'rgba(255, 183, 3, 0.5)', // #FFB703 at 0.5 opacity
-          borderColor: '#FFB703',
-          borderWidth: 2,
-          pointBackgroundColor: '#FFB703',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
-        },
-        // 3. Average Player from your Team - Sky blue fill with ~50% opacity
-        {
-          label: 'Average Player from your Team',
-          data: teamStatsData,
-          backgroundColor: 'rgba(135, 206, 235, 0.5)', // Sky blue at 0.5 opacity
-          borderColor: '#87CEEB',
-          borderWidth: 2,
-          pointBackgroundColor: '#87CEEB',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
-        },
-        // 4. Average Player Overall - Green fill with ~40% opacity
-        {
-          label: 'Average Player Overall',
-          data: communityStatsData,
-          backgroundColor: 'rgba(33, 158, 188, 0.4)', // #219EBC at 0.4 opacity
-          borderColor: '#219EBC',
-          borderWidth: 2,
-          pointBackgroundColor: '#219EBC',
-          pointBorderColor: '#fff',
-          pointBorderWidth: 2,
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
+      return Object.entries(filterConfig).map(([key, config]) => {
+        // If no filter is active, show all 4 series with normal opacity
+        if (activeFilter === null) {
+          const strokeWidth = config.key === "Global" ? 3 : 1.5
+          const fillOpacity = config.key === "Global" ? 0 : 
+                            config.key === "Team" ? 0.65 : 
+                            config.key === "You" ? 0.85 : 0.5
+          
+          return (
+            <Radar
+              key={config.key}
+              name={config.name}
+              dataKey={config.key}
+              stroke={config.color}
+              fill={config.fillColor}
+              fillOpacity={fillOpacity}
+              strokeWidth={strokeWidth}
+              strokeOpacity={1}
+            />
+          )
         }
-      ]
-    } else {
-      // Free users get simple monochrome design
-      return [
-        {
-          label: 'Own stats',
-          data: userStatsData,
-          backgroundColor: 'rgba(230, 57, 70, 0.3)', // Red background with transparency
-          borderColor: '#E63946', // Solid red border
-          borderWidth: 2,
-          pointBackgroundColor: '#E63946',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: '#E63946',
-          pointRadius: 4,
-          pointHoverRadius: 6,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
-        },
-        {
-          label: 'Community stats',
-          data: communityStatsData,
-          backgroundColor: 'rgba(230, 57, 70, 0.1)', // Lighter red background
-          borderColor: 'rgba(230, 57, 70, 0.6)', // Semi-transparent red border
-          borderWidth: 1,
-          borderDash: [3, 3],
-          pointBackgroundColor: 'rgba(230, 57, 70, 0.6)',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: 'rgba(230, 57, 70, 0.6)',
-          pointRadius: 3,
-          pointHoverRadius: 5,
-          fill: true,
-          tension: 0.3 // Smooth, rounded polygon
+        
+        // If a filter is active, show ALL series but make selected one dominant
+        const isSelected = activeFilter === key
+        
+        if (isSelected) {
+          // Make selected series dominant with stronger colors
+          return (
+            <Radar
+              key={config.key}
+              name={config.name}
+              dataKey={config.key}
+              stroke={config.color}
+              fill={config.fillColor}
+              fillOpacity={config.key === "Global" ? 0 : 0.9}
+              strokeWidth={4}
+              strokeOpacity={1}
+            />
+          )
+        } else {
+          // Make non-selected series faded but still visible
+          return (
+            <Radar
+              key={config.key}
+              name={config.name}
+              dataKey={config.key}
+              stroke={config.color}
+              fill={config.fillColor}
+              fillOpacity={config.key === "Global" ? 0 : 0.2}
+              strokeWidth={1}
+              strokeOpacity={0.3}
+            />
+          )
         }
-      ]
+      })
     }
-  }
-
-  const data = {
-    labels: labels,
-    datasets: createDatasets()
-  }
-
-  // Update tooltip to show actual values instead of percentages
-  const options = {
-    responsive: true,
-    maintainAspectRatio: false,
-    layout: {
-      padding: 10
-    },
-    plugins: {
-      legend: {
-        display: false, // Always hide default legend (we'll create custom one)
-        position: 'bottom' as const
-      },
-      tooltip: {
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
-        titleColor: '#ffffff',
-        bodyColor: '#ffffff',
-        padding: 12,
-        boxPadding: 6,
-        usePointStyle: true,
-        callbacks: {
-          label: function(context: any): string {
-            const label = context.dataset.label || ''
-            const dataIndex = context.dataIndex
-            const statKeys: (keyof StatBounds)[] = [
-              'pokemon_caught',
-              'pokestops_visited',
-              'distance_walked',
-              'total_xp',
-              'unique_pokedex_entries'
-            ]
-            
-            // For premium users with multiple data sources
-            if (isPremiumUser) {
-              let actualValue = 0
-              
-              if (label === 'Your stats') {
-                actualValue = profile[statKeys[dataIndex]] || 0
-              } else if (label === 'Average Player from your Country' && countryAverages) {
-                actualValue = countryAverages[statKeys[dataIndex]] || 0
-              } else if (label === 'Average Player from your Team' && teamAverages) {
-                actualValue = teamAverages[statKeys[dataIndex]] || 0
-              } else if (label === 'Average Player Overall') {
-                actualValue = communityAverages[statKeys[dataIndex]] || 0
-              }
-              
-              const formattedValue = new Intl.NumberFormat().format(actualValue)
-              return `${label}: ${formattedValue}`
-            }
-            
-            // For free users
-            const actualValue = context.dataset.label === 'Your Stats'
-              ? profile[statKeys[dataIndex]]
-              : communityAverages[statKeys[dataIndex]]
-            
-            const formattedValue = new Intl.NumberFormat().format(actualValue)
-            return `${label}: ${formattedValue}`
-          },
-          filter: function() {
-            // Show all tooltips for the clean Figma design
-            return true
-          }
-        }
-      }
-    },
-    scales: {
-      r: {
-        angleLines: {
-          color: '#AAAAAA', // Light grey axis lines
-          lineWidth: 1
-        },
-        grid: {
-          color: '#AAAAAA', // Light grey grid lines
-          circular: true,
-          lineWidth: 1
-        },
-        pointLabels: {
-          color: '#AAAAAA', // Light grey labels
-          font: {
-            size: isVerySmallScreen ? 10 : isMobile ? 12 : 14,
-            weight: 400
-          },
-          callback: function(value: any, index: number) {
-            // Handle multi-line labels on mobile
-            if (isMobile) {
-              const labels = isVerySmallScreen
-                ? [
-                    'Pokémon\nCaught',
-                    'Stops', 
-                    'Distance\nWalked',
-                    'XP',
-                    'Dex'
-                  ]
-                : [
-                    'Pokémon\nCaught',
-                    'PokéStops', 
-                    'Distance\nWalked',
-                    'Total XP',
-                    'Pokédex'
-                  ];
-              return labels[index] || value;
-            }
-            return value;
-          }
-        },
-        ticks: {
-          display: false, // Hide the scale numbers
-          stepSize: 20
-        },
-        backgroundColor: 'transparent', // Transparent background
-        beginAtZero: true,
-        max: 100
-      }
+    
+    // For free trial users: show only "You" and "Global" (community logic)
+    else {
+      const elementsToShow = activeFilter === null ? ['you', 'global'] : [activeFilter]
+      
+      return elementsToShow.map((key) => {
+        const config = filterConfig[key as keyof typeof filterConfig]
+        if (!config) return null
+        
+        const strokeWidth = config.key === "Global" ? 3 : 1.5
+        const fillOpacity = config.key === "Global" ? 0 : 0.85
+        
+        return (
+          <Radar
+            key={config.key}
+            name={config.name}
+            dataKey={config.key}
+            stroke={config.color}
+            fill={config.fillColor}
+            fillOpacity={fillOpacity}
+            strokeWidth={strokeWidth}
+            strokeOpacity={1}
+          />
+        )
+      }).filter(Boolean)
     }
   }
 
   return (
-    <div 
-      style={{
-        /* Removed container styling - clean minimal design */
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        width: '100%',
-        maxWidth: isMobile ? '100%' : '1000px',
-        height: isMobile ? '350px' : (isPremiumUser ? '500px' : '450px'),
-        margin: '0 auto'
-      }}
-    >
+    <div style={{
+      width: '100%',
+      maxWidth: isMobile ? '100%' : '100%',
+      background: '#F9FAFB',
+      boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+      borderRadius: '8px',
+      border: 'none',
+      padding: isMobile ? '16px' : '24px'
+    }}>
       {showHeader && (
-        <div style={{ 
-          textAlign: 'center', 
-          marginBottom: isMobile ? '10px' : '20px', 
-          marginTop: isMobile ? '10px' : '20px' 
-        }}>
-          <h2 style={{ 
-            color: '#000000', 
-            fontSize: isMobile ? '16px' : '20px', 
-            fontWeight: 'bold', 
-            margin: '0 0 8px 0' 
-          }}>
-            Performance Radar {isPremiumUser && <span style={{ color: '#FFD700', fontSize: '0.8em' }}>✨ Premium</span>}
-          </h2>
-          <p style={{ 
-            color: '#666666', 
-            fontSize: isMobile ? '12px' : '14px', 
-            margin: '0' 
-          }}>
-            {isPremiumUser 
-              ? 'Advanced colorful visualization of your stats vs community' 
-              : 'See how your stats compare to the community average'}
-          </p>
-          {!isPremiumUser && profile?.user_id === user?.id && (
-            <div style={{ 
-              marginTop: '8px',
-              padding: '8px 12px',
-              backgroundColor: 'rgba(255, 193, 7, 0.1)',
-              borderRadius: '6px',
-              border: '1px solid rgba(255, 193, 7, 0.3)'
-            }}>
-              <p style={{ 
-                color: '#F57C00', 
-                fontSize: '12px', 
-                margin: '0 0 4px 0',
-                fontWeight: '500'
-              }}>
-                Upgrade to Premium
-              </p>
-              <button 
-                onClick={handleUpgradeClick}
-                style={{
-                  backgroundColor: '#FF6B35',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  padding: '4px 8px',
-                  fontSize: '11px',
-                  cursor: 'pointer',
-                  fontWeight: '500'
-                }}
-              >
-                Upgrade Now
-              </button>
-            </div>
-          )}
-        </div>
-      )}
-
-      <div style={{ 
-        width: '100%', 
-        height: showHeader ? (isMobile ? 'calc(100% - 60px)' : 'calc(100% - 80px)') : '100%',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: isMobile ? '0 5px' : '0 20px'
-      }}>
-        <div style={{ 
-          width: '100%', 
-          height: '100%', 
-          maxWidth: isMobile ? '100%' : '900px',
+        <div style={{
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'space-between',
+          marginBottom: '16px'
         }}>
-          <div style={{ width: '100%', height: '100%' }}>
-            <Radar data={data} options={options} />
+          <h2 style={{
+            fontSize: isMobile ? '18px' : '20px',
+            fontWeight: 600,
+            color: '#000000',
+            margin: 0,
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            Performance Overview
+          </h2>
+          <div style={{
+            background: 'rgba(0, 0, 0, 0.08)',
+            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+            backdropFilter: 'blur(2px)',
+            padding: '8px 16px',
+            borderRadius: '12px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span
+              style={{
+                color: '#DC2627',
+                fontSize: '12px',
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                fontFamily: 'Poppins, sans-serif'
+              }}
+            >
+              5 DAYS LEFT
+            </span>
+            <div style={{
+              fontSize: '10px',
+              color: '#000000',
+              textDecoration: 'underline',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              Learn more
+            </div>
           </div>
         </div>
+      )}
+      
+      <div style={{
+        height: isMobile ? '300px' : '384px',
+        width: '100%',
+        maxWidth: isMobile ? '100%' : '100%',
+        marginBottom: '24px'
+      }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsRadarChart data={performanceData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
+            <PolarGrid stroke="#A5B7C6" strokeDasharray="3 3" radialLines={true} />
+            <PolarAngleAxis
+              dataKey="metric"
+              tick={{
+                fontSize: isMobile ? 10 : 11.559,
+                fill: "#000000",
+                fontFamily: "Poppins, sans-serif",
+                fontWeight: 600,
+              }}
+            />
+            {getRadarElements()}
+          </RechartsRadarChart>
+        </ResponsiveContainer>
       </div>
 
-      {/* Compact Legend - Mobile Responsive */}
-      {isPremiumUser && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: isMobile ? '5px' : '10px',
-          gap: isMobile ? '5px' : '20px',
-          width: '100%',
-          maxWidth: '100%',
-          flexWrap: 'wrap',
-          margin: '10px auto 0 auto'
-        }}>
-          {/* Your stats - Red square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: '#E63946',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Your stats</span>
-          </div>
-
-          {/* Average Player from your Country - Orange square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: '#FFB703',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Country Avg</span>
-          </div>
-
-          {/* Average Player from your Team - Sky blue square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: '#87CEEB',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Team Avg</span>
-          </div>
-
-          {/* Average Player Overall - Green square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: '#219EBC',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Overall Avg</span>
-          </div>
-        </div>
-      )}
-
-      {/* Free User Legend - Simple Two-Item Legend */}
-      {!isPremiumUser && (
-        <div style={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: isMobile ? '5px' : '10px',
-          gap: isMobile ? '15px' : '30px',
-          width: '100%',
-          maxWidth: '100%',
-          flexWrap: 'wrap',
-          margin: '10px auto 0 auto'
-        }}>
-          {/* Own stats - Red square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: '#E63946',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Own stats</span>
-          </div>
-
-          {/* Community stats - Light red square */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: isMobile ? '3px' : '4px'
-          }}>
-            <div style={{
-              width: isMobile ? '6px' : '8px',
-              height: isMobile ? '6px' : '8px',
-              backgroundColor: 'rgba(230, 57, 70, 0.6)',
-              borderRadius: '1px',
-              flex: 'none'
-            }}></div>
-            <span style={{
-              fontSize: isMobile ? '8px' : '10px',
-              fontWeight: '500',
-              color: '#000000', // Black text as requested
-              fontFamily: 'Poppins, system-ui, -apple-system, sans-serif',
-              whiteSpace: 'nowrap'
-            }}>Community stats</span>
-          </div>
-        </div>
-      )}
+      <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} profile={profile} isMobile={isMobile} />
     </div>
   )
-} 
+}

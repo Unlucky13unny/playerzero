@@ -554,7 +554,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Clear filters function
 
-  const clearFilters = () => {
+  const clearFilters = (newTab?: "trainers" | "country" | "team") => {
+    const tabToUse = newTab || activeTab
 
     setSelectedTeamFilter(null)
 
@@ -564,15 +565,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     // Update dynamic dropdown value based on tab
 
-    if (activeTab === 'trainers') {
+    if (tabToUse === 'trainers') {
 
       setSelectedDynamicValue('All Trainers')
 
-    } else if (activeTab === 'team') {
+    } else if (tabToUse === 'team') {
 
       setSelectedDynamicValue('All Teams')
 
-    } else if (activeTab === 'country') {
+    } else if (tabToUse === 'country') {
 
       setSelectedDynamicValue('All Country')
 
@@ -585,11 +586,16 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   // Update tab selection to clear filters
 
   const handleTabChange = (tab: "trainers" | "country" | "team") => {
-
+    // Prevent any potential event bubbling issues
+    console.log('Tab change triggered:', tab)
+    
+    // Immediately update the tab for instant UI feedback
     setActiveTab(tab)
-
-    clearFilters()
-
+    
+    // Clear filters with the new tab
+    clearFilters(tab)
+    
+    // The useEffect will handle data loading automatically
   }
 
 
@@ -2987,7 +2993,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               <button
 
-                onClick={() => handleTabChange('trainers')}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleTabChange('trainers')
+                }}
 
                 style={{
 
@@ -3065,7 +3075,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               <button
 
-                onClick={() => handleTabChange('country')}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleTabChange('country')
+                }}
 
                 style={{
 
@@ -3143,7 +3157,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               <button
 
-                onClick={() => handleTabChange('team')}
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  handleTabChange('team')
+                }}
 
                 style={{
 
@@ -3343,7 +3361,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             padding: '0px',
 
-            gap: '18px',
+            gap: '12px',
 
             width: '826px',
 
@@ -4075,7 +4093,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         <button
 
-          onClick={() => handleTabChange('trainers')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleTabChange('trainers')
+          }}
 
           style={{
 
@@ -4161,7 +4183,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         <button
 
-          onClick={() => handleTabChange('country')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleTabChange('country')
+          }}
 
           style={{
 
@@ -4247,7 +4273,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         <button
 
-          onClick={() => handleTabChange('team')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            handleTabChange('team')
+          }}
 
           style={{
 
@@ -4369,7 +4399,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           padding: '0px 8px',
 
-          gap: '20px',
+          gap: '50px',
 
           width: '100%',
 
@@ -5602,31 +5632,18 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           </div>
 
           <svg 
-
             width="38" 
-
             height="24" 
-
             viewBox="0 0 38 24" 
-
             fill="none" 
-
             xmlns="http://www.w3.org/2000/svg"
-
             style={{
-
-            transform: lockedExpanded ? 'rotate(180deg)' : 'rotate(0deg)',
-
-            transition: 'transform 0.2s ease'
-
+              transform: lockedExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
+              transition: 'transform 0.2s ease'
             }}
-
           >
-
             <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
-
             <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
-
           </svg>
 
         </button>
@@ -5952,6 +5969,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
            borderRadius: '8px',
 
+           marginTop: '20px',
+
            flex: 'none',
 
            order: 5,
@@ -6024,36 +6043,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
            </div>
 
-           {liveExpanded ? (
-             <ChevronDown style={{
-
-               width: '20px',
-
-               height: '20px',
-
-               color: '#000000'
-
-             }} />
-           ) : (
-             <span style={{
-
-               fontSize: '12px',
-
-               color: '#666',
-
-               padding: '4px 8px',
-
-               border: '1px solid #ccc',
-
-               borderRadius: '4px'
-
-             }}>
-
-               Show
-
-             </span>
-           )}
-
          </button>
 
 
@@ -6091,9 +6080,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    alignItems: 'center',
 
-                   padding: '4px 16px',
+                   padding: '12px',
 
-                   gap: '8px',
+                   gap: '12px',
 
                    width: '337px',
 

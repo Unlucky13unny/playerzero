@@ -187,7 +187,7 @@ export const UpdateStats = () => {
           width: isMobile ? "100%" : "838px",
           minWidth: isMobile ? "350px" : "auto", // Reduced for 414px devices
           maxWidth: isMobile ? "390px" : "100%", // Max width to fit in 414px viewport
-          fontFamily: "Poppins, sans-serif",
+          fontFamily: "Poppins, sans-ser",
           color: "#000000",
           margin: "0 auto",
           marginTop: isMobile ? "8px" : "20px", // Minimal top spacing for mobile header
@@ -703,14 +703,14 @@ export const UpdateStats = () => {
             style={{
               /* Frame 665 */
               display: "flex",
-              flexDirection: "row",
-              justifyContent: "space-between",
+              flexDirection: "row", // Match Figma design
+              justifyContent: "space-between", // Match Figma design
               alignItems: "center",
               padding: "0px",
               gap: "8px",
               
               width: isMobile ? "353px" : "100%",
-              height: isMobile ? "38px" : "auto",
+              height: isMobile ? "38px" : "auto", // Match Figma design
               
               /* Inside auto layout */
               flex: "none",
@@ -729,12 +729,12 @@ export const UpdateStats = () => {
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: isMobile ? "4px 8px" : "12px 24px",
+                padding: isMobile ? "4px 8px" : "12px 24px", // Match Figma design
                 gap: "8px",
                 
-                margin: isMobile ? "0 auto" : "0",
-                width: isMobile ? "170px" : "415px",
-                height: isMobile ? "38px" : "48px",
+                margin: isMobile ? "0 auto" : "0", // Match Figma design
+                width: isMobile ? "170px" : "415px", // Match Figma design
+                height: isMobile ? "38px" : "48px", // Match Figma design
                 
                 background: "#000000",
                 borderRadius: "6px",
@@ -747,9 +747,9 @@ export const UpdateStats = () => {
                 border: "none",
                 fontFamily: "Poppins",
                 fontStyle: "normal",
-                fontWeight: isMobile ? 500 : 600,
-                fontSize: isMobile ? "14px" : "16px",
-                lineHeight: isMobile ? "21px" : "24px",
+                fontWeight: 500, // Match Figma design
+                fontSize: isMobile ? "14px" : "16px", // Match Figma design
+                lineHeight: isMobile ? "21px" : "24px", // Match Figma design
                 color: "#FFFFFF",
                 cursor: "pointer",
                 opacity: (saving || !selectedFile) ? 0.5 : 1,
@@ -769,12 +769,12 @@ export const UpdateStats = () => {
                 flexDirection: "row",
                 justifyContent: "center",
                 alignItems: "center",
-                padding: isMobile ? "4px 8px" : "12px 24px",
+                padding: isMobile ? "4px 8px" : "12px 24px", // Match Figma design
                 gap: "8px",
                 
-                margin: isMobile ? "0 auto" : "0",
-                width: isMobile ? "170px" : "415px",
-                height: isMobile ? "38px" : "48px",
+                margin: isMobile ? "0 auto" : "0", // Match Figma design
+                width: isMobile ? "170px" : "415px", // Match Figma design
+                height: isMobile ? "38px" : "48px", // Match Figma design
                 
                 border: "1px solid #000000",
                 borderRadius: "6px",
@@ -787,9 +787,9 @@ export const UpdateStats = () => {
                 background: "#FFFFFF",
                 fontFamily: "Poppins",
                 fontStyle: "normal",
-                fontWeight: isMobile ? 500 : 600,
-                fontSize: isMobile ? "14px" : "16px",
-                lineHeight: isMobile ? "21px" : "24px",
+                fontWeight: 500, // Match Figma design
+                fontSize: isMobile ? "14px" : "16px", // Match Figma design
+                lineHeight: isMobile ? "21px" : "24px", // Match Figma design
                 color: "#000000",
                 cursor: "pointer",
               }}

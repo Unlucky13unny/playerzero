@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
-import { RadarChart } from '../dashboard/RadarChart'
+import { PerformanceRadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 export const PostProfileTutorial = () => {
@@ -108,7 +108,7 @@ export const PostProfileTutorial = () => {
       <div className="tutorial-visual">
         {/* Performance Radar */}
         <div style={{ marginBottom: '2rem' }}>
-          <RadarChart 
+          <PerformanceRadarChart 
             profile={profile} 
             isPaidUser={trialStatus.isPaidUser} 
             showHeader={false}

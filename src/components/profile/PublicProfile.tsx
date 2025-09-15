@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { profileService, type PublicProfileData } from '../../services/profileService'
 import { dashboardService } from '../../services/dashboardService'
-import { RadarChart } from '../dashboard/RadarChart'
+import { PerformanceRadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
@@ -363,7 +363,7 @@ export const PublicProfile = () => {
             <div className="performance-overview">
               <div className="performance-title">Performance Overview</div>
               <div className="radar-chart-container">
-                <RadarChart
+                <PerformanceRadarChart
                   profile={profile ? {
                     ...profile,
                     id: profile.id || '',
