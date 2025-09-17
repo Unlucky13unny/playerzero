@@ -1570,7 +1570,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               cursor: 'pointer',
 
-              background: '#FFFFFF',
+              background: 'transparent',
 
               opacity: exporting ? 0.7 : 1,
 
@@ -3461,7 +3461,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     cursor: 'pointer',
 
-                    background: '#FFFFFF',
+                    background: 'transparent',
 
                   }}>
 
@@ -3735,7 +3735,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     cursor: 'pointer',
 
-                    background: '#FFFFFF',
+                    background: 'transparent',
 
               }}>
 
@@ -4539,7 +4539,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             flexGrow: 0,
 
-            background: '#FFFFFF',
+            background: 'transparent',
 
                 position: 'relative',
 
@@ -4823,7 +4823,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 flexGrow: 0,
 
-                background: '#FFFFFF',
+                background: 'transparent',
 
                 position: 'relative',
 
@@ -4971,7 +4971,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                         borderBottom: '1px solid #f0f0f0',
 
-                        backgroundColor: sortBy === option.id ? '#f8f9fa' : 'transparent',
+                        backgroundColor: sortBy === option.id ? '#f8f9fa' : '#FFFFFF',
 
                       }}
 
@@ -4993,7 +4993,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                       onMouseLeave={(e) => {
 
-                        e.currentTarget.style.backgroundColor = sortBy === option.id ? '#f8f9fa' : 'transparent';
+                        e.currentTarget.style.backgroundColor = sortBy === option.id ? '#f8f9fa' : '#FFFFFF';
 
                       }}
 
@@ -5469,7 +5469,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             flexGrow: 0,
 
-            background: '#FFFFFF',
+            background: 'transparent',
 
             opacity: exporting ? 0.7 : 1,
 

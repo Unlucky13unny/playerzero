@@ -1248,6 +1248,26 @@ export const dashboardService = {
         max: Math.max(...data.map(d => d.unique_pokedex_entries || 0))
       }
     }
+  },
+
+  // Get all user stats for percentile-based normalization
+  async getAllUserStats() {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select(`
+        total_xp,
+        pokemon_caught,
+        distance_walked,
+        pokestops_visited,
+        unique_pokedex_entries
+      `)
+      .not('total_xp', 'is', null)
+
+    if (error) {
+      throw error
+    }
+
+    return data || []
   }
 } 
 

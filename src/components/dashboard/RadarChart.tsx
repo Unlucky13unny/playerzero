@@ -176,6 +176,7 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
   const [countryAverages, setCountryAverages] = useState<any>(null)
   const [teamAverages, setTeamAverages] = useState<any>(null)
   const [statBounds, setStatBounds] = useState<StatBounds | null>(null)
+  const [allUserStats, setAllUserStats] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -187,24 +188,28 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
       try {
         if (isPremiumUser && profile) {
           // Premium users get enhanced data with country and team averages
-          const [averages, countryAvg, teamAvg, bounds] = await Promise.all([
+          const [averages, countryAvg, teamAvg, bounds, allStats] = await Promise.all([
             dashboardService.getAverageStats(),
             dashboardService.getCountryAverageStats(profile.country || 'US'),
             dashboardService.getTeamAverageStats(profile.team_color || 'valor'),
-            dashboardService.getPaidUserStatBounds()
+            dashboardService.getPaidUserStatBounds(),
+            dashboardService.getAllUserStats()
           ])
           setCommunityAverages(averages)
           setCountryAverages(countryAvg)
           setTeamAverages(teamAvg)
           setStatBounds(bounds)
+          setAllUserStats(allStats)
         } else {
           // Free users get basic comparison only
-          const [averages, bounds] = await Promise.all([
+          const [averages, bounds, allStats] = await Promise.all([
             dashboardService.getAverageStats(),
-            dashboardService.getPaidUserStatBounds()
+            dashboardService.getPaidUserStatBounds(),
+            dashboardService.getAllUserStats()
           ])
           setCommunityAverages(averages)
           setStatBounds(bounds)
+          setAllUserStats(allStats)
         }
       } catch (err) {
         setError('Failed to load data')
@@ -217,16 +222,37 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
     loadData()
   }, [isPremiumUser, profile?.country, profile?.team_color])
 
-  // Normalize stats based on min/max values from paid users
-  const normalizeStats = (value: number, stat: keyof StatBounds) => {
-    if (!statBounds) return 0
-    const { min, max } = statBounds[stat]
-    // Clamp the value between min and max, then normalize to 0-100
-    const clampedValue = Math.max(min, Math.min(max, value))
-    return ((clampedValue - min) / (max - min)) * 100
+  // Percentile-based normalization for better visual representation
+  const normalizeStats = (value: number, stat: string) => {
+    if (!allUserStats || !allUserStats.length) return 0
+    
+    // Get all values for this stat and sort them
+    const allValues = allUserStats
+      .map((user: any) => user[stat] || 0)
+      .filter((val: number) => val > 0) // Remove zeros for better distribution
+      .sort((a: number, b: number) => a - b)
+    
+    if (allValues.length === 0) return 0
+    
+    // Calculate 5th and 95th percentiles for robust scaling
+    const p5Index = Math.floor(allValues.length * 0.05)
+    const p95Index = Math.floor(allValues.length * 0.95)
+    const p5 = allValues[p5Index] || allValues[0]
+    const p95 = allValues[p95Index] || allValues[allValues.length - 1]
+    
+    // Handle edge case where p5 = p95
+    if (p5 === p95) return 50
+    
+    // Scale value between 5th and 95th percentiles
+    let normalized = ((value - p5) / (p95 - p5)) * 100
+    
+    // Soft clamp to 0-100 range
+    normalized = Math.max(0, Math.min(100, normalized))
+    
+    return normalized
   }
 
-  if (!profile || loading || !communityAverages || !statBounds || (isPremiumUser && (!countryAverages || !teamAverages))) {
+  if (!profile || loading || !communityAverages || !statBounds || !allUserStats || (isPremiumUser && (!countryAverages || !teamAverages))) {
     return (
       <div 
         style={{
@@ -237,7 +263,6 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
           width: '100%',
           height: isMobile ? '310px' : '487px',
           background: isMobile ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
-          boxShadow: isMobile ? 'none' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
           borderRadius: isMobile ? '0px' : '8px',
         }}
       >
@@ -317,6 +342,51 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
     },
   ]
 
+  // Create actual values for tooltip/reference
+  const actualValues = {
+    XP: {
+      You: profile.total_xp || 0,
+      Global: communityAverages.total_xp,
+      Country: isPremiumUser && countryAverages ? countryAverages.total_xp : 0,
+      Team: isPremiumUser && teamAverages ? teamAverages.total_xp : 0,
+    },
+    Caught: {
+      You: profile.pokemon_caught || 0,
+      Global: communityAverages.pokemon_caught,
+      Country: isPremiumUser && countryAverages ? countryAverages.pokemon_caught : 0,
+      Team: isPremiumUser && teamAverages ? teamAverages.pokemon_caught : 0,
+    },
+    Stops: {
+      You: profile.pokestops_visited || 0,
+      Global: communityAverages.pokestops_visited,
+      Country: isPremiumUser && countryAverages ? countryAverages.pokestops_visited : 0,
+      Team: isPremiumUser && teamAverages ? teamAverages.pokestops_visited : 0,
+    },
+    Dex: {
+      You: profile.unique_pokedex_entries || 0,
+      Global: communityAverages.unique_pokedex_entries,
+      Country: isPremiumUser && countryAverages ? countryAverages.unique_pokedex_entries : 0,
+      Team: isPremiumUser && teamAverages ? teamAverages.unique_pokedex_entries : 0,
+    },
+    Distance: {
+      You: profile.distance_walked || 0,
+      Global: communityAverages.distance_walked,
+      Country: isPremiumUser && countryAverages ? countryAverages.distance_walked : 0,
+      Team: isPremiumUser && teamAverages ? teamAverages.distance_walked : 0,
+    }
+  }
+
+  // Debug logging to understand the data
+  console.log('🔍 Radar Chart Analysis:', {
+    'Raw Values': actualValues,
+    'Normalized Values': performanceData.map(item => ({
+      metric: item.metric,
+      You: `${item.You.toFixed(1)}% (${actualValues[item.metric as keyof typeof actualValues].You})`,
+      Global: `${item.Global.toFixed(1)}% (${actualValues[item.metric as keyof typeof actualValues].Global})`,
+    })),
+    'Stat Bounds': statBounds
+  })
+
   const getRadarElements = () => {
     const filterConfig = getFilterConfig(profile)
     
@@ -326,7 +396,7 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
         // If no filter is active, show all 4 series with normal opacity
         if (activeFilter === null) {
           const strokeWidth = config.key === "Global" ? 3 : 1.5
-          const fillOpacity = config.key === "Global" ? 0 : 
+          const fillOpacity = config.key === "Global" ? 0.1 : 
                             config.key === "Team" ? 0.65 : 
                             config.key === "You" ? 0.85 : 0.5
           
@@ -336,7 +406,7 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
               name={config.name}
               dataKey={config.key}
               stroke={config.color}
-              fill={config.fillColor}
+              fill={config.color}
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
@@ -344,35 +414,39 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
           )
         }
         
-        // If a filter is active, show ALL series but make selected one dominant
+        // If a filter is active, show ALL series but highlight the selected one
         const isSelected = activeFilter === key
         
         if (isSelected) {
-          // Make selected series dominant with stronger colors
+          // Make selected series bold and prominent - fill matches border color
+          const fillOpacity = config.key === "Global" ? 0.2 : 0.9
+          
           return (
             <Radar
               key={config.key}
               name={config.name}
               dataKey={config.key}
               stroke={config.color}
-              fill={config.fillColor}
-              fillOpacity={config.key === "Global" ? 0 : 0.9}
+              fill={config.color}
+              fillOpacity={fillOpacity}
               strokeWidth={4}
               strokeOpacity={1}
             />
           )
         } else {
-          // Make non-selected series faded but still visible
+          // Show other series with normal visibility but less prominent - fill matches border color
+          const fillOpacity = config.key === "Global" ? 0.05 : 0.3
+          
           return (
             <Radar
               key={config.key}
               name={config.name}
               dataKey={config.key}
               stroke={config.color}
-              fill={config.fillColor}
-              fillOpacity={config.key === "Global" ? 0 : 0.2}
-              strokeWidth={1}
-              strokeOpacity={0.3}
+              fill={config.color}
+              fillOpacity={fillOpacity}
+              strokeWidth={config.key === "Global" ? 2 : 1.5}
+              strokeOpacity={0.6}
             />
           )
         }
@@ -381,28 +455,71 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
     
     // For free trial users: show only "You" and "Global" (community logic)
     else {
-      const elementsToShow = activeFilter === null ? ['you', 'global'] : [activeFilter]
-      
-      return elementsToShow.map((key) => {
-        const config = filterConfig[key as keyof typeof filterConfig]
-        if (!config) return null
-        
-        const strokeWidth = config.key === "Global" ? 3 : 1.5
-        const fillOpacity = config.key === "Global" ? 0 : 0.85
-        
-        return (
-          <Radar
-            key={config.key}
-            name={config.name}
-            dataKey={config.key}
-            stroke={config.color}
-            fill={config.fillColor}
-            fillOpacity={fillOpacity}
-            strokeWidth={strokeWidth}
-            strokeOpacity={1}
-          />
-        )
-      }).filter(Boolean)
+      if (activeFilter === null) {
+        // Show both "You" and "Global" with normal styling
+        return ['you', 'global'].map((key) => {
+          const config = filterConfig[key as keyof typeof filterConfig]
+          if (!config) return null
+          
+          const strokeWidth = config.key === "Global" ? 3 : 1.5
+          const fillOpacity = config.key === "Global" ? 0.1 : 0.85
+          
+          return (
+            <Radar
+              key={config.key}
+              name={config.name}
+              dataKey={config.key}
+              stroke={config.color}
+              fill={config.color}
+              fillOpacity={fillOpacity}
+              strokeWidth={strokeWidth}
+              strokeOpacity={1}
+            />
+          )
+        }).filter(Boolean)
+      } else {
+        // Show both but highlight selected one
+        return ['you', 'global'].map((key) => {
+          const config = filterConfig[key as keyof typeof filterConfig]
+          if (!config) return null
+          
+          const isSelected = activeFilter === key
+          
+          if (isSelected) {
+            // Make selected series bold and prominent - fill matches border color
+            const fillOpacity = config.key === "Global" ? 0.2 : 0.9
+            
+            return (
+              <Radar
+                key={config.key}
+                name={config.name}
+                dataKey={config.key}
+                stroke={config.color}
+                fill={config.color}
+                fillOpacity={fillOpacity}
+                strokeWidth={config.key === "Global" ? 4 : 4}
+                strokeOpacity={1}
+              />
+            )
+          } else {
+            // Show other series with normal visibility but less prominent - fill matches border color
+            const fillOpacity = config.key === "Global" ? 0.05 : 0.3
+            
+            return (
+              <Radar
+                key={config.key}
+                name={config.name}
+                dataKey={config.key}
+                stroke={config.color}
+                fill={config.color}
+                fillOpacity={fillOpacity}
+                strokeWidth={config.key === "Global" ? 2 : 1.5}
+                strokeOpacity={0.6}
+              />
+            )
+          }
+        }).filter(Boolean)
+      }
     }
   }
 
@@ -411,7 +528,6 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
       width: '100%',
       maxWidth: isMobile ? '100%' : '100%',
       background: '#F9FAFB',
-      boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
       borderRadius: '8px',
       border: 'none',
       padding: isMobile ? '16px' : '24px'
@@ -434,7 +550,6 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
           </h2>
           <div style={{
             background: 'rgba(0, 0, 0, 0.08)',
-            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
             backdropFilter: 'blur(2px)',
             padding: '8px 16px',
             borderRadius: '12px',
