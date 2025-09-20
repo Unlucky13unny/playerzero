@@ -216,11 +216,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       const result = await dashboardService.getLeaderboard(params)
 
+      console.log(`Leaderboard result for ${timePeriod}:`, {
+        dataLength: result.data?.length || 0,
+        hasError: !!result.error,
+        errorMessage: result.error ? (typeof result.error === 'string' ? result.error : (result.error as any).message || 'Unknown error') : null
+      })
+
 
 
       if (result.error) {
 
-        throw new Error(result.error.message || 'Failed to load leaderboard')
+        throw new Error(typeof result.error === 'string' ? result.error : (result.error as any).message || 'Failed to load leaderboard')
 
       }
 
@@ -1133,13 +1139,45 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   }))
 
+  // Process all-time data for Live section (for weekly and monthly periods)
+  const getAllTimeStatValue = (entry: LeaderboardEntry) => {
+    switch (sortBy) {
+      case 'xp':
+        return formatNumber(entry.total_xp || 0)
+      case 'catches':
+        return formatNumber(entry.pokemon_caught || 0)
+      case 'distance':
+        return formatDistance(entry.distance_walked || 0)
+      case 'pokestops':
+        return formatNumber(entry.pokestops_visited || 0)
+      default:
+        return '0'
+    }
+  }
+
+  const allTimeData = leaderboardData.map((entry, index) => ({
+    rank: index + 1,
+    name: entry.trainer_name,
+    countryName: entry.country,
+    countryFlag: getCountryFlagUrl(entry.country),
+    team: getTeamColor(entry.team_color),
+    teamColor: entry.team_color,
+    statValue: getAllTimeStatValue(entry),
+    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+    profileId: entry.profile_id
+  }))
 
 
-  const lockedResults = processedData.slice(0, 3)
 
-  // Responsive Live section: Mobile shows all users, Web shows only top 3
+  // Locked Results: Show top 3 by default, top 10 when expanded
+  // const lockedResults = lockedExpanded ? processedData.slice(0, 10) : processedData.slice(0, 3)
 
-  const liveResults = isMobile ? processedData : processedData.slice(0, 3)
+  // Responsive Live section: Mobile shows all users, Web shows only top 3 (except for all-time)
+  // For weekly/monthly periods, Live section shows all-time results
+  // For all-time period, both mobile and web should show all results
+  const liveResults = (isMobile || timePeriod === 'alltime')
+    ? (timePeriod === 'alltime' ? processedData : allTimeData)
+    : allTimeData.slice(0, 3)
 
   
 
@@ -1149,95 +1187,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  const getMedalIcon = (medal: string | null) => {
-
-    if (medal === "gold")
-
-      return (
-
-        <img 
-
-          src={firstPlaceSvg} 
-
-          alt="1st place" 
-
-          style={{ 
-
-            width: '30px', 
-
-            height: '30px',
-
-            flex: 'none',
-
-            order: 0,
-
-            flexGrow: 0
-
-          }} 
-
-        />
-
-      )
-
-    if (medal === "silver")
-
-      return (
-
-        <img 
-
-          src={secondPlaceSvg} 
-
-          alt="2nd place" 
-
-          style={{ 
-
-            width: '30px', 
-
-            height: '30px',
-
-            flex: 'none',
-
-            order: 0,
-
-            flexGrow: 0
-
-          }} 
-
-        />
-
-      )
-
-    if (medal === "bronze")
-
-      return (
-
-        <img 
-
-          src={thirdPlaceSvg} 
-
-          alt="3rd place" 
-
-          style={{ 
-
-            width: '30px', 
-
-            height: '30px',
-
-            flex: 'none',
-
-            order: 0,
-
-            flexGrow: 0
-
-          }} 
-
-        />
-
-      )
-
-    return null
-
-  }
+  // const getMedalIcon = (medal: string | null) => {
+  //   // Function removed as it's no longer used
+  // }
 
 
 
@@ -1644,8 +1596,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-        {/* Frame 586 - Live Results Section */}
-
+        {/* Frame 586 - Locked Results Section - Only show for Weekly/Monthly */}
+        {timePeriod !== 'alltime' && (
           <div style={{
 
             display: 'flex',
@@ -1660,7 +1612,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             width: '826px',
 
-            height: '259px',
+            height: lockedExpanded ? 'auto' : '259px',
 
             background: 'rgba(0, 0, 0, 0.1)',
 
@@ -1676,9 +1628,123 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-          {renderWebLiveResults()}
+          {/* Locked Results Header with Dropdown */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px',
+            width: '810px',
+            height: '24px',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+          }}>
+            <div style={{
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: '13px',
+            }}>
+              {/* Trophy Icon */}
+              <svg 
+                width="20" 
+                height="20" 
+                viewBox="0 0 18 18" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  position: 'relative',
+                }}
+              >
+                <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
+                fill="#DC2627"
+              />
+            </svg>
+
+            {/* Locked Results Title */}
+            <span style={{
+              width: 'auto',
+              minWidth: '175px',
+              height: '24px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '16px',
+              lineHeight: '24px',
+              color: '#DC2627',
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+              textAlign: 'left',
+            }}>
+              Locked Results
+            </span>
+          </div>
+
+          {/* Dropdown Button */}
+          <button
+            onClick={() => setLockedExpanded(!lockedExpanded)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0px',
+              display: 'flex',
+              alignItems: 'center',
+              marginLeft: '8px',
+            }}
+          >
+            <svg 
+              width="38" 
+              height="24" 
+              viewBox="0 0 38 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                transform: lockedExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+            </svg>
+          </button>
+          </div>
+
+        {/* Locked Results Content - Always show top 3, show top 10 when expanded */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          padding: '0px',
+          width: '810px',
+          borderRadius: '8px',
+          flex: 'none',
+          order: 1,
+          flexGrow: 0,
+        }}>
+          {/* Always show top 3 results */}
+          {processedData.slice(0, 3).map((player, index) => 
+            renderWebLockedPlayerCard(player, index)
+          )}
+
+          {/* Additional results (positions 4-10) shown only when expanded */}
+          {lockedExpanded && (
+            <>
+              {processedData.slice(3, 10).map((player, index) => 
+                renderWebLockedPlayerCard(player, index + 3)
+              )}
+            </>
+          )}
+        </div>
 
           </div>
+        )}
 
 
 
@@ -1702,7 +1768,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           width: '826px',
 
-          height: '627px',
+          height: timePeriod === 'alltime' ? 'auto' : '627px',
+          maxHeight: timePeriod === 'alltime' ? '800px' : '627px',
+          overflowY: timePeriod === 'alltime' ? 'auto' : 'visible',
 
           /* Inside auto layout */
 
@@ -1768,281 +1836,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  const renderWebLiveResults = () => {
-
-    return (
-
-      <>
-
-        {/* Header */}
-
-        <div style={{
-
-          display: 'flex',
-
-          flexDirection: 'row',
-
-          justifyContent: 'space-between',
-
-          alignItems: 'flex-start',
-
-          padding: '0px',
-
-          gap: '16px',
-
-          width: '810px',
-
-          height: '24px',
-
-          flex: 'none',
-
-          order: 0,
-
-          alignSelf: 'stretch',
-
-          flexGrow: 0,
-
-        }}>
-
-          <div style={{
-
-            display: 'flex',
-
-            flexDirection: 'row',
-
-            alignItems: 'center',
-
-            padding: '0px',
-
-            gap: '8px',
-
-            margin: '0',
-
-            width: '104px',
-
-            height: '24px',
-
-            flex: 'none',
-
-            order: 0,
-
-            flexGrow: 0,
-
-          }}>
-
-            <svg 
-              width="18" 
-              height="18" 
-              viewBox="0 0 18 18" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
-              style={{
-                flex: 'none',
-                order: 0,
-                flexGrow: 0,
-              }}
-            >
-              <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
-                fill="#DC2627"
-              />
-            </svg>
-
-            <span style={{
-
-              width: '32px',
-
-              height: '24px',
-
-              fontFamily: 'Poppins',
-
-              fontStyle: 'normal',
-
-              fontWeight: 600,
-
-              fontSize: '16px',
-
-              lineHeight: '24px',
-
-              color: '#DC2627',
-
-              flex: 'none',
-
-              order: 1,
-
-              flexGrow: 0,
-
-              whiteSpace: 'nowrap',
-
-            }}>
-
-              Locked Results
-
-            </span>
-
-          </div>
-
-
-
-          {/* Dropdown Button */}
-
-          {webLiveExpanded ? (
-            <div 
-
-              style={{
-
-                cursor: 'pointer'
-
-              }}
-
-              onClick={() => setWebLiveExpanded(!webLiveExpanded)}
-
-            >
-
-              <svg 
-
-                width="50" 
-
-                height="24" 
-
-                viewBox="0 0 50 24" 
-
-                fill="none" 
-
-                xmlns="http://www.w3.org/2000/svg"
-
-              >
-
-                <rect x="0.5" y="0.5" width="49" height="23" rx="11.5" stroke="black"/>
-
-                <path d="M24.764 14.4707C24.8265 14.5332 24.912 14.5684 25.0004 14.5684C25.0886 14.5683 25.1733 14.5331 25.2357 14.4707L29.5961 10.1094L29.1244 9.63867L25.3539 13.4102L25.0004 13.7637L20.8754 9.63867L20.4037 10.1104L24.764 14.4707Z" fill="black" stroke="black"/>
-
-              </svg>
-
-            </div>
-          ) : (
-            <div 
-
-              style={{
-
-                cursor: 'pointer'
-
-              }}
-
-              onClick={() => setWebLiveExpanded(!webLiveExpanded)}
-
-            >
-
-              <svg width="50" height="24" viewBox="0 0 50 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="0.5" y="0.5" width="49" height="23" rx="11.5" stroke="black"/>
-                <path d="M25.236 9.5293C25.1735 9.46681 25.088 9.43164 24.9996 9.43164C24.9114 9.43174 24.8267 9.46693 24.7643 9.5293L20.4039 13.8906L20.8756 14.3613L24.6461 10.5898L24.9996 10.2363L29.1246 14.3613L29.5963 13.8896L25.236 9.5293Z" fill="black" stroke="black"/>
-              </svg>
-
-            </div>
-          )}
-
-        </div>
-
-
-
-        {/* Top 3 Results - Conditionally Rendered */}
-
-        {webLiveExpanded && (
-
-          <div style={{
-
-            display: 'flex',
-
-            flexDirection: 'column',
-
-            alignItems: 'flex-start',
-
-            padding: '0px',
-
-            width: '812px',
-
-            flex: 'none',
-
-            order: 1,
-
-            flexGrow: 0,
-
-            gap: '8px',
-
-          }}>
-
-            {liveResults && liveResults.length > 0 ? (
-
-              liveResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))
-
-            ) : (
-
-              // No Data State
-
-              <div style={{
-
-                display: 'flex',
-
-                justifyContent: 'center',
-
-                alignItems: 'center',
-
-                width: '100%',
-
-                height: '100px',
-
-                flexDirection: 'column',
-
-                gap: '8px'
-
-              }}>
-
-                <svg 
-                  width="32" 
-                  height="32" 
-                  viewBox="0 0 18 18" 
-                  fill="none" 
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path d="M4 18V16H8V12.9C7.18333 12.7167 6.45433 12.371 5.813 11.863C5.17167 11.355 4.70067 10.7173 4.4 9.95C3.15 9.8 2.10433 9.25433 1.263 8.313C0.421667 7.37167 0.000666667 6.26733 0 5V4C0 3.45 0.196 2.97933 0.588 2.588C0.98 2.19667 1.45067 2.00067 2 2H4V0H14V2H16C16.55 2 17.021 2.196 17.413 2.588C17.805 2.98 18.0007 3.45067 18 4V5C18 6.26667 17.579 7.371 16.737 8.313C15.895 9.255 14.8493 9.80067 13.6 9.95C13.3 10.7167 12.8293 11.3543 12.188 11.863C11.5467 12.3717 10.8173 12.7173 10 12.9V16H14V18H4ZM4 7.8V4H2V5C2 5.63333 2.18333 6.20433 2.55 6.713C2.91667 7.22167 3.4 7.584 4 7.8ZM9 11C9.83333 11 10.5417 10.7083 11.125 10.125C11.7083 9.54167 12 8.83333 12 8V2H6V8C6 8.83333 6.29167 9.54167 6.875 10.125C7.45833 10.7083 8.16667 11 9 11ZM14 7.8C14.6 7.58333 15.0833 7.22067 15.45 6.712C15.8167 6.20333 16 5.63267 16 5V4H14V7.8Z" 
-                    fill="#cccccc"
-                  />
-                </svg>
-
-                <span style={{
-
-                  fontFamily: 'Poppins',
-
-                  fontSize: '14px',
-
-                  color: '#999999',
-
-                  fontWeight: 400
-
-                }}>
-
-                  No live data available
-
-                </span>
-
-              </div>
-
-            )}
-
-          </div>
-
-        )}
-
-      </>
-
-    )
-
-  }
-
-
-
   const renderWebMonthlyResults = () => {
 
-    const allMainResults = processedData.slice(3) // All players except top 3 (which go to Live)
+    // For all periods: show all results from position 1 onwards
+    const allMainResults = timePeriod === 'alltime' ? processedData : allTimeData
 
     
 
@@ -2050,7 +1847,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       <>
 
-        {/* Frame 573 - Header */}
+        {/* Frame 573 - Header with Dropdown */}
 
         <div style={{
 
@@ -2062,13 +1859,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           flexDirection: 'row',
 
+          justifyContent: 'space-between',
+
           alignItems: 'center',
 
           padding: '0px',
 
-          gap: '13px',
-
-          width: '212px',
+          width: '810px',
 
           height: '24px',
 
@@ -2080,6 +1877,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           flexGrow: 0,
 
+        }}>
+
+          <div style={{
+            display: 'flex',
+            flexDirection: 'row',
+            alignItems: 'center',
+            gap: '13px',
         }}>
 
           {/* material-symbols:trophy-outline */}
@@ -2102,7 +1906,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             />
           </svg>
 
-          {/* Monthly Leaderboard */}
+            {/* Live Section Title */}
 
           <span style={{
 
@@ -2144,6 +1948,37 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         </div>
 
+          {/* Dropdown Button */}
+          <button
+            onClick={() => setWebLiveExpanded(!webLiveExpanded)}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0px',
+              display: 'flex',
+              alignItems: 'center',
+              marginLeft: '8px',
+            }}
+          >
+            <svg 
+              width="38" 
+              height="24" 
+              viewBox="0 0 38 24" 
+              fill="none" 
+              xmlns="http://www.w3.org/2000/svg"
+              style={{
+                transform: webLiveExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
+                transition: 'transform 0.2s ease'
+              }}
+            >
+              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+            </svg>
+          </button>
+
+        </div>
+
 
 
 
@@ -2152,7 +1987,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         {/* Frame 574 - Main Results Container */}
 
-        {allMainResults.length > 0 && (
+        {webLiveExpanded && allMainResults.length > 0 && (
 
         <div style={{
 
@@ -2184,7 +2019,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-            {allMainResults.map((player, index) => renderWebMonthlyPlayerCard(player, index + 3))}
+            {allMainResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))}
 
         </div>
 
@@ -2197,6 +2032,245 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   }
 
 
+
+  const renderWebLockedPlayerCard = (player: any, index: number) => {
+    const teamColorHex = getTeamColorHex(player.teamColor || player.team)
+
+    return (
+      <div 
+        key={index} 
+        className="hover:scale-102 transition-transform duration-200 ease-in-out cursor-pointer"
+        style={{
+          /* Frame 612 */
+          /* Auto layout */
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          padding: '0px',
+          width: '812px',
+          height: '68px',
+          filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))',
+          borderRadius: '8px',
+          /* Inside auto layout */
+          flex: 'none',
+          order: 0,
+          flexGrow: 0,
+          ...(index === 0 && {
+            border: '4px solid #DC2627'
+          })
+        }}>
+          {/* Frame 578 - Player Card Content */}
+          <div style={{
+            /* Frame 578 */
+            /* Auto layout */
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '8px 16px',
+            width: '100%',
+            height: '58px',
+            background: '#FFFFFF',
+            borderRadius: '4px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+          }}>
+            {/* Frame 582 - Left Section */}
+            <div style={{
+              /* Frame 582 */
+              /* Auto layout */
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: '0px',
+              gap: '15px',
+              height: '33px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 0,
+              flexGrow: 0,
+            }}>
+              {/* Rank Badge */}
+              <div style={{
+                /* Auto layout */
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '0px',
+                gap: '10px',
+                width: '24px',
+                height: '24px',
+                background: '#DC2627',
+                borderRadius: '2000px',
+                /* Inside auto layout */
+                flex: 'none',
+                order: 0,
+                flexGrow: 0,
+              }}>
+                {/* Use SVG medals for top 3 in Locked section */}
+                {player.rank <= 3 ? (
+                  <img 
+                    src={player.rank === 1 ? firstPlaceSvg : 
+                         player.rank === 2 ? secondPlaceSvg : thirdPlaceSvg} 
+                    alt={`${player.rank === 1 ? '1st' : player.rank === 2 ? '2nd' : '3rd'} place`}
+                    style={{
+                      width: '30px',
+                      height: '30px',
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}
+                  />
+                ) : (
+                  <span style={{
+                    width: '6px',
+                    height: '21px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    fontSize: '14px',
+                    lineHeight: '21px',
+                    textAlign: 'center',
+                    color: '#FFFFFF',
+                  }}>
+                    {player.rank}
+                  </span>
+                )}
+              </div>
+
+              {/* Player Info */}
+              <div style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                padding: '0px',
+                gap: '4px',
+                width: '200px',
+                height: '33px',
+                flex: 'none',
+                order: 1,
+                flexGrow: 0,
+              }}>
+                {/* Player Name */}
+                <span style={{
+                  width: '200px',
+                  height: '21px',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '14px',
+                  lineHeight: '21px',
+                  color: '#000000',
+                  textAlign: 'left',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  {player.name}
+                </span>
+
+                  {/* Country Flag and Team */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '8px',
+                    width: '200px',
+                    height: '12px',
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0,
+                  }}>
+                    {/* Country Flag */}
+                    <img 
+                      src={player.countryFlag}
+                      alt={`Flag of ${player.countryName}`}
+                      style={{
+                        width: '16px',
+                        height: '12px',
+                        objectFit: 'cover',
+                        borderRadius: '2px',
+                        border: '1px solid #e0e0e0'
+                      }}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                        const fallback = document.createElement('span');
+                        fallback.textContent = '🌍';
+                        fallback.style.cssText = 'font-size: 12px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
+                        target.parentNode?.insertBefore(fallback, target);
+                      }}
+                    />
+
+                    {/* Team Color Circle */}
+                    <div style={{
+                      width: '8px',
+                      height: '8px',
+                      background: teamColorHex,
+                      borderRadius: '50%',
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                    }} />
+
+                    {/* Team Name */}
+                    <span style={{
+                      width: 'auto',
+                      height: '12px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      fontSize: '10px',
+                      lineHeight: '12px',
+                      color: '#666666',
+                      flex: 'none',
+                      order: 2,
+                      flexGrow: 0,
+                    }}>
+                      {player.team}
+                    </span>
+                  </div>
+              </div>
+            </div>
+
+            {/* Frame 583 - Right Section (Stat Value) */}
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'flex-end',
+              padding: '0px',
+              gap: '4px',
+              width: '100px',
+              height: '33px',
+              flex: 'none',
+              order: 1,
+              flexGrow: 0,
+            }}>
+              <span style={{
+                width: '100px',
+                height: '21px',
+                fontFamily: 'Poppins',
+                fontStyle: 'normal',
+                fontWeight: 600,
+                fontSize: '14px',
+                lineHeight: '21px',
+                color: '#000000',
+                textAlign: 'right',
+                flex: 'none',
+                order: 0,
+                flexGrow: 0,
+              }}>
+                {player.statValue}
+              </span>
+            </div>
+          </div>
+        </div>
+    )
+  }
 
   const renderWebMonthlyPlayerCard = (player: any, index: number) => {
 
@@ -2349,73 +2423,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             }}>
 
-              {player.rank <= 3 ? (
-
-                <img 
-
-                  src={player.rank === 1 ? firstPlaceSvg : 
-
-                       player.rank === 2 ? secondPlaceSvg : thirdPlaceSvg} 
-
-                  alt={`${player.rank === 1 ? '1st' : player.rank === 2 ? '2nd' : '3rd'} place`}
-
-                  style={{
-
-                    width: '30px',
-
-                    height: '30px',
-
-                    flex: 'none',
-
-                    order: 0,
-
-                    flexGrow: 0
-
-                  }}
-
-                />
-
-              ) : (
-
+              {/* Always use circle with number format for Live section */}
               <span style={{
-
                 width: '6px',
-
                 height: '21px',
-
                 fontFamily: 'Poppins',
-
                 fontStyle: 'normal',
-
                 fontWeight: 600,
-
                 fontSize: '14px',
-
                 lineHeight: '21px',
-
                   textAlign: 'center',
-
-                  display: 'flex',
-
-                  alignItems: 'center',
-
-                  justifyContent: 'center',
-
                 color: '#FFFFFF',
-
-                flex: 'none',
-
-                order: 0,
-
-                flexGrow: 0,
-
-              }}>
-
+            }}>
                 {player.rank}
-
               </span>
-
-              )}
 
             </div>
 
@@ -3365,7 +3386,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             width: '826px',
 
-            height: '1024px',
+            //height: '1024px',
 
             flex: 'none',
 
@@ -5527,8 +5548,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       </div>
 
-      {/* Component 5 - Locked Results */}
-
+      {/* Component 5 - Locked Results - Only show for Weekly/Monthly */}
+      {timePeriod !== 'alltime' && (
       <div 
 
         style={{
@@ -5551,7 +5572,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           maxWidth: '100vw',
 
-          height: '213px',
+          height: lockedExpanded ? 'auto' : '213px',
 
           background: 'rgba(0, 0, 0, 0.1)',
 
@@ -5639,7 +5660,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             xmlns="http://www.w3.org/2000/svg"
             style={{
               transform: lockedExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
-              transition: 'transform 0.2s ease'
+              transition: 'transform 0.2s ease',
+              marginLeft: '8px'
             }}
           >
             <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
@@ -5650,8 +5672,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-        {lockedExpanded && (
-
+        {/* Always show top 3 results, show top 10 when expanded */}
           <div style={{
 
             display: 'flex',
@@ -5666,7 +5687,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-            {lockedResults.map((player, index) => (
+          {/* Always show top 3 results */}
+          {processedData.slice(0, 3).map((player, index) => (
 
               <div
 
@@ -5683,9 +5705,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   alignItems: 'center',
 
-                  padding: '4px 16px',
+                  padding: '12px',
 
-                  gap: '8px',
+                  gap: '12px',
 
                   width: '337px',
 
@@ -5725,9 +5747,41 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
-                  {/* Medal Icon */}
-
-                  {getMedalIcon(player.medal)}
+                  {/* Rank Badge - Use SVG medals for top 3 in Locked section */}
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    width: '24px',
+                    height: '24px',
+                    background: '#DC2627',
+                    borderRadius: '50%',
+                  }}>
+                    {player.rank <= 3 ? (
+                      <img 
+                        src={player.rank === 1 ? firstPlaceSvg : 
+                             player.rank === 2 ? secondPlaceSvg : thirdPlaceSvg} 
+                        alt={`${player.rank === 1 ? '1st' : player.rank === 2 ? '2nd' : '3rd'} place`}
+                        style={{
+                          width: '30px',
+                          height: '30px',
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0
+                        }}
+                      />
+                    ) : (
+                      <span style={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        lineHeight: '21px',
+                        color: '#FFFFFF',
+                      }}>
+                        {player.rank}
+                      </span>
+                    )}
+                  </div>
 
 
 
@@ -5927,11 +5981,180 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             ))}
 
-          </div>
+          {/* Additional results (positions 4-10) shown only when expanded */}
+          {lockedExpanded && (
+            <>
+              {processedData.slice(3, 10).map((player, index) => (
+                <div
+                  key={index + 3}
+                  className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: '12px',
+                    gap: '12px',
+                    width: '337px',
+                    height: '47px',
+                    background: '#FFFFFF',
+                    boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                    borderRadius: '8px',
+                    flex: 'none',
+                    order: index + 3,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                  }}
+                >
+                  {/* Player Info Row */}
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    flex: 1,
+                  }}>
+                    {/* Rank Badge - Use SVG medals for top 3 in Locked section */}
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      width: '24px',
+                      height: '24px',
+                      background: '#DC2627',
+                      borderRadius: '50%',
+                    }}>
+                      {player.rank <= 3 ? (
+                        <img 
+                          src={player.rank === 1 ? firstPlaceSvg : 
+                               player.rank === 2 ? secondPlaceSvg : thirdPlaceSvg} 
+                          alt={`${player.rank === 1 ? '1st' : player.rank === 2 ? '2nd' : '3rd'} place`}
+                          style={{
+                            width: '30px',
+                            height: '30px',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0
+                          }}
+                        />
+                      ) : (
+                        <span style={{
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          fontSize: '14px',
+                          lineHeight: '21px',
+                          color: '#FFFFFF',
+                        }}>
+                          {player.rank}
+                        </span>
+                      )}
+                    </div>
 
+                    {/* Name and Location */}
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                    }}>
+                      <span style={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: '#000000',
+                      }}>
+                        {player.name}
+                      </span>
+
+                      {/* Country and Team */}
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                      }}>
+                        <img 
+                          src={player.countryFlag}
+                          alt={`Flag of ${player.countryName}`}
+                          style={{
+                            width: '16px',
+                            height: '12px',
+                            objectFit: 'cover',
+                            borderRadius: '2px',
+                            border: '1px solid #e0e0e0'
+                          }}
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                            const fallback = document.createElement('span');
+                            fallback.textContent = '🌍';
+                            fallback.style.cssText = 'font-size: 14px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
+                            target.parentNode?.insertBefore(fallback, target);
+                          }}
+                        />
+
+                        {/* Team */}
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}>
+                          <div style={{
+                            width: '8px',
+                            height: '8px',
+                            background: '#DC2627',
+                            borderRadius: '50%',
+                          }} />
+
+                          <span style={{
+                            fontFamily: 'Poppins',
+                            fontWeight: 400,
+                            fontSize: '10px',
+                            lineHeight: '15px',
+                            color: '#DC2627',
+                          }}>
+                            {player.team}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-end',
+                    gap: '2px',
+                  }}>
+                    <span 
+                      className="hover:scale-110 transition-transform duration-200 ease-in-out"
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: '#000000',
+                      }}>
+                      {player.statValue}
+                    </span>
+
+                    <span style={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 400,
+                      fontSize: '10px',
+                      lineHeight: '15px',
+                      color: '#666666',
+                    }}>
+                      {sortBy === 'xp' ? 'XP' : sortBy === 'catches' ? 'Catches' : sortBy === 'distance' ? 'km' : 'Pokestops'}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </>
         )}
 
       </div>
+
+      </div>
+      )}
 
 
 
@@ -5995,7 +6218,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
              justifyContent: 'space-between',
 
-             width: '100%',
+             width: '96%',
 
              padding: '8px 0',
 
@@ -6042,6 +6265,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
              </span>
 
            </div>
+
+           {/* Dropdown Button */}
+           <svg 
+             width="38" 
+             height="24" 
+             viewBox="0 0 38 24" 
+             fill="none" 
+             xmlns="http://www.w3.org/2000/svg"
+             style={{
+               transform: liveExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
+               transition: 'transform 0.2s ease',
+               marginLeft: '8px'
+             }}
+           >
+             <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+             <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+           </svg>
 
          </button>
 

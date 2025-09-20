@@ -116,11 +116,21 @@ export const dashboardService = {
     let query: string
     
     if (params.period === 'weekly') {
-      // Show completed week leaderboard
-      return this.getCompletedPeriodLeaderboard('weekly', params)
+      // Try to get completed week leaderboard, fallback to current week if none exists
+      const completedResult = await this.getCompletedPeriodLeaderboard('weekly', params)
+      if (completedResult.data && completedResult.data.length > 0) {
+        return completedResult
+      }
+      // Fallback to current week if no completed periods
+      query = 'current_weekly_leaderboard'
     } else if (params.period === 'monthly') {
-      // Show completed month leaderboard
-      return this.getCompletedPeriodLeaderboard('monthly', params)
+      // Try to get completed month leaderboard, fallback to current month if none exists
+      const completedResult = await this.getCompletedPeriodLeaderboard('monthly', params)
+      if (completedResult.data && completedResult.data.length > 0) {
+        return completedResult
+      }
+      // Fallback to current month if no completed periods
+      query = 'current_monthly_leaderboard'
     } else {
       // All-time shows live current totals
       query = 'all_time_leaderboard'
@@ -156,67 +166,73 @@ export const dashboardService = {
 
   // Get completed period leaderboard
   async getCompletedPeriodLeaderboard(periodType: 'weekly' | 'monthly', params: LeaderboardParams) {
-    // First ensure periods are completed
-    await this.checkAndCompletePeriods()
+    try {
+      // First ensure periods are completed
+      await this.checkAndCompletePeriods()
 
-    // Get the period dates
-    const { data: periodData, error: periodError } = await supabase.rpc(
-      periodType === 'weekly' ? 'get_last_completed_week' : 'get_last_completed_month'
-    )
+      // Get the period dates
+      const { data: periodData, error: periodError } = await supabase.rpc(
+        periodType === 'weekly' ? 'get_last_completed_week' : 'get_last_completed_month'
+      )
 
-    if (periodError || !periodData || periodData.length === 0) {
-      return { data: [], error: periodError }
+      if (periodError || !periodData || periodData.length === 0) {
+        console.log(`No completed ${periodType} periods found`)
+        return { data: [], error: null }
+      }
+
+      const { period_start, period_end } = periodData[0]
+
+      // Get the completed period leaderboard
+      const { data, error } = await supabase.rpc('get_completed_period_leaderboard', {
+        p_period_type: periodType,
+        p_period_start: period_start,
+        p_period_end: period_end
+      })
+
+      if (error) {
+        console.error('Completed period leaderboard error:', error)
+        return { data: [], error: null }
+      }
+
+      // Apply filters and sorting
+      let filteredData = data || []
+
+      if (params.view === 'country' && params.filterValue) {
+        filteredData = filteredData.filter((entry: any) => entry.country === params.filterValue)
+      } else if (params.view === 'team' && params.filterValue) {
+        filteredData = filteredData.filter((entry: any) => entry.team_color === params.filterValue)
+      }
+
+      // Sort by the requested stat
+      const sortField = params.sortBy === 'xp' ? 'xp_gained' : 
+                       params.sortBy === 'catches' ? 'catches_gained' : 
+                       params.sortBy === 'distance' ? 'distance_gained' : 'pokestops_gained'
+      
+      filteredData.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
+
+      // Convert to LeaderboardEntry format
+      const formattedData = filteredData.slice(0, 100).map((entry: any) => ({
+        profile_id: entry.profile_id,
+        trainer_name: entry.trainer_name,
+        country: entry.country,
+        team_color: entry.team_color,
+        profile_screenshot_url: entry.profile_screenshot_url,
+        xp_delta: entry.xp_gained,
+        catches_delta: entry.catches_gained,
+        distance_delta: entry.distance_gained,
+        pokestops_delta: entry.pokestops_gained,
+        total_xp: null,
+        pokemon_caught: null,
+        distance_walked: null,
+        pokestops_visited: null,
+        last_update: entry.last_update
+      }))
+
+      return { data: formattedData as LeaderboardEntry[], error: null }
+    } catch (error) {
+      console.error(`Error getting completed ${periodType} leaderboard:`, error)
+      return { data: [], error: null }
     }
-
-    const { period_start, period_end } = periodData[0]
-
-    // Get the completed period leaderboard
-    const { data, error } = await supabase.rpc('get_completed_period_leaderboard', {
-      p_period_type: periodType,
-      p_period_start: period_start,
-      p_period_end: period_end
-    })
-
-    if (error) {
-      console.error('Completed period leaderboard error:', error)
-      throw error
-    }
-
-    // Apply filters and sorting
-    let filteredData = data || []
-
-    if (params.view === 'country' && params.filterValue) {
-      filteredData = filteredData.filter((entry: any) => entry.country === params.filterValue)
-    } else if (params.view === 'team' && params.filterValue) {
-      filteredData = filteredData.filter((entry: any) => entry.team_color === params.filterValue)
-    }
-
-    // Sort by the requested stat
-    const sortField = params.sortBy === 'xp' ? 'xp_gained' : 
-                     params.sortBy === 'catches' ? 'catches_gained' : 
-                     params.sortBy === 'distance' ? 'distance_gained' : 'pokestops_gained'
-    
-    filteredData.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
-
-    // Convert to LeaderboardEntry format
-    const formattedData = filteredData.slice(0, 100).map((entry: any) => ({
-      profile_id: entry.profile_id,
-      trainer_name: entry.trainer_name,
-      country: entry.country,
-      team_color: entry.team_color,
-      profile_screenshot_url: entry.profile_screenshot_url,
-      xp_delta: entry.xp_gained,
-      catches_delta: entry.catches_gained,
-      distance_delta: entry.distance_gained,
-      pokestops_delta: entry.pokestops_gained,
-      total_xp: null,
-      pokemon_caught: null,
-      distance_walked: null,
-      pokestops_visited: null,
-      last_update: entry.last_update
-    }))
-
-    return { data: formattedData as LeaderboardEntry[], error: null }
   },
 
   // Get historical winners for last completed week
