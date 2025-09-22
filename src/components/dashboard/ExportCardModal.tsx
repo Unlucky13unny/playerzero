@@ -582,7 +582,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
             border: 'none',
             overflow: 'hidden'
           }}>
-            {/* Web All-Time Card - You can adjust text positioning here later */}
+            {/* Web All Time Card - You can adjust text positioning here later */}
             <div style={{ 
               position: 'absolute',
               top: '50px',
@@ -836,7 +836,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
             disabled={!isCardTypeAllowed('all-time')}
             title={!isCardTypeAllowed('all-time') ? getRestrictedMessage('all-time') : ''}
           >
-            📊 All-Time
+            📊 All Time
             {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
           </button>
           <button

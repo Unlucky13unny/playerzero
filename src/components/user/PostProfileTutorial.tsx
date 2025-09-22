@@ -65,15 +65,15 @@ export const PostProfileTutorial = () => {
         <div className="stats-preview">
           <div className="stat-timeline">
             <div className="stat-period active">
-              <span className="period-label">Weekly</span>
+              <span className="period-label">Week</span>
               <div className="stat-bar" style={{ width: '60%' }}></div>
             </div>
             <div className="stat-period">
-              <span className="period-label">Monthly</span>
+              <span className="period-label">Month</span>
               <div className="stat-bar" style={{ width: '80%' }}></div>
             </div>
             <div className="stat-period">
-              <span className="period-label">All-Time</span>
+              <span className="period-label">All Time</span>
               <div className="stat-bar" style={{ width: '100%' }}></div>
             </div>
           </div>
@@ -172,7 +172,7 @@ export const PostProfileTutorial = () => {
         <div className="leaderboard-preview">
           <div className="leaderboard-header">
             <span className="leaderboard-title">🏆 Top Grinders</span>
-            <span className="leaderboard-update">Updates Weekly</span>
+            <span className="leaderboard-update">Updates Week</span>
           </div>
           <div className="leaderboard-entries">
             <div className="leaderboard-entry top">
@@ -205,7 +205,7 @@ export const PostProfileTutorial = () => {
         </div>
         <div className="feature-item">
           <span className="feature-icon">📅</span>
-          <span>Weekly updates</span>
+          <span>Week updates</span>
         </div>
         <div className="feature-item">
           <span className="feature-icon">🎯</span>

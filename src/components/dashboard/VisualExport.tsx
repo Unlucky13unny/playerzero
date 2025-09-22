@@ -472,7 +472,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
           disabled={!isCardTypeAllowed('all-time')}
           title={!isCardTypeAllowed('all-time') ? getRestrictedMessage('all-time') : ''}
         >
-          📊 All-Time
+          📊 All Time
           {!isCardTypeAllowed('all-time') && <span className="restriction-badge">🔒</span>}
         </button>
         <button

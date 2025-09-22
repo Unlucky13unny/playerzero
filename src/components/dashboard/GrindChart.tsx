@@ -71,13 +71,13 @@ export const GrindChart = ({ className = '', userId }: GrindChartProps) => {
   const getPeriodLabel = () => {
     switch (selectedPeriod) {
       case 'weekly':
-        return 'Weekly'
+        return 'Week'
       case 'monthly':
-        return 'Monthly'
+        return 'Month'
       case 'all-time':
-        return 'All-Time'
+        return 'All Time'
       default:
-        return 'All-Time'
+        return 'All Time'
     }
   }
 
@@ -139,21 +139,21 @@ export const GrindChart = ({ className = '', userId }: GrindChartProps) => {
             onClick={() => handlePeriodChange('weekly')}
           >
             <span className="period-icon">📅</span>
-            <span className="period-text">Weekly</span>
+            <span className="period-text">Week</span>
           </button>
           <button
             className={`period-button ${selectedPeriod === 'monthly' ? 'active' : ''}`}
             onClick={() => handlePeriodChange('monthly')}
           >
             <span className="period-icon">📊</span>
-            <span className="period-text">Monthly</span>
+            <span className="period-text">Month</span>
           </button>
           <button
             className={`period-button ${selectedPeriod === 'all-time' ? 'active' : ''}`}
             onClick={() => handlePeriodChange('all-time')}
           >
             <span className="period-icon">🏆</span>
-            <span className="period-text">All-Time</span>
+            <span className="period-text">All Time</span>
           </button>
         </div>
 

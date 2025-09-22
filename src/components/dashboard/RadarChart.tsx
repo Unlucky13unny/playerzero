@@ -28,7 +28,7 @@ const getFilterConfig = (profile: ProfileWithMetadata | null) => {
       fillColor: "rgba(132, 130, 130, 0.3)",
       name: countryName,
     },
-    team: { key: "Team", color: "#353535", fillColor: "rgba(53, 53, 53, 0.5)", name: teamName },
+    team: { key: "Team", color: "#353535", fillColor: "rgba(53, 53, 53, 0.5)", name: teamName.charAt(0).toUpperCase() + teamName.slice(1) },
     global: { key: "Global", color: "#000000", fillColor: "transparent", name: "Global" },
   }
 }
@@ -52,7 +52,7 @@ const getFilterButtons = (profile: ProfileWithMetadata | null) => {
     },
     {
       id: "team" as FilterType,
-      label: teamName,
+      label: teamName.charAt(0).toUpperCase() + teamName.slice(1),
       bgColor: "rgba(53, 53, 53, 0.5)",
       borderColor: "#353535",
     },

@@ -516,19 +516,19 @@ export const UserHome = () => {
                     style={activeTimeFilter === 'weekly' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
                     onClick={() => setActiveTimeFilter('weekly')}
                   >
-                    Weekly
+                    Week
                   </button>
                   <button 
                     style={activeTimeFilter === 'monthly' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
                     onClick={() => setActiveTimeFilter('monthly')}
                   >
-                    Monthly
+                    Month
                   </button>
                   <button 
                     style={activeTimeFilter === 'all-time' ? chartStyles.mobileTimeFilterButtonActive : chartStyles.mobileTimeFilterButton}
                     onClick={() => setActiveTimeFilter('all-time')}
                   >
-                    All-Time
+                    All Time
                   </button>
                   <button 
                     style={chartStyles.mobileExportChartButton}
@@ -687,19 +687,19 @@ export const UserHome = () => {
                     style={activeTimeFilter === 'weekly' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
                     onClick={() => setActiveTimeFilter('weekly')}
                   >
-                    Weekly
+                    Week
                   </button>
                   <button 
                     style={activeTimeFilter === 'monthly' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
                     onClick={() => setActiveTimeFilter('monthly')}
                   >
-                    Monthly
+                    Month
                   </button>
                   <button 
                     style={activeTimeFilter === 'all-time' ? chartStyles.timeFilterButtonActive : chartStyles.timeFilterButton}
                     onClick={() => setActiveTimeFilter('all-time')}
                   >
-                    All-Time
+                    All Time
                   </button>
           <button 
                     style={chartStyles.exportChartButton}

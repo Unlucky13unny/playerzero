@@ -17,22 +17,26 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
 
   // Load all-time stats from backend when component mounts or profile changes
   useEffect(() => {
-    if (user?.id) {
+    const targetUserId = profile?.user_id || user?.id
+    if (targetUserId) {
       loadBackendStats()
     }
   }, [user?.id, profile])
 
   const loadBackendStats = async () => {
-    if (!user?.id) return
+    // Use profile.user_id for public profiles, or current user.id for own profile
+    const targetUserId = profile?.user_id || user?.id
+    if (!targetUserId) return
 
     try {
       setLoading(true)
       
       // Always load all-time stats for GrindStats table (gets latest calculated values)
-      const result = await dashboardService.calculateAllTimeGrindStats(user.id)
+      const result = await dashboardService.calculateAllTimeGrindStats(targetUserId)
 
       console.log('All-time backend stats loaded for GrindStats:', result)
       console.log('Profile data available:', profile ? 'Yes' : 'No')
+      console.log('Target user ID:', targetUserId, profile?.user_id ? '(from profile)' : '(current user)')
       setBackendStats(result)
     } catch (error) {
       console.warn('Failed to load all-time backend stats for GrindStats:', error)
@@ -62,30 +66,42 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
     if (backendStats) {
       switch (statType) {
         case 'distance_walked':
-          const backendDistance = backendStats.distanceWalked || 0
-          console.log(`GrindStats using backend data for ${statType}:`, backendDistance)
-          return backendDistance
+          const backendDistancePerDay = backendStats.distancePerDay || 0
+          console.log(`GrindStats using backend daily average for ${statType}:`, backendDistancePerDay)
+          return backendDistancePerDay
         case 'pokemon_caught':
-          const backendCaught = backendStats.pokemonCaught || 0
-          console.log(`GrindStats using backend data for ${statType}:`, backendCaught)
-          return backendCaught
+          const backendCatchesPerDay = backendStats.catchesPerDay || 0
+          console.log(`GrindStats using backend daily average for ${statType}:`, backendCatchesPerDay)
+          return backendCatchesPerDay
         case 'pokestops_visited':
-          const backendStops = backendStats.pokestopsVisited || 0
-          console.log(`GrindStats using backend data for ${statType}:`, backendStops)
-          return backendStops
+          const backendStopsPerDay = backendStats.stopsPerDay || 0
+          console.log(`GrindStats using backend daily average for ${statType}:`, backendStopsPerDay)
+          return backendStopsPerDay
         case 'total_xp':
-          const backendXP = backendStats.totalXP || 0
-          console.log(`GrindStats using backend data for ${statType}:`, backendXP)
-          return backendXP
+          const backendXPPerDay = backendStats.xpPerDay || 0
+          console.log(`GrindStats using backend daily average for ${statType}:`, backendXPPerDay)
+          return backendXPPerDay
         default:
           return 0
       }
     }
     
-    // Fallback to profile data only if backend stats are not available
+    // Fallback to profile data - calculate daily average from totals
     if (profile && profile[statType] !== undefined && profile[statType] !== null) {
-      console.log(`GrindStats using profile fallback for ${statType}:`, profile[statType])
-      return profile[statType]
+      const totalValue = profile[statType]
+      const startDate = profile.start_date
+      
+      if (startDate) {
+        const start = new Date(startDate)
+        const current = new Date()
+        const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+        const dailyAverage = statType === 'distance_walked' 
+          ? Math.round((totalValue / daysPlayed) * 10) / 10 // Keep one decimal for distance
+          : Math.round(totalValue / daysPlayed)
+        
+        console.log(`GrindStats using profile fallback daily average for ${statType}:`, dailyAverage)
+        return dailyAverage
+      }
     }
 
     console.log(`GrindStats no data available for ${statType}, returning 0`)
@@ -110,7 +126,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         order: 1,
         flexGrow: 0,
         position: 'relative',
-        marginTop: isMobile ? '94px' : '100px', // Increased top margin to 100px
+        marginTop: isMobile ? '15px' : '65px', // Web view top margin changed to 65px
       }}
     >
       {/* Frame 530 - Main Content Container */}
@@ -227,7 +243,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Km
+              Km/day
             </div>
           </div>
 
@@ -281,7 +297,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Caught
+              Caught/day
             </div>
           </div>
 
@@ -334,7 +350,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Stops
+              Stops/day
             </div>
           </div>
 
@@ -387,7 +403,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              XP
+              XP/day
             </div>
           </div>
         </div>
@@ -481,7 +497,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Km</div>
+            }}>Km/day</div>
           </div>
 
           {/* Pokemon Caught Stat Card - Frame 531 */}
@@ -553,7 +569,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Caught</div>
+            }}>Caught/day</div>
           </div>
 
           {/* Pokestops Stat Card - Frame 531 */}
@@ -626,7 +642,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Stops</div>
+            }}>Stops/day</div>
           </div>
 
           {/* XP Stat Card - Frame 531 */}
@@ -685,7 +701,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>XP</div>
+            }}>XP/day</div>
           </div>
         </div>
       )}

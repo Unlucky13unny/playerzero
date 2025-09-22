@@ -1,4 +1,3 @@
-import { Button } from "../ui/button"
 import { CountryFlag } from "../common/CountryFlag"
 import { useMobile } from "../../hooks/useMobile"
 
@@ -48,105 +47,6 @@ const getSocialLink = (platform: string, value: string): string | undefined => {
 
 export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
   const isMobile = useMobile()
-  const getModeButton = () => {
-    if (viewMode === "public") {
-      return (
-        <div style={{
-          /* Public mode button */
-          boxSizing: 'border-box',
-          /* Auto layout */
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'center',
-          alignItems: 'center',
-          padding: '4px 8px',
-          gap: '10px',
-          width: '100px',
-          height: '28px',
-          background: 'rgba(43, 196, 156, 0.09)',
-          border: '1px solid #2BC49C',
-          borderRadius: '20px',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-          cursor: 'default'
-        }}>
-          <span style={{
-            /* Public mode text */
-            width: '64px',
-            height: '15px',
-            fontFamily: 'Poppins',
-            fontStyle: 'normal',
-            fontWeight: 600,
-            fontSize: '10px',
-            lineHeight: '15px',
-            /* identical to box height */
-            color: '#2BC49C',
-            /* Inside auto layout */
-            flex: 'none',
-            order: 0,
-            flexGrow: 0,
-            whiteSpace: 'nowrap',
-          }}>
-            Public mode
-          </span>
-        </div>
-      )
-    }
-    if (viewMode === "team") {
-      return (
-        <Button size="sm" className="bg-blue-100 text-blue-700 hover:bg-blue-200">
-          Team mode
-        </Button>
-      )
-    }
-    return (
-      <div style={{
-        /* Private mode button */
-        boxSizing: 'border-box',
-        /* Auto layout */
-        display: 'flex',
-        flexDirection: 'row',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: '4px 8px',
-        gap: '10px',
-        width: 'auto',
-        minWidth: '100px',
-        height: '28px',
-        background: 'rgba(220, 38, 39, 0.05)',
-        border: '1px solid #DC2627',
-        borderRadius: '20px',
-        /* Inside auto layout */
-        flex: 'none',
-        order: 0,
-        flexGrow: 0,
-        cursor: 'default'
-      }}>
-        <span style={{
-          /* Private mode text */
-          width: 'auto',
-          minWidth: '68px',
-          height: '15px',
-          fontFamily: 'Poppins',
-          fontStyle: 'normal',
-          fontWeight: 600,
-          fontSize: '10px',
-          lineHeight: '15px',
-          /* identical to box height */
-          color: '#DC2627',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-          whiteSpace: 'nowrap',
-        }}>
-          Private mode
-        </span>
-      </div>
-    )
-  }
 
   const getTrainerCode = () => {
     if (!profile?.trainer_code) {
@@ -437,15 +337,6 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
         </div>
       </div>
 
-      {/* Mode Button */}
-      <div style={{ 
-        marginTop: '8px', 
-        display: 'flex', 
-        justifyContent: 'flex-start',
-        alignItems: 'flex-start'
-      }}>
-        {getModeButton()}
-      </div>
 
             {/* Frame 515 - Details Section */}
       <div style={{
@@ -598,7 +489,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
                 fontWeight: 400,
                 fontSize: '12px',
                 lineHeight: '18px',
-                color: '#848282',
+                color: profile?.trainer_code_private ? '#848282' : '#000000',
                 textAlign: 'left',
               }}>{getTrainerCode()}</span>
             {profile?.trainer_code && !profile?.trainer_code_private && viewMode !== "public" && (

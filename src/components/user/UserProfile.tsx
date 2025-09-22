@@ -83,9 +83,34 @@ export const UserProfile = () => {
   }
 
   const handleCancelEdit = () => {
+    // Check if there are any unsaved changes
+    const hasChanges = profile && editData && (
+      profile.trainer_name !== editData.trainer_name ||
+      profile.country !== editData.country ||
+      profile.trainer_code !== editData.trainer_code ||
+      profile.trainer_code_private !== editData.trainer_code_private ||
+      profile.social_links_private !== editData.social_links_private ||
+      // Check for social platform changes
+      Object.keys(editData).some(key => 
+        key.startsWith('social_') && 
+        profile[key as keyof typeof profile] !== editData[key as keyof typeof editData]
+      )
+    );
+
+    if (hasChanges) {
+      const confirmed = window.confirm(
+        'You have unsaved changes. Are you sure you want to cancel and lose your changes?'
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+
     setEditData(profile)
     setError(null)
     setSuccess(null)
+    // Navigate back to the previous page
+    navigate(-1);
   }
 
   const handleSave = async () => {
@@ -109,6 +134,9 @@ export const UserProfile = () => {
 
       // Ensure trainer code privacy is properly set
       updatedData.trainer_code_private = editData.trainer_code_private || false;
+      
+      // Ensure social links privacy is properly set
+      updatedData.social_links_private = editData.social_links_private || false;
 
       // Update profile in database
       const { data, error } = await profileService.updateProfile(updatedData);
@@ -120,6 +148,9 @@ export const UserProfile = () => {
       setProfile(data);
       setEditData(data);
       // Don't show success message for profile updates
+      
+      // Navigate back to the previous page
+      navigate(-1);
       
     } catch (err: any) {
       setError(err.message || 'Failed to update profile');
@@ -1076,32 +1107,95 @@ export const UserProfile = () => {
               </div>
             ))}
 
-            {/* Connect New Platform Button */}
-            <button
-              type="button"
-              onClick={handleOpenSocialModal}
+            {/* Connect New Platform Button and Privacy Toggle Row */}
+            <div
               style={{
                 display: "flex",
                 flexDirection: "row",
-                justifyContent: "center",
+                justifyContent: "space-between",
                 alignItems: "center",
-                padding: "9px 60px",
                 width: "100%",
-                height: isMobile ? "44px" : "36px",
-                background: "#F9FAFB",
-                border: "1px solid #6B7280",
-                borderRadius: "6px",
-                fontFamily: "Poppins",
-                fontStyle: "normal",
-                fontWeight: 500,
-                fontSize: isMobile ? "14px" : "12px",
-                lineHeight: isMobile ? "20px" : "18px",
-                color: "#000000",
-                cursor: "pointer",
+                gap: "16px",
               }}
             >
-              + Connect New Social Platform
-            </button>
+              {/* Connect New Platform Button */}
+              <button
+                type="button"
+                onClick={handleOpenSocialModal}
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "9px 20px",
+                  flex: 1,
+                  height: isMobile ? "44px" : "36px",
+                  background: "#F9FAFB",
+                  border: "1px solid #6B7280",
+                  borderRadius: "6px",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 500,
+                  fontSize: isMobile ? "14px" : "12px",
+                  lineHeight: isMobile ? "20px" : "18px",
+                  color: "#000000",
+                  cursor: "pointer",
+                }}
+              >
+                + Connect New Social Platform
+              </button>
+
+              {/* Keep social links private toggle */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: "8px",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    fontSize: isMobile ? "12px" : "11px",
+                    lineHeight: isMobile ? "18px" : "16px",
+                    color: "#000000",
+                  }}
+                >
+                  Keep private
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleInputChange('social_links_private', !editData?.social_links_private)}
+                  style={{
+                    display: "flex",
+                    flexDirection: "row",
+                    alignItems: "center",
+                    padding: "2px",
+                    width: "44px",
+                    height: "24px",
+                    background: editData?.social_links_private ? "#DC2627" : "#E5E7EB",
+                    borderRadius: "12px",
+                    border: "none",
+                    cursor: "pointer",
+                    justifyContent: editData?.social_links_private ? "flex-end" : "flex-start",
+                    transition: "all 0.2s ease",
+                  }}
+                >
+                  <div 
+                    style={{
+                      width: "20px",
+                      height: "20px",
+                      background: "#FFFFFF",
+                      borderRadius: "50%",
+                    }}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
         </form>
 

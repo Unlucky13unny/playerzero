@@ -6,6 +6,7 @@ import { PerformanceRadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
+import { VerificationScreenshotsModal } from '../shareables/VerificationScreenshotsModal'
 
 interface TeamColor {
   value: string
@@ -37,6 +38,7 @@ export const PublicProfile = () => {
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
   const trialStatus = useTrialStatus()
 
   useEffect(() => {
@@ -272,19 +274,19 @@ export const PublicProfile = () => {
                 className={`timeframe-tab ${selectedTimeframe === 'weekly' ? 'active' : ''}`}
                 onClick={() => setSelectedTimeframe('weekly')}
               >
-                Weekly
+                Week
               </button>
               <button 
                 className={`timeframe-tab ${selectedTimeframe === 'monthly' ? 'active' : ''}`}
                 onClick={() => setSelectedTimeframe('monthly')}
               >
-                Monthly
+                Month
               </button>
               <button 
                 className={`timeframe-tab ${selectedTimeframe === 'alltime' ? 'active' : ''}`}
                 onClick={() => setSelectedTimeframe('alltime')}
               >
-                All time
+                All Time
               </button>
             </div>
 
@@ -318,13 +320,17 @@ export const PublicProfile = () => {
                 Create shareable cards of your achievements and stats. Show off your progress and let the community verify your accomplishments.
               </div>
               <div className="verification-badge">
-                <div className="verification-left">
+                <button 
+                  className="verification-left hover:opacity-80 transition-opacity cursor-pointer"
+                  onClick={() => setShowVerificationModal(true)}
+                  title="View verification screenshots"
+                >
                   <span className="verification-icon">✅</span>
                   <div>
                     <div className="verification-text">Stats verified</div>
                     <div className="verification-date">Uploaded Jul 15th, 2025</div>
                   </div>
-                </div>
+                </button>
                 <span className="delete-icon">🗑️</span>
               </div>
               <div className="disclaimer">
@@ -369,7 +375,8 @@ export const PublicProfile = () => {
                     id: profile.id || '',
                     user_id: profile.user_id,
                     trainer_code: profile.trainer_code || '',
-                    trainer_code_private: !profile.is_paid_user
+                    trainer_code_private: !profile.is_paid_user,
+                    social_links_private: profile.social_links_private || false
                   } : null}
                   isPaidUser={trialStatus.isPaidUser}
                   showHeader={false}
@@ -533,6 +540,14 @@ export const PublicProfile = () => {
           )}
         </div>
       </div>
+
+      {/* Verification Screenshots Modal */}
+      <VerificationScreenshotsModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        userId={id || ''}
+        userName={profile?.trainer_name}
+      />
     </div>
   )
 } 
