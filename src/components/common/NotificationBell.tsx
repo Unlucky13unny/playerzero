@@ -3,7 +3,7 @@ import { useNotifications } from '../../contexts/NotificationContext';
 
 export const NotificationBell: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, clearNotification } = useNotifications();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const toggleNotifications = () => {
@@ -11,7 +11,13 @@ export const NotificationBell: React.FC = () => {
   };
 
   const handleMarkAsRead = (id: string) => {
-    markAsRead(id);
+    clearNotification(id);
+  };
+
+  const handleClearAll = () => {
+    notifications.forEach(notification => {
+      clearNotification(notification.id);
+    });
   };
 
   // Close dropdown when clicking outside
@@ -66,9 +72,9 @@ export const NotificationBell: React.FC = () => {
             {notifications.length > 0 && (
               <button 
                 className="mark-all-read"
-                onClick={() => markAllAsRead()}
+                onClick={() => handleClearAll()}
               >
-                Mark all as read
+                Clear all
               </button>
             )}
           </div>

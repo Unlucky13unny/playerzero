@@ -89,11 +89,11 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         case 'weekly':
           try {
             statsResult = await dashboardService.calculateWeeklyGrindStats(user.id)
-            console.log('Weekly stats loaded:', statsResult)
+            console.log('Week stats loaded:', statsResult)
             // Ensure we have valid data before proceeding
             if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
                                statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
-              console.log('Weekly stats are all zero, using profile data as fallback')
+              console.log('Week stats are all zero, using profile data as fallback')
               statsResult = {
                 totalXP: profile.total_xp || 0,
                 pokemonCaught: profile.pokemon_caught || 0,
@@ -103,7 +103,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
               }
             }
           } catch (weeklyError) {
-            console.warn('Weekly stats calculation failed, using profile fallback:', weeklyError)
+            console.warn('Week stats calculation failed, using profile fallback:', weeklyError)
             // Use profile data as fallback instead of null
             statsResult = {
               totalXP: profile.total_xp || 0,
@@ -117,11 +117,11 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         case 'monthly':
           try {
             statsResult = await dashboardService.calculateMonthlyGrindStats(user.id)
-            console.log('Monthly stats loaded:', statsResult)
+            console.log('Month stats loaded:', statsResult)
             // Ensure we have valid data before proceeding
             if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
                                statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
-              console.log('Monthly stats are all zero, using profile data as fallback')
+              console.log('Month stats are all zero, using profile data as fallback')
               statsResult = {
                 totalXP: profile.total_xp || 0,
                 pokemonCaught: profile.pokemon_caught || 0, 
@@ -131,7 +131,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
               }
             }
           } catch (monthlyError) {
-            console.warn('Monthly stats calculation failed, using profile fallback:', monthlyError)
+            console.warn('Month stats calculation failed, using profile fallback:', monthlyError)
             // Use profile data as fallback instead of null
             statsResult = {
               totalXP: profile.total_xp || 0,
@@ -224,13 +224,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   }
 
   const formatNumber = (num: number | null | undefined) => {
-    if (!num || num === 0) return '0.0'
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M'
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K'
-    }
-    return num.toFixed(1)
+    if (!num || num === 0) return '0'
+    return num.toLocaleString()
   }
 
   const formatDistance = (distance: number | null | undefined) => {
@@ -454,11 +449,11 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     flexGrow: 0,
                 
                   }}>
-                    {/* Weekly Button */}
+                    {/* Week Button */}
                     <button 
                       onClick={() => handleTimePeriodChange('weekly')}
                       style={{
-                        /* Weekly */
+                        /* Week */
                         display: 'flex',
                         flexDirection: 'row',
                         alignItems: 'center',
@@ -475,7 +470,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <span style={{
-                        /* Weekly */
+                        /* Week */
                         width: '45px',
                         height: '18px',
                         fontFamily: 'Poppins',
@@ -489,15 +484,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         order: 0,
                         flexGrow: 0
                       }}>
-                      Weekly
+                      Week
                       </span>
                     </button>
 
-                    {/* Monthly Button */}
+                    {/* Month Button */}
                     <button 
                       onClick={() => handleTimePeriodChange('monthly')}
                       style={{
-                        /* Monthly */
+                        /* Month */
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
@@ -515,7 +510,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                       }}
                     >
                       <span style={{
-                        /* Monthly */
+                        /* Month */
                         width: '50px',
                         height: '18px',
                         fontFamily: 'Poppins',
@@ -529,7 +524,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         order: 0,
                         flexGrow: 0
                       }}>
-                      Monthly
+                      Month
                       </span>
                     </button>
 
@@ -571,7 +566,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         whiteSpace: 'nowrap'
                       }}>
 
-                      All time
+                      All Time
 
                       </span>
                     </button>
@@ -1023,7 +1018,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     width: '351px',
                     height: '205px',
                     borderRadius: '12px',
-                    marginTop: '40px',
                     /* Inside auto layout */
                     flex: 'none',
                     order: 2,
@@ -1045,11 +1039,11 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         alignSelf: 'stretch',
                       flexGrow: 0
                     }}>
-                      {/* Weekly Button */}
+                      {/* Week Button */}
                       <button 
                         onClick={() => handleTimePeriodChange('weekly')}
                         style={{
-                          /* Weekly Button */
+                          /* Week Button */
                           display: 'flex',
                           flexDirection: 'row',
                           alignItems: 'center',
@@ -1067,7 +1061,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         }}
                       >
                         <span style={{
-                          /* Weekly Text */
+                          /* Week Text */
                           width: '45px',
                           height: '18px',
                           fontFamily: 'Poppins',
@@ -1082,15 +1076,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 0,
                           flexGrow: 0
                         }}>
-                        Weekly
+                        Week
                         </span>
                       </button>
 
-                      {/* Monthly Button */}
+                      {/* Month Button */}
                       <button 
                         onClick={() => handleTimePeriodChange('monthly')}
                         style={{
-                          /* Monthly Button */
+                          /* Month Button */
                           display: 'flex',
                           flexDirection: 'column',
                           justifyContent: 'center',
@@ -1109,7 +1103,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         }}
                       >
                         <span style={{
-                          /* Monthly Text */
+                          /* Month Text */
                           width: '50px',
                           height: '18px',
                           fontFamily: 'Poppins',
@@ -1124,7 +1118,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           order: 0,
                           flexGrow: 0
                         }}>
-                        Monthly
+                        Month
                         </span>
                       </button>
 
@@ -1166,7 +1160,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                           flexGrow: 0,
                           whiteSpace: 'nowrap'
                         }}>
-                        All time
+                        All Time
                         </span>
                       </button>
 
@@ -1293,7 +1287,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             flexGrow: 0,
                             whiteSpace: 'nowrap'
                           }}>
-                            Distance-Walked
+                            Distance Walked
                       </div>
                       </div>
 
@@ -1359,7 +1353,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                             flexGrow: 0,
                             whiteSpace: 'nowrap'
                           }}>
-                            Pokémon-Caught
+                            Pokémon Caught
                       </div>
                     </div>
                   </div>
@@ -1526,7 +1520,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     width: '351px', // Match time period buttons container width
                     height: '442px',
                     borderRadius: '8px',
-                    marginTop: '24px',
+                    marginTop: '15px',
                     /* Inside auto layout */
                     flex: 'none',
                     order: 3,
@@ -1665,6 +1659,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     gap: '16px',
                     width: '348px',
                     height: '234px',
+                    marginTop: '-16px',
                     
                     /* Inside auto layout */
                     flex: 'none',

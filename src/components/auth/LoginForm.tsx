@@ -60,7 +60,7 @@ export const LoginForm = () => {
           </div>
           
           <div className="auth-header">
-            <h1>Sign in to bring new insights to light</h1>
+            <h1>Sign in to see where you rank</h1>
           </div>
           
           {error && (
@@ -137,9 +137,10 @@ export const LoginForm = () => {
       </div>
       
       <div className="split-layout-right">
-        <div className="welcome-message">
-          <h1>It's not about what you've accomplished.</h1>
-          <p>It's about what you're about to...</p>
+        <div className="welcome-message" style={{ textAlign: 'left' }}>
+          <h1>Grind.</h1>
+          <h1>Compete.</h1>
+          <h1>Flex.</h1>
         </div>
       </div>
     </div>

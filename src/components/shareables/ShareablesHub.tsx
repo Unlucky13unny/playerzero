@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import { ExportCardModal } from "../dashboard/ExportCardModal"
 import { GrindCard } from "./GrindCard"
 import { SummitCard } from "./SummitCard"
+import { VerificationScreenshotsModal } from "./VerificationScreenshotsModal"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTrialStatus } from "../../hooks/useTrialStatus"
 import { supabase } from "../../supabaseClient"
@@ -13,6 +14,7 @@ export function ShareablesHub() {
   const [showOptionButtons, setShowOptionButtons] = useState(false)
   const [showGrindCard, setShowGrindCard] = useState(false)
   const [showSummitCard, setShowSummitCard] = useState(false)
+  const [showVerificationModal, setShowVerificationModal] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [lastVerification, setLastVerification] = useState<any>(null)
   const { user } = useAuth()
@@ -150,8 +152,12 @@ export function ShareablesHub() {
           order: 0,
           flexGrow: 0,
         }}>
-          {/* Left side: Status verified icon and text */}
-          <div className="flex items-center gap-3">
+          {/* Left side: Status verified icon and text - Clickable to open verification modal */}
+          <button 
+            className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer"
+            onClick={() => setShowVerificationModal(true)}
+            title="View verification screenshots"
+          >
             <div className="flex items-center justify-center flex-shrink-0">
               <svg width="38" height="35" viewBox="0 0 40 41" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <rect x="0.5" y="1" width="39" height="39" rx="3.5" fill="#2BC49C" fillOpacity="0.09"/>
@@ -185,7 +191,7 @@ export function ShareablesHub() {
                 }
               </div>
             </div>
-          </div>
+          </button>
           
           {/* Right side: Copy button */}
           <button 
@@ -361,6 +367,14 @@ export function ShareablesHub() {
           isPaidUser={trialStatus.isPaidUser}
         />
       )}
+
+      {/* Verification Screenshots Modal */}
+      <VerificationScreenshotsModal
+        isOpen={showVerificationModal}
+        onClose={() => setShowVerificationModal(false)}
+        userId={user?.id || ''}
+        userName={profile?.trainer_name}
+      />
       
     </div>
   )

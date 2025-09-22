@@ -11,7 +11,6 @@ export const UpdateStats = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const navigate = useNavigate()
@@ -47,12 +46,14 @@ export const UpdateStats = () => {
     setEditData(profile)
     setSelectedFile(null)
     setError(null)
-    setSuccess(null)
   }
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     if (editData) {
-      setEditData(prev => ({ ...prev!, [field]: value }))
+      // Allow empty values and handle them properly
+      // If value is empty string, set to undefined to allow proper clearing
+      const processedValue = value === '' ? undefined : value;
+      setEditData(prev => ({ ...prev!, [field]: processedValue }))
     }
   }
 
@@ -61,12 +62,65 @@ export const UpdateStats = () => {
     setSelectedFile(file)
   }
 
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [acknowledgeError, setAcknowledgeError] = useState(false)
+
+  // Update image preview when file is selected
+  useEffect(() => {
+    if (selectedFile) {
+      const reader = new FileReader()
+      reader.onload = (e) => {
+        setImagePreview(e.target?.result as string)
+      }
+      reader.readAsDataURL(selectedFile)
+    } else {
+      setImagePreview(null)
+    }
+  }, [selectedFile])
+
   const handleSave = async () => {
     if (!editData || !profile) return;
 
+    // Check for decreasing stats (only primary stats - excluding Pokédex entries)
+    const decreasingStats = [];
+    if (editData.total_xp && parseFloat(editData.total_xp.toString()) < (profile.total_xp || 0)) {
+      decreasingStats.push('Total XP');
+    }
+    if (editData.pokemon_caught && parseFloat(editData.pokemon_caught.toString()) < (profile.pokemon_caught || 0)) {
+      decreasingStats.push('Pokémon Caught');
+    }
+    if (editData.distance_walked && parseFloat(editData.distance_walked.toString()) < (profile.distance_walked || 0)) {
+      decreasingStats.push('Distance Walked');
+    }
+    if (editData.pokestops_visited && parseFloat(editData.pokestops_visited.toString()) < (profile.pokestops_visited || 0)) {
+      decreasingStats.push('Pokéstops Visited');
+    }
+    // Note: Pokédex entries are excluded from decreasing stats warning as they can be more flexible
+
+    // First confirmation - accuracy check
+    const accuracyConfirmed = window.confirm(
+      'Are you sure these stats are accurate? Please double-check your values before proceeding.'
+    );
+    
+    if (!accuracyConfirmed) {
+      return;
+    }
+
+    // Second confirmation - decreasing stats warning (skip if error acknowledged)
+    if (decreasingStats.length > 0 && !acknowledgeError) {
+      const decreaseConfirmed = window.confirm(
+        `WARNING: The following stats are lower than your previous values: ${decreasingStats.join(', ')}.\n\n` +
+        'Stats should generally only increase. If you continue to decrease stats regularly, this may result in a temporary ban.\n\n' +
+        'Are you sure you want to proceed?'
+      );
+      
+      if (!decreaseConfirmed) {
+        return;
+      }
+    }
+
     setSaving(true);
     setError(null);
-    setSuccess(null);
 
     try {
       // Check if screenshot is provided (same logic as StatUpdater)
@@ -79,31 +133,31 @@ export const UpdateStats = () => {
       // Create updates object with only the changed stats (same logic as StatUpdater)
       const updates: any = {}
       
-      if (editData.distance_walked !== profile.distance_walked) {
-        updates.distance_walked = editData.distance_walked
+      // Convert to numbers for proper comparison and include all stats when checkbox is checked
+      if (acknowledgeError || editData.distance_walked !== profile.distance_walked) {
+        updates.distance_walked = editData.distance_walked ? parseFloat(editData.distance_walked.toString()) : profile.distance_walked
       }
-      if (editData.pokemon_caught !== profile.pokemon_caught) {
-        updates.pokemon_caught = editData.pokemon_caught
+      if (acknowledgeError || editData.pokemon_caught !== profile.pokemon_caught) {
+        updates.pokemon_caught = editData.pokemon_caught ? parseInt(editData.pokemon_caught.toString()) : profile.pokemon_caught
       }
-      if (editData.pokestops_visited !== profile.pokestops_visited) {
-        updates.pokestops_visited = editData.pokestops_visited
+      if (acknowledgeError || editData.pokestops_visited !== profile.pokestops_visited) {
+        updates.pokestops_visited = editData.pokestops_visited ? parseInt(editData.pokestops_visited.toString()) : profile.pokestops_visited
       }
-      if (editData.total_xp !== profile.total_xp) {
-        updates.total_xp = editData.total_xp
+      if (acknowledgeError || editData.total_xp !== profile.total_xp) {
+        updates.total_xp = editData.total_xp ? parseInt(editData.total_xp.toString()) : profile.total_xp
       }
-      if (editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
-        updates.unique_pokedex_entries = editData.unique_pokedex_entries
+      if (acknowledgeError || editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
+        updates.unique_pokedex_entries = editData.unique_pokedex_entries ? parseInt(editData.unique_pokedex_entries.toString()) : profile.unique_pokedex_entries
       }
 
       // Use dashboardService.updateUserStats with verification screenshot (same as StatUpdater)
-      const response = await dashboardService.updateUserStats(updates, selectedFile)
+      const response = await dashboardService.updateUserStats(updates, selectedFile, acknowledgeError)
       
       if (response.success) {
-        setSuccess('Stats updated successfully! Redirecting to your profile...')
-        
         // Reload profile data
         await loadProfile()
         setSelectedFile(null)
+        setAcknowledgeError(false) // Reset acknowledgment state
 
         // Redirect to user profile after 2 seconds
         setTimeout(() => {
@@ -166,17 +220,6 @@ export const UpdateStats = () => {
       }}
     >
       {/* Messages */}
-      {error && (
-        <div className="profile-error-message" style={{ marginBottom: isMobile ? "2px" : "1rem" }}>
-          <span>{error}</span>
-        </div>
-      )}
-
-      {success && (
-        <div className="profile-success-message" style={{ marginBottom: isMobile ? "2px" : "1rem" }}>
-          <span>{success}</span>
-        </div>
-      )}
 
       <div
         style={{
@@ -264,10 +307,11 @@ export const UpdateStats = () => {
                   width: "100%",
                 }}
               >
-                <input
-                  type="text"
-                  value={editData?.distance_walked || 0}
-                  onChange={(e) => handleInputChange('distance_walked', e.target.value)}
+              <input
+                type="text"
+                value={editData?.distance_walked ?? ''}
+                onChange={(e) => handleInputChange('distance_walked', e.target.value)}
+                placeholder="Enter new distance in km"
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -345,8 +389,9 @@ export const UpdateStats = () => {
               </label>
               <input
                 type="text"
-                value={editData?.pokemon_caught || 0}
+                value={editData?.pokemon_caught ?? ''}
                 onChange={(e) => handleInputChange('pokemon_caught', e.target.value)}
+                placeholder="Enter new Pokémon caught count"
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -407,8 +452,9 @@ export const UpdateStats = () => {
               </label>
               <input
                 type="text"
-                value={editData?.pokestops_visited || 0}
+                value={editData?.pokestops_visited ?? ''}
                 onChange={(e) => handleInputChange('pokestops_visited', e.target.value)}
+                placeholder="Enter new Pokéstops visited count"
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -469,8 +515,9 @@ export const UpdateStats = () => {
               </label>
               <input
                 type="text"
-                value={editData?.total_xp || 0}
+                value={editData?.total_xp ?? ''}
                 onChange={(e) => handleInputChange('total_xp', e.target.value)}
+                placeholder="Enter new Total XP value"
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -558,8 +605,9 @@ export const UpdateStats = () => {
               </label>
               <input
                 type="text"
-                value={editData?.unique_pokedex_entries || 0}
+                value={editData?.unique_pokedex_entries ?? ''}
                 onChange={(e) => handleInputChange('unique_pokedex_entries', e.target.value)}
+                placeholder="Enter new Pokédex entries count"
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -673,6 +721,69 @@ export const UpdateStats = () => {
               </div>
             </div>
           </div>
+
+          {/* Image Preview Section */}
+          {imagePreview && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "8px",
+                width: "100%",
+                marginTop: "16px",
+              }}
+            >
+              <label
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
+                  color: "#000000",
+                  width: "100%",
+                  textAlign: "left",
+                }}
+              >
+                Screenshot Preview
+              </label>
+              <div
+                style={{
+                  width: "100%",
+                  maxWidth: "400px",
+                  border: "1px solid #848282",
+                  borderRadius: "6px",
+                  overflow: "hidden",
+                  backgroundColor: "#f9f9f9",
+                }}
+              >
+                <img
+                  src={imagePreview}
+                  alt="Screenshot preview"
+                  style={{
+                    width: "100%",
+                    height: "auto",
+                    maxHeight: "300px",
+                    objectFit: "contain",
+                    display: "block",
+                  }}
+                />
+              </div>
+              <span
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: isMobile ? "10px" : "9px",
+                  lineHeight: isMobile ? "15px" : "14px",
+                  color: "#666666",
+                }}
+              >
+                Use this preview to help you enter your stats accurately
+              </span>
+            </div>
+          )}
         </form>
 
         {/* Action Buttons - Frame 666 */}
@@ -698,6 +809,118 @@ export const UpdateStats = () => {
             marginTop: "8px",
           }}
         >
+          {/* Error Acknowledgment Checkbox */}
+          {error && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                gap: "12px",
+                width: "100%",
+                marginBottom: "16px",
+                padding: "16px",
+                backgroundColor: "#f8f9fa",
+                border: "1px solid #dee2e6",
+                borderRadius: "8px",
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              {/* Warning Header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  width: "100%",
+                }}
+              >
+                <div
+                  style={{
+                    width: "20px",
+                    height: "20px",
+                    backgroundColor: "#dc3545",
+                    borderRadius: "50%",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    color: "white",
+                    fontSize: "12px",
+                    fontWeight: "bold",
+                  }}
+                >
+                  !
+                </div>
+                <span
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 600,
+                    fontSize: isMobile ? "14px" : "13px",
+                    lineHeight: isMobile ? "20px" : "18px",
+                    color: "#dc3545",
+                  }}
+                >
+                  Previous Upload Error Detected
+                </span>
+              </div>
+
+              {/* Warning Message */}
+              <div
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
+                  color: "#6c757d",
+                  width: "100%",
+                }}
+              >
+                {error}
+              </div>
+
+              {/* Acknowledgment Checkbox */}
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "flex-start",
+                  gap: "8px",
+                  width: "100%",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  id="acknowledge-error"
+                  checked={acknowledgeError}
+                  onChange={(e) => setAcknowledgeError(e.target.checked)}
+                  style={{
+                    marginTop: "2px",
+                    width: "16px",
+                    height: "16px",
+                    accentColor: "#dc3545",
+                  }}
+                />
+                <label
+                  htmlFor="acknowledge-error"
+                  style={{
+                    fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 500,
+                    fontSize: isMobile ? "12px" : "11px",
+                    lineHeight: isMobile ? "18px" : "16px",
+                    color: "#495057",
+                    cursor: "pointer",
+                    flex: 1,
+                  }}
+                >
+                  I acknowledge that I made an error in my previous stat update and understand that if this continues, I may incur a temporary ban.
+                </label>
+              </div>
+            </div>
+          )}
+
           {/* Save and Cancel buttons - Frame 665 */}
           <div
             style={{
@@ -722,7 +945,7 @@ export const UpdateStats = () => {
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || !selectedFile}
+              disabled={saving || !selectedFile || (!!error && !acknowledgeError)}
               style={{
                 /* Component 47 */
                 display: "flex",

@@ -5,6 +5,7 @@ export type ProfileData = {
   trainer_name: string
   trainer_code: string
   trainer_code_private: boolean
+  social_links_private: boolean
   trainer_level: number
   start_date: string
   country: string
@@ -62,6 +63,7 @@ export interface PublicProfileData {
   country: string
   team_color: string
   start_date: string
+  social_links_private: boolean
   total_xp: number
   pokemon_caught: number
   distance_walked: number

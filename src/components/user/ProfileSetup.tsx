@@ -64,7 +64,8 @@ export const ProfileSetup = () => {
     twitter: '',
     youtube: '',
     twitch: '',
-    reddit: ''
+    reddit: '',
+    social_links_private: false
   })
 
   const [profileScreenshot, setProfileScreenshot] = useState<File | null>(null)

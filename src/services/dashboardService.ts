@@ -981,7 +981,7 @@ export const dashboardService = {
     }
   },
 
-  async updateUserStats(updates: StatUpdate, verificationScreenshot?: File): Promise<StatUpdateResponse> {
+  async updateUserStats(updates: StatUpdate, verificationScreenshot?: File, acknowledgeError?: boolean): Promise<StatUpdateResponse> {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
@@ -1052,26 +1052,29 @@ export const dashboardService = {
       });
 
       // Validate that new stats are not lower than most recent stats (prevent cheating)
+      // Skip validation if user acknowledges previous error
       const validationErrors: string[] = [];
       
-      if (updates.total_xp !== undefined && referenceStats.total_xp !== null && updates.total_xp < referenceStats.total_xp) {
-        validationErrors.push(`Total XP cannot be lower than current value (${updates.total_xp} < ${referenceStats.total_xp})`);
-      }
-      if (updates.pokemon_caught !== undefined && referenceStats.pokemon_caught !== null && updates.pokemon_caught < referenceStats.pokemon_caught) {
-        validationErrors.push(`Pokémon caught cannot be lower than current value (${updates.pokemon_caught} < ${referenceStats.pokemon_caught})`);
-      }
-      if (updates.distance_walked !== undefined && referenceStats.distance_walked !== null && updates.distance_walked < referenceStats.distance_walked) {
-        validationErrors.push(`Distance walked cannot be lower than current value (${updates.distance_walked} < ${referenceStats.distance_walked})`);
-      }
-      if (updates.pokestops_visited !== undefined && referenceStats.pokestops_visited !== null && updates.pokestops_visited < referenceStats.pokestops_visited) {
-        validationErrors.push(`PokéStops visited cannot be lower than current value (${updates.pokestops_visited} < ${referenceStats.pokestops_visited})`);
-      }
-      if (updates.unique_pokedex_entries !== undefined && referenceStats.unique_pokedex_entries !== null && updates.unique_pokedex_entries < referenceStats.unique_pokedex_entries) {
-        validationErrors.push(`Pokédex entries cannot be lower than current value (${updates.unique_pokedex_entries} < ${referenceStats.unique_pokedex_entries})`);
-      }
+      if (!acknowledgeError) {
+        if (updates.total_xp !== undefined && referenceStats.total_xp !== null && updates.total_xp < referenceStats.total_xp) {
+          validationErrors.push(`Total XP cannot be lower than current value (${updates.total_xp} < ${referenceStats.total_xp})`);
+        }
+        if (updates.pokemon_caught !== undefined && referenceStats.pokemon_caught !== null && updates.pokemon_caught < referenceStats.pokemon_caught) {
+          validationErrors.push(`Pokémon caught cannot be lower than current value (${updates.pokemon_caught} < ${referenceStats.pokemon_caught})`);
+        }
+        if (updates.distance_walked !== undefined && referenceStats.distance_walked !== null && updates.distance_walked < referenceStats.distance_walked) {
+          validationErrors.push(`Distance walked cannot be lower than current value (${updates.distance_walked} < ${referenceStats.distance_walked})`);
+        }
+        if (updates.pokestops_visited !== undefined && referenceStats.pokestops_visited !== null && updates.pokestops_visited < referenceStats.pokestops_visited) {
+          validationErrors.push(`PokéStops visited cannot be lower than current value (${updates.pokestops_visited} < ${referenceStats.pokestops_visited})`);
+        }
+        if (updates.unique_pokedex_entries !== undefined && referenceStats.unique_pokedex_entries !== null && updates.unique_pokedex_entries < referenceStats.unique_pokedex_entries) {
+          validationErrors.push(`Pokédex entries cannot be lower than current value (${updates.unique_pokedex_entries} < ${referenceStats.unique_pokedex_entries})`);
+        }
 
-      if (validationErrors.length > 0) {
-        return { success: false, message: validationErrors.join(', ') };
+        if (validationErrors.length > 0) {
+          return { success: false, message: validationErrors.join(', ') };
+        }
       }
 
       // Create the new stat entry data

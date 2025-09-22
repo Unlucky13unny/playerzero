@@ -18,6 +18,12 @@ import { supabase } from "../../supabaseClient"
 
 import { getCountryFlag } from "../../utils/countryFlags"
 
+import { QuickProfileView } from "../profile/QuickProfileView"
+
+import { useTrialStatus } from "../../hooks/useTrialStatus"
+
+import "../common/UserSearch.css"
+
 import firstPlaceSvg from "/images/1st.svg"
 
 import secondPlaceSvg from "/images/2nd.svg"
@@ -42,7 +48,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const navigate = useNavigate()
 
+  const trialStatus = useTrialStatus()
+
   const [activeTab, setActiveTab] = useState<"trainers" | "country" | "team">("trainers")
+
+  const [selectedProfile, setSelectedProfile] = useState<string | null>(null)
 
   const [timePeriod, setTimePeriod] = useState<"weekly" | "monthly" | "alltime">("monthly")
 
@@ -461,6 +471,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   // Dropdown click handlers
 
   const handleDynamicDropdownClick = () => {
+    // Don't show dropdown for trainers tab - just show "All Trainers"
+    if (activeTab === 'trainers') {
+      return
+    }
 
     setShowDynamicDropdown(!showDynamicDropdown)
 
@@ -555,6 +569,29 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     setShowProxyDropdown(false)
 
   }
+
+
+
+  // Profile preview handlers
+  const handlePreviewClick = (e: React.MouseEvent, profileId: string | null | undefined) => {
+    e.stopPropagation(); // Prevent row click
+    
+    // Don't allow clicking on aggregated data (no individual profile)
+    if (!profileId) {
+      return;
+    }
+    
+    if (!trialStatus.canClickIntoProfiles) {
+      navigate('/upgrade');
+      return;
+    }
+    setSelectedProfile(profileId === selectedProfile ? null : profileId);
+  };
+
+  const handleClosePreview = () => {
+    setSelectedProfile(null);
+  };
+
 
 
 
@@ -653,9 +690,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       // Get the period name for the filename
 
-      const periodName = timePeriod === 'alltime' ? 'All-Time' : 
+      const periodName = timePeriod === 'alltime' ? 'All Time' : 
 
-                        timePeriod === 'weekly' ? 'Weekly' : 'Monthly'
+                        timePeriod === 'weekly' ? 'Week' : 'Month'
 
       
 
@@ -779,7 +816,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       
 
-      leaderboardData.forEach((player, index) => {
+      leaderboardData.forEach((player: any, index: number) => {
 
         const playerHeight = 50
 
@@ -925,13 +962,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       console.log('Leaderboard image exported successfully:', fileName)
 
-      alert('Leaderboard image downloaded successfully!')
-
     } catch (error) {
 
       console.error('Failed to export leaderboard image:', error)
-
-      alert('Failed to export leaderboard image. Please try again.')
 
     } finally {
 
@@ -1115,57 +1148,193 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  // Process leaderboard data for display
+  // Process leaderboard data for display - sort by stats value first
 
-  const processedData = leaderboardData.map((entry, index) => ({
-
-    rank: index + 1,
-
-    name: entry.trainer_name,
-
-    countryName: entry.country,
-
-    countryFlag: getCountryFlagUrl(entry.country),
-
-    team: getTeamColor(entry.team_color),
-
-    teamColor: entry.team_color, // Keep raw team color for web view
-
-    statValue: getStatValue(entry),
-
-    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
-
-    profileId: entry.profile_id
-
-  }))
-
-  // Process all-time data for Live section (for weekly and monthly periods)
-  const getAllTimeStatValue = (entry: LeaderboardEntry) => {
-    switch (sortBy) {
-      case 'xp':
-        return formatNumber(entry.total_xp || 0)
-      case 'catches':
-        return formatNumber(entry.pokemon_caught || 0)
-      case 'distance':
-        return formatDistance(entry.distance_walked || 0)
-      case 'pokestops':
-        return formatNumber(entry.pokestops_visited || 0)
-      default:
-        return '0'
+  const sortedData = [...leaderboardData].sort((a, b) => {
+    const getNumericValue = (entry: LeaderboardEntry) => {
+      switch (sortBy) {
+        case 'xp':
+          return entry.total_xp || entry.xp_delta || 0
+        case 'catches':
+          return entry.pokemon_caught || entry.catches_delta || 0
+        case 'distance':
+          return entry.distance_walked || entry.distance_delta || 0
+        case 'pokestops':
+          return entry.pokestops_visited || entry.pokestops_delta || 0
+        default:
+          return 0
+      }
     }
+    
+    const aValue = getNumericValue(a)
+    const bValue = getNumericValue(b)
+    
+    // Sort in descending order (highest values first)
+    return bValue - aValue
+  })
+
+  // Check if we should aggregate data by country or team
+  const shouldAggregateByCountry = activeTab === 'country' && (!selectedCountryFilter || selectedCountryFilter === 'all')
+  const shouldAggregateByTeam = activeTab === 'team' && (!selectedTeamFilter || selectedTeamFilter === 'all')
+
+  let processedData: Array<{
+    rank: number;
+    name: string;
+    countryName: string | null;
+    countryFlag: string | null;
+    team: string | null;
+    teamColor: string | null;
+    statValue: number | string;
+    medal: string | null;
+    profileId: string | null;
+    isAggregated?: boolean;
+    aggregateType?: string;
+  }>
+
+  if (shouldAggregateByCountry) {
+    // Aggregate data by country
+    const countryAggregates = new Map()
+    
+    sortedData.forEach(entry => {
+      // Normalize country name to handle variations in case/spacing
+      const countryName = (entry.country || 'Unknown').trim()
+      const normalizedCountryName = countryName.toLowerCase()
+      
+      if (!countryAggregates.has(normalizedCountryName)) {
+        countryAggregates.set(normalizedCountryName, {
+          country: countryName, // Use original case for display
+          totalXp: 0,
+          totalCatches: 0,
+          totalDistance: 0,
+          totalStops: 0,
+          trainerCount: 0
+        })
+      }
+      
+      const aggregate = countryAggregates.get(normalizedCountryName)
+      aggregate.totalXp += entry.total_xp || 0
+      aggregate.totalCatches += entry.pokemon_caught || 0
+      aggregate.totalDistance += entry.distance_walked || 0
+      aggregate.totalStops += entry.pokestops_visited || 0
+      aggregate.trainerCount += 1
+    })
+
+    // Convert to array and sort by selected stat
+    console.log('Country aggregation results:', Array.from(countryAggregates.values()).map(c => ({ country: c.country, trainerCount: c.trainerCount, totalXp: c.totalXp })))
+    const aggregatedData = Array.from(countryAggregates.values()).sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case 'xp': aValue = a.totalXp; bValue = b.totalXp; break
+        case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
+        case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
+        case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        default: aValue = a.totalXp; bValue = b.totalXp
+      }
+      return bValue - aValue
+    })
+
+    processedData = aggregatedData.map((aggregate, index) => ({
+      rank: index + 1,
+      name: aggregate.country,
+      countryName: aggregate.country,
+      countryFlag: getCountryFlagUrl(aggregate.country),
+      team: null,
+      teamColor: null,
+      statValue: (() => {
+        switch (sortBy) {
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          default: return aggregate.totalXp
+        }
+      })(),
+    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: null, // No individual profile for aggregated data
+      isAggregated: true,
+      aggregateType: 'country'
+    }))
+
+  } else if (shouldAggregateByTeam) {
+    // Aggregate data by team
+    const teamAggregates = new Map()
+    
+    sortedData.forEach(entry => {
+      // Normalize team name to handle variations in case/spacing
+      const teamName = (entry.team_color || 'Unknown').trim()
+      const normalizedTeamName = teamName.toLowerCase()
+      
+      if (!teamAggregates.has(normalizedTeamName)) {
+        teamAggregates.set(normalizedTeamName, {
+          team: teamName, // Use original case for display
+          totalXp: 0,
+          totalCatches: 0,
+          totalDistance: 0,
+          totalStops: 0,
+          trainerCount: 0
+        })
+      }
+      
+      const aggregate = teamAggregates.get(normalizedTeamName)
+      aggregate.totalXp += entry.total_xp || 0
+      aggregate.totalCatches += entry.pokemon_caught || 0
+      aggregate.totalDistance += entry.distance_walked || 0
+      aggregate.totalStops += entry.pokestops_visited || 0
+      aggregate.trainerCount += 1
+    })
+
+    // Convert to array and sort by selected stat
+    console.log('Team aggregation results:', Array.from(teamAggregates.values()).map(t => ({ team: t.team, trainerCount: t.trainerCount, totalXp: t.totalXp })))
+    const aggregatedData = Array.from(teamAggregates.values()).sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case 'xp': aValue = a.totalXp; bValue = b.totalXp; break
+        case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
+        case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
+        case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        default: aValue = a.totalXp; bValue = b.totalXp
+      }
+      return bValue - aValue
+    })
+
+    processedData = aggregatedData.map((aggregate, index) => ({
+      rank: index + 1,
+      name: aggregate.team.charAt(0).toUpperCase() + aggregate.team.slice(1),
+      countryName: null,
+      countryFlag: null,
+      team: getTeamColor(aggregate.team),
+      teamColor: aggregate.team,
+      statValue: (() => {
+        switch (sortBy) {
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          default: return aggregate.totalXp
+        }
+      })(),
+      medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: null, // No individual profile for aggregated data
+      isAggregated: true,
+      aggregateType: 'team'
+    }))
+
+  } else {
+    // Normal individual trainer data
+    processedData = sortedData.map((entry, index) => ({
+      rank: index + 1,
+      name: entry.trainer_name,
+      countryName: entry.country,
+      countryFlag: getCountryFlagUrl(entry.country),
+      team: getTeamColor(entry.team_color),
+      teamColor: entry.team_color,
+      statValue: getStatValue(entry),
+      medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: entry.profile_id,
+      isAggregated: false
+    }))
   }
 
-  const allTimeData = leaderboardData.map((entry, index) => ({
-    rank: index + 1,
-    name: entry.trainer_name,
-    countryName: entry.country,
-    countryFlag: getCountryFlagUrl(entry.country),
-    team: getTeamColor(entry.team_color),
-    teamColor: entry.team_color,
-    statValue: getAllTimeStatValue(entry),
-    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
-    profileId: entry.profile_id
-  }))
 
 
 
@@ -1173,11 +1342,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   // const lockedResults = lockedExpanded ? processedData.slice(0, 10) : processedData.slice(0, 3)
 
   // Responsive Live section: Mobile shows all users, Web shows only top 3 (except for all-time)
-  // For weekly/monthly periods, Live section shows all-time results
+  // Live section should always show current period data (weekly/monthly/all-time)
   // For all-time period, both mobile and web should show all results
   const liveResults = (isMobile || timePeriod === 'alltime')
-    ? (timePeriod === 'alltime' ? processedData : allTimeData)
-    : allTimeData.slice(0, 3)
+    ? processedData
+    : processedData.slice(0, 3)
 
   
 
@@ -1255,7 +1424,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-            {/* Weekly */}
+            {/* Week */}
 
             <button
 
@@ -1321,7 +1490,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               }}>
 
-                Weekly
+                Week
 
               </span>
 
@@ -1329,7 +1498,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-            {/* Monthly */}
+            {/* Month */}
 
             <button
 
@@ -1397,7 +1566,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               }}>
 
-                Monthly
+                Month
 
               </span>
 
@@ -1472,7 +1641,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               }}>
 
-                All time
+                All Time
 
               </span>
 
@@ -1596,7 +1765,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-        {/* Frame 586 - Locked Results Section - Only show for Weekly/Monthly */}
+        {/* Frame 586 - Locked Results Section - Only show for Week/Month */}
         {timePeriod !== 'alltime' && (
           <div style={{
 
@@ -1748,7 +1917,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-        {/* Frame 605 - Monthly Results Container */}
+        {/* Frame 605 - Month Results Container */}
 
         <div style={{
 
@@ -1782,7 +1951,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         }}>
 
-          {/* Frame 530 - Monthly Leaderboard */}
+          {/* Frame 530 - Month Leaderboard */}
 
           <div style={{
 
@@ -1822,7 +1991,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-            {renderWebMonthlyResults()}
+            {renderWebMonthResults()}
 
           </div>
 
@@ -1836,10 +2005,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  const renderWebMonthlyResults = () => {
+  const renderWebMonthResults = () => {
 
     // For all periods: show all results from position 1 onwards
-    const allMainResults = timePeriod === 'alltime' ? processedData : allTimeData
+    const allMainResults = processedData
 
     
 
@@ -1948,7 +2117,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         </div>
 
-          {/* Dropdown Button */}
+          {/* Dropdown Button - Hidden in All Time view */}
+          {timePeriod !== 'alltime' && (
           <button
             onClick={() => setWebLiveExpanded(!webLiveExpanded)}
             style={{
@@ -1976,6 +2146,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
             </svg>
           </button>
+          )}
 
         </div>
 
@@ -2019,7 +2190,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-            {allMainResults.map((player, index) => renderWebMonthlyPlayerCard(player, index))}
+            {allMainResults.map((player, index) => renderWebMonthPlayerCard(player, index))}
 
         </div>
 
@@ -2155,7 +2326,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 flexGrow: 0,
               }}>
                 {/* Player Name */}
-                <span style={{
+                <span 
+                  style={{
                   width: '200px',
                   height: '21px',
                   fontFamily: 'Poppins',
@@ -2163,13 +2335,18 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   fontWeight: 600,
                   fontSize: '14px',
                   lineHeight: '21px',
-                  color: '#000000',
+                    color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
                   textAlign: 'left',
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
-                }}>
+                    cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                  }}
+                  onClick={(e) => handlePreviewClick(e, player.profileId)}
+                  title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                >
                   {player.name}
+                  {!trialStatus.canClickIntoProfiles && player.profileId && <span style={{ marginLeft: '4px' }}>🔒</span>}
                 </span>
 
                   {/* Country Flag and Team */}
@@ -2185,9 +2362,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     order: 1,
                     flexGrow: 0,
                   }}>
-                    {/* Country Flag */}
+                    {/* Country Flag - Hidden for team aggregation */}
+                    {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
                     <img 
-                      src={player.countryFlag}
+                        src={player.countryFlag || ''}
                       alt={`Flag of ${player.countryName}`}
                       style={{
                         width: '16px',
@@ -2205,8 +2383,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         target.parentNode?.insertBefore(fallback, target);
                       }}
                     />
+                    )}
 
-                    {/* Team Color Circle */}
+                    {/* Team Color Circle - Hidden for country aggregation */}
+                    {!(player.isAggregated && player.aggregateType === 'country') && teamColorHex && (
                     <div style={{
                       width: '8px',
                       height: '8px',
@@ -2216,6 +2396,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       order: 1,
                       flexGrow: 0,
                     }} />
+                    )}
 
                     {/* Team Name */}
                     <span style={{
@@ -2272,7 +2453,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     )
   }
 
-  const renderWebMonthlyPlayerCard = (player: any, index: number) => {
+  const renderWebMonthPlayerCard = (player: any, index: number) => {
 
     const teamColorHex = getTeamColorHex(player.teamColor || player.team)
 
@@ -2476,46 +2657,32 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               {/* Player Name */}
 
-              <span style={{
-
+              <span 
+                style={{
                 width: '120px',
-
                 height: '18px',
-
                 fontFamily: 'Poppins',
-
                 fontStyle: 'normal',
-
                 fontWeight: 600,
-
                 fontSize: '12px',
-
                 lineHeight: '18px',
-
                 /* identical to box height */
-
                 textAlign: 'left',
-
-                color: '#000000',
-
+                  color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
                 /* Inside auto layout */
-
                 flex: 'none',
-
                 order: 0,
-
                 flexGrow: 0,
-
                 overflow: 'hidden',
-
                 textOverflow: 'ellipsis',
-
                 whiteSpace: 'nowrap',
-
-              }}>
-
+                  cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                }}
+                onClick={(e) => handlePreviewClick(e, player.profileId)}
+                title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+              >
                 {player.name}
-
+                {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
               </span>
 
 
@@ -2576,9 +2743,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
+                  {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
                   <img 
 
-                    src={player.countryFlag}
+                      src={player.countryFlag || ''}
 
                     alt={`Flag of ${player.countryName}`}
 
@@ -2613,6 +2781,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     }}
 
                   />
+                  )}
 
                 </div>
 
@@ -2648,8 +2817,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
-                  {/* Team Color Circle - Ellipse 3 */}
-
+                  {/* Team Color Circle - Ellipse 3 - Hidden for country aggregation */}
+                  {!(player.isAggregated && player.aggregateType === 'country') && teamColorHex && (
                   <div style={{
 
                     /* Ellipse 3 */
@@ -2671,11 +2840,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     flexGrow: 0,
 
                   }} />
+                  )}
 
                   
 
-                  {/* Team Name */}
-
+                  {/* Team Name - Hidden for country aggregation */}
+                  {!(player.isAggregated && player.aggregateType === 'country') && player.team && (
                   <span style={{
 
                     fontFamily: 'Poppins',
@@ -2713,6 +2883,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     {player.team}
 
                   </span>
+                  )}
 
                 </div>
 
@@ -3480,7 +3651,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 borderRadius: '6px',
 
-                    cursor: 'pointer',
+                    cursor: activeTab === 'trainers' ? 'default' : 'pointer',
 
                     background: 'transparent',
 
@@ -3524,6 +3695,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   </span>
 
+                  {/* Hide ChevronDown for trainers tab */}
+                  {activeTab !== 'trainers' && (
                   <ChevronDown style={{
 
                     /* Dropdown */
@@ -3559,6 +3732,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     marginLeft: 'auto'
 
                   }} />
+                  )}
 
                 </div>
 
@@ -4564,11 +4738,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 position: 'relative',
 
-            cursor: 'pointer',
+            cursor: activeTab === 'trainers' ? 'default' : 'pointer',
 
           }}
 
-              onClick={() => setShowDynamicDropdown(!showDynamicDropdown)}
+              onClick={activeTab === 'trainers' ? undefined : () => setShowDynamicDropdown(!showDynamicDropdown)}
 
         >
 
@@ -4614,8 +4788,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           </span>
 
-              {/* Dropdown Icon */}
-
+              {/* Dropdown Icon - Hidden for trainers tab */}
+              {activeTab !== 'trainers' && (
           <ChevronDown 
 
             style={{ 
@@ -4651,6 +4825,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             }} 
 
           />
+              )}
 
               
 
@@ -5224,7 +5399,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         >
 
-          {/* Weekly */}
+          {/* Week */}
 
           <div 
 
@@ -5291,7 +5466,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             >
 
-              Weekly
+              Week
 
             </span>
 
@@ -5299,7 +5474,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-          {/* Monthly */}
+          {/* Month */}
 
           <div 
 
@@ -5366,7 +5541,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             >
 
-              Monthly
+              Month
 
             </span>
 
@@ -5435,12 +5610,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 order: 0,
 
                 flexGrow: 0,
+                whiteSpace: 'nowrap',
 
               }}
 
             >
 
-              All-time
+              All Time
 
             </span>
 
@@ -5548,7 +5724,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       </div>
 
-      {/* Component 5 - Locked Results - Only show for Weekly/Monthly */}
+      {/* Component 5 - Locked Results - Only show for Week/Month */}
       {timePeriod !== 'alltime' && (
       <div 
 
@@ -5797,22 +5973,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   }}>
 
-                    <span style={{
-
+                    <span 
+                      style={{
                       fontFamily: 'Poppins',
-
                       fontWeight: 600,
-
                       fontSize: '12px',
-
                       lineHeight: '18px',
-
-                      color: '#000000',
-
-                    }}>
-
+                        color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
+                        cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                      }}
+                      onClick={(e) => handlePreviewClick(e, player.profileId)}
+                      title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                    >
                       {player.name}
-
+                      {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                     </span>
 
                     
@@ -5831,7 +6005,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                       <img 
 
-                        src={player.countryFlag}
+                        src={player.countryFlag || ''}
 
                         alt={`Flag of ${player.countryName}`}
 
@@ -6054,14 +6228,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       flexDirection: 'column',
                       gap: '2px',
                     }}>
-                      <span style={{
+                      <span 
+                        style={{
                         fontFamily: 'Poppins',
                         fontWeight: 600,
                         fontSize: '12px',
                         lineHeight: '18px',
-                        color: '#000000',
-                      }}>
+                          color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
+                          cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                        }}
+                        onClick={(e) => handlePreviewClick(e, player.profileId)}
+                        title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                      >
                         {player.name}
+                        {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                       </span>
 
                       {/* Country and Team */}
@@ -6070,8 +6250,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         alignItems: 'center',
                         gap: '6px',
                       }}>
+                        {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
                         <img 
-                          src={player.countryFlag}
+                            src={player.countryFlag || ''}
                           alt={`Flag of ${player.countryName}`}
                           style={{
                             width: '16px',
@@ -6089,6 +6270,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                             target.parentNode?.insertBefore(fallback, target);
                           }}
                         />
+                        )}
 
                         {/* Team */}
                         <div style={{
@@ -6208,7 +6390,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
          <button
 
-           onClick={() => setLiveExpanded(!liveExpanded)}
+           onClick={timePeriod !== 'alltime' ? () => setLiveExpanded(!liveExpanded) : undefined}
 
            style={{
 
@@ -6226,7 +6408,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
              border: 'none',
 
-             cursor: 'pointer',
+             cursor: timePeriod !== 'alltime' ? 'pointer' : 'default',
 
            }}
 
@@ -6260,13 +6442,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
              }}>
 
-               {timePeriod === "monthly" ? "Monthly Leaderboard" : "Live"}
+               {timePeriod === "monthly" ? "Live" : "Live"}
 
              </span>
 
            </div>
 
-           {/* Dropdown Button */}
+           {/* Dropdown Button - Hidden in All Time view */}
+           {timePeriod !== 'alltime' && (
            <svg 
              width="38" 
              height="24" 
@@ -6282,6 +6465,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
            </svg>
+           )}
 
          </button>
 
@@ -6414,22 +6598,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    }}>
 
-                     <span style={{
-
+                     <span 
+                       style={{
                        fontFamily: 'Poppins',
-
                        fontWeight: 600,
-
                        fontSize: '12px',
-
                        lineHeight: '18px',
-
-                       color: '#000000',
-
-                     }}>
-
+                         color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
+                         cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                       }}
+                       onClick={(e) => handlePreviewClick(e, player.profileId)}
+                       title={trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles"}
+                     >
                        {player.name}
-
+                       {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                      </span>
 
                      
@@ -6446,9 +6628,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                      }}>
 
+                       {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
                        <img 
 
-                         src={player.countryFlag}
+                           src={player.countryFlag || ''}
 
                          alt={`Flag of ${player.countryName}`}
 
@@ -6483,6 +6666,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                          }}
 
                        />
+                       )}
 
                        
 
@@ -6660,6 +6844,25 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         </div>
 
+      )}
+
+      {/* Profile Preview Modal */}
+      {selectedProfile && (
+        <div className="profile-preview-modal">
+          <div className="modal-backdrop" onClick={handleClosePreview}></div>
+          <div className="modal-content">
+            <div className="modal-inner">
+              <button className="modal-close" onClick={handleClosePreview}>×</button>
+              <div className="quick-profile-container">
+                <QuickProfileView 
+                  profileId={selectedProfile}
+                  isOpen={true}
+                  onClose={handleClosePreview}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
     </>

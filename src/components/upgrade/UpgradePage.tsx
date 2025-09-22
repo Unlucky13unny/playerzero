@@ -133,7 +133,7 @@ export const UpgradePage = () => {
               <span className="period">one-time</span>
             </div>
             <div className="value-prop">
-              <span className="savings">🎉 Best Value - No Monthly Fees!</span>
+              <span className="savings">🎉 Best Value - No Month Fees!</span>
             </div>
           </div>
 
@@ -199,7 +199,7 @@ export const UpgradePage = () => {
                   </div>
                   
                   <div className="table-row-compact">
-                    <div className="feature-name-compact">📅 Weekly/Monthly Cards</div>
+                    <div className="feature-name-compact">📅 Week/Month Cards</div>
                     <div className="trial-status">❌ Locked</div>
                     <div className="premium-status">✅ Available</div>
                   </div>
