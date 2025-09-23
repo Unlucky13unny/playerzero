@@ -18,7 +18,7 @@ import { supabase } from "../../supabaseClient"
 
 import { getCountryFlag } from "../../utils/countryFlags"
 
-import { QuickProfileView } from "../profile/QuickProfileView"
+import { PlyrZeroProfileStandalone } from "../profile/PlyrZeroProfileStandalone"
 
 import { useTrialStatus } from "../../hooks/useTrialStatus"
 
@@ -681,297 +681,1059 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
   const handleExport = async () => {
-
     try {
-
       setExporting(true)
 
-      
-
-      // Get the period name for the filename
-
-      const periodName = timePeriod === 'alltime' ? 'All Time' : 
-
-                        timePeriod === 'weekly' ? 'Week' : 'Month'
-
-      
-
-      console.log('Starting image export for:', periodName)
-
-      
-
-      // Create simple leaderboard data export
-
-      const leaderboardData = processedData.slice(0, 10) // Top 10 players
-
-      
-
-      // Create canvas for the card
-
-      const canvas = document.createElement('canvas')
-
-      const ctx = canvas.getContext('2d')
-
-      
-
-      if (!ctx) {
-
-        throw new Error('Canvas context not available')
-
-      }
-
-      
-
-      // Set canvas size
-
-      canvas.width = 600
-
-      canvas.height = 800
-
-      
-
-      // Create gradient background
-
-      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height)
-
-      gradient.addColorStop(0, '#667eea')
-
-      gradient.addColorStop(1, '#764ba2')
-
-      ctx.fillStyle = gradient
-
-      ctx.fillRect(0, 0, canvas.width, canvas.height)
-
-      
-
-      // Draw card background
-
-      const cardX = 40
-
-      const cardY = 40
-
-      const cardWidth = canvas.width - 80
-
-      const cardHeight = canvas.height - 80
-
-      
-
-      // Card shadow
-
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'
-
-      ctx.fillRect(cardX + 5, cardY + 5, cardWidth, cardHeight)
-
-      
-
-      // Card background
-
-      ctx.fillStyle = 'white'
-
-      ctx.fillRect(cardX, cardY, cardWidth, cardHeight)
-
-      
-
-      // Header
-
-      ctx.fillStyle = '#DC2627'
-
-      ctx.font = 'bold 28px Poppins'
-
-      ctx.textAlign = 'center'
-
-      ctx.fillText('🏆 PlayerZero Leaderboard', canvas.width / 2, cardY + 60)
-
-      
-
-      // Subtitle
-
-      ctx.fillStyle = '#666'
-
-      ctx.font = '16px Poppins'
-
-      ctx.fillText(`${periodName} Rankings • ${new Date().toLocaleDateString()}`, canvas.width / 2, cardY + 90)
-
-      
-
-      // Header line
-
-      ctx.strokeStyle = '#DC2627'
-
-      ctx.lineWidth = 3
-
-      ctx.beginPath()
-
-      ctx.moveTo(cardX + 30, cardY + 110)
-
-      ctx.lineTo(cardX + cardWidth - 30, cardY + 110)
-
-      ctx.stroke()
-
-      
-
-      // Draw players
-
-      let yPos = cardY + 140
-
-      
-
-      leaderboardData.forEach((player: any, index: number) => {
-
-        const playerHeight = 50
-
-        const playerY = yPos + (index * 60)
-
-        
-
-        // Player background
-
-        let bgColor = '#f8f9fa'
-
-        if (index === 0) bgColor = '#FFD700'
-
-        else if (index === 1) bgColor = '#C0C0C0'
-
-        else if (index === 2) bgColor = '#CD7F32'
-
-        
-
-        ctx.fillStyle = bgColor
-
-        ctx.fillRect(cardX + 20, playerY, cardWidth - 40, playerHeight)
-
-        
-
-        // Left border
-
-        ctx.fillStyle = index < 3 ? bgColor : '#DC2627'
-
-        ctx.fillRect(cardX + 20, playerY, 4, playerHeight)
-
-        
-
-        // Rank
-
-        ctx.fillStyle = '#DC2627'
-
-        ctx.font = 'bold 20px Poppins'
-
-        ctx.textAlign = 'left'
-
-        if (index < 3) {
-
-          // For SVG medals, we would need to load and draw the SVG
-
-          // For now, keeping emojis in export to maintain functionality
-
-          const rankText = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉'
-
-          ctx.fillText(rankText, cardX + 35, playerY + 32)
-
-        } else {
-
-          const rankText = `#${index + 1}`
-
-          ctx.fillText(rankText, cardX + 35, playerY + 32)
-
+      // Get the actual period dates from database
+      const getPeriodInfo = async () => {
+        if (timePeriod === 'alltime') {
+          return {
+            periodName: 'All Time',
+            dateRange: 'ALL TIME',
+            periodText: 'ALL TIME'
+          }
         }
 
-        
+        try {
+          // Check if we have completed period data first
+          if (timePeriod === 'weekly') {
+            const { data: completedWeekData, error: weekError } = await supabase.rpc('get_last_completed_week')
+            if (!weekError && completedWeekData && completedWeekData.length > 0) {
+              const { period_start, period_end } = completedWeekData[0]
+              const startDate = new Date(period_start)
+              const endDate = new Date(period_end)
+              const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+              return {
+                periodName: 'Week',
+                dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+                periodText: `WEEK: ${formatDate(startDate)} - ${formatDate(endDate)}`
+              }
+            }
+          } else if (timePeriod === 'monthly') {
+            const { data: completedMonthData, error: monthError } = await supabase.rpc('get_last_completed_month')
+            if (!monthError && completedMonthData && completedMonthData.length > 0) {
+              const { period_start, period_end } = completedMonthData[0]
+              const startDate = new Date(period_start)
+              const endDate = new Date(period_end)
+              const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+              return {
+                periodName: 'Month',
+                dateRange: `${formatDate(startDate)} - ${formatDate(endDate)}`,
+                periodText: `MONTH: ${formatDate(startDate)} - ${formatDate(endDate)}`
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error fetching period data:', error)
+        }
 
-        // Name
+        // Fallback to current period calculation
+        if (timePeriod === 'weekly') {
+          const now = new Date()
+          const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()))
+          const endOfWeek = new Date(startOfWeek)
+          endOfWeek.setDate(startOfWeek.getDate() + 6)
+          const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+          return {
+            periodName: 'Week',
+            dateRange: `${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`,
+            periodText: `CURRENT WEEK: ${formatDate(startOfWeek)} - ${formatDate(endOfWeek)}`
+          }
+        } else {
+          const now = new Date()
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+          const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+          const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
+          return {
+            periodName: 'Month',
+            dateRange: `${formatDate(startOfMonth)} - ${formatDate(endOfMonth)}`,
+            periodText: `CURRENT MONTH: ${formatDate(startOfMonth)} - ${formatDate(endOfMonth)}`
+          }
+        }
+      }
 
-        ctx.fillStyle = '#333'
+      const periodInfo = await getPeriodInfo()
 
-        ctx.font = '600 16px Poppins'
+      console.log('Starting image export for:', periodInfo.periodName)
 
-        ctx.fillText(player.name, cardX + 90, playerY + 32)
-
-        
-
-        // Stats
-
-        ctx.fillStyle = '#DC2627'
-
-        ctx.font = 'bold 16px Poppins'
-
-        ctx.textAlign = 'right'
-
-        const statValue = typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue
-
-        ctx.fillText(`${statValue} ${getStatLabel()}`, cardX + cardWidth - 40, playerY + 32)
-
-      })
-
+      // Create leaderboard data export (top 10 + user's position if not in top 10)
+      const leaderboardData = processedData.slice(0, 10)
       
+      // Find user's position if not in top 10
+      const currentUser = processedData.find((player: any) => player.isCurrentUser)
+      const userPosition = currentUser ? processedData.findIndex((player: any) => player.isCurrentUser) + 1 : null
+      
+      // Create canvas for the card - using exact dimensions from CSS
+      const canvas = document.createElement('canvas')
+      const ctx = canvas.getContext('2d')
 
-      // Footer
-
-      const footerY = yPos + (leaderboardData.length * 60) + 40
-
-      ctx.strokeStyle = '#eee'
-
-      ctx.lineWidth = 2
-
+      if (!ctx) {
+        throw new Error('Canvas context not available')
+      }
+      
+      // Set canvas size to match CSS specifications (958x1831)
+      const scale = 0.6 // Scale down for reasonable file size
+      canvas.width = 958 * scale
+      canvas.height = 1831 * scale
+      ctx.scale(scale, scale)
+      
+      // Gray background
+      ctx.fillStyle = '#f5f5f5'
+      ctx.fillRect(0, 0, 958, 1831)
+      
+      // Main card background with rounded corners and shadow
+      const cardX = 0
+      const cardY = 0
+      const cardWidth = 958
+      const cardHeight = 1831
+      const cornerRadius = 19.35
+      
+      // Draw card shadow
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+      ctx.shadowBlur = 10
+      ctx.shadowOffsetX = 5.8
+      ctx.shadowOffsetY = 0
+      
+      // Draw rounded rectangle background
+      ctx.fillStyle = '#FFFFFF'
       ctx.beginPath()
-
-      ctx.moveTo(cardX + 30, footerY)
-
-      ctx.lineTo(cardX + cardWidth - 30, footerY)
-
+      ctx.moveTo(cardX + cornerRadius, cardY)
+      ctx.lineTo(cardX + cardWidth - cornerRadius, cardY)
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY, cardX + cardWidth, cardY + cornerRadius)
+      ctx.lineTo(cardX + cardWidth, cardY + cardHeight - cornerRadius)
+      ctx.quadraticCurveTo(cardX + cardWidth, cardY + cardHeight, cardX + cardWidth - cornerRadius, cardY + cardHeight)
+      ctx.lineTo(cardX + cornerRadius, cardY + cardHeight)
+      ctx.quadraticCurveTo(cardX, cardY + cardHeight, cardX, cardY + cardHeight - cornerRadius)
+      ctx.lineTo(cardX, cardY + cornerRadius)
+      ctx.quadraticCurveTo(cardX, cardY, cardX + cornerRadius, cardY)
+      ctx.closePath()
+      ctx.fill()
+      
+      // Reset shadow for other elements
+      ctx.shadowColor = 'transparent'
+      ctx.shadowBlur = 0
+      ctx.shadowOffsetX = 0
+      ctx.shadowOffsetY = 0
+      
+      // Load PlayerZERO logo image first
+      let logoImg = null
+      try {
+        logoImg = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const img = new Image()
+          img.crossOrigin = 'anonymous'
+          img.onload = () => resolve(img)
+          img.onerror = () => reject(new Error('Failed to load layer_1.png'))
+          img.src = '/images/Layer_1.png'
+        })
+        
+      } catch (error) {
+        console.warn('Failed to load PlayerZero logo, using text fallback:', error)
+        logoImg = null
+      }
+      
+      // Draw PlayerZERO logo or fallback text and calculate header height
+      let headerBottomY = 120 // Default bottom position after text
+      
+      if (logoImg) {
+        // Calculate logo dimensions and position
+        const logoMaxWidth = 300 // Max width for logo
+        const logoMaxHeight = 60 // Max height for logo
+        
+        // Calculate scaled dimensions maintaining aspect ratio
+        const logoAspectRatio = logoImg.naturalWidth / logoImg.naturalHeight
+        let logoWidth = logoMaxWidth
+        let logoHeight = logoMaxWidth / logoAspectRatio
+        
+        if (logoHeight > logoMaxHeight) {
+          logoHeight = logoMaxHeight
+          logoWidth = logoMaxHeight * logoAspectRatio
+        }
+        
+        // Center the logo horizontally
+        const logoX = (958 - logoWidth) / 2
+        const logoY = 40 // Position from top (moved up slightly)
+        
+        ctx.drawImage(logoImg, logoX, logoY, logoWidth, logoHeight)
+        console.log(`Successfully loaded PlayerZero logo: ${logoWidth}x${logoHeight}`)
+        
+        // Calculate where the logo ends plus some padding
+        headerBottomY = logoY + logoHeight + 20 // 20px padding after logo
+      } else {
+        // Fallback: Use text if image fails to load
+        ctx.fillStyle = '#000000'
+        ctx.font = 'bold 36px Poppins'
+        ctx.textAlign = 'center'
+        ctx.fillText('PlayerZERO', 958/2, 80)
+        headerBottomY = 120 // Standard text position + padding
+      }
+      
+      // TOP 10 title - positioned relative to header bottom
+      const top10Y = headerBottomY + 40
+      ctx.fillStyle = '#DC2627'
+      ctx.font = '900 50px Poppins'
+      ctx.textAlign = 'center'
+      ctx.fillText('TOP 10', 958/2, top10Y)
+      
+      // LOCKED LEADERBOARD title - positioned relative to TOP 10
+      const lockedTitleY = top10Y + 80
+      ctx.fillStyle = '#000000'
+      ctx.font = '800 67px Poppins'
+      ctx.fillText('LOCKED LEADERBOARD', 958/2, lockedTitleY)
+      
+      // Date range - positioned relative to LOCKED LEADERBOARD
+      const dateRangeY = lockedTitleY + 60
+      ctx.fillStyle = '#DC2627'
+      ctx.font = '600 40px Poppins'
+      ctx.fillText(periodInfo.periodText, 958/2, dateRangeY)
+      
+      // Stat type (196x60) - positioned relative to date range
+      const statTypeY = dateRangeY + 60
+      ctx.fillStyle = '#000000'
+      ctx.font = '900 40px Poppins'
+      ctx.fillText(getStatLabel().toUpperCase(), 958/2, statTypeY)
+      
+      
+      // Top 3 medal cards section (831.6x323.63) - positioned relative to stat type
+      const medalSectionY = statTypeY + 80
+      const medalSpacing = 24
+      
+      // Medal card specifications from CSS with exact dimensions
+      const medalConfigs = [
+        {
+          // 1st place - center, larger card (272.42x323.63)
+          width: 272.42,
+          height: 323.63,
+          background: 'linear-gradient(188.19deg, #A66300 6.29%, #FFBF00 115.32%)',
+          borderColor: '#FFBF00',
+          position: 'center',
+          order: 0
+        },
+        {
+          // 2nd place - left, smaller card (260.13x301.1)
+          width: 260.13,
+          height: 301.1,
+          background: 'linear-gradient(180deg, #202020 0%, #545454 100%)',
+          borderColor: '#A4A4A4',
+          position: 'left',
+          order: 1
+        },
+        {
+          // 3rd place - right, smaller card (260.13x301.1)
+          width: 260.13,
+          height: 301.1,
+          background: 'linear-gradient(350.79deg, #9E3F00 30.43%, #261404 93.02%)',
+          borderColor: '#C9490E',
+          position: 'right',
+          order: 2
+        }
+      ]
+      
+      // Calculate positions: 1st center, 2nd left, 3rd right
+      const centerX = 958 / 2
+      const firstCardX = centerX - medalConfigs[0].width / 2 // 1st place center
+      const secondCardX = firstCardX - medalConfigs[1].width - medalSpacing // 2nd place left
+      const thirdCardX = firstCardX + medalConfigs[0].width + medalSpacing // 3rd place right
+      
+      const medalPositions = [firstCardX, secondCardX, thirdCardX]
+      
+      // Enhanced image loading function with retry mechanism
+      const loadImage = (imagePath: string, maxRetries: number = 2): Promise<HTMLImageElement> => {
+        return new Promise((resolve, reject) => {
+          let attempts = 0
+          
+          const attemptLoad = () => {
+            const img = new Image()
+            img.crossOrigin = 'anonymous'
+            
+            img.onload = () => {
+              resolve(img)
+            }
+            
+            img.onerror = () => {
+              attempts++
+              if (attempts <= maxRetries) {
+                console.warn(`Failed to load ${imagePath}, attempt ${attempts}/${maxRetries + 1}`)
+                // Retry after a short delay
+                setTimeout(() => attemptLoad(), 500 * attempts)
+              } else {
+                console.error(`Failed to load ${imagePath} after ${maxRetries + 1} attempts`)
+                reject(new Error(`Failed to load ${imagePath} after ${maxRetries + 1} attempts`))
+              }
+            }
+            
+            img.src = imagePath
+          }
+          
+          attemptLoad()
+        })
+      }
+      
+      // Keep the old function name for medal images
+      const loadMedalImage = loadImage
+      
+      // Load all medal images first
+      const medalImagePaths = [
+        '/images/1st_position.png',
+        '/images/2nd_postion.png',  // Note: keeping the original typo in filename
+        '/images/3rd_psotion.png'   // Note: keeping the original typo in filename
+      ]
+      
+      const medalImages: (HTMLImageElement | null)[] = []
+      
+      // Load images for the positions we have data for
+      for (let i = 0; i < Math.min(3, leaderboardData.length); i++) {
+        try {
+          const img = await loadMedalImage(medalImagePaths[i])
+          medalImages[i] = img
+        } catch (error) {
+          console.error(`Failed to load medal image ${i + 1}:`, error)
+          medalImages[i] = null // Will use fallback
+        }
+      }
+      
+      // Load country flag images for all positions we'll show (up to 10)
+      const flagImages: (HTMLImageElement | null)[] = []
+      const maxPositions = Math.min(10, leaderboardData.length)
+      
+      for (let i = 0; i < maxPositions; i++) {
+        const player = leaderboardData[i]
+        
+        // Enhanced flag loading with multiple fallback attempts
+        if (player.countryName) {
+          try {
+            // First try the provided flag URL if available
+            let flagImg = null
+            if (player.countryFlag) {
+              try {
+                flagImg = await loadImage(player.countryFlag, 1)
+                console.log(`Successfully loaded primary flag for ${player.name} (${player.countryName})`)
+              } catch (primaryError) {
+                console.warn(`Primary flag failed for ${player.name} (${player.countryName}): ${primaryError instanceof Error ? primaryError.message : String(primaryError)}`)
+              }
+            }
+            
+            // If primary failed or no URL provided, try enhanced mapping
+            if (!flagImg) {
+              const fallbackFlagUrl = getCountryFlagUrl(player.countryName)
+              if (fallbackFlagUrl && fallbackFlagUrl !== 'https://flagcdn.com/w40/xx.png') {
+                try {
+                  flagImg = await loadImage(fallbackFlagUrl, 2) // More retries for fallback
+                  console.log(`Fallback flag loaded for ${player.name} (${player.countryName}): ${fallbackFlagUrl}`)
+                } catch (fallbackError) {
+                  console.warn(`Fallback flag failed for ${player.name} (${player.countryName}): ${fallbackError instanceof Error ? fallbackError.message : String(fallbackError)}`)
+                }
+              }
+            }
+            
+            flagImages[i] = flagImg
+            
+            if (!flagImg) {
+              console.error(`All flag loading methods failed for ${player.name} (${player.countryName})`)
+            }
+            
+          } catch (error) {
+            console.error(`Unexpected error loading flag for ${player.name}:`, error)
+            flagImages[i] = null
+          }
+        } else {
+          flagImages[i] = null
+          console.warn(`Player ${player.name} has no country name`)
+        }
+      }
+      
+      // Get trainer levels for the top players
+      const playerLevels: { [key: string]: number } = {}
+      try {
+        // Fetch trainer levels from profiles table for the players we're showing
+        const profileIds = leaderboardData.slice(0, Math.min(10, leaderboardData.length))
+          .filter(p => p.profileId)
+          .map(p => p.profileId)
+        
+        // Also include current user if not in top 10
+        if (currentUser?.profileId && !profileIds.includes(currentUser.profileId)) {
+          profileIds.push(currentUser.profileId)
+        }
+        
+        if (profileIds.length > 0) {
+          const { data: profileData, error } = await supabase
+            .from('profiles')
+            .select('id, trainer_level')
+            .in('id', profileIds)
+          
+          if (profileData && !error) {
+            profileData.forEach(profile => {
+              playerLevels[profile.id] = profile.trainer_level || 1
+            })
+          }
+        }
+      } catch (error) {
+        console.warn('Failed to fetch trainer levels:', error)
+      }
+      
+      // Load user's country flag if they have one and are not in top 10
+      let userFlagImage: HTMLImageElement | null = null
+      const currentUserInTop10 = leaderboardData.slice(0, 10).some(p => p.profileId === currentUser?.profileId)
+      if (currentUser?.countryFlag && !currentUserInTop10) {
+        try {
+          // First try the provided flag URL
+          userFlagImage = await loadImage(currentUser.countryFlag, 1)
+          console.log(`Successfully loaded user flag (${currentUser.countryName || 'Unknown'})`)
+        } catch (error) {
+          console.warn(`Primary user flag failed, trying fallback...`)
+          
+          // Try to generate a new flag URL if we have country name
+          if (currentUser.countryName) {
+            try {
+              const fallbackFlagUrl = getCountryFlagUrl(currentUser.countryName)
+              if (fallbackFlagUrl && fallbackFlagUrl !== currentUser.countryFlag) {
+                userFlagImage = await loadImage(fallbackFlagUrl, 1)
+                console.log(`Fallback user flag loaded (${currentUser.countryName})`)
+              } else {
+                userFlagImage = null
+              }
+            } catch (fallbackError) {
+              console.warn(`All user flag loading attempts failed`)
+              userFlagImage = null
+            }
+          } else {
+            userFlagImage = null
+          }
+        }
+      }
+      
+      // Draw top 3 cards in the correct order (1st, 2nd, 3rd)
+      for (let index = 0; index < Math.min(3, leaderboardData.length); index++) {
+        const player = leaderboardData[index]
+        const config = medalConfigs[index]
+        const medalX = medalPositions[index]
+        const medalWidth = config.width
+        const medalHeight = config.height
+        
+        // Adjust Y position for 2nd and 3rd place to align bottoms (since they're shorter)
+        const cardY = index === 0 ? medalSectionY : medalSectionY + (medalConfigs[0].height - medalHeight)
+        
+        // Draw card background with gradient effect and opacity
+        const gradientColors = [
+          ['#FFBF00', '#A66300'], // Gold
+          ['#545454', '#202020'], // Silver
+          ['#261404', '#9E3F00']  // Bronze
+        ]
+        
+        const gradient = ctx.createLinearGradient(medalX, cardY, medalX, cardY + medalHeight)
+        gradient.addColorStop(0, gradientColors[index][0])
+        gradient.addColorStop(1, gradientColors[index][1])
+        
+        // Set opacity to 0.8 as per CSS
+        ctx.globalAlpha = 0.8
+        ctx.fillStyle = gradient
+        
+        // Draw rounded rectangle background (border-radius: 9.02787px)
+        const borderRadius = 9.03
+        ctx.beginPath()
+        ctx.moveTo(medalX + borderRadius, cardY)
+        ctx.lineTo(medalX + medalWidth - borderRadius, cardY)
+        ctx.quadraticCurveTo(medalX + medalWidth, cardY, medalX + medalWidth, cardY + borderRadius)
+        ctx.lineTo(medalX + medalWidth, cardY + medalHeight - borderRadius)
+        ctx.quadraticCurveTo(medalX + medalWidth, cardY + medalHeight, medalX + medalWidth - borderRadius, cardY + medalHeight)
+        ctx.lineTo(medalX + borderRadius, cardY + medalHeight)
+        ctx.quadraticCurveTo(medalX, cardY + medalHeight, medalX, cardY + medalHeight - borderRadius)
+        ctx.lineTo(medalX, cardY + borderRadius)
+        ctx.quadraticCurveTo(medalX, cardY, medalX + borderRadius, cardY)
+        ctx.closePath()
+        ctx.fill()
+        
+        // Draw border (3.07242px solid)
+        ctx.strokeStyle = config.borderColor
+        ctx.lineWidth = 3.07
+        ctx.stroke()
+        
+        // Add box shadow effect
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+        ctx.shadowBlur = 4.1
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 4.1
+        ctx.stroke()
+        
+        // Reset shadow and opacity
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        ctx.globalAlpha = 1.0
+        
+        // Draw inner frame (Frame 723) with exact dimensions
+        const innerPadding = 9.03
+        const innerX = medalX + innerPadding
+        const innerY = cardY + innerPadding
+        const innerWidth = (index === 0 ? 253.99 : 244.77) // Different inner widths per CSS
+        const innerHeight = (index === 0 ? 305.19 : 286.76) // Different inner heights per CSS
+        
+        // Inner frame border (1.02414px solid)
+        ctx.strokeStyle = config.borderColor
+        ctx.lineWidth = 1.02
+        
+        // Draw inner rounded rectangle (border-radius: 6.14484px)
+        const innerRadius = 6.14
+      ctx.beginPath()
+        ctx.moveTo(innerX + innerRadius, innerY)
+        ctx.lineTo(innerX + innerWidth - innerRadius, innerY)
+        ctx.quadraticCurveTo(innerX + innerWidth, innerY, innerX + innerWidth, innerY + innerRadius)
+        ctx.lineTo(innerX + innerWidth, innerY + innerHeight - innerRadius)
+        ctx.quadraticCurveTo(innerX + innerWidth, innerY + innerHeight, innerX + innerWidth - innerRadius, innerY + innerHeight)
+        ctx.lineTo(innerX + innerRadius, innerY + innerHeight)
+        ctx.quadraticCurveTo(innerX, innerY + innerHeight, innerX, innerY + innerHeight - innerRadius)
+        ctx.lineTo(innerX, innerY + innerRadius)
+        ctx.quadraticCurveTo(innerX, innerY, innerX + innerRadius, innerY)
+        ctx.closePath()
+        ctx.stroke()
+        
+        // Add inner frame drop shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+        ctx.shadowBlur = 4.1
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 4.1
+      ctx.stroke()
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        // Medal icon area (107.56x107.56) - exact SVG dimensions
+        const medalIconSize = 107.56
+        const medalIconY = cardY + 30 // Position within card
+        const centerX = medalX + medalWidth/2
+        const centerY = medalIconY + medalIconSize/2
+        
+        // Draw medal image if loaded, otherwise use fallback
+        const medalImg = medalImages[index]
+        
+        if (medalImg) {
+          // Use the loaded medal image
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+          ctx.shadowBlur = 4.1
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 4.1
+          
+          // Draw the medal image centered
+          const imageSize = medalIconSize
+          const imageX = centerX - imageSize/2
+          const imageY = centerY - imageSize/2
+          
+          ctx.drawImage(medalImg, imageX, imageY, imageSize, imageSize)
+          
+          // Reset shadow
+          ctx.shadowColor = 'transparent'
+          ctx.shadowBlur = 0
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 0
+          
+        } else {
+          // Fallback: draw simple medal design if image failed to load
+          console.warn(`Using fallback design for position ${index + 1}`)
+          
+          const medalBgColors = [
+            'rgba(194, 139, 0, 0.3)',   // Gold
+            'rgba(208, 208, 208, 0.13)', // Silver
+            'rgba(171, 54, 0, 0.3)'      // Bronze
+          ]
+          
+          const medalBorderColors = [
+            '#F6B81C', // Gold
+            '#787878', // Silver
+            '#C9490E'  // Bronze
+          ]
+          
+          ctx.fillStyle = medalBgColors[index]
+          ctx.beginPath()
+          ctx.arc(centerX, centerY, medalIconSize/2, 0, 2 * Math.PI)
+          ctx.fill()
+          
+          ctx.strokeStyle = medalBorderColors[index]
+          ctx.lineWidth = 2.05
+      ctx.beginPath()
+          ctx.arc(centerX, centerY, medalIconSize/2, 0, 2 * Math.PI)
+          ctx.stroke()
+          
+          // Add shadow
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+          ctx.shadowBlur = 4.1
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 4.1
       ctx.stroke()
 
+          // Reset shadow
+          ctx.shadowColor = 'transparent'
+          ctx.shadowBlur = 0
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 0
+          
+          // Draw number
+          ctx.fillStyle = medalBorderColors[index]
+          ctx.font = 'bold 24px Poppins'
+          ctx.textAlign = 'center'
+          ctx.fillText((index + 1).toString(), centerX, centerY + 8)
+        }
+        
+        // Player name (207x34) - exact CSS specs
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '900 22.53px Poppins' // font-size: 22.5311px
+        ctx.textAlign = 'center'
+        const name = player.name.length > 12 ? player.name.substring(0, 12) + '...' : player.name
+        ctx.fillText(name, medalX + medalWidth/2, cardY + config.height - 120)
+        
+        // Country and Team in one row - using exact CSS specifications
+        const infoRowY = cardY + config.height - 80
+        const containerWidth = 209.95
+        const containerX = medalX + (medalWidth - containerWidth) / 2 // Center the container
+        
+        // Country section (Frame 22) - width: 86.72px, height: 18px
+        const countryFrameX = containerX
+        
+        // Country flag (Frame 651) - 24.58x16.39px with drop-shadow and border-radius
+        const flagImg = flagImages[index]
+        const flagWidth = 24.58
+        const flagHeight = 16.39
+        const flagX = countryFrameX
+        const flagY = infoRowY - flagHeight/2
+        
+        if (flagImg) {
+          // Add drop shadow: drop-shadow(0px 4.09656px 4.09656px rgba(0, 0, 0, 0.25))
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+          ctx.shadowBlur = 4.09656
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 4.09656
+          
+          // Draw flag with border-radius (simulated with rounded rectangle)
+          ctx.save()
+          ctx.beginPath()
+          const radius = 2.04828
+          
+          // Create rounded rectangle path (fallback for browsers without roundRect)
+          if (ctx.roundRect) {
+            ctx.roundRect(flagX, flagY, flagWidth, flagHeight, radius)
+          } else {
+            // Manual rounded rectangle implementation
+            ctx.moveTo(flagX + radius, flagY)
+            ctx.lineTo(flagX + flagWidth - radius, flagY)
+            ctx.quadraticCurveTo(flagX + flagWidth, flagY, flagX + flagWidth, flagY + radius)
+            ctx.lineTo(flagX + flagWidth, flagY + flagHeight - radius)
+            ctx.quadraticCurveTo(flagX + flagWidth, flagY + flagHeight, flagX + flagWidth - radius, flagY + flagHeight)
+            ctx.lineTo(flagX + radius, flagY + flagHeight)
+            ctx.quadraticCurveTo(flagX, flagY + flagHeight, flagX, flagY + flagHeight - radius)
+            ctx.lineTo(flagX, flagY + radius)
+            ctx.quadraticCurveTo(flagX, flagY, flagX + radius, flagY)
+          }
+          
+          ctx.clip()
+          ctx.drawImage(flagImg, flagX, flagY, flagWidth, flagHeight)
+          ctx.restore()
+          
+          // Reset shadow
+          ctx.shadowColor = 'transparent'
+          ctx.shadowBlur = 0
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 0
+        } else {
+          // Fallback: Draw a placeholder flag rectangle when no flag image is available
+          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+          ctx.shadowBlur = 4.09656
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 4.09656
+          
+          // Draw placeholder rectangle with border
+          ctx.fillStyle = '#CCCCCC' // Light gray background
+          ctx.strokeStyle = '#999999' // Darker gray border
+          ctx.lineWidth = 1
+          
+          ctx.save()
+          ctx.beginPath()
+          const radius = 2.04828
+          
+          if (ctx.roundRect) {
+            ctx.roundRect(flagX, flagY, flagWidth, flagHeight, radius)
+          } else {
+            // Manual rounded rectangle for placeholder
+            ctx.moveTo(flagX + radius, flagY)
+            ctx.lineTo(flagX + flagWidth - radius, flagY)
+            ctx.quadraticCurveTo(flagX + flagWidth, flagY, flagX + flagWidth, flagY + radius)
+            ctx.lineTo(flagX + flagWidth, flagY + flagHeight - radius)
+            ctx.quadraticCurveTo(flagX + flagWidth, flagY + flagHeight, flagX + flagWidth - radius, flagY + flagHeight)
+            ctx.lineTo(flagX + radius, flagY + flagHeight)
+            ctx.quadraticCurveTo(flagX, flagY + flagHeight, flagX, flagY + flagHeight - radius)
+            ctx.lineTo(flagX, flagY + radius)
+            ctx.quadraticCurveTo(flagX, flagY, flagX + radius, flagY)
+          }
+          
+          ctx.fill()
+          ctx.stroke()
+          ctx.restore()
+          
+          // Draw "?" in the center of placeholder
+          ctx.shadowColor = 'transparent'
+          ctx.shadowBlur = 0
+          ctx.shadowOffsetX = 0
+          ctx.shadowOffsetY = 0
+          
+          ctx.fillStyle = '#666666'
+          ctx.font = 'bold 10px Arial'
+          ctx.textAlign = 'center'
+          ctx.textBaseline = 'middle'
+          ctx.fillText('?', flagX + flagWidth/2, flagY + flagHeight/2)
+          
+          // Reset text alignment
+          ctx.textAlign = 'left'
+          ctx.textBaseline = 'middle'
+        }
+        
+        // Country text - gap: 6.14px, font: 500 12.2897px Poppins
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '500 12.2897px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const countryText = player.countryName || 'Unknown'
+        const countryTextX = flagX + flagWidth + 6.14
+        const countryTextY = infoRowY // Center vertically at infoRowY
+        ctx.fillText(countryText.length > 8 ? countryText.substring(0, 8) + '...' : countryText, countryTextX, countryTextY)
+        
+        // Team section (Frame 584) - width: 88.53px, height: 18px with drop-shadow
+        const teamFrameX = containerX + containerWidth - 88.53
+        
+        // Team circle (Ellipse 3) - 16.58x16.58px with border: 1.50494px solid #FFFFFF
+        const teamColorHex = player.team || '#FF0001' // Default to red as in CSS
+        const circleSize = 16.58
+        const circleX = teamFrameX + circleSize/2
+        const circleY = infoRowY
+        
+        // Add drop shadow for team section: drop-shadow(0px 6.01975px 6.01975px rgba(0, 0, 0, 0.25))
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+        ctx.shadowBlur = 6.01975
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 6.01975
+        
+        // Team circle fill
+        ctx.fillStyle = teamColorHex
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleSize/2, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        // Team circle border
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 1.50494
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, (circleSize - 1.50494)/2, 0, 2 * Math.PI)
+        ctx.stroke()
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        // Team text - gap: 9.95px, font: 400 12.2897px Poppins
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '400 12.2897px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const teamName = player.teamColor ? 
+          (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
+          'Red Team'
+        const teamTextX = circleX + circleSize/2 + 9.95
+        const teamTextY = infoRowY // Center vertically at infoRowY
+        ctx.fillText(teamName, teamTextX, teamTextY)
+        
+        // Reset text alignment for other elements
+        ctx.textAlign = 'center'
+        ctx.textBaseline = 'alphabetic'
+        
+        // Divider line (removed trainer level from top 3)
+        ctx.strokeStyle = config.borderColor
+        ctx.lineWidth = 1
+        ctx.beginPath()
+        ctx.moveTo(medalX + 20, cardY + config.height - 50)
+        ctx.lineTo(medalX + medalWidth - 20, cardY + config.height - 50)
+        ctx.stroke()
+        
+        // Stat value (73x20)
+        const statValue = typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '600 13px Poppins'
+        ctx.textAlign = 'center'
+        ctx.fillText(statValue, medalX + medalWidth/2, cardY + config.height - 25)
+        
+        // Stat label (45x17)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.72)'
+        ctx.font = '400 11px Poppins'
+        ctx.fillText(getStatLabel(), medalX + medalWidth/2, cardY + config.height - 10)
+      }
       
+      // Positions 4-10 list - using exact CSS specifications
+      const listStartY = medalSectionY + medalConfigs[0].height + 60
+      const rowHeight = 90.7 + 12.49 // Frame height + gap from CSS
+      
+      leaderboardData.slice(3, 10).forEach((player: any, index: number) => {
+        const actualIndex = index + 4 // Positions 4-10 (index 0-6 becomes positions 4-10)
+        const rowY = listStartY + (index * rowHeight)
+        
+        // Row background (849.01x90.7)
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+        const rowBg = {
+          x: 50,
+          y: rowY,
+          width: 849,
+          height: 90,
+          radius: 22
+        }
+        
+        // Draw rounded rectangle for row
+        ctx.beginPath()
+        ctx.moveTo(rowBg.x + rowBg.radius, rowBg.y)
+        ctx.lineTo(rowBg.x + rowBg.width - rowBg.radius, rowBg.y)
+        ctx.quadraticCurveTo(rowBg.x + rowBg.width, rowBg.y, rowBg.x + rowBg.width, rowBg.y + rowBg.radius)
+        ctx.lineTo(rowBg.x + rowBg.width, rowBg.y + rowBg.height - rowBg.radius)
+        ctx.quadraticCurveTo(rowBg.x + rowBg.width, rowBg.y + rowBg.height, rowBg.x + rowBg.width - rowBg.radius, rowBg.y + rowBg.height)
+        ctx.lineTo(rowBg.x + rowBg.radius, rowBg.y + rowBg.height)
+        ctx.quadraticCurveTo(rowBg.x, rowBg.y + rowBg.height, rowBg.x, rowBg.y + rowBg.height - rowBg.radius)
+        ctx.lineTo(rowBg.x, rowBg.y + rowBg.radius)
+        ctx.quadraticCurveTo(rowBg.x, rowBg.y, rowBg.x + rowBg.radius, rowBg.y)
+        ctx.closePath()
+        ctx.fill()
+        
+        // Row shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.1)'
+        ctx.shadowBlur = 48
+        ctx.shadowOffsetX = -4
+        ctx.shadowOffsetY = 22
+        ctx.fill()
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        // Rank number (27.53x75) - font: 700 49.9525px Poppins, line-height: 75px
+        ctx.fillStyle = '#000000'
+        ctx.font = '700 49.9525px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const containerX = (958 - 849.01) / 2 // Center container
+        ctx.fillText(actualIndex.toString(), containerX + 29.9715, rowY + 90.7/2)
+        
+        // Player name (248x37) - font: 600 24.9762px Poppins, line-height: 37px
+        ctx.fillStyle = '#000000'
+        ctx.font = '600 24.9762px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'top'
+        const name = player.name.length > 20 ? player.name.substring(0, 20) + '...' : player.name
+        const cardX = containerX + 29.9715 + 27.53 + 34.13 + 27.4739 // Container padding + rank width + gap + card padding
+        ctx.fillText(name, cardX, rowY + 9.15796)
+        
+        // Team section - positioned in second row (gap: 3.87px from player name)
+        const secondRowY = rowY + 9.15796 + 37 + 3.87
+        
+        // Team circle (18.99x18.99) with border: 4.16271px solid #FFFFFF
+        const teamColorHex = player.team || '#DC2627'
+        const circleRadius = 18.99 / 2
+        const circleX = cardX + circleRadius
+        const circleY = secondRowY + 28/2
+        
+        ctx.fillStyle = teamColorHex
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 4.16271
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleRadius - 4.16271/2, 0, 2 * Math.PI)
+        ctx.stroke()
+        
+        // Team name (96x28) - font: 400 18.991px Poppins, gap: 11.39px
+        const teamName = player.teamColor ? 
+          (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
+          'Red Team'
+        ctx.fillStyle = '#000000'
+        ctx.font = '400 18.991px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(teamName, circleX + circleRadius + 11.39, circleY)
+        
+        // Country flag (34.83x23.22) - using real country data
+        const flagImg = flagImages[index + 3] // Use original array index (index + 3 for positions 4-10)
+        if (flagImg) {
+          const flagWidth = 30
+          const flagHeight = 20
+          const flagX = 340
+          const flagY = rowY + 55
+          ctx.drawImage(flagImg, flagX, flagY, flagWidth, flagHeight)
+        } else {
+          // Fallback to text if flag image not available
+          ctx.fillStyle = '#000000'
+          ctx.font = '400 19px Poppins'
+          ctx.fillText('🏳️', 350, rowY + 70)
+        }
+        
+        // Level - using real trainer level data
+        ctx.fillStyle = '#000000'
+        ctx.font = '500 19px Poppins'
+        const playerLevel = player.profileId ? (playerLevels[player.profileId] || '--') : '--'
+        ctx.fillText(`lvl ${playerLevel}`, 400, rowY + 70)
+        
+        // Stat value (122x34)
+        ctx.fillStyle = '#000000'
+        ctx.font = '600 23px Poppins'
+        ctx.textAlign = 'right'
+        const statValue = typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue
+        ctx.fillText(statValue, 850, rowY + 45)
+        
+        // Stat label (131.04x28)
+        ctx.fillStyle = '#353535'
+        ctx.font = '400 19px Poppins'
+        ctx.fillText(getStatLabel(), 850, rowY + 70)
+      })
+      
+      // User's position (if not in top 10)
+      if (userPosition && userPosition > 10 && currentUser) {
+        const userRowY = listStartY + (7 * rowHeight) + 40
+        
+        // Highlighted background with border
+        ctx.fillStyle = 'rgba(173, 173, 173, 0.16)'
+        ctx.strokeStyle = '#848282'
+        ctx.lineWidth = 1
+        
+        const userBg = {
+          x: 50,
+          y: userRowY,
+          width: 849,
+          height: 97,
+          radius: 10
+        }
+        
+        // Draw rounded rectangle
+      ctx.beginPath()
+        ctx.moveTo(userBg.x + userBg.radius, userBg.y)
+        ctx.lineTo(userBg.x + userBg.width - userBg.radius, userBg.y)
+        ctx.quadraticCurveTo(userBg.x + userBg.width, userBg.y, userBg.x + userBg.width, userBg.y + userBg.radius)
+        ctx.lineTo(userBg.x + userBg.width, userBg.y + userBg.height - userBg.radius)
+        ctx.quadraticCurveTo(userBg.x + userBg.width, userBg.y + userBg.height, userBg.x + userBg.width - userBg.radius, userBg.y + userBg.height)
+        ctx.lineTo(userBg.x + userBg.radius, userBg.y + userBg.height)
+        ctx.quadraticCurveTo(userBg.x, userBg.y + userBg.height, userBg.x, userBg.y + userBg.height - userBg.radius)
+        ctx.lineTo(userBg.x, userBg.y + userBg.radius)
+        ctx.quadraticCurveTo(userBg.x, userBg.y, userBg.x + userBg.radius, userBg.y)
+        ctx.closePath()
+        ctx.fill()
+        ctx.stroke()
+        
+        // Inner content background
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.77)'
+        const innerBg = {
+          x: 70,
+          y: userRowY + 10,
+          width: 710,
+          height: 81,
+          radius: 22
+        }
 
-      ctx.fillStyle = '#666'
+      ctx.beginPath()
+        ctx.moveTo(innerBg.x + innerBg.radius, innerBg.y)
+        ctx.lineTo(innerBg.x + innerBg.width - innerBg.radius, innerBg.y)
+        ctx.quadraticCurveTo(innerBg.x + innerBg.width, innerBg.y, innerBg.x + innerBg.width, innerBg.y + innerBg.radius)
+        ctx.lineTo(innerBg.x + innerBg.width, innerBg.y + innerBg.height - innerBg.radius)
+        ctx.quadraticCurveTo(innerBg.x + innerBg.width, innerBg.y + innerBg.height, innerBg.x + innerBg.width - innerBg.radius, innerBg.y + innerBg.height)
+        ctx.lineTo(innerBg.x + innerBg.radius, innerBg.y + innerBg.height)
+        ctx.quadraticCurveTo(innerBg.x, innerBg.y + innerBg.height, innerBg.x, innerBg.y + innerBg.height - innerBg.radius)
+        ctx.lineTo(innerBg.x, innerBg.y + innerBg.radius)
+        ctx.quadraticCurveTo(innerBg.x, innerBg.y, innerBg.x + innerBg.radius, innerBg.y)
+        ctx.closePath()
+        ctx.fill()
+        
+        // User rank (59x75)
+        ctx.fillStyle = '#000000'
+        ctx.font = '700 50px Poppins'
+        ctx.textAlign = 'left'
+        ctx.fillText(userPosition.toString(), 100, userRowY + 55)
+        
+        // User name
+        ctx.fillStyle = '#000000'
+        ctx.font = '600 25px Poppins'
+        const userName = currentUser.name.length > 20 ? currentUser.name.substring(0, 20) + '...' : currentUser.name
+        ctx.fillText(userName, 170, userRowY + 40)
+        
+        // Team and country info - using real user team color
+        const userTeamColorHex = currentUser.team || '#DC2627'
+        ctx.fillStyle = userTeamColorHex
+        ctx.beginPath()
+        ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 4
+        ctx.beginPath()
+        ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
+      ctx.stroke()
 
-      ctx.font = '14px Poppins'
-
+        // Team and country info - using real user data
+        ctx.fillStyle = '#000000'
+        ctx.font = '400 19px Poppins'
+        const userTeamName = currentUser.teamColor ? 
+          (currentUser.teamColor.charAt(0).toUpperCase() + currentUser.teamColor.slice(1) + ' Team') : 
+          'Team'
+        ctx.fillText(userTeamName, 205, userRowY + 70)
+        
+        // User country flag - using preloaded image
+        if (userFlagImage) {
+          const flagWidth = 30
+          const flagHeight = 20
+          const flagX = 340
+          const flagY = userRowY + 55
+          ctx.drawImage(userFlagImage, flagX, flagY, flagWidth, flagHeight)
+        } else {
+          // Fallback to emoji if flag image not available
+          ctx.fillStyle = '#000000'
+          ctx.font = '400 19px Poppins'
+          ctx.fillText('🏳️', 350, userRowY + 70)
+        }
+        
+        ctx.font = '500 19px Poppins'
+        const userLevel = currentUser.profileId ? (playerLevels[currentUser.profileId] || '--') : '--'
+        ctx.fillText(`lvl ${userLevel}`, 400, userRowY + 70)
+        
+        // User stat value
+        ctx.fillStyle = '#000000'
+        ctx.font = '600 23px Poppins'
+        ctx.textAlign = 'right'
+        const userStatValue = typeof currentUser.statValue === 'number' ? formatNumber(currentUser.statValue) : currentUser.statValue
+        ctx.fillText(userStatValue, 850, userRowY + 45)
+        
+        ctx.fillStyle = '#353535'
+        ctx.font = '400 19px Poppins'
+        ctx.fillText(getStatLabel(), 850, userRowY + 70)
+      }
+      
+      // Footer (432x27)
+      ctx.fillStyle = '#848282'
+      ctx.font = '400 20px Geist'
       ctx.textAlign = 'center'
-
-      ctx.fillText('Generated from PlayerZero App • Keep grinding! 🔥', canvas.width / 2, footerY + 30)
-
-      
+      ctx.fillText('Generated from PlayerZero App • Keep grinding!', 958/2, 1800)
 
       // Convert canvas to image and download
-
       const dataUrl = canvas.toDataURL('image/png', 1.0)
 
-      
-
       // Create download link
-
       const link = document.createElement('a')
-
-      const fileName = `PlayerZero-${periodName}-Leaderboard-${new Date().toISOString().split('T')[0]}.png`
-
+      const fileName = `PlayerZero-${periodInfo.periodName}-Leaderboard-${new Date().toISOString().split('T')[0]}.png`
       link.download = fileName
-
       link.href = dataUrl
 
-      
-
       // Trigger download
-
       document.body.appendChild(link)
-
       link.click()
-
       document.body.removeChild(link)
 
-      
-
       console.log('Leaderboard image exported successfully:', fileName)
-
     } catch (error) {
-
       console.error('Failed to export leaderboard image:', error)
-
     } finally {
-
       setExporting(false)
-
     }
-
   }
 
 
@@ -998,59 +1760,178 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
+  // Enhanced country name normalization function
+  const normalizeCountryName = (countryName: string): string => {
+    if (!countryName) return ''
+    
+    return countryName
+      .toLowerCase() // Convert to lowercase
+      .trim() // Remove leading/trailing spaces
+      .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+      .replace(/[^\w\s-]/g, '') // Remove special characters except hyphens
+      .replace(/-+/g, ' ') // Replace hyphens with spaces
+      .replace(/\b(the|republic|of|and)\b/g, '') // Remove common words
+      .replace(/\s+/g, ' ') // Clean up spaces again
+      .trim() // Final trim
+  }
+
   const getCountryFlagUrl = (countryName: string) => {
-
-    // Map country names to flag URLs using the same logic as countryFlags.ts
-
+    // Enhanced country mapping with more variations and common misspellings
     const countryToCode: { [key: string]: string } = {
-
-      'united states': 'us', 'usa': 'us', 'us': 'us',
-
-      'canada': 'ca', 'united kingdom': 'gb', 'uk': 'gb', 'england': 'gb',
-
-      'australia': 'au', 'germany': 'de', 'france': 'fr', 'spain': 'es',
-
-      'italy': 'it', 'japan': 'jp', 'china': 'cn', 'india': 'in',
-
-      'brazil': 'br', 'mexico': 'mx', 'argentina': 'ar', 'russia': 'ru',
-
-      'netherlands': 'nl', 'sweden': 'se', 'norway': 'no', 'denmark': 'dk',
-
-      'finland': 'fi', 'switzerland': 'ch', 'austria': 'at', 'belgium': 'be',
-
-      'portugal': 'pt', 'poland': 'pl', 'czech republic': 'cz', 'hungary': 'hu',
-
-      'romania': 'ro', 'ukraine': 'ua', 'croatia': 'hr', 'serbia': 'rs',
-
-      'greece': 'gr', 'turkey': 'tr', 'israel': 'il', 'egypt': 'eg',
-
-      'south africa': 'za', 'nigeria': 'ng', 'kenya': 'ke', 'morocco': 'ma',
-
-      'chile': 'cl', 'peru': 'pe', 'colombia': 'co', 'venezuela': 've',
-
-      'thailand': 'th', 'singapore': 'sg', 'malaysia': 'my', 'philippines': 'ph',
-
-      'indonesia': 'id', 'vietnam': 'vn', 'south korea': 'kr', 'korea': 'kr',
-
-      'new zealand': 'nz', 'ireland': 'ie'
-
+      // United States variations
+      'united states': 'us', 'usa': 'us', 'us': 'us', 'america': 'us', 'united states america': 'us',
+      
+      // Canada variations  
+      'canada': 'ca', 'can': 'ca',
+      
+      // United Kingdom variations
+      'united kingdom': 'gb', 'uk': 'gb', 'england': 'gb', 'britain': 'gb', 'great britain': 'gb',
+      'scotland': 'gb', 'wales': 'gb', 'northern ireland': 'gb',
+      
+      // European countries
+      'australia': 'au', 'aus': 'au',
+      'germany': 'de', 'deutschland': 'de', 'ger': 'de',
+      'france': 'fr', 'fra': 'fr',
+      'spain': 'es', 'españa': 'es', 'esp': 'es',
+      'italy': 'it', 'italia': 'it', 'ita': 'it',
+      'netherlands': 'nl', 'holland': 'nl', 'nederland': 'nl', 'nld': 'nl',
+      'sweden': 'se', 'sverige': 'se', 'swe': 'se',
+      'norway': 'no', 'norge': 'no', 'nor': 'no',
+      'denmark': 'dk', 'danmark': 'dk', 'dnk': 'dk',
+      'finland': 'fi', 'suomi': 'fi', 'fin': 'fi',
+      'switzerland': 'ch', 'schweiz': 'ch', 'che': 'ch',
+      'austria': 'at', 'österreich': 'at', 'aut': 'at',
+      'belgium': 'be', 'belgië': 'be', 'belgique': 'be', 'bel': 'be',
+      'portugal': 'pt', 'por': 'pt',
+      'poland': 'pl', 'polska': 'pl', 'pol': 'pl',
+      'czech republic': 'cz', 'czechia': 'cz', 'česká republika': 'cz', 'cze': 'cz',
+      'hungary': 'hu', 'magyarország': 'hu', 'hun': 'hu',
+      'romania': 'ro', 'românia': 'ro', 'rou': 'ro',
+      'ukraine': 'ua', 'україна': 'ua', 'ukr': 'ua',
+      'croatia': 'hr', 'hrvatska': 'hr', 'hrv': 'hr',
+      'serbia': 'rs', 'srbija': 'rs', 'srb': 'rs',
+      'greece': 'gr', 'ελλάδα': 'gr', 'grc': 'gr',
+      'turkey': 'tr', 'türkiye': 'tr', 'tur': 'tr',
+      'russia': 'ru', 'россия': 'ru', 'rus': 'ru',
+      
+      // Asian countries
+      'japan': 'jp', '日本': 'jp', 'jpn': 'jp',
+      'china': 'cn', '中国': 'cn', 'chn': 'cn', 'peoples china': 'cn',
+      'india': 'in', 'भारत': 'in', 'ind': 'in',
+      'south korea': 'kr', 'korea': 'kr', '대한민국': 'kr', 'kor': 'kr',
+      'thailand': 'th', 'ประเทศไทย': 'th', 'tha': 'th',
+      'singapore': 'sg', 'sgp': 'sg',
+      'malaysia': 'my', 'mys': 'my',
+      'philippines': 'ph', 'pilipinas': 'ph', 'phl': 'ph',
+      'indonesia': 'id', 'idn': 'id',
+      'vietnam': 'vn', 'việt nam': 'vn', 'vnm': 'vn',
+      
+      // Middle East & Africa
+      'israel': 'il', 'ישראל': 'il', 'isr': 'il',
+      'egypt': 'eg', 'مصر': 'eg', 'egy': 'eg',
+      'south africa': 'za', 'zaf': 'za',
+      'nigeria': 'ng', 'nga': 'ng',
+      'kenya': 'ke', 'ken': 'ke',
+      'morocco': 'ma', 'المغرب': 'ma', 'mar': 'ma',
+      'pakistan': 'pk', 'pak': 'pk', 'پاکستان': 'pk',
+      'bangladesh': 'bd', 'bgd': 'bd', 'বাংলাদেশ': 'bd',
+      'iran': 'ir', 'irn': 'ir', 'ایران': 'ir',
+      'iraq': 'iq', 'irq': 'iq', 'العراق': 'iq',
+      'afghanistan': 'af', 'afg': 'af', 'افغانستان': 'af',
+      'sri lanka': 'lk', 'lka': 'lk', 'ශ්‍රී ලංකා': 'lk',
+      'nepal': 'np', 'npl': 'np', 'नेपाल': 'np',
+      'myanmar': 'mm', 'mmr': 'mm', 'burma': 'mm',
+      'cambodia': 'kh', 'khm': 'kh', 'កម្ពុជា': 'kh',
+      'laos': 'la', 'lao': 'la', 'ລາວ': 'la',
+      
+      // Americas
+      'brazil': 'br', 'brasil': 'br', 'bra': 'br',
+      'mexico': 'mx', 'méxico': 'mx', 'mex': 'mx',
+      'argentina': 'ar', 'arg': 'ar',
+      'chile': 'cl', 'chl': 'cl',
+      'peru': 'pe', 'perú': 'pe', 'per': 'pe',
+      'colombia': 'co', 'col': 'co',
+      'venezuela': 've', 'ven': 've',
+      
+      // Oceania
+      'new zealand': 'nz', 'nzl': 'nz',
+      'ireland': 'ie', 'éire': 'ie', 'irl': 'ie',
+      
+      // Additional common variations and edge cases
+      'uae': 'ae', 'united arab emirates': 'ae', 'emirates': 'ae',
+      'saudi arabia': 'sa', 'ksa': 'sa', 'saudi': 'sa',
+      'papua new guinea': 'pg', 'png': 'pg',
+      'costa rica': 'cr', 'cri': 'cr',
+      'puerto rico': 'pr', 'pri': 'pr',
+      'hong kong': 'hk', 'hkg': 'hk',
+      'taiwan': 'tw', 'twn': 'tw', 'chinese taipei': 'tw',
+      'north korea': 'kp', 'dprk': 'kp', 'democratic peoples korea': 'kp',
+      'south sudan': 'ss', 'ssd': 'ss',
+      'czech': 'cz', 'slovak republic': 'sk', 'slovakia': 'sk', 'svk': 'sk',
+      'bosnia herzegovina': 'ba', 'bosnia': 'ba', 'bih': 'ba',
+      'macedonia': 'mk', 'north macedonia': 'mk', 'mkd': 'mk',
+      'montenegro': 'me', 'mne': 'me',
+      'moldova': 'md', 'mda': 'md',
+      'belarus': 'by', 'blr': 'by',
+      'lithuania': 'lt', 'ltu': 'lt',
+      'latvia': 'lv', 'lva': 'lv',
+      'estonia': 'ee', 'est': 'ee',
+      'slovenia': 'si', 'svn': 'si',
+      'albania': 'al', 'alb': 'al',
+      'cyprus': 'cy', 'cyp': 'cy',
+      'malta': 'mt', 'mlt': 'mt',
+      'luxembourg': 'lu', 'lux': 'lu',
+      'liechtenstein': 'li', 'lie': 'li',
+      'andorra': 'ad', 'and': 'ad',
+      'monaco': 'mc', 'mco': 'mc',
+      'san marino': 'sm', 'smr': 'sm',
+      'vatican': 'va', 'vat': 'va', 'vatican city': 'va',
+      'iceland': 'is', 'isl': 'is',
+      'faroe islands': 'fo', 'fro': 'fo',
+      'greenland': 'gl', 'grl': 'gl'
+    }
+    
+    // Normalize the input country name
+    const normalizedName = normalizeCountryName(countryName)
+    
+    // Direct lookup first
+    let countryCode = countryToCode[normalizedName]
+    
+    // If not found, try partial matching for compound names
+    if (!countryCode) {
+      // Try to find a match by checking if any key contains the normalized name or vice versa
+      for (const [key, code] of Object.entries(countryToCode)) {
+        if (key.includes(normalizedName) || normalizedName.includes(key)) {
+          countryCode = code
+          break
+        }
+      }
+    }
+    
+    // If still not found, try first word matching (for cases like "United States of America" -> "united")
+    if (!countryCode && normalizedName.includes(' ')) {
+      const firstWord = normalizedName.split(' ')[0]
+      if (firstWord.length > 2) { // Only try if first word is meaningful
+        for (const [key, code] of Object.entries(countryToCode)) {
+          if (key.startsWith(firstWord) || key.includes(firstWord)) {
+            countryCode = code
+            break
+          }
+        }
+      }
     }
 
-    
-
-    const lowerName = countryName?.toLowerCase() || ''
-
-    const countryCode = countryToCode[lowerName]
-
-    
-
     if (countryCode) {
-
       return `https://flagcdn.com/w40/${countryCode}.png`
 
     }
 
     
+
+    // Log for debugging purposes (can be removed in production)
+    if (countryName && countryName.trim()) {
+      console.warn(`No flag found for country: "${countryName}" (normalized: "${normalizedName}")`)
+    }
 
     return 'https://flagcdn.com/w40/xx.png' // Fallback flag
 
@@ -6846,23 +7727,43 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       )}
 
-      {/* Profile Preview Modal */}
+      {/* Centered Profile Preview */}
       {selectedProfile && (
-        <div className="profile-preview-modal">
-          <div className="modal-backdrop" onClick={handleClosePreview}></div>
-          <div className="modal-content">
-            <div className="modal-inner">
-              <button className="modal-close" onClick={handleClosePreview}>×</button>
-              <div className="quick-profile-container">
-                <QuickProfileView 
-                  profileId={selectedProfile}
-                  isOpen={true}
-                  onClose={handleClosePreview}
-                />
-              </div>
-            </div>
+        <>
+          {/* Subtle backdrop */}
+          <div 
+            style={{ 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              zIndex: 999
+            }}
+            onClick={handleClosePreview}
+          />
+          {/* Centered profile */}
+          <div style={{ 
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            maxWidth: '90vw'
+          }}>
+            <PlyrZeroProfileStandalone 
+              profileId={selectedProfile}
+              isOpen={true}
+              onClose={handleClosePreview}
+            />
           </div>
-        </div>
+        </>
       )}
 
     </>
