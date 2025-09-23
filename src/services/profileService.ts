@@ -490,7 +490,12 @@ export const profileService = {
           pokemon_caught,
           distance_walked,
           pokestops_visited,
-          profile_screenshot_url
+          profile_screenshot_url,
+          facebook,
+          instagram,
+          snapchat,
+          is_paid_user,
+          social_links_private
         `)
         .eq('id', profileId)
         .single();
@@ -511,6 +516,7 @@ export const profileService = {
           trainer_name,
           trainer_level,
           team_color,
+          country,
           total_xp,
           pokemon_caught,
           distance_walked,

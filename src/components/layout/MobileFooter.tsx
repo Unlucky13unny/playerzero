@@ -2,7 +2,7 @@ import { Link } from "react-router-dom"
 import { useMobile } from "../../hooks/useMobile"
 
 interface MobileFooterProps {
-  currentPage?: "profile" | "leaderboard"
+  currentPage?: "profile" | "leaderboard" | "search"
 }
 
 export function MobileFooter({ currentPage = "profile" }: MobileFooterProps) {

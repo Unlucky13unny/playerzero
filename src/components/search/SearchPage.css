@@ -1,10 +1,4 @@
-.search-page {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  min-height: calc(100vh - 64px); /* Adjust based on header height */
-  background: var(--bg-gradient, linear-gradient(to bottom, #f8fafc, #f1f5f9));
-}
+/* All styles are now handled inline for responsive design */
 
 .search-page-header {
   text-align: center;

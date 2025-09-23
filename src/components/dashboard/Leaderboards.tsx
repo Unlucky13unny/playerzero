@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
-import { QuickProfileView } from '../profile/QuickProfileView'
+import { PlyrZeroProfileStandalone } from '../profile/PlyrZeroProfileStandalone'
 
 import { LeaderboardView } from './LeaderboardView'
 import { MobileFooter } from '../layout/MobileFooter'
@@ -40,21 +40,41 @@ export const Leaderboards = ({ }: LeaderboardsProps) => {
       
       {/* Profile Preview Modal */}
       {selectedProfile && (
-        <div className="profile-preview-modal">
-          <div className="modal-backdrop" onClick={handleCloseQuickView}></div>
-          <div className="modal-content">
-            <div className="modal-inner">
-              <button className="modal-close" onClick={handleCloseQuickView}>×</button>
-              <div className="quick-profile-container">
-                <QuickProfileView 
-                  profileId={selectedProfile}
-                  isOpen={true}
-                  onClose={handleCloseQuickView}
-                />
-              </div>
-            </div>
+        <>
+          {/* Subtle backdrop */}
+          <div 
+            style={{ 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0, 0, 0, 0.3)',
+              zIndex: 999
+            }}
+            onClick={handleCloseQuickView}
+          />
+          {/* Centered profile */}
+          <div style={{ 
+            position: 'fixed',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            zIndex: 1000,
+            backgroundColor: 'white',
+            borderRadius: '12px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)',
+            maxHeight: '90vh',
+            overflow: 'auto',
+            maxWidth: '90vw'
+          }}>
+            <PlyrZeroProfileStandalone 
+              profileId={selectedProfile}
+              isOpen={true}
+              onClose={handleCloseQuickView}
+            />
           </div>
-        </div>
+        </>
       )}
     </div>
   )
