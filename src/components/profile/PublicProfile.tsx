@@ -240,7 +240,7 @@ export const PublicProfile = () => {
               <div className="stat-row">
                 <span className="stat-label">Start Date:</span>
                 <span className="stat-value">
-                {profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', {
+                {profile.start_date ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-US', {
                   month: '2-digit',
                   day: '2-digit',
                   year: 'numeric'
@@ -258,7 +258,7 @@ export const PublicProfile = () => {
                 <span className="stat-value">
                 {profile.is_paid_user && profile.trainer_code && !profile.trainer_code_private ? (
                     <>
-                      {profile.trainer_code.replace(/(.{4})/g, "$1 ").trim()}
+                      {profile.trainer_code}
                       <span className="copy-icon" onClick={copyTrainerCode}>📋</span>
                     </>
                 ) : (

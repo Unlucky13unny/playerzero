@@ -1,5 +1,5 @@
 import { dashboardService } from "../../services/dashboardService"
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { useAuth } from "../../contexts/AuthContext"
 
 interface GrindStatsProps {
@@ -9,42 +9,58 @@ interface GrindStatsProps {
   profile?: any
 }
 
-export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
+// Memoize the GrindStats component to prevent unnecessary re-renders
+// CSS animation for spinner
+const spinnerAnimation = `
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+`;
+
+export const GrindStats = memo(function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   const { user } = useAuth()
   const [backendStats, setBackendStats] = useState<any>(null)
   const [loading, setLoading] = useState(false)
 
-
   // Load all-time stats from backend when component mounts or profile changes
   useEffect(() => {
+    let isMounted = true;
     const targetUserId = profile?.user_id || user?.id
+    
     if (targetUserId) {
+      // Define the async function inside useEffect
+      const loadBackendStats = async () => {
+        try {
+          setLoading(true)
+          
+          // Always load all-time stats for GrindStats table (gets latest calculated values)
+          const result = await dashboardService.calculateAllTimeGrindStats(targetUserId)
+
+          // Only update state if component is still mounted
+          if (isMounted) {
+            setBackendStats(result)
+            setLoading(false)
+          }
+        } catch (error) {
+          // Only update state if component is still mounted
+          if (isMounted) {
+            console.warn('Failed to load all-time backend stats for GrindStats:', error)
+            setBackendStats(null)
+            setLoading(false)
+          }
+        }
+      }
+      
+      // Call the function
       loadBackendStats()
     }
-  }, [user?.id, profile])
-
-  const loadBackendStats = async () => {
-    // Use profile.user_id for public profiles, or current user.id for own profile
-    const targetUserId = profile?.user_id || user?.id
-    if (!targetUserId) return
-
-    try {
-      setLoading(true)
-      
-      // Always load all-time stats for GrindStats table (gets latest calculated values)
-      const result = await dashboardService.calculateAllTimeGrindStats(targetUserId)
-
-      console.log('All-time backend stats loaded for GrindStats:', result)
-      console.log('Profile data available:', profile ? 'Yes' : 'No')
-      console.log('Target user ID:', targetUserId, profile?.user_id ? '(from profile)' : '(current user)')
-      setBackendStats(result)
-    } catch (error) {
-      console.warn('Failed to load all-time backend stats for GrindStats:', error)
-      setBackendStats(null)
-    } finally {
-      setLoading(false)
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false
     }
-  }
+  }, [user?.id, profile?.user_id])
 
   const formatNumber = (num: number | null | undefined) => {
     if (!num || num === 0) return '0.0'
@@ -97,7 +113,9 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
         const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
         const dailyAverage = statType === 'distance_walked' 
           ? Math.round((totalValue / daysPlayed) * 10) / 10 // Keep one decimal for distance
-          : Math.round(totalValue / daysPlayed)
+          : statType === 'total_xp' && (totalValue / daysPlayed) >= 1000
+          ? Math.round(((totalValue / daysPlayed) / 1000) * 10) / 10 // Convert XP to K and round to tenth
+          : Math.round((totalValue / daysPlayed) * 10) / 10 // Round to nearest tenth for other values
         
         console.log(`GrindStats using profile fallback daily average for ${statType}:`, dailyAverage)
         return dailyAverage
@@ -109,8 +127,10 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   }
 
   return (
-    <div 
-      className="bg-white rounded-lg p-6"
+    <>
+      <style>{spinnerAnimation}</style>
+      <div 
+        className="bg-white rounded-lg p-6"
       style={{
         /* Frame 561 */
         display: 'flex',
@@ -174,7 +194,9 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
 
       {/* Frame 535 - Stats Container */}
       {isMobile ? (
-        <div style={{
+        <div 
+          className="grind-stats-container-mobile"
+          style={{
           /* Frame 535 */
           display: 'flex',
           flexDirection: 'row',
@@ -182,7 +204,11 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
           padding: '0px',
           gap: '21px',
           width: '353px',
+          minWidth: '353px',
+          maxWidth: '353px',
           height: '74px',
+          minHeight: '74px',
+          maxHeight: '74px',
           background: 'rgba(0, 0, 0, 0.02)',
           boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
           borderRadius: '4px',
@@ -191,8 +217,42 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
           order: 1,
           alignSelf: 'stretch',
           flexGrow: 0,
-          opacity: loading ? 0.5 : 1,
+          opacity: 1,
+          position: 'relative',
+          boxSizing: 'border-box',
         }}>
+          {/* Transparent loading overlay */}
+          {loading && (
+            <div 
+              className="loading-overlay"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                borderRadius: '4px',
+              }}
+            >
+              <div 
+                className="loading-spinner"
+                style={{
+                  width: '30px',
+                  height: '30px',
+                  border: '2px solid #f3f4f6',
+                  borderTop: '2px solid #dc2626',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  animationTimingFunction: 'linear',
+                }}
+              ></div>
+            </div>
+          )}
           {/* Frame 531 - Distance Stat */}
           <div style={{
             /* Frame 531 */
@@ -243,7 +303,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Km/day
+              Km
             </div>
           </div>
 
@@ -297,7 +357,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Caught/day
+              Caught
             </div>
           </div>
 
@@ -350,7 +410,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              Stops/day
+              Stops
             </div>
           </div>
 
@@ -403,31 +463,70 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0
             }}>
-              XP/day
+              XP
             </div>
           </div>
         </div>
       ) : (
         /* Frame 535 - Desktop Stats Container */
-        <div style={{
+        <div 
+          className="grind-stats-container"
+          style={{
           /* Frame 535 */
             display: 'flex',
             flexDirection: 'row',
             justifyContent: 'space-between',
             alignItems: 'center',
-          padding: '10px 0px',
-          gap: '21px',
+            padding: '10px 0px',
+            gap: '21px',
             width: '100%',
-        maxWidth: '100%',
-          height: '111px',
-          borderRadius: '4px',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 1,
-          alignSelf: 'stretch',
-          flexGrow: 0,
-            opacity: loading ? 0.5 : 1,
+            minWidth: '100%',
+            maxWidth: '100%',
+            height: '111px',
+            minHeight: '111px',
+            maxHeight: '111px',
+            borderRadius: '4px',
+            /* Inside auto layout */
+            flex: 'none',
+            order: 1,
+            alignSelf: 'stretch',
+            flexGrow: 0,
+            opacity: 1,
+            position: 'relative',
+            boxSizing: 'border-box',
         }}>
+          {/* Transparent loading overlay */}
+          {loading && (
+            <div 
+              className="loading-overlay"
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                backgroundColor: 'rgba(255, 255, 255, 0.7)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 10,
+                borderRadius: '4px',
+              }}
+            >
+              <div 
+                className="loading-spinner"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  border: '3px solid #f3f4f6',
+                  borderTop: '3px solid #dc2626',
+                  borderRadius: '50%',
+                  animation: 'spin 1s linear infinite',
+                  animationTimingFunction: 'linear',
+                }}
+              ></div>
+            </div>
+          )}
           {/* Distance Stat Card - Frame 531 */}
           <div 
             className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"
@@ -451,18 +550,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               flexGrow: 0,
             }}
           >
-            {/* Loading Overlay */}
-            {loading && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 1
-              }}>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
-              </div>
-            )}
             <div style={{
               /* Stat Value - 4.6 */
               width: '57px',
@@ -497,7 +584,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Km/day</div>
+            }}>Km</div>
           </div>
 
           {/* Pokemon Caught Stat Card - Frame 531 */}
@@ -523,18 +610,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               flexGrow: 0,
             }}
           >
-            {/* Loading Overlay */}
-            {loading && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 1
-              }}>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
-              </div>
-            )}
             <div style={{
               /* Stat Value - 52.1 */
               width: '67px',
@@ -569,7 +644,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Caught/day</div>
+            }}>Caught</div>
           </div>
 
           {/* Pokestops Stat Card - Frame 531 */}
@@ -596,18 +671,6 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               flexGrow: 0,
             }}
           >
-            {/* Loading Overlay */}
-            {loading && (
-              <div style={{
-                position: 'absolute',
-                top: '50%',
-                left: '50%',
-                transform: 'translate(-50%, -50%)',
-                zIndex: 1
-              }}>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-red-500"></div>
-              </div>
-            )}
             <div style={{
               /* Stat Value - 46.8 */
               width: '80px',
@@ -642,7 +705,7 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>Stops/day</div>
+            }}>Stops</div>
           </div>
 
           {/* XP Stat Card - Frame 531 */}
@@ -701,11 +764,12 @@ export function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
               order: 1,
               flexGrow: 0,
               textAlign: 'center',
-            }}>XP/day</div>
+            }}>XP</div>
           </div>
         </div>
       )}
       </div>
     </div>
+    </>
   )
-}
+})

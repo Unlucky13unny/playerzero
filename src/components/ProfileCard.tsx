@@ -137,12 +137,18 @@ export default function ProfileCard({
         {/* Team */}
         <div className="flex justify-between">
           <span className="text-gray-600">Team:</span>
-          <span
-            className="font-medium"
-            style={{ color: getTeamColor(teamInfo?.name) }}
-          >
-            {teamInfo?.name || "N/A"} Team
-          </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              backgroundColor: getTeamColor(teamInfo?.name),
+              border: '1px solid rgba(0, 0, 0, 0.1)'
+            }}></div>
+            <span className="font-medium" style={{ color: 'black' }}>
+              {teamInfo?.name || "N/A"} Team
+            </span>
+          </div>
         </div>
 
         {/* Start Date */}
@@ -150,7 +156,7 @@ export default function ProfileCard({
           <span className="text-gray-600">Start Date:</span>
           <span>
             {stats?.start_date
-              ? new Date(stats.start_date).toLocaleDateString("en-US", {
+              ? new Date(stats.start_date + 'T00:00:00').toLocaleDateString("en-US", {
                   month: "2-digit",
                   day: "2-digit",
                   year: "numeric",

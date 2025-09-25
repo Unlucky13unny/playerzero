@@ -538,6 +538,18 @@ const countryFlags: CountryFlags = {
     nativeName: 'Éire',
     flagUrl: 'https://flagcdn.com/w40/ie.png',
     code: 'IE'
+  },
+  'pakistan': {
+    name: 'Pakistan',
+    nativeName: 'پاکستان',
+    flagUrl: 'https://flagcdn.com/w40/pk.png',
+    code: 'PK'
+  },
+  'پاکستان': {
+    name: 'Pakistan',
+    nativeName: 'پاکستان',
+    flagUrl: 'https://flagcdn.com/w40/pk.png',
+    code: 'PK'
   }
 };
 

@@ -47,6 +47,20 @@
   margin-left: 8px;
 }
 
+/* Trainer Code Validation Styles */
+.trainer-code-incomplete {
+  border-color: #ff375f !important;
+  box-shadow: 0 0 0 2px rgba(255, 55, 95, 0.1);
+}
+
+.validation-message {
+  font-size: 0.75rem;
+  color: #ff375f;
+  margin-top: 4px;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+}
+
 .section-description {
   font-size: 0.875rem;
   color: var(--gray-600);
@@ -58,9 +72,7 @@
   align-items: center;
 }
 
-.form-input {
-  flex: 1;
-}
+
 
 /* Additional styles for social media section */
 .social-media-section {

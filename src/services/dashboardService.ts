@@ -414,10 +414,12 @@ export const dashboardService = {
       const uniquePokedexEntries = profile.unique_pokedex_entries || 0
 
       // Calculate daily averages
-      const xpPerDay = Math.round(totalXP / daysPlayed)
-      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const xpPerDay = totalXP / daysPlayed >= 1000 
+        ? Math.round(((totalXP / daysPlayed) / 1000) * 10) / 10 // Convert XP to K and round to tenth
+        : Math.round((totalXP / daysPlayed) * 10) / 10 // Round to nearest tenth
+      const catchesPerDay = Math.round((pokemonCaught / daysPlayed) * 10) / 10 // Round to nearest tenth
       const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
-      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+      const stopsPerDay = Math.round((pokestopsVisited / daysPlayed) * 10) / 10 // Round to nearest tenth
 
       return {
         totalXP,
@@ -468,10 +470,12 @@ export const dashboardService = {
       const uniquePokedexEntries = profile.unique_pokedex_entries || 0
 
       // Calculate daily averages
-      const xpPerDay = Math.round(totalXP / daysPlayed)
-      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const xpPerDay = totalXP / daysPlayed >= 1000 
+        ? Math.round(((totalXP / daysPlayed) / 1000) * 10) / 10 // Convert XP to K and round to tenth
+        : Math.round((totalXP / daysPlayed) * 10) / 10 // Round to nearest tenth
+      const catchesPerDay = Math.round((pokemonCaught / daysPlayed) * 10) / 10 // Round to nearest tenth
       const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
-      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+      const stopsPerDay = Math.round((pokestopsVisited / daysPlayed) * 10) / 10 // Round to nearest tenth
 
       return {
         totalXP,
@@ -751,10 +755,12 @@ export const dashboardService = {
       const uniquePokedexEntries = profile.unique_pokedex_entries || 0
 
       // Calculate daily averages
-      const xpPerDay = Math.round(totalXP / daysPlayed)
-      const catchesPerDay = Math.round(pokemonCaught / daysPlayed)
+      const xpPerDay = totalXP / daysPlayed >= 1000 
+        ? Math.round(((totalXP / daysPlayed) / 1000) * 10) / 10 // Convert XP to K and round to tenth
+        : Math.round((totalXP / daysPlayed) * 10) / 10 // Round to nearest tenth
+      const catchesPerDay = Math.round((pokemonCaught / daysPlayed) * 10) / 10 // Round to nearest tenth
       const distancePerDay = Math.round((distanceWalked / daysPlayed) * 10) / 10 // Keep one decimal place for distance
-      const stopsPerDay = Math.round(pokestopsVisited / daysPlayed)
+      const stopsPerDay = Math.round((pokestopsVisited / daysPlayed) * 10) / 10 // Round to nearest tenth
 
       return {
         totalXP,

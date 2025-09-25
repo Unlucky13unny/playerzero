@@ -179,6 +179,9 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   const startDate = profile.start_date ? new Date(profile.start_date) : new Date()
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
   const dailyXPRate = currentXP / daysSinceStart
+  const formattedDailyXP = dailyXPRate >= 1000 
+    ? Math.round((dailyXPRate / 1000) * 10) / 10 + 'K'
+    : Math.round(dailyXPRate * 10) / 10
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
       <div className="locked-content">
@@ -198,7 +201,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
   }
 
   const renderCard = () => {
-    const startDate = profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', { 
+    const startDate = profile.start_date ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-US', { 
       month: '2-digit', 
       day: '2-digit', 
       year: 'numeric' 
@@ -263,7 +266,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Pokemon Caught</div>
                  <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.pokemon_caught || 0).toLocaleString()}</div>
-                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{Math.round(((profile.pokemon_caught || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) * 10) / 10} /Day</div>
                </div>
                <div style={{ marginBottom: isSmallMobile ? '10px' : isMobile ? '12px' : '15px' }}>
                  <div style={{ 
@@ -271,7 +274,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Distance Walked</div>
                  <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.distance_walked || 0).toLocaleString()} km</div>
-                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{Math.round(((profile.distance_walked || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) * 10) / 10} /Day</div>
                </div>
                <div>
                  <div style={{ 
@@ -279,7 +282,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
                    textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                  }}>Pokestops Visited</div>
                  <div style={{ fontSize: styles.statValueFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.pokestops_visited || 0).toLocaleString()}</div>
-                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))).toFixed(2)} /Day</div>
+                 <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{Math.round(((profile.pokestops_visited || 0) / Math.max(1, Math.floor((new Date().getTime() - new Date(profile.start_date || new Date()).getTime()) / (1000 * 60 * 60 * 24)))) * 10) / 10} /Day</div>
                </div>
              </div>
 
@@ -297,7 +300,7 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
                  textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white' 
                }}>Total XP</div>
                <div style={{ fontSize: styles.totalXPFontSize, fontWeight: 'bold', color: 'red'}}>{(profile.total_xp || 0).toLocaleString()}</div>
-               <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{(dailyXPRate).toFixed(2)} /Day</div>
+               <div style={{ fontSize: styles.statDailyFontSize, color: 'red'}}>{formattedDailyXP} /Day</div>
              </div>
             
             {/* All-time Label */}

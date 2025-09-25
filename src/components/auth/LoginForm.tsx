@@ -55,12 +55,16 @@ export const LoginForm = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
-          <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-            <Logo style={{ color: 'var(--white-pure)', fontSize: '2rem' }} />
+          <div className="mobile-welcome-text">
+            Grind. Compete. Flex.
+          </div>
+          <div style={{  display: 'flex', justifyContent: 'center' }}>
+            <Logo className="auth-logo" style={{ color: '#000000' }} />
           </div>
           
           <div className="auth-header">
-            <h1>Sign in to see where you rank</h1>
+            <h1>Welcome back!</h1>
+            <p>Enter your details to access your account </p>
           </div>
           
           {error && (
@@ -72,7 +76,7 @@ export const LoginForm = () => {
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
               <label htmlFor="email">
-                Email
+                Email Address
               </label>
               <input
                 id="email"
@@ -87,14 +91,9 @@ export const LoginForm = () => {
             </div>
             
             <div className="form-group">
-              <div className="form-footer">
-                <label htmlFor="password">
-                  Password
-                </label>
-                <Link to="/forgot-password" className="form-link">
-                  Forgot password?
-                </Link>
-              </div>
+              <label htmlFor="password">
+                Password
+              </label>
               <input
                 id="password"
                 type="password"
@@ -106,7 +105,7 @@ export const LoginForm = () => {
               />
             </div>
             
-            <div style={{ marginTop: '1.5rem' }}>
+            <div style={{ }}>
               <button
                 type="submit"
                 disabled={loading}
@@ -130,6 +129,11 @@ export const LoginForm = () => {
               Don't have an account?{' '}
               <Link to="/signup" className="form-link">
                 Sign up
+              </Link>
+            </p>
+            <p style={{  }}>
+              <Link to="/forgot-password" className="form-link">
+                Forgot password?
               </Link>
             </p>
           </div>

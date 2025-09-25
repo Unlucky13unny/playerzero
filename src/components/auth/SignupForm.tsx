@@ -79,8 +79,11 @@ export const SignupForm = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
+          <div className="mobile-welcome-text">
+            Grind. Compete. Flex.
+          </div>
           <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-            <Logo style={{ color: 'var(--white-pure)', fontSize: '2rem' }} />
+            <Logo className="auth-logo" style={{ color: '#000000' }} />
           </div>
           
           <div className="auth-header">
@@ -195,9 +198,10 @@ export const SignupForm = () => {
       </div>
       
       <div className="split-layout-right">
-        <div className="welcome-message">
-          <h1>Start your journey with PlayerZERO.</h1>
-          <p>Join thousands of users who are already gaining new insights with our platform.</p>
+        <div className="welcome-message" style={{ textAlign: 'left' }}>
+          <h1>Grind.</h1>
+          <h1>Compete.</h1>
+          <h1>Flex.</h1>
         </div>
       </div>
     </div>

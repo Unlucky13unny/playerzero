@@ -35,13 +35,17 @@ export const ForgotPassword = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
+          <div className="mobile-welcome-text">
+            Grind. Compete. Flex.
+          </div>
           <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-            <Logo style={{ color: 'var(--white-pure)', fontSize: '2rem' }} />
+            <Logo className="auth-logo" style={{ color: '#000000' }} />
           </div>
           
           <div className="auth-header">
-            <h1>Reset Password</h1>
-          </div>
+            <h1>Forget your Password</h1>
+            <p>Enter your email to reset your password!</p>
+                  </div>
           
           {error && (
             <div className="error-message">
@@ -70,9 +74,7 @@ export const ForgotPassword = () => {
                 required
                 autoFocus
               />
-              <p style={{ fontSize: 'var(--font-xs)', color: 'var(--gray-light)', marginTop: '0.25rem' }}>
-                Enter your email address and we'll send you a link to reset your password.
-              </p>
+              
             </div>
             
             <div style={{ marginTop: '1.5rem' }}>
@@ -89,7 +91,7 @@ export const ForgotPassword = () => {
                     </svg>
                     Sending...
                   </span>
-                ) : 'Send Reset Link'}
+                ) : 'Reset my password'}
               </button>
             </div>
           </form>
@@ -105,9 +107,10 @@ export const ForgotPassword = () => {
       </div>
       
       <div className="split-layout-right">
-        <div className="welcome-message">
-          <h1>Forgot your password?</h1>
-          <p>No worries, we'll help you get back into your account.</p>
+        <div className="welcome-message" style={{ textAlign: 'left' }}>
+          <h1>Grind.</h1>
+          <h1>Compete.</h1>
+          <h1>Flex.</h1>
         </div>
       </div>
     </div>

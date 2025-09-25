@@ -5,6 +5,8 @@ import { PlyrZeroProfileStandalone } from '../profile/PlyrZeroProfileStandalone'
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { useMobile } from '../../hooks/useMobile';
 import { getCountryFlagSync } from '../../utils/countryFlags';
+import { NoResultsState } from './NoResultsState';
+import { NoResultsFound } from './NoResultsFound';
 import './UserSearch.css';
 
 export const UserSearch = () => {
@@ -171,7 +173,6 @@ export const UserSearch = () => {
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '12px',
-                  borderBottom: '1px solid #e5e7eb',
                   width: '100%'
                 }}
               >
@@ -191,24 +192,16 @@ export const UserSearch = () => {
                       fontWeight: 600,
                       fontSize: '12px',
                       lineHeight: '18px',
-                      color: '#000000',
-                      whiteSpace: 'nowrap'
+                      color: '#000000'
                     }}
+                    title={profile.trainer_name}
                   >
                     {profile.trainer_name}
                   </span>
 
                   {/* Country Flag + Name */}
                   {profile.country && (
-                    <div 
-                      className="country-section"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px',
-                        whiteSpace: 'nowrap'
-                      }}
-                    >
+                    <div className="country-section">
                       <img 
                         src={getCountryFlagSync(profile.country).flagUrl} 
                         alt={profile.country}
@@ -231,14 +224,14 @@ export const UserSearch = () => {
 
                   {/* Level */}
                   <span 
+                    className="trainer-level"
                     style={{
                       fontFamily: 'Poppins',
                       fontStyle: 'normal',
                       fontWeight: 500,
                       fontSize: '10px',
                       lineHeight: '15px',
-                      color: '#000000',
-                      whiteSpace: 'nowrap'
+                      color: '#000000'
                     }}
                   >
                     Lvl {profile.trainer_level}
@@ -246,45 +239,41 @@ export const UserSearch = () => {
                 </div>
 
                 {/* Right Section - Team Circle + Name */}
-                <div 
-                  className="team-section"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    whiteSpace: 'nowrap'
-                  }}
-                >
-                  <div 
-                    className="team-circle"
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      backgroundColor: getTeamColor(profile.team_color),
-                      borderRadius: '50%',
-                    }}
-                  />
-                  <span 
-                    style={{
-                      fontFamily: 'Poppins',
-                      fontStyle: 'normal',
-                      fontWeight: 500,
-                      fontSize: '10px',
-                      lineHeight: '15px',
-                      color: getTeamColor(profile.team_color),
-                    }}
-                  >
-                    {profile.team_color}
-                  </span>
+                <div className="search-result-right-section">
+                  <div className="team-section">
+                    <div 
+                      className="team-circle"
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        backgroundColor: getTeamColor(profile.team_color),
+                        borderRadius: '50%',
+                      }}
+                    />
+                    <span 
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 500,
+                        fontSize: '10px',
+                        lineHeight: '15px',
+                        color: 'black',
+                      }}
+                    >
+                      {profile.team_color}
+                    </span>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         ) : query.trim().length >= 2 ? (
-          <div className="no-results">No trainers found</div>
+          <NoResultsFound />
         ) : query.trim().length > 0 ? (
           <div className="search-hint">Type at least 2 characters to search</div>
-        ) : null}
+        ) : (
+          <NoResultsState />
+        )}
       </div>
 
       {/* Centered Profile Preview */}

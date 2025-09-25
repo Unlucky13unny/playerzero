@@ -10,7 +10,6 @@ import { ProfileSetup } from './components/user/ProfileSetup'
 import { PostProfileTutorial } from './components/user/PostProfileTutorial'
 import { UserHome } from './components/dashboard/UserHome'
 import { StatCalculators } from './components/calculators/StatCalculators'
-import { StatUpdater } from './components/stats/StatUpdater'
 import { UpgradePage } from './components/upgrade/UpgradePage'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { ProfileGuard } from './components/auth/ProfileGuard'
@@ -85,19 +84,6 @@ const AppRoutes = () => {
         </Layout>
       } />
       
-      {/* Update Stats - Protected */}
-      <Route path="/update-stats" element={
-        <Layout>
-          <ProtectedRoute>
-            <ProfileSetupGuard>
-              <ProfileGuard>
-                <UpdateStats />
-              </ProfileGuard>
-            </ProfileSetupGuard>
-          </ProtectedRoute>
-        </Layout>
-      } />
-      
       {/* Other protected routes */}
       <Route path="/calculators" element={
         <Layout>
@@ -128,7 +114,7 @@ const AppRoutes = () => {
           <ProtectedRoute>
             <ProfileSetupGuard>
               <ProfileGuard>
-                <StatUpdater />
+                <UpdateStats />
               </ProfileGuard>
             </ProfileSetupGuard>
           </ProtectedRoute>
@@ -239,21 +225,22 @@ const AppRoutes = () => {
           alignItems: 'center',
           justifyContent: 'center',
           minHeight: '100vh',
-          background: '#000000',
-          color: 'white',
+          background: '#ffffff',
+          color: '#000000',
           textAlign: 'center',
           padding: '2rem'
         }}>
           <div style={{
-            background: 'rgba(15, 15, 35, 0.8)',
-            border: '1px solid rgba(139, 0, 0, 0.3)',
+            background: '#ffffff',
+            border: '1px solid #e5e7eb',
             borderRadius: '1rem',
             padding: '2rem',
-            maxWidth: '400px'
+            maxWidth: '400px',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)'
           }}>
             <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>🔍</div>
             <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Page Not Found</h1>
-            <p style={{ color: '#a0a0a0', marginBottom: '1.5rem' }}>
+            <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
               The page you're looking for doesn't exist.
             </p>
             <a 
@@ -261,7 +248,7 @@ const AppRoutes = () => {
               style={{
                 display: 'inline-block',
                 padding: '0.75rem 1.5rem',
-                background: 'linear-gradient(135deg, #B91C1C, #8B0000)',
+                background: '#dc2626',
                 color: 'white',
                 textDecoration: 'none',
                 borderRadius: '0.5rem',

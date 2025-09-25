@@ -36,11 +36,25 @@ export function PlayerHeader({
 
   const handleSignOut = async () => {
     try {
-      await signOut()
-      navigate('/login')
-      setMenuOpen(false)
+      console.log('Starting logout process from PlayerHeader...')
+      setMenuOpen(false) // Close the dropdown first
+      
+      const { error } = await signOut()
+      if (error) {
+        console.error('Logout error:', error)
+        return
+      }
+      
+      console.log('Logout successful, navigating to login...')
+      
+      // Small delay to ensure state is cleared, then navigate
+      setTimeout(() => {
+        navigate('/login', { replace: true })
+        // Force a page reload to ensure complete cleanup
+        window.location.reload()
+      }, 100)
     } catch (error) {
-      console.error('Sign out error:', error)
+      console.error('Logout failed:', error)
     }
   }
 
