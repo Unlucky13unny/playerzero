@@ -188,10 +188,14 @@ export const UserHome = () => {
   const [activeTimeFilter, setActiveTimeFilter] = useState<'weekly' | 'monthly' | 'all-time'>('weekly');
   const [filteredStats, setFilteredStats] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
 
   useEffect(() => {
-    loadUserStats();
-  }, []);
+    if (!hasLoaded) {
+      loadUserStats();
+      setHasLoaded(true);
+    }
+  }, [hasLoaded]);
 
   useEffect(() => {
     loadFilteredStats();
@@ -307,10 +311,18 @@ export const UserHome = () => {
     const dailyAverage = calculateDailyAverage(totalValue, startDate);
     
     if (isDistance) {
-      return `${dailyAverage.toFixed(1)} km`;
+      // Round to nearest tenth (1 decimal place)
+      return `${Math.round(dailyAverage * 10) / 10} km`;
     }
     
-    return formatNumber(Math.round(dailyAverage));
+    // For XP, convert to K before rounding if >= 1000
+    if (dailyAverage >= 1000) {
+      const xpInK = dailyAverage / 1000;
+      return `${Math.round(xpInK * 10) / 10}K`;
+    }
+    
+    // Round to nearest tenth for other values
+    return Math.round(dailyAverage * 10) / 10;
   };
 
 
@@ -445,28 +457,28 @@ export const UserHome = () => {
                 fontWeight: "600", 
                 fontSize: isMobile ? "0.7rem" : "0.875rem",
                 wordBreak: "break-word"
-              }}>KM/DAY</th>
+              }}>KM</th>
               <th className="stat-value" style={{ 
                 padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
                 textAlign: "center", 
                 fontWeight: "600", 
                 fontSize: isMobile ? "0.7rem" : "0.875rem",
                 wordBreak: "break-word"
-              }}>CAUGHT/DAY</th>
+              }}>CAUGHT</th>
               <th className="stat-value" style={{ 
                 padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
                 textAlign: "center", 
                 fontWeight: "600", 
                 fontSize: isMobile ? "0.7rem" : "0.875rem",
                 wordBreak: "break-word"
-              }}>STOPS/DAY</th>
+              }}>STOPS</th>
               <th className="stat-value" style={{ 
                 padding: isMobile ? "0.5rem 0.25rem" : "1rem", 
                 textAlign: "center", 
                 fontWeight: "600", 
                 fontSize: isMobile ? "0.7rem" : "0.875rem",
                 wordBreak: "break-word"
-              }}>XP/DAY</th>
+              }}>XP</th>
             </tr>
             {/* Row 3: Values */}
             <tr>
@@ -649,17 +661,24 @@ export const UserHome = () => {
 
           {/* Radar Chart - Mobile Second */}
           <div style={chartStyles.mobileChartSection}>
-            <div className="radar-chart-container" style={{ 
-              flex: "1", 
-              display: "flex", 
-              flexDirection: "column",
-              backgroundColor: "#111827",
-              border: "1px solid #374151",
-              borderRadius: "12px",
-              overflow: "hidden",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
-              padding: "1rem",
-              minHeight: "400px"
+            <div className="radar-chart-container" style={{
+              width: 300,
+              minWidth: 300,
+              maxWidth: 300,
+              height: 300,
+              minHeight: 300,
+              maxHeight: 300,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#111827',
+              border: '1px solid #374151',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
+              padding: '1rem',
+              boxSizing: 'border-box',
+              flexShrink: 0,
+              flexGrow: 0,
             }}>
               <h2 style={{ 
                 marginBottom: "1rem", 
@@ -820,17 +839,24 @@ export const UserHome = () => {
 
           {/* Radar Chart - Right Side (Desktop) */}
           <div style={chartStyles.chartSection}>
-            <div className="radar-chart-container" style={{ 
-              flex: "1", 
-              display: "flex", 
-              flexDirection: "column",
-              backgroundColor: "#111827",
-              border: "1px solid #374151",
-              borderRadius: "12px",
-              overflow: "hidden",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)",
-              padding: "1.5rem",
-              minHeight: "500px"
+            <div className="radar-chart-container" style={{
+              width: 500,
+              minWidth: 500,
+              maxWidth: 500,
+              height: 384,
+              minHeight: 384,
+              maxHeight: 384,
+              display: 'flex',
+              flexDirection: 'column',
+              backgroundColor: '#111827',
+              border: '1px solid #374151',
+              borderRadius: '12px',
+              overflow: 'hidden',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2)',
+              padding: '1.5rem',
+              boxSizing: 'border-box',
+              flexShrink: 0,
+              flexGrow: 0,
             }}>
               <h2 style={{ 
                 marginBottom: "1.5rem", 

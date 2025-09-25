@@ -47,8 +47,11 @@ export const ResetPassword = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
+          <div className="mobile-welcome-text">
+            Grind. Compete. Flex.
+          </div>
           <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-            <Logo style={{ color: 'var(--white-pure)', fontSize: '2rem' }} />
+            <Logo style={{ color: '#000000', fontSize: '2rem' }} />
           </div>
           
           <div className="auth-header">
@@ -119,9 +122,10 @@ export const ResetPassword = () => {
       </div>
       
       <div className="split-layout-right">
-        <div className="welcome-message">
-          <h1>Create a new password</h1>
-          <p>Make sure to use a strong, unique password to keep your account secure.</p>
+        <div className="welcome-message" style={{ textAlign: 'left' }}>
+          <h1>Grind.</h1>
+          <h1>Compete.</h1>
+          <h1>Flex.</h1>
         </div>
       </div>
     </div>

@@ -23,11 +23,11 @@ interface StatCardProps {
 const formatNumber = (num: number | undefined) => {
   if (!num) return '0'
   if (num >= 1000000) {
-    return `${(num / 1000000).toFixed(1)}M`
+    return `${Math.round((num / 1000000) * 10) / 10}M`
   } else if (num >= 1000) {
-    return `${(num / 1000).toFixed(1)}K`
+    return `${Math.round((num / 1000) * 10) / 10}K`
   }
-  return num.toLocaleString()
+  return Math.round(num * 10) / 10
 }
 
 const formatDate = (dateStr: string) => {

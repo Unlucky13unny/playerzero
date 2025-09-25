@@ -107,7 +107,18 @@ export const ProfileSetup = () => {
   }, []);
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
-    setProfileData(prev => ({ ...prev, [field]: value }))
+    // Special handling for trainer_code to enforce 12-digit limit
+    if (field === 'trainer_code') {
+      // Remove any non-digit characters
+      const digitsOnly = value.replace(/\D/g, '');
+      
+      // Limit to 12 digits maximum
+      const limitedValue = digitsOnly.slice(0, 12);
+      
+      setProfileData(prev => ({ ...prev, [field]: limitedValue }))
+    } else {
+      setProfileData(prev => ({ ...prev, [field]: value }))
+    }
   }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -300,11 +311,17 @@ export const ProfileSetup = () => {
                 type="text"
                 value={profileData.trainer_code}
                 onChange={(e) => handleInputChange('trainer_code', e.target.value)}
-                className="form-input"
+                className={`form-input ${profileData.trainer_code && profileData.trainer_code.length < 12 ? 'trainer-code-incomplete' : ''}`}
                 placeholder="Enter your 12-digit trainer code"
                 pattern="\d{4}\s?\d{4}\s?\d{4}"
                 title="Enter your 12-digit trainer code"
+                maxLength={12}
               />
+              {profileData.trainer_code && profileData.trainer_code.length < 12 && (
+                <div className="validation-message">
+                  Trainer code must be exactly 12 digits ({profileData.trainer_code.length}/12)
+                </div>
+              )}
               <div className="checkbox-group">
                 <input
                   type="checkbox"

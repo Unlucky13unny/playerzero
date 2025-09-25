@@ -55,8 +55,8 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
     if (profile?.trainer_code_private) {
       return "205***********"
     }
-    // Format trainer code with spaces like PublicProfile: 2056 5536 4353
-    return profile.trainer_code.replace(/(.{4})/g, "$1 ").trim()
+    // Display trainer code without spaces
+    return profile.trainer_code
   }
 
   const getTeamName = () => {
@@ -65,6 +65,14 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       return team?.label || profile.team_color.charAt(0).toUpperCase() + profile.team_color.slice(1)
     }
     return "Unknown"
+  }
+
+  const getTeamColor = () => {
+    if (profile?.team_color) {
+      const team = TEAM_COLORS.find(t => t.value === profile.team_color)
+      return team?.color || '#666666'
+    }
+    return '#666666'
   }
 
   const copyTrainerCode = () => {
@@ -380,15 +388,28 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               textAlign: 'left',
               minWidth: '80px'
             }}>Team:</span>
-            <span style={{
-              fontFamily: 'Poppins',
-              fontStyle: 'normal',
-              fontWeight: 400,
-              fontSize: '12px',
-              lineHeight: '18px',
-              color: '#DC2627',
-              textAlign: 'left',
-            }}>{getTeamName()}</span>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}>
+              <div style={{
+                width: '12px',
+                height: '12px',
+                borderRadius: '50%',
+                backgroundColor: getTeamColor(),
+                border: '1px solid rgba(0, 0, 0, 0.1)'
+              }}></div>
+              <span style={{
+                fontFamily: 'Poppins',
+                fontStyle: 'normal',
+                fontWeight: 400,
+                fontSize: '12px',
+                lineHeight: '18px',
+                color: 'black',
+                textAlign: 'left',
+              }}>{getTeamName()}</span>
+            </div>
         </div>
 
           {/* Start Date Row */}
@@ -418,7 +439,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               color: '#000000',
               textAlign: 'left',
             }}>
-            {profile?.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', {
+            {profile?.start_date ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-US', {
               month: '2-digit',
               day: '2-digit',
               year: 'numeric'

@@ -46,31 +46,129 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  gap: 8px;
 }
 
 .search-result-row {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  padding: 12px;
-  border-bottom: 1px solid #e5e7eb;
-  width: 100%;
-  flex-wrap: nowrap;
-  transition: background-color 0.2s ease;
-  background-color: #f8f9fa;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.2s ease;
 }
 
 .search-result-row:hover {
-  background-color: #f9fafb;
+  border-color: var(--red-bright);
+  box-shadow: 0 2px 8px rgba(255, 55, 95, 0.1);
 }
 
 .search-result-row:last-child {
-  border-bottom: none;
+  border-bottom: 1px solid #e5e7eb;
 }
 
-/* Responsive gap for search result left section */
+/* Mobile responsive styles for search results */
+@media (max-width: 768px) {
+  .search-results-list {
+    gap: 4px;
+  }
+  
+  .search-result-row {
+    padding: 8px;
+  }
+  
+  /* Smaller fixed widths for mobile */
+  .trainer-name {
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
+  }
+  
+  .country-section {
+    width: 40px;
+    min-width: 40px;
+    max-width: 40px;
+    justify-content: flex-start;
+  }
+  
+  .trainer-level {
+    width: 20px;
+    min-width: 20px;
+    max-width: 20px;
+    margin-top: 12px;
+  }
+  
+  .team-section {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+  }
+  
+  .search-result-left-section {
+    gap: 1px;
+  }
+  
+  .search-result-right-section {
+    gap: 6px;
+  }
+}
+
+/* Search result sections styling */
 .search-result-left-section {
-  gap: 18px;
+  display: flex;
+  align-items: center;
+  gap: 1px;
+  flex: 1;
+  min-width: 0;
+}
+
+.search-result-right-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Fixed width for username to ensure consistent alignment */
+.trainer-name {
+  width: 120px;
+  min-width: 120px;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: left;
+}
+
+/* Fixed width for country section */
+.country-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  justify-content: center;
+}
+
+/* Fixed width for level */
+.trainer-level {
+  width: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Fixed width for team section */
+.team-section {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  justify-content: flex-end;
 }
 
 /* Responsive gap that increases with screen width */
@@ -860,5 +958,91 @@
 
   .stat-item .stat-value {
     font-size: 13px;
+  }
+}
+
+/* No Results Styles */
+.no-results-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+  min-height: 400px;
+  width: 100%;
+}
+
+.no-results-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  text-align: center;
+}
+
+.no-results-svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  min-height: 250px;
+  max-height: 300px;
+}
+
+.no-results-text h3 {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 0.5rem 0;
+}
+
+.no-results-text p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 1rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .no-results-container {
+    padding: 1rem;
+    min-height: 350px;
+  }
+  
+  .no-results-content {
+    gap: 1rem;
+  }
+  
+  .no-results-svg {
+    min-height: 200px;
+    max-height: 250px;
+  }
+  
+  .no-results-text h3 {
+    font-size: 1.25rem;
+  }
+  
+  .no-results-text p {
+    font-size: 0.875rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .no-results-container {
+    min-height: 300px;
+  }
+  
+  .no-results-svg {
+    min-height: 150px;
+    max-height: 200px;
+  }
+  
+  .no-results-text h3 {
+    font-size: 1.125rem;
+  }
+  
+  .no-results-text p {
+    font-size: 0.8rem;
   }
 } 

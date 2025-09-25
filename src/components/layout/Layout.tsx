@@ -21,9 +21,27 @@ export const Layout = ({ children }: LayoutProps) => {
   const isMobile = useMobile()
   
   const handleSignOut = async () => {
-    await signOut()
-    navigate('/login')
-    // setMobileMenuOpen(false)
+    try {
+      console.log('Starting logout process...')
+      setFeaturesDropdownOpen(false) // Close the dropdown first
+      
+      const { error } = await signOut()
+      if (error) {
+        console.error('Logout error:', error)
+        return
+      }
+      
+      console.log('Logout successful, navigating to login...')
+      
+      // Small delay to ensure state is cleared, then navigate
+      setTimeout(() => {
+        navigate('/login', { replace: true })
+        // Force a page reload to ensure complete cleanup
+        window.location.reload()
+      }, 100)
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
   const toggleFeaturesDropdown = () => {

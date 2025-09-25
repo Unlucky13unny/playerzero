@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, memo } from "react"
 import { Radar, RadarChart as RechartsRadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts"
 import { type ProfileWithMetadata } from '../../services/profileService'
 import { dashboardService, type StatBounds } from '../../services/dashboardService'
@@ -111,7 +111,6 @@ function FilterButtons({ activeFilter, onFilterChange, profile, isMobile }: Filt
             padding: '0px',
             gap: isMobile ? '2.54px' : '4px',
             cursor: 'pointer',
-            transition: 'opacity 0.2s ease',
             background: 'transparent',
             border: 'none',
             /* Inside auto layout */
@@ -168,22 +167,60 @@ function FilterButtons({ activeFilter, onFilterChange, profile, isMobile }: Filt
   )
 }
 
-export const PerformanceRadarChart = ({ profile, showHeader = true }: PerformanceRadarChartProps) => {
+// Memoize the radar chart component to prevent unnecessary re-renders
+// Add CSS styles to fix chart rendering
+const chartStyles = `
+  .radar-chart-outer-container {
+    transition: none !important;
+  }
+  
+  .radar-chart-inner-container {
+    transition: none !important;
+  }
+  
+  .recharts-wrapper {
+    position: static !important;
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .recharts-surface {
+    transform: none !important;
+    transition: none !important;
+    animation: none !important;
+    overflow: visible !important;
+  }
+`;
+
+export const PerformanceRadarChart = memo(({ profile, showHeader = true }: PerformanceRadarChartProps) => {
   const trialStatus = useTrialStatus()
   const isMobile = useMobile()
   const [activeFilter, setActiveFilter] = useState<FilterType>(null)
-  const [communityAverages, setCommunityAverages] = useState<any>(null)
-  const [countryAverages, setCountryAverages] = useState<any>(null)
-  const [teamAverages, setTeamAverages] = useState<any>(null)
-  const [statBounds, setStatBounds] = useState<StatBounds | null>(null)
-  const [allUserStats, setAllUserStats] = useState<any>(null)
+  const [chartData, setChartData] = useState<{
+    communityAverages: any;
+    countryAverages: any;
+    teamAverages: any;
+    statBounds: StatBounds | null;
+    allUserStats: any;
+  }>({
+    communityAverages: null,
+    countryAverages: null,
+    teamAverages: null,
+    statBounds: null,
+    allUserStats: null
+  })
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Always show radar chart, but with different styling for free vs premium users
   const isPremiumUser = trialStatus.isPaidUser
 
+  // Use a single effect for data loading with proper cleanup
   useEffect(() => {
+    let isMounted = true;
+    setLoading(true);
+    
     const loadData = async () => {
       try {
         if (isPremiumUser && profile) {
@@ -195,11 +232,18 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
             dashboardService.getPaidUserStatBounds(),
             dashboardService.getAllUserStats()
           ])
-          setCommunityAverages(averages)
-          setCountryAverages(countryAvg)
-          setTeamAverages(teamAvg)
-          setStatBounds(bounds)
-          setAllUserStats(allStats)
+          
+          // Only update state if component is still mounted
+          if (isMounted) {
+            setChartData({
+              communityAverages: averages,
+              countryAverages: countryAvg,
+              teamAverages: teamAvg,
+              statBounds: bounds,
+              allUserStats: allStats
+            });
+            setLoading(false);
+          }
         } else {
           // Free users get basic comparison only
           const [averages, bounds, allStats] = await Promise.all([
@@ -207,20 +251,38 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
             dashboardService.getPaidUserStatBounds(),
             dashboardService.getAllUserStats()
           ])
-          setCommunityAverages(averages)
-          setStatBounds(bounds)
-          setAllUserStats(allStats)
+          
+          // Only update state if component is still mounted
+          if (isMounted) {
+            setChartData({
+              communityAverages: averages,
+              countryAverages: null,
+              teamAverages: null,
+              statBounds: bounds,
+              allUserStats: allStats
+            });
+            setLoading(false);
+          }
         }
       } catch (err) {
-        setError('Failed to load data')
-        console.error('Error loading data:', err)
-      } finally {
-        setLoading(false)
+        if (isMounted) {
+          setError('Failed to load data')
+          setLoading(false);
+          console.error('Error loading data:', err)
+        }
       }
     }
 
-    loadData()
-  }, [isPremiumUser, profile?.country, profile?.team_color])
+    loadData();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
+  }, [isPremiumUser, profile?.country, profile?.team_color, profile?.id])
+
+  // Destructure chart data for easier access
+  const { communityAverages, countryAverages, teamAverages, statBounds, allUserStats } = chartData;
 
   // Percentile-based normalization for better visual representation
   const normalizeStats = (value: number, stat: string) => {
@@ -410,6 +472,7 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
+              animationEasing="linear"
             />
           )
         }
@@ -474,6 +537,7 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
+              animationEasing="linear"
             />
           )
         }).filter(Boolean)
@@ -524,14 +588,17 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
   }
 
   return (
-    <div style={{
-      width: '100%',
-      maxWidth: isMobile ? '100%' : '100%',
-      background: '#F9FAFB',
-      borderRadius: '8px',
-      border: 'none',
-      padding: isMobile ? '16px' : '24px'
-    }}>
+    <>
+      <style>{chartStyles}</style>
+      <div style={{
+        width: '100%',
+        maxWidth: '100%',
+        background: '#F9FAFB',
+        borderRadius: '8px',
+        border: 'none',
+        padding: isMobile ? '16px' : '24px',
+        boxSizing: 'border-box'
+      }}>
       {showHeader && (
         <div style={{
           display: 'flex',
@@ -582,30 +649,115 @@ export const PerformanceRadarChart = ({ profile, showHeader = true }: Performanc
         </div>
       )}
       
-      <div style={{
-        height: isMobile ? '300px' : '384px',
-        width: '100%',
-        maxWidth: isMobile ? '100%' : '100%',
-        marginBottom: '24px'
+      <div 
+        className="radar-chart-outer-container"
+        style={{
+          width: isMobile ? 300 : 500,
+          minWidth: isMobile ? 300 : 500,
+          maxWidth: isMobile ? 300 : 500,
+          height: isMobile ? 300 : 384,
+          minHeight: isMobile ? 300 : 384,
+          maxHeight: isMobile ? 300 : 384,
+          marginBottom: '24px',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+          position: 'relative',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexShrink: 0,
+          flexGrow: 0,
+          boxSizing: 'border-box',
       }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <RechartsRadarChart data={performanceData} margin={{ top: 20, right: 30, bottom: 20, left: 30 }}>
-            <PolarGrid stroke="#A5B7C6" strokeDasharray="3 3" radialLines={true} />
-            <PolarAngleAxis
-              dataKey="metric"
-              tick={{
-                fontSize: isMobile ? 10 : 11.559,
-                fill: "#000000",
-                fontFamily: "Poppins, sans-serif",
-                fontWeight: 600,
+        {loading ? (
+          <div 
+            className="loading-spinner-container"
+            style={{
+              width: isMobile ? 300 : 500,
+              minWidth: isMobile ? 300 : 500,
+              maxWidth: isMobile ? 300 : 500,
+              height: isMobile ? 300 : 384,
+              minHeight: isMobile ? 300 : 384,
+              maxHeight: isMobile ? 300 : 384,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '16px',
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              backgroundColor: '#f9fafb',
+              zIndex: 10,
+              borderRadius: '8px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div 
+              className="loading-spinner"
+              style={{
+                width: '40px',
+                height: '40px',
+                border: '3px solid #f3f4f6',
+                borderTop: '3px solid #dc2626',
+                borderRadius: '50%',
+                animation: 'spin 1s linear infinite',
+                animationTimingFunction: 'linear',
               }}
-            />
-            {getRadarElements()}
-          </RechartsRadarChart>
-        </ResponsiveContainer>
+            ></div>
+            <span style={{
+              fontSize: '14px',
+              color: '#6b7280',
+              fontFamily: 'Poppins, sans-serif',
+              fontWeight: 500
+            }}>
+              Loading performance data...
+            </span>
+          </div>
+        ) : (
+          <div 
+            className="radar-chart-inner-container"
+            style={{
+              width: isMobile ? 300 : 500,
+              minWidth: isMobile ? 300 : 500,
+              maxWidth: isMobile ? 300 : 500,
+              height: isMobile ? 300 : 384,
+              minHeight: isMobile ? 300 : 384,
+              maxHeight: isMobile ? 300 : 384,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              flexGrow: 0,
+              boxSizing: 'border-box',
+              transition: 'none',
+            }}>
+            <ResponsiveContainer width="100%" height="100%" debounce={0}>
+              <RechartsRadarChart 
+                data={performanceData} 
+                margin={{ top: 20, right: 30, bottom: 20, left: 30 }}
+                style={{ transition: 'none' }}
+              >
+                <PolarGrid stroke="#A5B7C6" strokeDasharray="3 3" radialLines={true} />
+                <PolarAngleAxis
+                  dataKey="metric"
+                  tick={{
+                    fontSize: isMobile ? 10 : 11.559,
+                    fill: "#000000",
+                    fontFamily: "Poppins, sans-serif",
+                    fontWeight: 600,
+                  }}
+                />
+                {getRadarElements()}
+              </RechartsRadarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} profile={profile} isMobile={isMobile} />
     </div>
+    </>
   )
-}
+})

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { profileService } from '../services/profileService'
 
@@ -33,26 +33,9 @@ export const useTrialStatus = (): PrivateModeStatus => {
   const [isPaidUser, setIsPaidUser] = useState(false)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [lastUpdateTime, setLastUpdateTime] = useState(0)
 
-  // Update current time every second for live countdown
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
-
-    return () => clearInterval(timer)
-  }, [])
-
-  useEffect(() => {
-    if (user) {
-      checkPaidStatus()
-    } else {
-      setIsPaidUser(false)
-      setLoading(false)
-    }
-  }, [user])
-
-  const checkPaidStatus = async () => {
+  const checkPaidStatus = useCallback(async () => {
     try {
       setLoading(true)
       const { isPaid } = await profileService.isPaidUser()
@@ -63,9 +46,32 @@ export const useTrialStatus = (): PrivateModeStatus => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const calculatePrivateModeStatus = (): PrivateModeStatus => {
+  // Update current time every second for live countdown, but only if user is in trial
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = Date.now()
+      // Only update every 5 seconds to reduce flickering
+      if (now - lastUpdateTime > 5000) {
+        setCurrentTime(new Date())
+        setLastUpdateTime(now)
+      }
+    }, 1000)
+
+    return () => clearInterval(timer)
+  }, [lastUpdateTime])
+
+  useEffect(() => {
+    if (user) {
+      checkPaidStatus()
+    } else {
+      setIsPaidUser(false)
+      setLoading(false)
+    }
+  }, [user, checkPaidStatus])
+
+  const calculatePrivateModeStatus = useCallback((): PrivateModeStatus => {
     // Default values for logged out users or while loading
     if (!user || loading) {
       return {
@@ -141,7 +147,7 @@ export const useTrialStatus = (): PrivateModeStatus => {
       canShowSocialLinks: false, // Social links remain private
       loading: false
     }
-  }
+  }, [user, loading, isPaidUser, currentTime])
 
-  return calculatePrivateModeStatus()
+  return useMemo(() => calculatePrivateModeStatus(), [calculatePrivateModeStatus])
 } 

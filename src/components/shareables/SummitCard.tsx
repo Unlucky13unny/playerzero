@@ -49,7 +49,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
     )
   }
 
-  const startDate = profile.start_date ? new Date(profile.start_date).toLocaleDateString('en-US', { 
+  const startDate = profile.start_date ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-US', { 
     month: '2-digit', 
     day: '2-digit', 
     year: 'numeric' 

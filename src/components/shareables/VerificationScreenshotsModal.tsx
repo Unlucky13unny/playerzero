@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { X, ImageIcon } from "lucide-react"
 import { dashboardService } from '../../services/dashboardService'
 
 interface VerificationScreenshotsModalProps {
@@ -8,10 +9,19 @@ interface VerificationScreenshotsModalProps {
   userName?: string
 }
 
-export function VerificationScreenshotsModal({ isOpen, onClose, userId, userName }: VerificationScreenshotsModalProps) {
+interface ProofItem {
+  id: string
+  uploadDate: string
+  isApproved: boolean
+  screenshot_url: string
+  created_at: string
+}
+
+export function VerificationScreenshotsModal({ isOpen, onClose, userId }: VerificationScreenshotsModalProps) {
   const [screenshots, setScreenshots] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -32,152 +42,481 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId, userName
     }
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
+  const formatUploadDate = (dateString: string) => {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      year: 'numeric'
     })
   }
 
-  const formatNumber = (num: number) => {
-    return num.toLocaleString()
+  const handleImageClick = (imageUrl: string) => {
+    setSelectedImage(imageUrl)
   }
+
+  const closeImagePreview = () => {
+    setSelectedImage(null)
+  }
+
+  // Transform screenshots data to ProofItem format
+  const proofs: ProofItem[] = screenshots.map((screenshot) => ({
+    id: screenshot.id,
+    uploadDate: formatUploadDate(screenshot.stat_entries?.entry_date || screenshot.created_at),
+    isApproved: true, // All screenshots in the system are considered approved
+    screenshot_url: screenshot.screenshot_url,
+    created_at: screenshot.created_at
+  }))
 
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900">
-              Verification Screenshots
+    <>
+      {/* Main Modal */}
+      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+        {/* Frame 735 - Main Container */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-start',
+          padding: '0px',
+          gap: '16px',
+          width: '352px',
+          height: '422px',
+          background: 'white',
+          borderRadius: '8px',
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)'
+        }}>
+          {/* Header with close button */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%',
+            padding: '16px',
+            borderBottom: '1px solid #f0f0f0'
+          }}>
+            {/* Proofs Gallery Title */}
+            <h2 style={{
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 700,
+              fontSize: '20px',
+              lineHeight: '30px',
+              color: '#000000',
+              textAlign: 'left',
+              flex: 'none',
+              order: 0,
+              marginRight: 'auto'
+            }}>
+              Proofs Gallery
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
-              {userName ? `${userName}'s` : 'User\'s'} stat verification history
-            </p>
-          </div>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              <X size={20} color="#000000" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
+          {/* Frame 732 - Proofs List Container */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            padding: '0px',
+            width: '352px',
+            height: '376px',
+            overflowY: 'auto',
+            flex: 'none',
+            order: 1,
+            alignSelf: 'stretch',
+            flexGrow: 0
+          }}>
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-              <span className="ml-3 text-gray-600">Loading screenshots...</span>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                width: '100%',
+                height: '100%'
+              }}>
+                <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '50%',
+                  border: '2px solid #f0f0f0',
+                  borderTopColor: '#2BC49C',
+                  animation: 'spin 1s linear infinite'
+                }}></div>
+                <span style={{
+                  marginLeft: '12px',
+                  fontFamily: 'Poppins',
+                  fontSize: '12px',
+                  color: '#848282'
+                }}>Loading screenshots...</span>
             </div>
           ) : error ? (
-            <div className="text-center py-12">
-              <div className="text-red-500 mb-2">⚠️</div>
-              <p className="text-gray-600">{error}</p>
+              <div style={{
+                textAlign: 'center',
+                width: '100%',
+                padding: '24px'
+              }}>
+                <p style={{
+                  fontFamily: 'Poppins',
+                  fontSize: '12px',
+                  color: '#848282'
+                }}>{error}</p>
             </div>
-          ) : screenshots.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-2">📸</div>
-              <p className="text-gray-600">No verification screenshots found</p>
+            ) : proofs.length === 0 ? (
+              <div style={{
+                textAlign: 'center',
+                width: '100%',
+                padding: '24px'
+              }}>
+                <p style={{
+                  fontFamily: 'Poppins',
+                  fontSize: '12px',
+                  color: '#848282'
+                }}>No verification screenshots found</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {screenshots.map((screenshot, index) => (
-                <div key={screenshot.id || index} className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  {/* Screenshot Image */}
-                  <div className="mb-4">
-                    <img
-                      src={screenshot.screenshot_url}
-                      alt={`Verification screenshot ${index + 1}`}
-                      className="w-full h-48 object-cover rounded-lg border border-gray-200"
-                      onError={(e) => {
-                        e.currentTarget.src = '/images/placeholder-screenshot.png'
-                      }}
-                    />
-                  </div>
-
-                  {/* Stats Information */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-900">Date:</span>
-                      <span className="text-sm text-gray-600">
-                        {formatDate(screenshot.stat_entries?.entry_date || screenshot.created_at)}
-                      </span>
+              proofs.map((proof, index) => (
+                <div 
+                  key={proof.id} 
+                  style={{
+                    /* Frame 729 */
+                    /* Auto layout */
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0px 8px',
+                    gap: '14px',
+                    width: '352px',
+                    height: '47px',
+                    borderRadius: '6px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: index,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => handleImageClick(proof.screenshot_url)}
+                >
+                  {/* Frame 733 - Left side with image icon and text */}
+                  <div style={{
+                    /* Frame 733 */
+                    /* Auto layout */
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '14px',
+                    margin: '0 auto',
+                    width: '178px',
+                    height: '24px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0
+                  }}>
+                    {/* Image icon */}
+                    <div style={{
+                      /* Image */
+                      width: '24px',
+                      height: '24px',
+                      position: 'relative',
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}>
+                      <ImageIcon size={24} style={{
+                        /* Vector */
+                        position: 'absolute',
+                        left: '9.38%',
+                        right: '9.38%',
+                        top: '15.62%',
+                        bottom: '15.62%',
+                        color: '#000000'
+                      }} />
                     </div>
                     
-                    {screenshot.stat_entries && (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Level:</span>
-                          <span className="text-sm text-gray-600">
-                            {screenshot.stat_entries.trainer_level}
+                    {/* Upload date text */}
+                    <span style={{
+                      /* Uploaded Jul 15th, 2025 */
+                      width: '140px',
+                      height: '18px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      fontSize: '12px',
+                      lineHeight: '18px',
+                      /* identical to box height */
+                      textAlign: 'center',
+                      color: '#000000',
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0
+                    }}>
+                      Uploaded {proof.uploadDate}
                           </span>
                         </div>
                         
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Total XP:</span>
-                          <span className="text-sm text-gray-600">
-                            {formatNumber(screenshot.stat_entries.total_xp)}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Pokémon Caught:</span>
-                          <span className="text-sm text-gray-600">
-                            {formatNumber(screenshot.stat_entries.pokemon_caught)}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Distance:</span>
-                          <span className="text-sm text-gray-600">
-                            {screenshot.stat_entries.distance_walked?.toFixed(1)} km
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Pokéstops:</span>
-                          <span className="text-sm text-gray-600">
-                            {formatNumber(screenshot.stat_entries.pokestops_visited)}
-                          </span>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm font-medium text-gray-900">Pokédex:</span>
-                          <span className="text-sm text-gray-600">
-                            {screenshot.stat_entries.unique_pokedex_entries}
-                          </span>
-                        </div>
-                      </>
-                    )}
+                  {/* Shield tick icon */}
+                  <div style={{
+                    /* charm:shield-tick */
+                    boxSizing: 'border-box',
+                    /* Auto layout */
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0',
+                    margin: '0 auto',
+                    width: '40px',
+                    height: '40px',
+                    /* Inside auto layout */
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0
+                  }}>
+                    <svg width="40" height="40" viewBox="0 0 40 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <rect x="0.5" y="1" width="39" height="39" rx="3.5" fill="#2BC49C" fillOpacity="0.09"/>
+                      <rect x="0.5" y="1" width="39" height="39" rx="3.5" stroke="#2BC49C"/>
+                      <path d="M20 11.125L27.875 14.125V21.625C27.875 25 24.875 28.375 20 29.875C15.125 28.375 12.125 25.375 12.125 21.625V14.125L20 11.125Z" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M16.625 20.125L18.875 22.375L23.375 17.125" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
                   </div>
                 </div>
-              ))}
-            </div>
+              ))
           )}
         </div>
+        </div>
+                        </div>
+                        
+      {/* Image Preview Modal */}
+      {selectedImage && (
+        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            width: '100%',
+            maxWidth: '1000px',
+            padding: '0 20px'
+          }}>
+            {/* Main container - positioned to the left */}
+            <div style={{
+              position: 'relative',
+              width: '352px',
+              height: '422px',
+              background: 'white',
+              borderRadius: '8px',
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
+              marginRight: '20px'
+            }}>
+              {/* This is a duplicate of the main modal to maintain visual consistency */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+                padding: '16px',
+                borderBottom: '1px solid #f0f0f0'
+              }}>
+                <h2 style={{
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  fontSize: '20px',
+                  lineHeight: '30px',
+                  color: '#000000',
+                  textAlign: 'left',
+                  flex: 'none',
+                  order: 0,
+                  marginRight: 'auto'
+                }}>
+                  Proofs Gallery
+                </h2>
+                        </div>
+              <div style={{
+                height: '376px',
+                overflowY: 'auto',
+                padding: '16px'
+              }}>
+                {proofs.map((proof, index) => (
+                  <div 
+                    key={`preview-${proof.id}`} 
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      padding: '0px 8px',
+                      gap: '14px',
+                      width: '100%',
+                      height: '47px',
+                      borderRadius: '6px',
+                      flex: 'none',
+                      order: index,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                      backgroundColor: selectedImage === proof.screenshot_url ? 'rgba(43, 196, 156, 0.09)' : 'transparent'
+                    }}
+                    onClick={() => handleImageClick(proof.screenshot_url)}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      padding: '0px',
+                      gap: '14px',
+                      margin: '0 auto',
+                      width: '178px',
+                      height: '24px',
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        position: 'relative',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0
+                      }}>
+                        <ImageIcon size={24} style={{
+                          position: 'absolute',
+                          left: '9.38%',
+                          right: '9.38%',
+                          top: '15.62%',
+                          bottom: '15.62%',
+                          color: '#000000'
+                        }} />
+                        </div>
+                        
+                      <span style={{
+                        width: '140px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        textAlign: 'center',
+                        color: '#000000',
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0
+                      }}>
+                        Uploaded {proof.uploadDate}
+                          </span>
+                        </div>
+                    <div style={{
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0',
+                      margin: '0 auto',
+                      width: '40px',
+                      height: '40px',
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0
+                    }}>
+                      <svg width="40" height="40" viewBox="0 0 40 41" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="0.5" y="1" width="39" height="39" rx="3.5" fill="#2BC49C" fillOpacity="0.09"/>
+                        <rect x="0.5" y="1" width="39" height="39" rx="3.5" stroke="#2BC49C"/>
+                        <path d="M20 11.125L27.875 14.125V21.625C27.875 25 24.875 28.375 20 29.875C15.125 28.375 12.125 25.375 12.125 21.625V14.125L20 11.125Z" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                        <path d="M16.625 20.125L18.875 22.375L23.375 17.125" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                        </div>
+                  </div>
+                ))}
+                </div>
+        </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-6 border-t border-gray-200 bg-gray-50">
-          <p className="text-sm text-gray-600">
-            Showing {screenshots.length} verification screenshot{screenshots.length !== 1 ? 's' : ''}
-          </p>
+            {/* Image preview container */}
+            <div style={{
+              position: 'relative',
+              width: '352px',
+              height: '422px',
+              background: 'white',
+              borderRadius: '8px',
+              padding: '8px',
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)'
+            }}>
+              {/* Close button */}
           <button
-            onClick={onClose}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Close
+                onClick={closeImagePreview}
+                style={{
+                  position: 'absolute',
+                  top: '10px',
+                  right: '10px',
+                  zIndex: 10,
+                  background: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '50%',
+                  width: '32px',
+                  height: '32px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer'
+                }}
+              >
+                <X size={20} color="#FFFFFF" />
           </button>
+              
+              {/* Image */}
+              <div style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden'
+              }}>
+                <img
+                  src={selectedImage}
+                  alt="Verification screenshot preview"
+                  style={{
+                    maxWidth: '100%',
+                    maxHeight: '100%',
+                    objectFit: 'contain',
+                    borderRadius: '4px'
+                  }}
+                  onClick={closeImagePreview}
+                />
+              </div>
         </div>
       </div>
     </div>
+      )}
+
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </>
   )
 }

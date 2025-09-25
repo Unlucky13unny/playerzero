@@ -123,8 +123,38 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
   const signOut = async () => {
-    const { error } = await supabase.auth.signOut()
-    return { error }
+    try {
+      console.log('AuthContext: Starting signOut process...')
+      
+      // First clear local state
+      setUser(null)
+      setSession(null)
+      setUserMetadata(null)
+      
+      // Clear any local storage items that might persist
+      try {
+        localStorage.removeItem('supabase.auth.token')
+        sessionStorage.clear()
+      } catch (storageError) {
+        console.warn('Error clearing storage:', storageError)
+      }
+      
+      // Then sign out from Supabase
+      const { error } = await supabase.auth.signOut({
+        scope: 'global' // Sign out from all sessions
+      })
+      
+      if (error) {
+        console.error('AuthContext: SignOut error:', error)
+        return { error }
+      }
+      
+      console.log('AuthContext: SignOut successful')
+      return { error: null }
+    } catch (error) {
+      console.error('AuthContext: SignOut exception:', error)
+      return { error }
+    }
   }
 
   const resetPassword = async (email: string) => {

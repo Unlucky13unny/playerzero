@@ -3741,7 +3741,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     textAlign: 'left',
 
-                    color: teamColorHex,
+                    color: 'black',
 
                     whiteSpace: 'nowrap',
 

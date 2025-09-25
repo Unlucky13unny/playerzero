@@ -411,11 +411,24 @@ export function PlyrZeroProfileStandalone({
               </div>
               <div style={styles.userInfoItem}>
                 <span style={styles.label}>Team:</span>
-                <div style={{ 
-                  ...styles.teamValue, 
-                  color: getTeamColor(profileData.team_color) 
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
                 }}>
-                  {getTeamName(profileData.team_color)}
+                  <div style={{
+                    width: '12px',
+                    height: '12px',
+                    borderRadius: '50%',
+                    backgroundColor: getTeamColor(profileData.team_color),
+                    border: '1px solid rgba(0, 0, 0, 0.1)'
+                  }}></div>
+                  <span style={{
+                    ...styles.teamValue,
+                    color: 'black'
+                  }}>
+                    {getTeamName(profileData.team_color)}
+                  </span>
                 </div>
               </div>
               <div style={styles.userInfoItem}>

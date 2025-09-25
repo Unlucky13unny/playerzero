@@ -24,7 +24,7 @@ const TEAM_COLORS = [
 const COUNTRIES = [
   'United States', 'Canada', 'United Kingdom', 'Australia', 'Germany', 'France', 
   'Japan', 'South Korea', 'Brazil', 'Mexico', 'Italy', 'Spain', 'Netherlands',
-  'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland', 'Other'
+  'Sweden', 'Norway', 'Denmark', 'Finland', 'Poland','Pakistan' , 'Other'
 ]
 
 export const UserProfile = () => {
@@ -78,7 +78,18 @@ export const UserProfile = () => {
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     if (editData) {
-      setEditData(prev => ({ ...prev!, [field]: value }))
+      // Special handling for trainer_code to enforce 12-digit limit
+      if (field === 'trainer_code') {
+        // Remove any non-digit characters
+        const digitsOnly = value.replace(/\D/g, '');
+        
+        // Limit to 12 digits maximum
+        const limitedValue = digitsOnly.slice(0, 12);
+        
+        setEditData(prev => ({ ...prev!, [field]: limitedValue }))
+      } else {
+        setEditData(prev => ({ ...prev!, [field]: value }))
+      }
     }
   }
 
@@ -706,6 +717,7 @@ export const UserProfile = () => {
                   type="text"
                   value={editData?.trainer_code || ''}
                   onChange={(e) => handleInputChange('trainer_code', e.target.value)}
+                  maxLength={12}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -715,7 +727,7 @@ export const UserProfile = () => {
                     width: "100%",
                     height: isMobile ? "44px" : "36px",
                     background: "#FFFFFF",
-                    border: "1px solid #848282",
+                    border: editData?.trainer_code && editData.trainer_code.length < 12 ? "1px solid #ff375f" : "1px solid #848282",
                     borderRadius: "6px",
                     fontFamily: "Poppins",
                     fontStyle: "normal",
@@ -727,6 +739,16 @@ export const UserProfile = () => {
                     outline: "none",
                   }}
                 />
+                {editData?.trainer_code && editData.trainer_code.length < 12 && (
+                  <div style={{
+                    fontSize: isMobile ? "12px" : "10px",
+                    color: "#ff375f",
+                    marginTop: "4px",
+                    fontFamily: "Poppins"
+                  }}>
+                    Trainer code must be exactly 12 digits ({editData.trainer_code.length}/12)
+                  </div>
+                )}
               </div>
 
               {/* Keep trainer code private toggle */}
