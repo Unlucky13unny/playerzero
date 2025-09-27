@@ -472,7 +472,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
-              animationEasing="linear"
+              animationDuration={0}
+              animationBegin={0}
+              isAnimationActive={false}
             />
           )
         }
@@ -494,6 +496,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={4}
               strokeOpacity={1}
+              animationDuration={0}
+              animationBegin={0}
+              isAnimationActive={false}
             />
           )
         } else {
@@ -510,6 +515,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={config.key === "Global" ? 2 : 1.5}
               strokeOpacity={0.6}
+              animationDuration={0}
+              animationBegin={0}
+              isAnimationActive={false}
             />
           )
         }
@@ -537,7 +545,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
-              animationEasing="linear"
+              animationDuration={0}
+              animationBegin={0}
+              isAnimationActive={false}
             />
           )
         }).filter(Boolean)
@@ -563,6 +573,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 fillOpacity={fillOpacity}
                 strokeWidth={config.key === "Global" ? 4 : 4}
                 strokeOpacity={1}
+                animationDuration={0}
+                animationBegin={0}
+                isAnimationActive={false}
               />
             )
           } else {
@@ -579,6 +592,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 fillOpacity={fillOpacity}
                 strokeWidth={config.key === "Global" ? 2 : 1.5}
                 strokeOpacity={0.6}
+                animationDuration={0}
+                animationBegin={0}
+                isAnimationActive={false}
               />
             )
           }
@@ -669,10 +685,13 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
           flexShrink: 0,
           flexGrow: 0,
           boxSizing: 'border-box',
+          transition: 'none',
+          transform: 'translateZ(0)', // Force GPU acceleration to prevent layout shift
+          willChange: 'contents', // Hint browser that only content will change, not dimensions
       }}>
         {loading ? (
           <div 
-            className="loading-spinner-container"
+            className="loading-skeleton-container"
             style={{
               width: isMobile ? 300 : 500,
               minWidth: isMobile ? 300 : 500,
@@ -681,39 +700,63 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               minHeight: isMobile ? 300 : 384,
               maxHeight: isMobile ? 300 : 384,
               display: 'flex',
-              flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '16px',
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              backgroundColor: '#f9fafb',
-              zIndex: 10,
-              borderRadius: '8px',
+              position: 'relative',
               boxSizing: 'border-box',
             }}
           >
-            <div 
-              className="loading-spinner"
+            {/* Skeleton loader that mimics the radar chart shape */}
+            <svg
+              viewBox="0 0 500 384"
               style={{
-                width: '40px',
-                height: '40px',
-                border: '3px solid #f3f4f6',
-                borderTop: '3px solid #dc2626',
-                borderRadius: '50%',
-                animation: 'spin 1s linear infinite',
-                animationTimingFunction: 'linear',
+                width: '100%',
+                height: '100%',
+                opacity: 0.15,
               }}
-            ></div>
-            <span style={{
-              fontSize: '14px',
-              color: '#6b7280',
-              fontFamily: 'Poppins, sans-serif',
-              fontWeight: 500
-            }}>
-              Loading performance data...
-            </span>
+            >
+              {/* Pentagon shape skeleton */}
+              <polygon
+                points="250,60 420,160 370,340 130,340 80,160"
+                fill="none"
+                stroke="#d1d5db"
+                strokeWidth="2"
+                strokeDasharray="5,5"
+              />
+              {/* Inner pentagons */}
+              <polygon
+                points="250,120 340,180 315,270 185,270 160,180"
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="1"
+                strokeDasharray="3,3"
+              />
+              <polygon
+                points="250,180 260,200 255,220 245,220 240,200"
+                fill="none"
+                stroke="#f3f4f6"
+                strokeWidth="1"
+              />
+              {/* Radial lines */}
+              <line x1="250" y1="192" x2="250" y2="60" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="250" y1="192" x2="420" y2="160" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="250" y1="192" x2="370" y2="340" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="250" y1="192" x2="130" y2="340" stroke="#f3f4f6" strokeWidth="1" />
+              <line x1="250" y1="192" x2="80" y2="160" stroke="#f3f4f6" strokeWidth="1" />
+            </svg>
+            {/* Subtle loading indicator */}
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '20px',
+                fontSize: '12px',
+                color: '#9ca3af',
+                fontFamily: 'Poppins, sans-serif',
+                fontWeight: 400,
+              }}
+            >
+              Loading...
+            </div>
           </div>
         ) : (
           <div 

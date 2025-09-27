@@ -5,12 +5,14 @@ import { dashboardService } from '../../services/dashboardService'
 import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
 import { Upload } from 'lucide-react'
+import { StatUpdateModal } from '../common/StatUpdateModal'
 import './UserProfile.css'
 
 export const UpdateStats = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const navigate = useNavigate()
@@ -63,7 +65,9 @@ export const UpdateStats = () => {
   }
 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
-  const [acknowledgeError, setAcknowledgeError] = useState(false)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [statChanges, setStatChanges] = useState<any[]>([])
+  const [hasDecreasingStats, setHasDecreasingStats] = useState(false)
 
   // Update image preview when file is selected
   useEffect(() => {
@@ -77,100 +81,169 @@ export const UpdateStats = () => {
       setImagePreview(null)
     }
   }, [selectedFile])
+  
+  // Clear error message after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const handleSave = async () => {
     if (!editData || !profile) return;
 
-    // Check for decreasing stats (only primary stats - excluding Pokédex entries)
+    // Build stat changes for review
+    const changes = [];
     const decreasingStats = [];
-    if (editData.total_xp && parseFloat(editData.total_xp.toString()) < (profile.total_xp || 0)) {
-      decreasingStats.push('Total XP');
-    }
-    if (editData.pokemon_caught && parseFloat(editData.pokemon_caught.toString()) < (profile.pokemon_caught || 0)) {
-      decreasingStats.push('Pokémon Caught');
-    }
-    if (editData.distance_walked && parseFloat(editData.distance_walked.toString()) < (profile.distance_walked || 0)) {
-      decreasingStats.push('Distance Walked');
-    }
-    if (editData.pokestops_visited && parseFloat(editData.pokestops_visited.toString()) < (profile.pokestops_visited || 0)) {
-      decreasingStats.push('Pokéstops Visited');
-    }
-    // Note: Pokédex entries are excluded from decreasing stats warning as they can be more flexible
-
-    // First confirmation - accuracy check
-    const accuracyConfirmed = window.confirm(
-      'Are you sure these stats are accurate? Please double-check your values before proceeding.'
-    );
     
-    if (!accuracyConfirmed) {
+    // Check Total XP
+    if (editData.total_xp !== undefined && editData.total_xp !== profile.total_xp) {
+      const newValue = parseFloat(editData.total_xp.toString());
+      const oldValue = profile.total_xp || 0;
+      const isDecrease = newValue < oldValue;
+      if (isDecrease) decreasingStats.push('Total XP');
+      changes.push({
+        label: 'Total XP',
+        oldValue: oldValue.toLocaleString(),
+        newValue: newValue.toLocaleString(),
+        isDecrease
+      });
+    }
+    
+    // Check Pokemon Caught
+    if (editData.pokemon_caught !== undefined && editData.pokemon_caught !== profile.pokemon_caught) {
+      const newValue = parseFloat(editData.pokemon_caught.toString());
+      const oldValue = profile.pokemon_caught || 0;
+      const isDecrease = newValue < oldValue;
+      if (isDecrease) decreasingStats.push('Pokémon Caught');
+      changes.push({
+        label: 'Pokémon Caught',
+        oldValue: oldValue.toLocaleString(),
+        newValue: newValue.toLocaleString(),
+        isDecrease
+      });
+    }
+    
+    // Check Distance Walked
+    if (editData.distance_walked !== undefined && editData.distance_walked !== profile.distance_walked) {
+      const newValue = parseFloat(editData.distance_walked.toString());
+      const oldValue = profile.distance_walked || 0;
+      const isDecrease = newValue < oldValue;
+      if (isDecrease) decreasingStats.push('Distance Walked');
+      changes.push({
+        label: 'Distance Walked',
+        oldValue: `${oldValue} km`,
+        newValue: `${newValue} km`,
+        isDecrease
+      });
+    }
+    
+    // Check Pokestops Visited
+    if (editData.pokestops_visited !== undefined && editData.pokestops_visited !== profile.pokestops_visited) {
+      const newValue = parseFloat(editData.pokestops_visited.toString());
+      const oldValue = profile.pokestops_visited || 0;
+      const isDecrease = newValue < oldValue;
+      if (isDecrease) decreasingStats.push('Pokéstops Visited');
+      changes.push({
+        label: 'Pokéstops Visited',
+        oldValue: oldValue.toLocaleString(),
+        newValue: newValue.toLocaleString(),
+        isDecrease
+      });
+    }
+    
+    // Check Pokedex Entries
+    if (editData.unique_pokedex_entries !== undefined && editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
+      const newValue = parseFloat(editData.unique_pokedex_entries.toString());
+      const oldValue = profile.unique_pokedex_entries || 0;
+      changes.push({
+        label: 'Pokédex Entries',
+        oldValue: oldValue.toLocaleString(),
+        newValue: newValue.toLocaleString(),
+        isDecrease: false // Pokedex can fluctuate
+      });
+    }
+    
+    // If no changes, don't proceed
+    if (changes.length === 0) {
+      setError('No changes detected. Please update at least one stat.');
       return;
     }
 
-    // Second confirmation - decreasing stats warning (skip if error acknowledged)
-    if (decreasingStats.length > 0 && !acknowledgeError) {
-      const decreaseConfirmed = window.confirm(
-        `WARNING: The following stats are lower than your previous values: ${decreasingStats.join(', ')}.\n\n` +
-        'Stats should generally only increase. If you continue to decrease stats regularly, this may result in a temporary ban.\n\n' +
-        'Are you sure you want to proceed?'
-      );
-      
-      if (!decreaseConfirmed) {
+    // Check if screenshot is provided
+    if (!selectedFile) {
+      setError('Please upload a verification screenshot to update your stats');
         return;
-      }
     }
+    
+    // Show confirmation modal
+    setStatChanges(changes);
+    setHasDecreasingStats(decreasingStats.length > 0);
+    setShowConfirmModal(true);
+  };
+  
+  const handleConfirmSave = async () => {
+    setShowConfirmModal(false);
+    if (!editData || !profile) return;
 
     setSaving(true);
     setError(null);
+    setSuccess(null);
 
     try {
-      // Check if screenshot is provided (same logic as StatUpdater)
-      if (!selectedFile) {
-        setError('Please upload a verification screenshot to update your stats')
-        setSaving(false)
-        return
-      }
-
-      // Create updates object with only the changed stats (same logic as StatUpdater)
+      // Create updates object with only the changed stats
       const updates: any = {}
       
-      // Convert to numbers for proper comparison and include all stats when checkbox is checked
-      if (acknowledgeError || editData.distance_walked !== profile.distance_walked) {
+      // Convert to numbers for proper comparison
+      if (editData.distance_walked !== profile.distance_walked) {
         updates.distance_walked = editData.distance_walked ? parseFloat(editData.distance_walked.toString()) : profile.distance_walked
       }
-      if (acknowledgeError || editData.pokemon_caught !== profile.pokemon_caught) {
+      if (editData.pokemon_caught !== profile.pokemon_caught) {
         updates.pokemon_caught = editData.pokemon_caught ? parseInt(editData.pokemon_caught.toString()) : profile.pokemon_caught
       }
-      if (acknowledgeError || editData.pokestops_visited !== profile.pokestops_visited) {
+      if (editData.pokestops_visited !== profile.pokestops_visited) {
         updates.pokestops_visited = editData.pokestops_visited ? parseInt(editData.pokestops_visited.toString()) : profile.pokestops_visited
       }
-      if (acknowledgeError || editData.total_xp !== profile.total_xp) {
+      if (editData.total_xp !== profile.total_xp) {
         updates.total_xp = editData.total_xp ? parseInt(editData.total_xp.toString()) : profile.total_xp
       }
-      if (acknowledgeError || editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
+      if (editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
         updates.unique_pokedex_entries = editData.unique_pokedex_entries ? parseInt(editData.unique_pokedex_entries.toString()) : profile.unique_pokedex_entries
       }
 
-      // Use dashboardService.updateUserStats with verification screenshot (same as StatUpdater)
-      const response = await dashboardService.updateUserStats(updates, selectedFile, acknowledgeError)
+      // Use dashboardService.updateUserStats with verification screenshot
+      // Pass true for acknowledgeError if user has decreasing stats (they already acknowledged in modal)
+      const response = await dashboardService.updateUserStats(updates, selectedFile || undefined, hasDecreasingStats)
       
       if (response.success) {
         // Reload profile data
         await loadProfile()
         setSelectedFile(null)
-        setAcknowledgeError(false) // Reset acknowledgment state
+        setSuccess('Stats updated successfully! Redirecting to your profile...')
+        setError(null)
 
-        // Redirect to user profile after 2 seconds
+        // Show success message briefly then redirect
         setTimeout(() => {
           navigate('/UserProfile')
-        }, 2000)
+        }, 1500)
       } else {
         setError(response.message || 'Failed to update stats')
+        setSuccess(null)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to update stats');
     } finally {
       setSaving(false);
     }
+  };
+  
+  const handleReviewChanges = () => {
+    setShowConfirmModal(false);
+    // Scroll to top to review inputs
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading && !profile) {
@@ -219,7 +292,6 @@ export const UpdateStats = () => {
         justifyContent: isMobile ? "flex-start" : "center", // Top align on mobile
       }}
     >
-      {/* Messages */}
 
       <div
         style={{
@@ -238,6 +310,52 @@ export const UpdateStats = () => {
           boxSizing: "border-box",
         }}
       >
+        {/* Success Message */}
+        {success && (
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "12px",
+              width: "100%",
+              padding: "12px 16px",
+              backgroundColor: "#dcfce7",
+              border: "1px solid #bbf7d0",
+              borderRadius: "8px",
+              marginBottom: "8px",
+            }}
+          >
+            <div
+              style={{
+                width: "20px",
+                height: "20px",
+                backgroundColor: "#22c55e",
+                borderRadius: "50%",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "white",
+                fontSize: "12px",
+                fontWeight: "bold",
+                flexShrink: 0,
+              }}
+            >
+              ✓
+            </div>
+            <span
+              style={{
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 400,
+                fontSize: isMobile ? "13px" : "12px",
+                lineHeight: isMobile ? "18px" : "16px",
+                color: "#166534",
+              }}
+            >
+              {success}
+            </span>
+          </div>
+        )}
 
         {/* Stats Form */}
         <form
@@ -809,37 +927,26 @@ export const UpdateStats = () => {
             marginTop: "8px",
           }}
         >
-          {/* Error Acknowledgment Checkbox */}
+          {/* Error Message Display */}
           {error && (
             <div
               style={{
                 display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
+                alignItems: "center",
                 gap: "12px",
                 width: "100%",
                 marginBottom: "16px",
-                padding: "16px",
-                backgroundColor: "#f8f9fa",
-                border: "1px solid #dee2e6",
+                padding: "12px 16px",
+                backgroundColor: "#fef2f2",
+                border: "1px solid #fecaca",
                 borderRadius: "8px",
-                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-              }}
-            >
-              {/* Warning Header */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "8px",
-                  width: "100%",
                 }}
               >
                 <div
                   style={{
                     width: "20px",
                     height: "20px",
-                    backgroundColor: "#dc3545",
+                  backgroundColor: "#dc2626",
                     borderRadius: "50%",
                     display: "flex",
                     alignItems: "center",
@@ -847,77 +954,23 @@ export const UpdateStats = () => {
                     color: "white",
                     fontSize: "12px",
                     fontWeight: "bold",
+                  flexShrink: 0,
                   }}
                 >
                   !
                 </div>
                 <span
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 600,
-                    fontSize: isMobile ? "14px" : "13px",
-                    lineHeight: isMobile ? "20px" : "18px",
-                    color: "#dc3545",
-                  }}
-                >
-                  Previous Upload Error Detected
-                </span>
-              </div>
-
-              {/* Warning Message */}
-              <div
                 style={{
                   fontFamily: "Poppins",
                   fontStyle: "normal",
                   fontWeight: 400,
-                  fontSize: isMobile ? "12px" : "11px",
+                  fontSize: isMobile ? "13px" : "12px",
                   lineHeight: isMobile ? "18px" : "16px",
-                  color: "#6c757d",
-                  width: "100%",
+                  color: "#7f1d1d",
                 }}
               >
                 {error}
-              </div>
-
-              {/* Acknowledgment Checkbox */}
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "flex-start",
-                  gap: "8px",
-                  width: "100%",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  id="acknowledge-error"
-                  checked={acknowledgeError}
-                  onChange={(e) => setAcknowledgeError(e.target.checked)}
-                  style={{
-                    marginTop: "2px",
-                    width: "16px",
-                    height: "16px",
-                    accentColor: "#dc3545",
-                  }}
-                />
-                <label
-                  htmlFor="acknowledge-error"
-                  style={{
-                    fontFamily: "Poppins",
-                    fontStyle: "normal",
-                    fontWeight: 500,
-                    fontSize: isMobile ? "12px" : "11px",
-                    lineHeight: isMobile ? "18px" : "16px",
-                    color: "#495057",
-                    cursor: "pointer",
-                    flex: 1,
-                  }}
-                >
-                  I acknowledge that I made an error in my previous stat update and understand that if this continues, I may incur a temporary ban.
-                </label>
-              </div>
+              </span>
             </div>
           )}
 
@@ -945,7 +998,7 @@ export const UpdateStats = () => {
             <button
               type="button"
               onClick={handleSave}
-              disabled={saving || !selectedFile || (!!error && !acknowledgeError)}
+              disabled={saving || !selectedFile}
               style={{
                 /* Component 47 */
                 display: "flex",
@@ -1022,6 +1075,16 @@ export const UpdateStats = () => {
           </div>
         </div>
       </div>
+      
+      {/* Stat Update Confirmation Modal */}
+      <StatUpdateModal
+        isOpen={showConfirmModal}
+        onConfirm={handleConfirmSave}
+        onCancel={() => setShowConfirmModal(false)}
+        onReview={handleReviewChanges}
+        changes={statChanges}
+        hasDecreasingStats={hasDecreasingStats}
+      />
       
       {/* Mobile Footer */}
       <MobileFooter currentPage="profile" />

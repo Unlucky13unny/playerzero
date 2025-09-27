@@ -1736,10 +1736,14 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                   width: '100%',
                   maxWidth: '100%',
                   height: isMobile ? '400px' : '487px',
+                  minHeight: isMobile ? '400px' : '487px',
                   background: 'rgba(0, 0, 0, 0.02)',
                   boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                   borderRadius: '8px',
                   margin: '0 auto',
+                  transition: 'none',
+                  transform: 'translateZ(0)', // Force GPU acceleration
+                  willChange: 'contents', // Prevent layout shifts
                 }}
               >
 
@@ -1755,6 +1759,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transition: 'none',
+                    transform: 'translateZ(0)', // Force GPU acceleration
                   }}
                 >
                   {chartLoading ? (
