@@ -63,13 +63,17 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
   }, [user?.id, profile?.user_id])
 
   const formatNumber = (num: number | null | undefined) => {
-    if (!num || num === 0) return '0.0'
-    if (num >= 1000000) {
-      return (num / 1000000).toFixed(1) + 'M'
-    } else if (num >= 1000) {
-      return (num / 1000).toFixed(1) + 'K'
+    if (num === null || num === undefined) return '0.0'
+    const absVal = Math.abs(num)
+    const sign = num < 0 ? '-' : ''
+
+    if (absVal === 0) return '0.0'
+    if (absVal >= 1_000_000) {
+      return sign + (absVal / 1_000_000).toFixed(1) + 'M'
+    } else if (absVal >= 1_000) {
+      return sign + (absVal / 1_000).toFixed(1) + 'K'
     }
-    return num.toFixed(1)
+    return sign + absVal.toFixed(1)
   }
 
   const formatDistance = (distance: number | null | undefined) => {
@@ -78,7 +82,40 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
   }
 
   const getStatValue = (statType: 'distance_walked' | 'pokemon_caught' | 'pokestops_visited' | 'total_xp') => {
-    // Always prioritize backend stats (calculated from latest stat_entries) for accuracy
+    // For XP, always calculate from raw values to avoid backend formatting confusion
+    if (statType === 'total_xp') {
+      // First try backend total XP
+      if (backendStats && backendStats.totalXP !== undefined) {
+        const startDate = profile?.start_date
+        if (startDate) {
+          const start = new Date(startDate)
+          const current = new Date()
+          const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+          const xpPerDay = backendStats.totalXP / daysPlayed
+          const dailyAverage = Math.round(xpPerDay * 10) / 10
+          console.log(`GrindStats calculated XP daily average from backend totalXP:`, dailyAverage)
+          return dailyAverage
+        }
+      }
+      
+      // Fallback to profile total XP
+      if (profile && profile.total_xp !== undefined) {
+        const startDate = profile.start_date
+        if (startDate) {
+          const start = new Date(startDate)
+          const current = new Date()
+          const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+          const xpPerDay = profile.total_xp / daysPlayed
+          const dailyAverage = Math.round(xpPerDay * 10) / 10
+          console.log(`GrindStats calculated XP daily average from profile:`, dailyAverage)
+          return dailyAverage
+        }
+      }
+      
+      return 0
+    }
+    
+    // For other stats, use backend values when available
     if (backendStats) {
       switch (statType) {
         case 'distance_walked':
@@ -93,10 +130,6 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
           const backendStopsPerDay = backendStats.stopsPerDay || 0
           console.log(`GrindStats using backend daily average for ${statType}:`, backendStopsPerDay)
           return backendStopsPerDay
-        case 'total_xp':
-          const backendXPPerDay = backendStats.xpPerDay || 0
-          console.log(`GrindStats using backend daily average for ${statType}:`, backendXPPerDay)
-          return backendXPPerDay
         default:
           return 0
       }
@@ -106,17 +139,14 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
     if (profile && profile[statType] !== undefined && profile[statType] !== null) {
       const totalValue = profile[statType]
       const startDate = profile.start_date
-      
+
       if (startDate) {
         const start = new Date(startDate)
         const current = new Date()
         const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
-        const dailyAverage = statType === 'distance_walked' 
-          ? Math.round((totalValue / daysPlayed) * 10) / 10 // Keep one decimal for distance
-          : statType === 'total_xp' && (totalValue / daysPlayed) >= 1000
-          ? Math.round(((totalValue / daysPlayed) / 1000) * 10) / 10 // Convert XP to K and round to tenth
-          : Math.round((totalValue / daysPlayed) * 10) / 10 // Round to nearest tenth for other values
-        
+        const averagePerDay = totalValue / daysPlayed
+        const dailyAverage = Math.round(averagePerDay * 10) / 10 // Round to nearest tenth for display
+
         console.log(`GrindStats using profile fallback daily average for ${statType}:`, dailyAverage)
         return dailyAverage
       }
@@ -124,6 +154,12 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
 
     console.log(`GrindStats no data available for ${statType}, returning 0`)
     return 0
+  }
+
+  const formatXP = (xpValue: number) => {
+    // Now that we're calculating raw XP per day values, just use the standard formatter
+    // which handles K/M suffixes properly
+    return formatNumber(xpValue)
   }
 
   return (
@@ -445,7 +481,7 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
               order: 0,
               flexGrow: 0
             }}>
-              {formatNumber(getStatValue('total_xp'))}
+              {formatXP(getStatValue('total_xp'))}
             </div>
             <div style={{
               /* XP */
@@ -746,7 +782,7 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
               flexGrow: 0,
               textAlign: 'center',
             }}>
-              {formatNumber(getStatValue('total_xp'))}
+              {formatXP(getStatValue('total_xp'))}
             </div>
             <div style={{
               /* XP */
