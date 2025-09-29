@@ -195,7 +195,7 @@ export const ProfileSetup = () => {
           throw new Error(uploadError.message || 'Failed to upload screenshot')
         }
         
-        screenshotUrl = uploadData?.publicUrl || ''
+        screenshotUrl = uploadData || ''
       }
       
       // Create profile
@@ -211,7 +211,7 @@ export const ProfileSetup = () => {
       }
       
       // Update auth context
-      await updateProfile()
+      await updateProfile({})
       
       // Navigate to dashboard after successful profile completion
       navigate('/UserProfile')
