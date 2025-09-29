@@ -238,7 +238,8 @@
   background: rgba(0, 0, 0, 0.2);
 }
 
-.btn {
+/* Admin specific button styles */
+.admin-layout .btn {
   padding: 12px 20px;
   border: none;
   border-radius: 12px;
@@ -252,7 +253,7 @@
   overflow: hidden;
 }
 
-.btn:hover {
+.admin-layout .btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
 }

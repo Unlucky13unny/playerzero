@@ -3,24 +3,26 @@ import { useAuth } from '../../contexts/AuthContext'
 import { Link, useNavigate } from 'react-router-dom'
 import { Logo } from '../common/Logo'
 import { profileService } from '../../services/profileService'
+import { EyeIcon } from '../icons/EyeIcon'
+import { ErrorModal } from '../common/ErrorModal'
 
 export const LoginForm = () => {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError(null)
     setLoading(true)
     
     try {
       const { error } = await signIn(email, password)
       if (error) {
-        setError(error.message)
+        setShowErrorModal(true)
       } else {
         // After successful login, check if user has completed profile setup
         try {
@@ -44,7 +46,7 @@ export const LoginForm = () => {
         }
       }
     } catch (err) {
-      setError('An unexpected error occurred')
+      setShowErrorModal(true)
       console.error(err)
     } finally {
       setLoading(false)
@@ -55,23 +57,17 @@ export const LoginForm = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
-          <div className="mobile-welcome-text">
-            Grind. Compete. Flex.
-          </div>
-          <div style={{  display: 'flex', justifyContent: 'center' }}>
-            <Logo className="auth-logo" style={{ color: '#000000' }} />
+          <div className="logo-section">
+            <Logo className="auth-logo" />
+            <div className="mobile-tagline">
+              Grind. Compete. Flex.
+            </div>
           </div>
           
           <div className="auth-header">
             <h1>Welcome back!</h1>
-            <p>Enter your details to access your account </p>
+            <p>Enter your details to access your account</p>
           </div>
-          
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
           
           <form onSubmit={handleSubmit} className="auth-form">
             <div className="form-group">
@@ -84,7 +80,7 @@ export const LoginForm = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
-                placeholder="you@example.com"
+                placeholder="Enter your email"
                 required
                 autoFocus
               />
@@ -94,46 +90,54 @@ export const LoginForm = () => {
               <label htmlFor="password">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="form-input"
-                placeholder="••••••••"
-                required
-              />
+              <div className="password-input-wrapper">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="form-input password-input"
+                  placeholder="Enter your password"
+                  required
+                />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                  tabIndex={-1}
+                >
+                  <EyeIcon isOpen={showPassword} size={17} />
+                </button>
+              </div>
             </div>
             
-            <div style={{ }}>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary"
-              >
-                {loading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    <svg style={{ animation: 'spin 1s linear infinite', width: '1rem', height: '1rem' }} viewBox="0 0 24 24">
-                      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
-                      <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Signing in...
-                  </span>
-                ) : 'Sign In'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary btn-login"
+            >
+              {loading ? (
+                <span className="loading-spinner">
+                  <svg className="spinner" viewBox="0 0 24 24">
+                    <circle className="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
+                    <path className="spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Logging in...
+                </span>
+              ) : 'Login'}
+            </button>
           </form>
           
           <div className="auth-footer">
             <p>
               Don't have an account?{' '}
               <Link to="/signup" className="form-link">
-                Sign up
+                Register
               </Link>
             </p>
-            <p style={{  }}>
+            <p>
               <Link to="/forgot-password" className="form-link">
-                Forgot password?
+                Forgot your password?
               </Link>
             </p>
           </div>
@@ -141,12 +145,21 @@ export const LoginForm = () => {
       </div>
       
       <div className="split-layout-right">
-        <div className="welcome-message" style={{ textAlign: 'left' }}>
+        <div className="welcome-message">
           <h1>Grind.</h1>
           <h1>Compete.</h1>
           <h1>Flex.</h1>
         </div>
       </div>
+      
+      <ErrorModal 
+        isOpen={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false)
+        }}
+        title="Wrong email or password"
+        message="Login failed! Check your email and password."
+      />
     </div>
   )
 } 
