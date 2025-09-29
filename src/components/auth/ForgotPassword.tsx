@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { Link } from 'react-router-dom'
 import { Logo } from '../common/Logo'
+import { ErrorModal } from '../common/ErrorModal'
 
 export const ForgotPassword = () => {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [showErrorModal, setShowErrorModal] = useState(false)
   const [success, setSuccess] = useState(false)
   const { resetPassword } = useAuth()
 
@@ -20,6 +22,7 @@ export const ForgotPassword = () => {
       const { error } = await resetPassword(email)
       if (error) {
         setError(error.message)
+        setShowErrorModal(true)
       } else {
         setSuccess(true)
       }
@@ -35,23 +38,17 @@ export const ForgotPassword = () => {
     <div className="split-layout">
       <div className="split-layout-left">
         <div className="auth-container">
-          <div className="mobile-welcome-text">
-            Grind. Compete. Flex.
-          </div>
-          <div style={{ marginBottom: '2rem', display: 'flex', justifyContent: 'center' }}>
-            <Logo className="auth-logo" style={{ color: '#000000' }} />
+          <div className="logo-section">
+            <Logo className="auth-logo" />
+            <div className="mobile-tagline">
+              Grind. Compete. Flex.
+            </div>
           </div>
           
           <div className="auth-header">
-            <h1>Forget your Password</h1>
-            <p>Enter your email to reset your password!</p>
-                  </div>
-          
-          {error && (
-            <div className="error-message">
-              {error}
-            </div>
-          )}
+            <h1>Forgot your Password?</h1>
+            <p>Enter your email to reset your password</p>
+          </div>
           
           {success && (
             <div className="success-message">
@@ -70,30 +67,28 @@ export const ForgotPassword = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="form-input"
-                placeholder="you@example.com"
+                placeholder="Enter your email"
                 required
                 autoFocus
               />
               
             </div>
             
-            <div style={{ marginTop: '1.5rem' }}>
-              <button
-                type="submit"
-                disabled={loading}
-                className="btn btn-primary"
-              >
-                {loading ? (
-                  <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    <svg style={{ animation: 'spin 1s linear infinite', width: '1rem', height: '1rem' }} viewBox="0 0 24 24">
-                      <circle style={{ opacity: 0.25 }} cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
-                      <path style={{ opacity: 0.75 }} fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                    </svg>
-                    Sending...
-                  </span>
-                ) : 'Reset my password'}
-              </button>
-            </div>
+            <button
+              type="submit"
+              disabled={loading}
+              className="btn btn-primary btn-login"
+            >
+              {loading ? (
+                <span className="loading-spinner">
+                  <svg className="spinner" viewBox="0 0 24 24">
+                    <circle className="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
+                    <path className="spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Sending...
+                </span>
+              ) : 'Reset Password'}
+            </button>
           </form>
           
           <div className="auth-footer">
@@ -113,6 +108,16 @@ export const ForgotPassword = () => {
           <h1>Flex.</h1>
         </div>
       </div>
+      
+      <ErrorModal 
+        isOpen={showErrorModal}
+        onClose={() => {
+          setShowErrorModal(false)
+          setError(null)
+        }}
+        title="Reset Failed"
+        message={error || "Please check your email and try again."}
+      />
     </div>
   )
 } 
