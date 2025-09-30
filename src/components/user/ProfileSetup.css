@@ -1,113 +1,951 @@
-.privacy-toggle {
-  position: relative;
+/* Error and Success Messages */
+.profile-error-message {
+  background: #FEE2E2;
+  border: 1px solid #EF4444;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #DC2626;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
   display: flex;
   align-items: center;
-  padding: 4px 8px;
-  background: var(--gray-100);
-  border-radius: 4px;
-  margin-left: 8px;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.privacy-toggle.disabled {
+.profile-success-message {
+  background: #D1FAE5;
+  border: 1px solid #10B981;
+  border-radius: 6px;
+  padding: 12px 16px;
+  color: #059669;
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Profile Setup Container - Split Layout for Web */
+.profile-setup-split-layout {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.profile-setup-left {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  max-width: 50%;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  overflow-y: auto;
+}
+
+.profile-setup-right {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 4rem;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e5e7eb 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-setup-hero {
+  max-width: 600px;
+  text-align: left;
+}
+
+.profile-setup-hero h1 {
+  font-size: 6rem;
+  font-weight: 900;
+  margin-bottom: -0.5rem;
+  color: #000000;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+/* Profile Setup Container - Frame 667 (Mobile) */
+.profile-setup-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 34px 0;
+  min-height: 100vh;
+  background: #ffffff;
+  width: 100%;
+}
+
+/* Frame 667 - Main Container */
+.profile-setup-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 34px;
+  position: relative;
+  width: 353px;
+  max-width: 95vw;
+  margin: 0 auto;
+}
+
+/* Frame 528 - Contains Header + Form */
+.profile-setup-form-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 353px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Frame 527 - Header Section */
+.profile-setup-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: 147px;
+  width: 353px;
+  height: 24px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Layer_1 - Logo */
+.profile-setup-logo {
+  width: 122px;
+  height: 24px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+/* Frame 662 - Main Form Container */
+.profile-setup-main {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 13px;
+  width: 353px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+/* "Set up your profile!" Title */
+.profile-setup-title {
+  width: 353px;
+  height: 27px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #000000;
+  text-align: left;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+  margin: 0;
+}
+
+/* Frame 657 - Form Fields Container */
+.profile-setup-form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 13px;
+  width: 353px;
+  height: auto;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Frame 655/656/657/660/661 - Individual Form Fields */
+.form-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 2px;
+  width: 353px;
+  height: 55px;
+  flex: none;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Frame 659 - Trainer Code Field (with toggle) */
+.form-field.trainer-code-field {
+  height: 87px;
+  gap: 4px;
+}
+
+/* Form Labels - Email Address, Trainer Name, etc. */
+.form-label {
+  width: 353px;
+  height: 17px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  color: #000000;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Frame 654 - Form Inputs */
+.form-input,
+.form-select {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 9px;
+  gap: 10px;
+  width: 353px;
+  height: 36px;
+  background: #ffffff;
+  border: 1px solid #848282;
+  border-radius: 6px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  color: #000000;
+}
+
+.form-input::placeholder {
+  color: #848282;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.form-input:focus,
+.form-select:focus {
+  outline: none;
+  border-color: #DC2627;
+  box-shadow: 0 0 0 2px rgba(220, 38, 39, 0.1);
+}
+
+.form-input:disabled {
+  background-color: #f9fafb;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Select Dropdown - Overall */
+.form-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='16' height='16' viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M4 6L8 10L12 6' stroke='%23000000' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 32px;
+  cursor: pointer;
+}
+
+/* Dropdown options styling */
+.form-select option {
+  background-color: #ffffff;
+  color: #000000;
+  padding: 8px;
+}
+
+.form-select option:hover {
+  background-color: #f9fafb;
+}
+
+.form-select option:checked {
+  background-color: #ffffff;
+  color: #000000;
+}
+
+/* Frame 508 - Toggle Field Container */
+.toggle-field {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: 16px;
+  width: 100%;
+  height: 28px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* "Keep trainer code private" / "Keep social links private" text */
+.toggle-field span {
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 16px;
+  color: #000000;
+  flex: 1;
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Ellipse 20 - Toggle Switch Container */
+.toggle-switch {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 4px;
+  
+  width: 58px;
+  height: 28px;
+  min-width: 58px;
+  
+  background: #848282;
+  border-radius: 100px;
+  
+  flex-shrink: 0;
+  margin-left: auto;
+  
+  cursor: pointer;
+  position: relative;
+  transition: background 0.3s ease;
+}
+
+.toggle-switch input[type="checkbox"] {
+  opacity: 0;
+  width: 0;
+  height: 0;
+  position: absolute;
+}
+
+/* Ellipse 19 - White Circle */
+.toggle-slider {
+  width: 20px;
+  height: 20px;
+  
+  background: #FFFFFF;
+  border-radius: 50%;
+  
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  
+  transition: transform 0.3s ease;
+  position: absolute;
+  left: 4px;
+}
+
+/* When checked, move slider to the right */
+.toggle-switch input[type="checkbox"]:checked + .toggle-slider {
+  transform: translateX(30px);
+}
+
+/* Change background color when checked - Red for active */
+.toggle-switch:has(input[type="checkbox"]:checked) {
+  background: #DC2627;
+}
+
+/* Disabled state */
+.toggle-switch input[type="checkbox"]:disabled {
+  cursor: not-allowed;
+}
+
+.toggle-switch:has(input[type="checkbox"]:disabled) {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Frame 371 - Social Platforms Section */
+.social-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 13px;
+  row-gap: 13px;
+  width: 100%;
+  flex: none;
+  order: 2;
+  align-self: stretch;
+  flex-grow: 0;
+  margin-top: 13px;
+}
+
+/* Frame 370 - Social Header */
+.social-header {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: 183px;
+  width: 353px;
+  height: 22px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Frame 367 - Social Icon & Text */
+.social-label-container {
+  /* Auto layout */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 0px;
+  
+  width: 119px;
+  height: 22px;
+  
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+/* tabler:share icon */
+.social-icon {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  
+  /* Inside auto layout */
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  flex-shrink: 0;
+  
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  background: transparent;
+}
+
+/* Vector inside icon - Full 22x22 SVG */
+.social-icon svg {
+  width: 22px;
+  height: 22px;
+  display: block;
+}
+
+/* "Social Platforms" text */
+.social-label-text {
+  width: 50px;
+  height: 17px;
+  white-space: nowrap;
+  text-align: left;
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 400;
+  font-size: 11px;
+  line-height: 16px;
+  /* identical to box height */
+  
+  color: #000000;
+  
+  /* Inside auto layout */
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+/* Connected Social Platform Items */
+.connected-social-platform {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 40px;
+  padding: 8px 0;
+  margin-bottom: 8px;
+}
+
+.connected-social-platform:last-child {
+  margin-bottom: 0;
+}
+
+/* Frame 387 - Social Connect Button */
+.social-connect-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 9px 20px;
+  gap: 10px;
+  width: 100%;
+  height: 36px;
+  background: #F9FAFB;
+  border: 1px solid #6B7280;
+  border-radius: 6px;
+  flex: none;
+  align-self: stretch;
+  flex-grow: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 18px;
+  color: #000000;
+}
+
+.social-connect-btn:hover {
+  background: #F3F4F6;
+  border-color: #4B5563;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Frame 666 - Action Buttons Container */
+.profile-setup-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 353px;
+  height: 38px;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  margin-top: 2px;
+}
+
+/* Frame 665 - Buttons Row */
+.action-buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 353px;
+  height: 38px;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Component 48 - Back Button (Matches Next Button Style) */
+.btn-back {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 8px;
+  width: 170px;
+  height: 38px;
+  background: #000000;
+  border: none;
+  border-radius: 6px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 21px;
+  color: #FFFFFF;
+}
+
+.btn-back:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-back:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Component 47 - Next/Save Button */
+.btn-next {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 8px;
+  gap: 8px;
+  width: 170px;
+  height: 38px;
+  background: #000000;
+  border: none;
+  border-radius: 6px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* "Save" / "Next" text */
+.btn-next span:not(.loading-spinner) {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 21px;
+  color: #FFFFFF;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.btn-next:hover:not(:disabled) {
+  background: #1f2937;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-next:disabled {
   opacity: 0.7;
   cursor: not-allowed;
 }
 
-.privacy-label {
-  margin-left: 4px;
-  font-size: 0.875rem;
-  color: var(--gray-600);
-}
-
-.upgrade-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.1);
+/* Loading Spinner */
+.loading-spinner {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  gap: 0.5rem;
 }
 
-.upgrade-text {
-  font-size: 0.75rem;
-  color: var(--gray-600);
-  background: var(--white);
-  padding: 2px 6px;
-  border-radius: 4px;
-  white-space: nowrap;
+.spinner {
+  animation: spin 1s linear infinite;
+  width: 1rem;
+  height: 1rem;
 }
 
-.optional-tag {
-  font-size: 0.75rem;
-  color: var(--gray-500);
+.spinner-circle {
+  opacity: 0.25;
+}
+
+.spinner-path {
+  opacity: 0.75;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Error Message */
+.error-message {
+  width: 100%;
+  padding: 12px;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+}
+
+/* Stats Step Specific Styles */
+.secondary-stats-heading {
+  width: 353px;
+  height: 27px;
+  font-family: 'Poppins';
+  font-style: normal;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 27px;
+  color: #000000;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+.upload-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+.upload-area {
+  width: 100%;
+  max-width: 100%;
+  background: #ffffff;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+.upload-label {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 9px 60px;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  height: 36px;
+  background: rgba(244, 244, 244, 0.11);
+  border: 1px solid #5F5E5E;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 500;
+  font-size: 12px;
+  color: #000000;
+  transition: none;
+  margin: 0;
+}
+
+.upload-label:hover {
+  background: #ffffff;
+  border-color: #5F5E5E;
+  cursor: default;
+}
+
+.file-hint {
+  font-size: 11px;
+  color: #848282;
   margin-left: 8px;
 }
 
-/* Trainer Code Validation Styles */
+.file-selected {
+  padding: 8px;
+  background: #f3f4f6;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-size: 11px;
+  color: #000000;
+}
+
+.input-with-unit {
+  position: relative;
+  width: 100%;
+}
+
+.input-unit {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: 'Poppins', sans-serif;
+  font-size: 12px;
+  color: #848282;
+  pointer-events: none;
+}
+
+/* Desktop/Web View - Show Split Layout */
+@media (min-width: 769px) {
+  .profile-setup-wrapper {
+    display: none;
+  }
+  
+  .profile-setup-split-layout {
+    display: flex;
+  }
+  
+  .profile-setup-content {
+    width: 460px;
+    max-width: 100%;
+  }
+  
+  .profile-setup-left {
+    display: flex;
+  }
+  
+  .profile-setup-right {
+    display: flex;
+  }
+  
+  /* Web view upload section styling */
+  .upload-section {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .upload-area {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .upload-label {
+    width: 100%;
+    max-width: 100%;
+    cursor: default;
+  }
+  
+  .upload-label:hover {
+    cursor: default;
+  }
+}
+
+/* Mobile View - Hide Split Layout */
+@media (max-width: 768px) {
+  .profile-setup-split-layout {
+    display: none;
+  }
+  
+  .profile-setup-wrapper {
+    display: flex;
+  }
+  
+  .profile-setup-left {
+    display: none;
+  }
+  
+  .profile-setup-right {
+    display: none;
+  }
+  
+  /* Mobile logo styling for stats update */
+  .profile-setup-logo {
+    margin-top: 50px;
+  }
+  
+  /* Center the stats update section in mobile view */
+  .profile-setup-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px 0;
+  }
+  
+  .profile-setup-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    max-width: 353px;
+  }
+}
+
+/* Responsive Adjustments - Mobile */
+@media (max-width: 400px) {
+  .profile-setup-content {
+    width: 90vw;
+  }
+  
+  /* Keep toggle in one line on mobile */
+  .toggle-field {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    height: 28px;
+    gap: 8px;
+  }
+  
+  .toggle-field span {
+    font-size: 10px;
+    line-height: 14px;
+  }
+  
+  /* Keep buttons in one line on mobile */
+  .action-buttons {
+    flex-direction: row;
+    justify-content: space-between;
+    height: 38px;
+    gap: 8px;
+  }
+  
+  .btn-back,
+  .btn-next {
+    width: 48%;
+    flex: 1;
+  }
+}
+
+/* Loading Container */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 3rem;
+}
+
+.loading-container .loading-spinner {
+  width: 48px;
+  height: 48px;
+}
+
+.loading-container p {
+  font-family: 'Poppins', sans-serif;
+  font-size: 14px;
+  color: #636874;
+}
+
+/* Trainer Code Validation */
 .trainer-code-incomplete {
   border-color: #ff375f !important;
   box-shadow: 0 0 0 2px rgba(255, 55, 95, 0.1);
 }
 
 .validation-message {
-  font-size: 0.75rem;
+  font-size: 11px;
   color: #ff375f;
   margin-top: 4px;
   font-family: 'Poppins', sans-serif;
   font-weight: 500;
-}
-
-.section-description {
-  font-size: 0.875rem;
-  color: var(--gray-600);
-  margin-bottom: 1rem;
-}
-
-.input-group {
-  display: flex;
-  align-items: center;
-}
-
-
-
-/* Additional styles for social media section */
-.social-media-section {
-  margin-top: 2rem;
-}
-
-.social-media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-}
-
-.social-media-input {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.social-media-icon {
-  font-size: 1.25rem;
-}
-
-/* Form validation styles */
-.form-input:invalid {
-  border-color: var(--red-500);
-}
-
-.form-input:invalid:focus {
-  border-color: var(--red-500);
-  box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2);
-}
-
-/* Help text styles */
-.help-text {
-  font-size: 0.75rem;
-  color: var(--gray-500);
-  margin-top: 0.25rem;
 } 

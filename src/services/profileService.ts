@@ -12,6 +12,7 @@ export type ProfileData = {
   team_color: string
   average_daily_xp: number
   last_name_change_date?: string
+  is_profile_setup?: boolean
   
   // Subscription Status
   is_paid_user?: boolean

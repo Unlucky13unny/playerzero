@@ -1,302 +1,71 @@
-import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 export const ContactHelp = () => {
-  const [activeTab, setActiveTab] = useState<'help' | 'contact' | 'faq'>('help')
-
-  const faqItems = [
-    {
-      question: "How do I get started with PlayerZero?",
-      answer: "Sign up for an account, complete your profile setup with your Pokémon GO trainer details, and start tracking your stats. You can update your stats regularly to see your progress on the leaderboards."
-    },
-    {
-      question: "What stats does PlayerZero track?",
-      answer: "We track your total XP, Pokémon caught, distance walked, PokéStops visited, and unique Pokédex entries. These are the core metrics that show your grinding progress in Pokémon GO."
-    },
-    {
-      question: "How often should I update my stats?",
-      answer: "We recommend updating your stats at least once a week to keep your profile current. You can update them as frequently as you'd like to see your real-time progress."
-    },
-    {
-      question: "What's the difference between Private Mode and Premium?",
-      answer: "Private Mode is a free trial that lets you experience the app with limited features. Premium unlocks all features including advanced search, detailed analytics, social links, and unlimited profile views."
-    },
-    {
-      question: "How do the leaderboards work?",
-      answer: "Leaderboards are updated weekly and monthly, with historical winners preserved. You can filter by country, team, and time period to see how you rank against other trainers."
-    },
-    {
-      question: "Can I make my profile private?",
-      answer: "Yes! You can choose to keep your trainer code private and control which social media links are visible. Premium users get full control over their profile visibility."
-    },
-    {
-      question: "How do the calculators work?",
-      answer: "Our calculators help you analyze your Pokémon GO progress. The Grind Stats calculator shows your average daily progress, while other tools help you set goals and track achievements."
-    },
-    {
-      question: "Is my data secure?",
-      answer: "Absolutely. We use industry-standard encryption and security practices. Your personal information and Pokémon GO stats are protected and never shared without your permission."
-    },
-    {
-      question: "How do I export my stats?",
-      answer: "Premium users can create beautiful stat cards to share on social media. These cards showcase your achievements and can be downloaded as high-quality images."
-    },
-    {
-      question: "What if I find incorrect information?",
-      answer: "If you notice any issues with your stats or profile, you can update them at any time. For technical issues, please contact our support team."
-    }
-  ]
-
-  const contactMethods = [
-    {
-      icon: "📧",
-      title: "Email Support",
-      description: "Get help with account issues, technical problems, or general questions",
-      action: "support@playerzero.com",
-      link: "mailto:support@playerzero.com"
-    },
-    {
-      icon: "🐛",
-      title: "Report a Bug",
-      description: "Found a bug or technical issue? Let us know so we can fix it",
-      action: "bug@playerzero.com",
-      link: "mailto:bug@playerzero.com"
-    },
-    {
-      icon: "💡",
-      title: "Feature Request",
-      description: "Have an idea for a new feature? We'd love to hear it",
-      action: "ideas@playerzero.com",
-      link: "mailto:ideas@playerzero.com"
-    },
-    {
-      icon: "📱",
-      title: "Social Media",
-      description: "Follow us for updates, tips, and community highlights",
-      action: "@pgPlayerZero",
-      link: "https://instagram.com/pgPlayerZero"
-    }
-  ]
-
-  const helpCategories = [
-    {
-      icon: "👤",
-      title: "Profile Setup",
-      description: "Learn how to create and customize your trainer profile",
-      link: "/profile?edit=true"
-    },
-    {
-      icon: "📊",
-      title: "Updating Stats",
-      description: "How to keep your stats current and accurate",
-      link: "/update-stats"
-    },
-    {
-      icon: "🏆",
-      title: "Leaderboards",
-      description: "Understanding how rankings and competitions work",
-      link: "/leaderboards"
-    },
-    {
-      icon: "🧮",
-      title: "Calculators",
-      description: "Using our tools to analyze your progress",
-      link: "/calculators"
-    },
-    {
-      icon: "🔍",
-      title: "Search & Discovery",
-      description: "Finding and connecting with other trainers",
-      link: "/search"
-    },
-    {
-      icon: "⭐",
-      title: "Premium Features",
-      description: "What you get with a premium subscription",
-      link: "/upgrade"
-    }
-  ]
-
   return (
-    <div className="contact-help-container">
-      {/* Header Section */}
-      <div className="contact-help-header">
-        <div className="header-content">
-          <div className="header-icon">💬</div>
-          <h1>Help & Support</h1>
-          <p>Get help with PlayerZero, contact our team, or find answers to common questions</p>
+    <div className="help-center-container">
+
+      {/* Title */}
+      <div className="help-title">
+        <h1>Help Center</h1>
+      </div>
+
+      {/* Main Content Wrapper - Frame 740 */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        padding: '0px',
+        gap: '24px',
+        width: '353px',
+        maxWidth: '95vw',
+        margin: '0 auto',
+      }}>
+        {/* Main Content Card - Frame 738 */}
+        <div className="help-main-card">
+          {/* Community Section */}
+          <div className="community-section">
+            <div className="community-icons">
+              <a 
+                href="https://discord.gg/playerzero" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="community-icon discord-icon"
+                aria-label="Join our Discord"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028a14.09 14.09 0 0 0 1.226-1.994a.076.076 0 0 0-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.892a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+                </svg>
+              </a>
+              <a 
+                href="https://reddit.com/r/playerzero" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="community-icon reddit-icon"
+                aria-label="Join our Reddit"
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547l-.8 3.747c1.824.07 3.48.632 4.674 1.488c.308-.309.73-.491 1.207-.491c.968 0 1.754.786 1.754 1.754c0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87c-3.874 0-7.004-2.176-7.004-4.87c0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12c0-.968.786-1.754 1.754-1.754c.463 0 .898.196 1.207.49c1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197a.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248c.687 0 1.248-.561 1.248-1.249c0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25c0 .687.561 1.248 1.249 1.248c.688 0 1.249-.561 1.249-1.249c0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094a.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913c.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463a.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73c-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/>
+                </svg>
+              </a>
+            </div>
+            <p className="community-text">
+              Join the PlayerZero community for FAQs, help and updates!
+            </p>
+          </div>
+
+          {/* Contact Section */}
+          <div className="contact-section">
+            <p className="contact-label">Need more help?</p>
+            <p className="contact-text">
+              Contact us on <a href="mailto:support@playerzero.com" className="contact-link">support@playerzero.com</a>
+            </p>
+          </div>
         </div>
-      </div>
 
-      {/* Tab Navigation */}
-      <div className="tab-navigation">
-        <button 
-          className={`tab-button ${activeTab === 'help' ? 'active' : ''}`}
-          onClick={() => setActiveTab('help')}
-        >
-          🆘 Help Center
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'contact' ? 'active' : ''}`}
-          onClick={() => setActiveTab('contact')}
-        >
-          📞 Contact Us
-        </button>
-        <button 
-          className={`tab-button ${activeTab === 'faq' ? 'active' : ''}`}
-          onClick={() => setActiveTab('faq')}
-        >
-          ❓ FAQ
-        </button>
-      </div>
-
-      {/* Tab Content */}
-      <div className="tab-content">
-        {/* Help Center Tab */}
-        {activeTab === 'help' && (
-          <div className="help-content">
-            <div className="help-intro">
-              <h2>Getting Started with PlayerZero</h2>
-              <p>Choose a category below to get detailed help with specific features:</p>
-            </div>
-            
-            <div className="help-categories">
-              {helpCategories.map((category, index) => (
-                <Link 
-                  key={index} 
-                  to={category.link} 
-                  className="help-category-card"
-                >
-                  <div className="category-icon">{category.icon}</div>
-                  <div className="category-content">
-                    <h3>{category.title}</h3>
-                    <p>{category.description}</p>
-                  </div>
-                  <div className="category-arrow">→</div>
-                </Link>
-              ))}
-            </div>
-
-            <div className="quick-tips">
-              <h3>Quick Tips</h3>
-              <div className="tips-grid">
-                <div className="tip-card">
-                  <div className="tip-icon">⚡</div>
-                  <h4>Keep Stats Updated</h4>
-                  <p>Update your stats regularly to see accurate progress on leaderboards</p>
-                </div>
-                <div className="tip-card">
-                  <div className="tip-icon">🔒</div>
-                  <h4>Privacy Control</h4>
-                  <p>Use privacy settings to control what information is visible to others</p>
-                </div>
-                <div className="tip-card">
-                  <div className="tip-icon">📱</div>
-                  <h4>Mobile Friendly</h4>
-                  <p>PlayerZero works great on mobile devices for on-the-go stat updates</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Contact Tab */}
-        {activeTab === 'contact' && (
-          <div className="contact-content">
-            <div className="contact-intro">
-              <h2>Get in Touch</h2>
-              <p>We're here to help! Choose the best way to reach us based on your needs:</p>
-            </div>
-
-            <div className="contact-methods">
-              {contactMethods.map((method, index) => (
-                <a 
-                  key={index} 
-                  href={method.link} 
-                  className="contact-method-card"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <div className="method-icon">{method.icon}</div>
-                  <div className="method-content">
-                    <h3>{method.title}</h3>
-                    <p>{method.description}</p>
-                    <div className="method-action">{method.action}</div>
-                  </div>
-                </a>
-              ))}
-            </div>
-
-            <div className="response-time">
-              <h3>Response Times</h3>
-              <div className="response-info">
-                <div className="response-item">
-                  <span className="response-label">Email Support:</span>
-                  <span className="response-time">Within 24 hours</span>
-                </div>
-                <div className="response-item">
-                  <span className="response-label">Bug Reports:</span>
-                  <span className="response-time">Within 48 hours</span>
-                </div>
-                <div className="response-item">
-                  <span className="response-label">Feature Requests:</span>
-                  <span className="response-time">We'll review and respond</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* FAQ Tab */}
-        {activeTab === 'faq' && (
-          <div className="faq-content">
-            <div className="faq-intro">
-              <h2>Frequently Asked Questions</h2>
-              <p>Find quick answers to the most common questions about PlayerZero:</p>
-            </div>
-
-            <div className="faq-list">
-              {faqItems.map((item, index) => (
-                <details key={index} className="faq-item">
-                  <summary className="faq-question">
-                    {item.question}
-                  </summary>
-                  <div className="faq-answer">
-                    <p>{item.answer}</p>
-                  </div>
-                </details>
-              ))}
-            </div>
-
-            <div className="faq-footer">
-              <p>Still have questions? <button onClick={() => setActiveTab('contact')} className="inline-link">Contact our support team</button></p>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer Section */}
-      <div className="contact-help-footer">
-        <div className="footer-content">
-          <div className="footer-section">
-            <h4>Additional Resources</h4>
-            <div className="resource-links">
-              <a href="#" className="resource-link">Terms of Service</a>
-              <a href="#" className="resource-link">Privacy Policy</a>
-              <a href="#" className="resource-link">Community Guidelines</a>
-            </div>
-          </div>
-          <div className="footer-section">
-            <h4>Follow Us</h4>
-            <div className="social-links">
-              <a href="https://instagram.com/pgPlayerZero" target="_blank" rel="noopener noreferrer" className="social-link">
-                Instagram
-              </a>
-              <a href="https://tiktok.com/@pgPlayerZero" target="_blank" rel="noopener noreferrer" className="social-link">
-                TikTok
-              </a>
-            </div>
-          </div>
+        {/* Footer Links - Frame 739 */}
+        <div className="help-footer">
+          <Link to="/terms" className="footer-link">Terms of Service</Link>
+          <Link to="/privacy" className="footer-link">Privacy Policy</Link>
         </div>
       </div>
     </div>

@@ -51,13 +51,11 @@ const AppRoutes = () => {
       } />
       <Route path="/landing" element={<LandingPage />} />
       
-      {/* Profile setup route - protected but no setup guard */}
+      {/* Profile setup route - protected but no setup guard, no Layout (standalone like auth pages) */}
       <Route path="/profile-setup" element={
-        <Layout>
-          <ProtectedRoute>
-            <ProfileSetup />
-          </ProtectedRoute>
-        </Layout>
+        <ProtectedRoute>
+          <ProfileSetup />
+        </ProtectedRoute>
       } />
       
       {/* Tutorial route - after profile setup */}

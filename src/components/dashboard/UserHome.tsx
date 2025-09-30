@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useLocation } from 'react-router-dom';
 import { supabase } from '../../supabaseClient';
 import { PerformanceRadarChart } from './RadarChart';
 import { ExportCardModal } from './ExportCardModal';
@@ -7,6 +8,7 @@ import { type ProfileWithMetadata } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
 import { PlayerProfile } from './PlayerProfile';
+import { WelcomeModal } from '../common/WelcomeModal';
 
 // Styles for the new layout
 const chartStyles = {
@@ -180,15 +182,27 @@ const chartStyles = {
 
 export const UserHome = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const trialStatus = useTrialStatus();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<ProfileWithMetadata | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const [activeTimeFilter, setActiveTimeFilter] = useState<'weekly' | 'monthly' | 'all-time'>('weekly');
   const [filteredStats, setFilteredStats] = useState<any>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
+
+  // Check if user is coming from profile setup
+  useEffect(() => {
+    const isFromSetup = location.state?.fromProfileSetup;
+    if (isFromSetup) {
+      setShowWelcomeModal(true);
+      // Clear the state so it doesn't show again on refresh
+      window.history.replaceState({}, document.title);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (!hasLoaded) {
@@ -372,6 +386,12 @@ export const UserHome = () => {
 
   return (
     <div>
+      <WelcomeModal 
+        isOpen={showWelcomeModal}
+        onContinue={() => setShowWelcomeModal(false)}
+        userName={stats?.trainer_name}
+      />
+      
       {/* Use the new PlayerProfile component with proper design */}
       <PlayerProfile 
         viewMode="own" 
