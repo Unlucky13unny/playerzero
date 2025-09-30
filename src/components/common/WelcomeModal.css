@@ -1,0 +1,123 @@
+/* Welcome Modal Overlay */
+.welcome-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.95);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(4px);
+  overflow: hidden;
+}
+
+/* Welcome Modal Content */
+.welcome-modal-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  max-width: 90%;
+  width: 360px;
+  position: relative;
+  margin: auto;
+}
+
+/* Welcome Modal Header */
+.welcome-modal-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.welcome-modal-header h2 {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 24px;
+  line-height: 36px;
+  text-align: center;
+  color: #000000;
+  margin: 0;
+}
+
+/* Welcome Modal Logo */
+.welcome-modal-logo {
+  width: 181px;
+  height: 35px;
+  object-fit: contain;
+}
+
+/* Welcome Continue Button */
+.welcome-continue-btn {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 12px 48px;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+  height: 48px;
+  background: #DC2627;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  color: #FFFFFF;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.welcome-continue-btn:hover {
+  background: #B01F20;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 38, 39, 0.3);
+}
+
+.welcome-continue-btn:active {
+  transform: translateY(0);
+  background: #9a1a1b;
+}
+
+/* Mobile Responsive */
+@media (max-width: 480px) {
+  .welcome-modal-content {
+    padding: 32px 24px;
+    width: 85%;
+  }
+  
+  .welcome-modal-header h2 {
+    font-size: 20px;
+    line-height: 30px;
+  }
+  
+  .welcome-modal-logo {
+    width: 150px;
+    height: 29px;
+  }
+  
+  .welcome-continue-btn {
+    font-size: 14px;
+    height: 44px;
+    padding: 10px 40px;
+  }
+}
+

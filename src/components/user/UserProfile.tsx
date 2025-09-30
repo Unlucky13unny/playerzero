@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
@@ -7,6 +7,7 @@ import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
+import { WelcomeModal } from '../common/WelcomeModal'
 import { LogOut } from 'lucide-react'
 import './UserProfile.css'
 
@@ -37,9 +38,21 @@ export const UserProfile = () => {
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false)
   const [editingPlatform, setEditingPlatform] = useState<{id: string, name: string, url: string} | null>(null)
+  const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const navigate = useNavigate()
+  const location = useLocation()
   const isMobile = useMobile()
   const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
+
+  // Check if user is coming from profile setup
+  useEffect(() => {
+    const isFromSetup = location.state?.fromProfileSetup
+    if (isFromSetup) {
+      setShowWelcomeModal(true)
+      // Clear the state so it doesn't show again on refresh
+      window.history.replaceState({}, document.title)
+    }
+  }, [location])
 
   useEffect(() => {
     loadProfile()
@@ -439,6 +452,12 @@ export const UserProfile = () => {
         justifyContent: isMobile ? "flex-start" : "center", // Top align on mobile
       }}
     >
+      <WelcomeModal 
+        isOpen={showWelcomeModal}
+        onContinue={() => setShowWelcomeModal(false)}
+        userName={profile?.trainer_name}
+      />
+
       <ValuePropModal 
         isOpen={isOpen} 
         onClose={closeValueProp} 

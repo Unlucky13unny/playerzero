@@ -394,7 +394,31 @@ body {
   color: #000000;
   font-family: 'Poppins', sans-serif;
   border: none;
-  box-shadow: none;
+}
+
+/* Ensure consistent button and input widths across all auth pages */
+.auth-form .btn,
+.auth-form .form-input,
+.auth-form .form-select {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Web view specific button consistency */
+@media (min-width: 769px) {
+  .auth-container {
+    width: 400px;
+    max-width: 400px;
+  }
+  
+  .auth-form .btn,
+  .auth-form .form-input,
+  .auth-form .form-select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+  }
 }
 
 /* Logo section */
@@ -491,6 +515,7 @@ body {
   padding: 9px;
   gap: 10px;
   width: 100%;
+  max-width: 100%;
   height: 36px;
   background-color: #ffffff !important;
   border: 1px solid #848282;
@@ -612,6 +637,7 @@ body {
   padding: 0 1rem;
   gap: 8px;
   width: 100%;
+  max-width: 100%;
   height: 36px !important;
   min-height: 36px;
   background-color: transparent;
@@ -1093,9 +1119,10 @@ body {
   }
   
   .auth-container {
-    width: 376px;
-    max-width: calc(100% - 2rem);
+    width: 100%;
+    max-width: 100%;
     padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -1159,6 +1186,8 @@ body {
   
   .auth-form {
     width: 100%;
+    padding: 0;
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
@@ -1166,7 +1195,8 @@ body {
   
   .form-group {
     width: 100%;
-    margin-bottom: 0;
+    padding: 0;
+    margin: 0 0 0 0;
     gap: 2px;
   }
   
@@ -1185,6 +1215,7 @@ body {
     flex-direction: row;
     align-items: center;
     width: 100%;
+    max-width: 100%;
     height: 36px;
     padding: 9px;
     gap: 10px;
@@ -1238,6 +1269,7 @@ body {
   .btn-login {
     box-sizing: border-box;
     width: 100%;
+    max-width: 100%;
     height: 36px !important;
     min-height: 36px;
     padding: 0 1rem;
@@ -1402,7 +1434,7 @@ body {
   }
   
   .mobile-tagline {
-    font-size: 20px;
+    font-size: 31px;
     line-height: 28px;
   }
   
@@ -10004,175 +10036,216 @@ body {
 }
 
 /* =============================================================================
-   CONTACT & HELP PAGE STYLES
+   HELP CENTER PAGE STYLES
    ============================================================================= */
 
-.contact-help-container {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-  min-height: calc(100vh - var(--header-height) - var(--footer-height));
-}
-
-/* Header Section */
-.contact-help-header {
-  text-align: center;
-  margin-bottom: 3rem;
+/* Help Center Container - Frame 740 */
+.help-center-container {
+  min-height: calc(100vh - 80px);
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   padding: 2rem 0;
+  position: relative;
 }
 
-.contact-help-header .header-content {
-  max-width: 600px;
-  margin: 0 auto;
+/* Title Section */
+.help-title {
+  margin: 3rem 0 2rem;
+  text-align: left;
+  width: 353px;
+  max-width: 95vw;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.contact-help-header .header-icon {
-  font-size: 4rem;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.contact-help-header h1 {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--white-pure);
-  margin-bottom: 1rem;
-  background: linear-gradient(135deg, var(--red-bright), #ff6b9d);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.contact-help-header p {
-  font-size: 1.125rem;
-  color: var(--gray-light);
-  line-height: 1.6;
-  margin: 0;
-}
-
-/* Tab Navigation */
-.tab-navigation {
-  display: flex;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 3rem;
-  padding: 0 1rem;
-}
-
-.tab-button {
-  padding: 1rem 2rem;
-  border: 1px solid var(--gray-darker);
-  background: var(--black-card);
-  color: var(--gray-light);
-  border-radius: 0.75rem;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-medium);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.tab-button:hover {
-  background: var(--gray-darker);
-  color: var(--white-pure);
-  transform: translateY(-2px);
-}
-
-.tab-button.active {
-  background: linear-gradient(135deg, var(--red-bright), #ff6b9d);
-  color: var(--white-pure);
-  border-color: var(--red-bright);
-  box-shadow: 0 4px 20px rgba(255, 55, 95, 0.3);
-}
-
-/* Tab Content */
-.tab-content {
-  background: var(--black-card);
-  border: 1px solid var(--gray-darker);
-  border-radius: 1rem;
-  padding: 2rem;
-  margin-bottom: 2rem;
-}
-
-/* Help Center Styles */
-.help-intro {
-  text-align: center;
-  margin-bottom: 2rem;
-}
-
-.help-intro h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: var(--white-pure);
-  margin-bottom: 0.5rem;
-}
-
-.help-intro p {
-  color: var(--gray-light);
-  font-size: 1.125rem;
-}
-
-.help-categories {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 3rem;
-}
-
-.help-category-card {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: var(--black-dark);
-  border: 1px solid var(--gray-darker);
-  border-radius: 0.75rem;
-  text-decoration: none;
-  color: var(--white-pure);
-  transition: all var(--transition-medium);
-}
-
-.help-category-card:hover {
-  background: var(--gray-darker);
-  border-color: var(--red-bright);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-}
-
-.category-icon {
+.help-title h1 {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
   font-size: 2rem;
-  flex-shrink: 0;
-}
-
-.category-content {
-  flex: 1;
-}
-
-.category-content h3 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
-  color: var(--white-pure);
-}
-
-.category-content p {
-  font-size: 0.875rem;
-  color: var(--gray-light);
+  line-height: 1.2;
+  color: #000000;
   margin: 0;
-  line-height: 1.4;
+  text-align: left;
 }
 
-.category-arrow {
-  font-size: 1.25rem;
-  color: var(--gray-light);
-  transition: all var(--transition-medium);
+/* Main Content Wrapper - Frame 740 */
+.help-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 24px;
+  position: absolute;
+  width: 353px;
+  height: auto;
+  left: calc(50% - 353px/2);
+  top: calc(50% - 278px/2);
 }
 
-.help-category-card:hover .category-arrow {
-  color: var(--red-bright);
-  transform: translateX(4px);
+/* Main Card - Frame 738 */
+.help-main-card {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  gap: 24px;
+  width: 353px;
+  height: auto;
+  border: 1px solid #848282;
+  border-radius: 6px;
+  background: transparent;
+  flex: none;
+  order: 0;
+  align-self: stretch;
+  flex-grow: 0;
+}
+
+/* Community Section */
+.community-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  gap: 24px;
+}
+
+/* Icons Row - Frame 737 */
+.community-icons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 96px;
+  height: 44px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.community-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease;
+  text-decoration: none;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+}
+
+.community-icon:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.community-icon svg {
+  color: #FFFFFF;
+}
+
+.discord-icon {
+  background: #000000;
+  order: 0;
+}
+
+.reddit-icon {
+  background: #000000;
+  order: 1;
+}
+
+/* Community Text */
+.community-text {
+  width: 337px;
+  height: auto;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: center;
+  color: #000000;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  margin: 0;
+}
+
+/* Contact Section */
+.contact-section {
+  width: 353px;
+  height: auto;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 21px;
+  color: #000000;
+  flex: none;
+  order: 1;
+  align-self: stretch;
+  flex-grow: 0;
+  text-align: left;
+}
+
+.contact-label {
+  color: #000000;
+  margin: 0;
+}
+
+.contact-text {
+  color: #000000;
+  margin: 0;
+}
+
+.contact-link {
+  color: #000000;
+  text-decoration: underline;
+}
+
+.contact-link:hover {
+  opacity: 0.8;
+}
+
+/* Footer Links - Frame 739 */
+.help-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 8px;
+  width: 100%;
+  max-width: 353px;
+  height: auto;
+  flex: none;
+  order: 2;
+  flex-grow: 0;
+}
+
+.footer-link {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 24px;
+  text-align: left;
+  text-decoration-line: underline;
+  color: #000000;
+  flex: none;
+  flex-grow: 0;
+  transition: opacity 0.2s ease;
+}
+
+.footer-link:hover {
+  opacity: 0.8;
 }
 
 /* Quick Tips */
@@ -10720,5 +10793,91 @@ body {
 }
 
 /* Profile Card Table Layout */
+
+/* New Help Center Mobile Responsive Styles */
+@media (max-width: 768px) {
+  .help-center-container {
+    padding: 1rem 0;
+    min-height: calc(100vh - 60px);
+  }
+
+  .help-title {
+    width: 95vw;
+    max-width: 353px;
+  }
+
+  .help-title h1 {
+    font-size: 1.75rem;
+    margin: 1rem 0 1.5rem;
+    text-align: left;
+  }
+
+  .help-main-card {
+    width: 353px;
+    max-width: 95vw;
+  }
+
+  .community-text {
+    width: 100%;
+    max-width: 337px;
+  }
+
+  .contact-section {
+    width: 100%;
+    max-width: 353px;
+  }
+}
+
+@media (max-width: 480px) {
+  .help-container {
+    padding: 0.5rem 0;
+  }
+
+  .help-title {
+    width: 90vw;
+    max-width: 353px;
+  }
+
+  .help-title h1 {
+    font-size: 1.5rem;
+    margin: 1rem 0 1rem;
+    text-align: left;
+  }
+
+  .help-main-card {
+    width: 90vw;
+    max-width: 353px;
+  }
+
+  .community-icons {
+    width: 96px;
+    height: 44px;
+  }
+
+  .community-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .community-icon svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .community-text {
+    font-size: 14px;
+    line-height: 21px;
+  }
+
+  .contact-section {
+    font-size: 13px;
+    line-height: 19px;
+  }
+
+  .footer-link {
+    font-size: 14px;
+    line-height: 21px;
+  }
+}
 
 
