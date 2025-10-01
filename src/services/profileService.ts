@@ -124,12 +124,12 @@ export const calculateSummitDate = (currentXp: number, averageDailyXp: number, s
   const summitDate = new Date();
   summitDate.setDate(summitDate.getDate() + daysNeeded);
   
-  // Format date as Month Day, Year
-  return summitDate.toLocaleDateString('en-US', { 
+  // Format date as DD.MM.YYYY
+  return summitDate.toLocaleDateString('en-GB', { 
     year: 'numeric', 
-    month: 'long', 
+    month: 'numeric', 
     day: 'numeric' 
-  });
+  }).replace(/\//g, '.');
 };
 
 export const profileService = {

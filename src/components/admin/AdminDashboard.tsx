@@ -3,6 +3,7 @@ import { useAuth } from '../../contexts/AuthContext'
 import { UserManagement } from './UserManagement'
 import { StatEntries } from './StatEntries'
 import { ScreenshotModeration } from './ScreenshotModeration'
+import { ReportedScreenshots } from './ReportedScreenshots'
 
 export const AdminDashboard = () => {
   const { user } = useAuth()
@@ -11,7 +12,8 @@ export const AdminDashboard = () => {
   const tabs = [
     { id: 'users', label: 'Users', icon: '👥' },
     { id: 'content', label: 'Stat Entries', icon: '📝' },
-    { id: 'screenshots', label: 'Screenshot Moderation', icon: '📸' }
+    { id: 'screenshots', label: 'Screenshot Moderation', icon: '📸' },
+    { id: 'reports', label: 'Reports', icon: '🚩' }
   ]
 
 
@@ -47,6 +49,10 @@ export const AdminDashboard = () => {
 
         {activeTab === 'screenshots' && (
           <ScreenshotModeration />
+        )}
+
+        {activeTab === 'reports' && (
+          <ReportedScreenshots />
         )}
       </div>
     </div>

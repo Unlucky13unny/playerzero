@@ -49,7 +49,7 @@ export const ProfileSetup = () => {
     trainer_code: '',
     trainer_code_private: false,
     trainer_level: 1,
-    start_date: new Date().toISOString().split('T')[0], // Default to today's date
+    start_date: '', // No default date - user must select
     country: '',
     team_color: '',
     average_daily_xp: 0,
@@ -279,7 +279,8 @@ export const ProfileSetup = () => {
     switch (step) {
       case 1:
         return !!(profileData.trainer_name && profileData.trainer_code && 
-                 profileData.trainer_level && profileData.country && profileData.team_color)
+                 profileData.trainer_level && profileData.country && 
+                 profileData.team_color && profileData.start_date)
       case 2:
         return true // All stats are optional
       default:
@@ -326,8 +327,6 @@ export const ProfileSetup = () => {
       // Update existing profile (created during signup)
       const profileToSubmit = {
         ...profileData,
-        // If start_date is empty, use current date
-        start_date: profileData.start_date || new Date().toISOString().split('T')[0],
         profile_screenshot_url: screenshotUrl,
         is_profile_setup: true
       }
@@ -447,6 +446,20 @@ export const ProfileSetup = () => {
             <option key={team.value} value={team.value}>{team.label}</option>
           ))}
         </select>
+      </div>
+
+        {/* Start Date */}
+      <div className="form-field">
+        <label className="form-label">Start Date</label>
+        <input
+          type="date"
+          value={profileData.start_date}
+          onChange={(e) => handleInputChange('start_date', e.target.value)}
+          className="form-input"
+          max={new Date().toISOString().split('T')[0]} // Can't select future dates
+          required
+        />
+        <span className="form-hint">When did you start playing Pokémon GO?</span>
       </div>
 
       {/* Frame 371 - Social Platforms Section */}
