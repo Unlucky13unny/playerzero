@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { X, ImageIcon } from "lucide-react"
 import { dashboardService } from '../../services/dashboardService'
+import { ReportModal } from '../moderation/ReportModal'
+import { reportService } from '../../services/reportService'
 
 interface VerificationScreenshotsModalProps {
   isOpen: boolean
@@ -22,6 +24,9 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedScreenshotId, setSelectedScreenshotId] = useState<string | null>(null)
+  const [showReportModal, setShowReportModal] = useState(false)
+  const [hasReported, setHasReported] = useState(false)
 
   useEffect(() => {
     if (isOpen && userId) {
@@ -51,12 +56,33 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
     })
   }
 
-  const handleImageClick = (imageUrl: string) => {
+  const handleImageClick = async (imageUrl: string, screenshotId: string) => {
     setSelectedImage(imageUrl)
+    setSelectedScreenshotId(screenshotId)
+    
+    // Check if user has already reported this screenshot
+    const { hasReported: reported } = await reportService.hasUserReported(screenshotId)
+    setHasReported(reported)
   }
 
   const closeImagePreview = () => {
     setSelectedImage(null)
+    setSelectedScreenshotId(null)
+    setHasReported(false)
+  }
+
+  const handleReportClick = () => {
+    setShowReportModal(true)
+  }
+
+  const handleReportModalClose = () => {
+    setShowReportModal(false)
+  }
+
+  const handleReportSubmitted = async () => {
+    setHasReported(true)
+    // Optionally reload screenshots to update report count
+    await loadScreenshots()
   }
 
   // Transform screenshots data to ProofItem format
@@ -212,7 +238,7 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
                     flexGrow: 0,
                     cursor: 'pointer'
                   }}
-                  onClick={() => handleImageClick(proof.screenshot_url)}
+                  onClick={() => handleImageClick(proof.screenshot_url, proof.id)}
                 >
                   {/* Frame 733 - Left side with image icon and text */}
                   <div style={{
@@ -376,7 +402,7 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
                       flexGrow: 0,
                       backgroundColor: selectedImage === proof.screenshot_url ? 'rgba(43, 196, 156, 0.09)' : 'transparent'
                     }}
-                    onClick={() => handleImageClick(proof.screenshot_url)}
+                    onClick={() => handleImageClick(proof.screenshot_url, proof.id)}
                   >
                     <div style={{
                       display: 'flex',
@@ -462,15 +488,146 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
               padding: '8px',
               boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)'
             }}>
+              {/* Frame 653 - Report button */}
+              {!hasReported && (
+                <button
+                  onClick={handleReportClick}
+                  title="Report Suspicious Stats"
+                  style={{
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '8px',
+                    position: 'absolute',
+                    width: '80px',
+                    height: '28px',
+                    right: '20px',
+                    top: '20px',
+                    border: '1px solid #000000',
+                    borderRadius: '4px',
+                    background: 'rgba(255, 255, 255, 0.9)',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: '600',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                    color: '#000000',
+                    zIndex: 10
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 1)'
+                    e.currentTarget.style.transform = 'scale(1.05)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.9)'
+                    e.currentTarget.style.transform = 'scale(1)'
+                  }}
+                >
+                  {/* lucide:info - Info Icon */}
+                  <svg 
+                    width="18" 
+                    height="18" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="#000000" strokeWidth="2"/>
+                    <line x1="12" y1="16" x2="12" y2="12" stroke="#000000" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="12" cy="8" r="0.5" fill="#000000" stroke="#000000" strokeWidth="1"/>
+                  </svg>
+                  
+                  {/* Report Text */}
+                  <span style={{
+                    width: '41px',
+                    height: '18px',
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0
+                  }}>
+                    Report
+                  </span>
+                </button>
+              )}
+
+              {/* Already reported indicator */}
+              {hasReported && (
+                <div
+                  title="You have already reported this screenshot"
+                  style={{
+                    boxSizing: 'border-box',
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '8px',
+                    position: 'absolute',
+                    width: '80px',
+                    height: '28px',
+                    right: '20px',
+                    top: '20px',
+                    border: '1px solid rgba(255, 255, 255, 0.4)',
+                    borderRadius: '4px',
+                    background: 'rgba(0, 0, 0, 0.3)',
+                    cursor: 'not-allowed',
+                    opacity: '0.7',
+                    fontFamily: 'Poppins, sans-serif',
+                    fontWeight: '600',
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                    color: 'rgba(255, 255, 255, 0.6)',
+                    zIndex: 10
+                  }}
+                >
+                  {/* Info Icon - Greyed Out */}
+                  <svg 
+                    width="18" 
+                    height="18" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                    style={{
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0
+                    }}
+                  >
+                    <circle cx="12" cy="12" r="10" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="2"/>
+                    <line x1="12" y1="16" x2="12" y2="12" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="2" strokeLinecap="round"/>
+                    <circle cx="12" cy="8" r="0.5" fill="rgba(255, 255, 255, 0.4)" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1"/>
+                  </svg>
+                  
+                  {/* Text */}
+                  <span style={{
+                    width: '41px',
+                    height: '18px',
+                    flex: 'none',
+                    order: 1,
+                    flexGrow: 0
+                  }}>
+                    Report
+                  </span>
+                </div>
+              )}
+
               {/* Close button */}
           <button
                 onClick={closeImagePreview}
                 style={{
                   position: 'absolute',
                   top: '10px',
-                  right: '10px',
+                  left: '10px',
                   zIndex: 10,
-                  background: 'rgba(0, 0, 0, 0.5)',
+                  background: 'rgba(0, 0, 0, 0.6)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '50%',
@@ -479,7 +636,14 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.8)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.6)'
                 }}
               >
                 <X size={20} color="#FFFFFF" />
@@ -509,6 +673,17 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
         </div>
       </div>
     </div>
+      )}
+
+      {/* Report Modal */}
+      {showReportModal && selectedScreenshotId && selectedImage && (
+        <ReportModal
+          screenshotId={selectedScreenshotId}
+          reportedUserId={userId}
+          screenshotUrl={selectedImage}
+          onClose={handleReportModalClose}
+          onReportSubmitted={handleReportSubmitted}
+        />
       )}
 
       <style>{`

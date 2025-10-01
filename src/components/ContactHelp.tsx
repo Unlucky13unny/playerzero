@@ -10,16 +10,7 @@ export const ContactHelp = () => {
       </div>
 
       {/* Main Content Wrapper - Frame 740 */}
-      <div style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        padding: '0px',
-        gap: '24px',
-        width: '353px',
-        maxWidth: '95vw',
-        margin: '0 auto',
-      }}>
+      <div className="help-main-wrapper">
         {/* Main Content Card - Frame 738 */}
         <div className="help-main-card">
           {/* Community Section */}
@@ -52,14 +43,14 @@ export const ContactHelp = () => {
               Join the PlayerZero community for FAQs, help and updates!
             </p>
           </div>
+        </div>
 
-          {/* Contact Section */}
-          <div className="contact-section">
-            <p className="contact-label">Need more help?</p>
-            <p className="contact-text">
-              Contact us on <a href="mailto:support@playerzero.com" className="contact-link">support@playerzero.com</a>
-            </p>
-          </div>
+        {/* Contact Section - Outside the bordered box */}
+        <div className="contact-section">
+          <p className="contact-label">Need more help?</p>
+          <p className="contact-text">
+            Contact us on <a href="mailto:support@playerzero.com" className="contact-link">support@playerzero.com</a>
+          </p>
         </div>
 
         {/* Footer Links - Frame 739 */}

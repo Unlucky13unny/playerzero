@@ -10050,25 +10050,40 @@ body {
   position: relative;
 }
 
-/* Title Section */
+/* Title Section - Frame 663 */
 .help-title {
-  margin: 3rem 0 2rem;
-  text-align: left;
-  width: 353px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 0px;
+  gap: 13px;
+  width: 838px;
   max-width: 95vw;
-  margin-left: auto;
+  height: auto;
+  margin-left: 10rem;
   margin-right: auto;
+  margin-top: 3rem;
+  margin-bottom: 100px;
+  flex: none;
+  order: 0;
+  align-self: flex-start;
+  flex-grow: 0;
 }
 
 .help-title h1 {
+  width: 143px;
+  height: 36px;
   font-family: 'Poppins', sans-serif;
   font-style: normal;
-  font-weight: 400;
-  font-size: 2rem;
-  line-height: 1.2;
+  font-weight: 500;
+  font-size: 24px;
+  line-height: 36px;
   color: #000000;
   margin: 0;
-  text-align: left;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  white-space: nowrap;
 }
 
 /* Main Content Wrapper - Frame 740 */
@@ -10078,11 +10093,14 @@ body {
   align-items: flex-start;
   padding: 0px;
   gap: 24px;
-  position: absolute;
-  width: 353px;
+  width: 838px;
   height: auto;
-  left: calc(50% - 353px/2);
-  top: calc(50% - 278px/2);
+  max-width: 95vw;
+  margin: 0 auto 0 10rem;
+  flex: none;
+  order: 1;
+  align-self: flex-start;
+  flex-grow: 0;
 }
 
 /* Main Card - Frame 738 */
@@ -10093,7 +10111,8 @@ body {
   align-items: center;
   padding: 8px;
   gap: 24px;
-  width: 353px;
+  width: 838px;
+  max-width: 100%;
   height: auto;
   border: 1px solid #848282;
   border-radius: 6px;
@@ -10163,7 +10182,8 @@ body {
 
 /* Community Text */
 .community-text {
-  width: 337px;
+  width: 822px;
+  max-width: 100%;
   height: auto;
   font-family: 'Poppins', sans-serif;
   font-style: normal;
@@ -10181,7 +10201,8 @@ body {
 
 /* Contact Section */
 .contact-section {
-  width: 353px;
+  width: 838px;
+  max-width: 100%;
   height: auto;
   font-family: 'Poppins', sans-serif;
   font-style: normal;
@@ -10191,9 +10212,10 @@ body {
   color: #000000;
   flex: none;
   order: 1;
-  align-self: stretch;
+  align-self: flex-start;
   flex-grow: 0;
   text-align: left;
+  margin: 0;
 }
 
 .contact-label {
@@ -10207,7 +10229,7 @@ body {
 }
 
 .contact-link {
-  color: #000000;
+  color: #808080;
   text-decoration: underline;
 }
 
@@ -10222,12 +10244,12 @@ body {
   align-items: flex-start;
   padding: 0px;
   gap: 8px;
-  width: 100%;
-  max-width: 353px;
+  width: 133px;
   height: auto;
   flex: none;
   order: 2;
   flex-grow: 0;
+  align-self: flex-start;
 }
 
 .footer-link {
@@ -10240,8 +10262,11 @@ body {
   text-decoration-line: underline;
   color: #000000;
   flex: none;
+  order: 0;
+  align-self: flex-start;
   flex-grow: 0;
   transition: opacity 0.2s ease;
+  white-space: nowrap;
 }
 
 .footer-link:hover {
@@ -10802,14 +10827,28 @@ body {
   }
 
   .help-title {
-    width: 95vw;
-    max-width: 353px;
+    width: 353px;
+    max-width: 95vw;
+    align-items: flex-start;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .help-title h1 {
-    font-size: 1.75rem;
+    width: auto;
+    height: auto;
+    font-size: 2rem;
+    line-height: 1.2;
+    font-weight: 400;
     margin: 1rem 0 1.5rem;
     text-align: left;
+  }
+
+  .help-main-wrapper {
+    width: 353px;
+    max-width: 95vw;
+    align-items: center;
+    margin: 0 auto;
   }
 
   .help-main-card {
@@ -10818,13 +10857,24 @@ body {
   }
 
   .community-text {
-    width: 100%;
-    max-width: 337px;
+    width: 337px;
+    max-width: 100%;
   }
 
   .contact-section {
+    width: 353px;
+    max-width: 100%;
+    text-align: left;
+  }
+
+  .help-footer {
     width: 100%;
     max-width: 353px;
+    align-items: flex-start;
+  }
+
+  .footer-link {
+    text-align: left;
   }
 }
 
@@ -10836,6 +10886,8 @@ body {
   .help-title {
     width: 90vw;
     max-width: 353px;
+    margin-left: auto;
+    margin-right: auto;
   }
 
   .help-title h1 {

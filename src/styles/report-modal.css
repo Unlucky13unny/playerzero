@@ -1,0 +1,397 @@
+/* Report Modal Styles */
+.report-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Error Message Container */
+.report-modal-content {
+  position: absolute;
+  width: 290px;
+  height: 276px;
+  left: calc(50% - 290px/2);
+  top: calc(50% - 276px/2 - 67.5px);
+  background: #FFFFFF;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 40px;
+  animation: slideUp 0.3s ease-out;
+}
+
+.report-modal-content.simple {
+  /* Same as default - using Frame 214 specs */
+  width: 290px;
+  height: 276px;
+  background: #FFFFFF;
+  border-radius: 40px;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.report-modal-content.success {
+  /* Success state - same size as report modal */
+  position: absolute;
+  width: 290px;
+  height: 276px;
+  left: calc(50% - 290px/2);
+  top: calc(50% - 276px/2 - 67.5px);
+  background: #FFFFFF;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+  border-radius: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 0px;
+}
+
+.report-success-icon {
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, #10B981, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: white;
+  flex: none;
+  animation: scaleIn 0.5s ease-out;
+}
+
+.report-modal-content.success h2 {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 110%;
+  color: #10B981;
+  margin: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.report-modal-content.success p {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: #636874;
+  margin: 0;
+  width: 239px;
+}
+
+@keyframes scaleIn {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* Frame 214 - Inner Container */
+.report-modal-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 16px;
+  position: absolute;
+  width: 278px;
+  height: 240px;
+  left: calc(50% - 278px/2);
+  top: calc(50% - 240px/2);
+}
+
+/* mi:warning - Warning Icon */
+.report-warning-icon {
+  width: 72px;
+  height: 72px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.report-warning-icon svg {
+  width: 72px;
+  height: 72px;
+}
+
+/* Frame 225 - Text Container */
+.report-text-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px;
+  gap: 4px;
+  width: 239px;
+  height: 98px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+}
+
+/* Report Suspicious Stats - Title */
+.report-modal-title {
+  width: 239px;
+  height: auto;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 110%;
+  color: #DC2627;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* Description Text */
+.report-modal-description {
+  width: 239px;
+  height: 72px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: #636874;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  margin: 0;
+}
+
+/* REMOVED: Old form-related CSS (no longer needed)
+   - .report-form
+   - .report-form-group
+   - .report-form-label
+   - .report-reasons
+   - .report-reason-option
+   - .report-textarea
+   - .report-char-count
+   - .report-disclaimer
+   All simplified to just warning icon, text, and buttons
+*/
+
+/* Error Message */
+.report-error-message {
+  width: 239px;
+  background: rgba(220, 38, 39, 0.1);
+  border: 1px solid rgba(220, 38, 39, 0.3);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: #DC2627;
+  margin-top: -8px;
+  margin-bottom: 8px;
+}
+
+/* Frame 226 - Buttons Container */
+.report-modal-actions {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 0px;
+  gap: 8px;
+  width: 190px;
+  height: 38px;
+  flex: none;
+  order: 2;
+  flex-grow: 0;
+}
+
+/* Report Button (Confirm) */
+.report-btn-submit {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 10px;
+  width: 95px;
+  height: 38px;
+  background: #DC2627;
+  border-radius: 6px;
+  flex: none;
+  order: 0;
+  flex-grow: 0;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  /* Text */
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 23px;
+  color: #FFFFFF;
+}
+
+.report-btn-submit:hover:not(:disabled) {
+  background: #B91C1C;
+  transform: translateY(-1px);
+}
+
+.report-btn-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.report-btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Cancel Button */
+.report-btn-cancel {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+  padding: 8px 16px;
+  gap: 10px;
+  width: 87px;
+  height: 38px;
+  border: 1px solid #636874;
+  border-radius: 6px;
+  flex: none;
+  order: 1;
+  flex-grow: 0;
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  /* Text */
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 23px;
+  color: #636874;
+}
+
+.report-btn-cancel:hover:not(:disabled) {
+  background: rgba(99, 104, 116, 0.1);
+  border-color: #4B5563;
+  color: #4B5563;
+}
+
+.report-btn-cancel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .report-modal-content,
+  .report-modal-content.simple,
+  .report-modal-content.success {
+    width: 280px;
+    height: auto;
+    min-height: 260px;
+    padding: 20px;
+    border-radius: 30px;
+  }
+
+  .report-modal-inner {
+    width: 100%;
+    height: auto;
+    position: relative;
+    left: 0;
+    top: 0;
+  }
+
+  .report-warning-icon {
+    width: 60px;
+    height: 60px;
+  }
+
+  .report-warning-icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .report-text-container {
+    width: 100%;
+    height: auto;
+  }
+
+  .report-modal-title {
+    width: 100%;
+    font-size: 15px;
+    white-space: nowrap;
+  }
+
+  .report-modal-description {
+    width: 100%;
+    height: auto;
+  }
+
+  .report-modal-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Custom scrollbar for modal */
+.report-modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.report-modal-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+.report-modal-content::-webkit-scrollbar-thumb {
+  background: rgba(185, 28, 28, 0.3);
+  border-radius: 4px;
+}
+
+.report-modal-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(185, 28, 28, 0.5);
+}
+
