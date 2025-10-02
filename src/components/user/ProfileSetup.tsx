@@ -7,6 +7,7 @@ import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { useMobile } from '../../hooks/useMobile'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
+import { extractStatsFromImage } from '../../utils/ocrService'
 import logoSvg from "/images/logo.svg"
 import { Upload } from 'lucide-react'
 import './ProfileSetup.css'
@@ -76,6 +77,11 @@ export const ProfileSetup = () => {
   })
 
   const [profileScreenshot, setProfileScreenshot] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false)
+  const [ocrProgress, setOcrProgress] = useState(0)
+  const [ocrMessage, setOcrMessage] = useState<string | null>(null)
+  const [hasExtractedStats, setHasExtractedStats] = useState(false)
 
   // Check if user already has a profile when component mounts
   useEffect(() => {
@@ -240,6 +246,135 @@ export const ProfileSetup = () => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
     setProfileScreenshot(file)
+    setOcrMessage(null)
+    setHasExtractedStats(false)
+    
+    if (file) {
+      // Create image preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      
+      console.log('📁 Image selected:', file.name, 'Size:', file.size, 'bytes')
+      console.log('✅ Preview ready. Click "Extract Stats from Image" button to process.')
+    } else {
+      setImagePreview(null)
+    }
+  }
+
+  const handleExtractStats = async () => {
+    if (!profileScreenshot) {
+      setOcrMessage('❌ Please select an image first')
+      return
+    }
+    
+    console.log('🔘 User clicked "Extract Stats" button')
+    await processOCR(profileScreenshot)
+  }
+
+  const processOCR = async (file: File) => {
+    console.log('🚀 Starting OCR processing for file:', file.name, 'Size:', file.size, 'bytes')
+    
+    setIsProcessingOCR(true)
+    setOcrProgress(0)
+    setOcrMessage('🔍 Analyzing screenshot...')
+
+    try {
+      console.log('📸 Calling extractStatsFromImage...')
+      
+      const result = await extractStatsFromImage(file, (progress) => {
+        console.log(`📊 OCR Progress: ${Math.round(progress)}%`)
+        setOcrProgress(Math.round(progress))
+        setOcrMessage(`🔍 Processing image... ${Math.round(progress)}%`)
+      })
+
+      console.log('✅ OCR Extraction Complete!')
+      console.log('📋 Raw OCR Text:', result.rawText)
+      console.log('📊 Extracted Stats:', result.stats)
+      console.log('🎯 Confidence Score:', result.confidence + '%')
+
+      // Check if any stats were extracted
+      const statsCount = Object.keys(result.stats).length
+      if (statsCount === 0) {
+        console.warn('⚠️ No stats were extracted from the image')
+        setOcrMessage('⚠️ Could not extract stats from image. Please ensure the screenshot shows your Pokémon GO profile with visible stats.')
+        setIsProcessingOCR(false)
+        return
+      }
+
+      console.log(`✅ Successfully extracted ${statsCount} stat(s)`)
+
+      // No validation needed for profile setup (no current stats to compare against)
+      setOcrMessage('✅ Stats extracted successfully!')
+
+      // Auto-fill the form with extracted stats
+      const updatedData = { ...profileData }
+      
+      if (result.stats.total_xp !== undefined) {
+        console.log(`✓ Total XP: ${result.stats.total_xp.toLocaleString()}`)
+        updatedData.total_xp = result.stats.total_xp
+      }
+      
+      if (result.stats.pokemon_caught !== undefined) {
+        console.log(`✓ Pokémon Caught: ${result.stats.pokemon_caught.toLocaleString()}`)
+        updatedData.pokemon_caught = result.stats.pokemon_caught
+      }
+      
+      if (result.stats.distance_walked !== undefined) {
+        console.log(`✓ Distance Walked: ${result.stats.distance_walked} km`)
+        updatedData.distance_walked = result.stats.distance_walked
+      }
+      
+      if (result.stats.pokestops_visited !== undefined) {
+        console.log(`✓ PokéStops Visited: ${result.stats.pokestops_visited.toLocaleString()}`)
+        updatedData.pokestops_visited = result.stats.pokestops_visited
+      }
+      
+      if (result.stats.unique_pokedex_entries !== undefined) {
+        console.log(`✓ Pokédex Entries: ${result.stats.unique_pokedex_entries}`)
+        updatedData.unique_pokedex_entries = result.stats.unique_pokedex_entries
+      }
+
+      if (result.stats.trainer_level !== undefined) {
+        console.log(`✓ Trainer Level: ${result.stats.trainer_level}`)
+        updatedData.trainer_level = result.stats.trainer_level
+      }
+
+      if (result.stats.username !== undefined) {
+        console.log(`✓ Username: ${result.stats.username}`)
+        updatedData.trainer_name = result.stats.username
+      }
+
+      if (result.stats.start_date !== undefined) {
+        console.log(`✓ Start Date: ${result.stats.start_date}`)
+        // Convert from MM/DD/YYYY to YYYY-MM-DD
+        const dateParts = result.stats.start_date.split('/')
+        if (dateParts.length === 3) {
+          updatedData.start_date = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
+        }
+      }
+
+      console.log('📝 Auto-filling form with extracted stats:', updatedData)
+      setProfileData(updatedData)
+      setHasExtractedStats(true)
+
+      // Show success message (confidence logged to console only)
+      setTimeout(() => {
+        console.log(`✅ Extracted ${statsCount} stat(s) with ${Math.round(result.confidence)}% confidence`)
+        setOcrMessage('✅ Stats extracted and auto-filled successfully!')
+      }, 1000)
+
+    } catch (err: any) {
+      console.error('❌ OCR Error:', err)
+      console.error('Error details:', err.message || err)
+      setOcrMessage(`❌ Failed to extract stats: ${err.message || 'Unknown error'}. Please enter values manually.`)
+    } finally {
+      setIsProcessingOCR(false)
+      setOcrProgress(100)
+      console.log('🏁 OCR processing finished')
+    }
   }
 
   const handleStatChange = (key: keyof ProfileData, value: string) => {
@@ -703,7 +838,7 @@ export const ProfileSetup = () => {
 
         {/* Screenshot Upload */}
       <div className="upload-section">
-        <label className="form-label">Upload a screenshot of your Trainer Profile to verify your stats.</label>
+        <label className="form-label">Upload a screenshot of your Trainer Profile to verify your stats and auto-fill using OCR.</label>
         <div className="upload-area">
           <input
             type="file"
@@ -711,16 +846,120 @@ export const ProfileSetup = () => {
             accept="image/*"
             onChange={handleFileChange}
             style={{ display: 'none' }}
+            disabled={isProcessingOCR}
           />
-          <label htmlFor="screenshot-upload" className="upload-label">
+          <label htmlFor="screenshot-upload" className="upload-label" style={{ opacity: isProcessingOCR ? 0.6 : 1, cursor: isProcessingOCR ? 'not-allowed' : 'pointer' }}>
               <Upload size={16} />
             <span>Choose file</span>
               <span className="file-hint">{profileScreenshot ? profileScreenshot.name : 'No file chosen'}</span>
           </label>
         </div>
-        {profileScreenshot && (
+        {profileScreenshot && !isProcessingOCR && !hasExtractedStats && (
           <div className="file-selected">
               ✓ {profileScreenshot.name}
+          </div>
+        )}
+
+        {/* Image Preview with Extract Button */}
+        {imagePreview && !isProcessingOCR && !hasExtractedStats && (
+          <div className="image-preview-with-ocr">
+            <div className="preview-header">📸 Selected Screenshot:</div>
+            <img src={imagePreview} alt="Screenshot preview" className="screenshot-preview-image" />
+            <button 
+              type="button"
+              onClick={handleExtractStats}
+              className="extract-button"
+            >
+              <span className="extract-icon">🔍</span>
+              <span className="extract-text">Extract Stats from Image</span>
+              <span className="extract-subtitle">Click to analyze screenshot using OCR</span>
+            </button>
+          </div>
+        )}
+
+        {/* OCR Processing Indicator */}
+        {isProcessingOCR && (
+          <div className="ocr-processing-container">
+            <div className="ocr-spinner-ring"></div>
+            <div className="ocr-progress-bar-container">
+              <div className="ocr-progress-bar-fill" style={{ width: `${ocrProgress}%` }}></div>
+            </div>
+            <p className="ocr-status-text">{ocrMessage} ({ocrProgress}%)</p>
+          </div>
+        )}
+
+        {/* OCR Result Message */}
+        {!isProcessingOCR && ocrMessage && (
+          <div className={`ocr-result-message ${ocrMessage.includes('✅') ? 'success' : ocrMessage.includes('❌') ? 'error' : 'warning'}`}>
+            {ocrMessage}
+          </div>
+        )}
+
+        {/* Extracted Stats Display */}
+        {hasExtractedStats && (
+          <div className="extracted-stats-card">
+            <h3 className="extracted-stats-title">📊 Extracted Stats from Screenshot:</h3>
+            <div className="extracted-stats-grid-setup">
+              {profileData.trainer_name && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">👤</div>
+                  <div className="stat-label-box">Username</div>
+                  <div className="stat-value-box">{profileData.trainer_name}</div>
+                </div>
+              )}
+              {profileData.trainer_level && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">🎖️</div>
+                  <div className="stat-label-box">Level</div>
+                  <div className="stat-value-box">{profileData.trainer_level}</div>
+                </div>
+              )}
+              {profileData.total_xp !== undefined && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">⭐</div>
+                  <div className="stat-label-box">Total XP</div>
+                  <div className="stat-value-box">{profileData.total_xp.toLocaleString()}</div>
+                </div>
+              )}
+              {profileData.pokemon_caught !== undefined && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">🔴</div>
+                  <div className="stat-label-box">Pokémon Caught</div>
+                  <div className="stat-value-box">{profileData.pokemon_caught.toLocaleString()}</div>
+                </div>
+              )}
+              {profileData.distance_walked !== undefined && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">👣</div>
+                  <div className="stat-label-box">Distance Walked</div>
+                  <div className="stat-value-box">{profileData.distance_walked} km</div>
+                </div>
+              )}
+              {profileData.pokestops_visited !== undefined && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">🔵</div>
+                  <div className="stat-label-box">PokéStops Visited</div>
+                  <div className="stat-value-box">{profileData.pokestops_visited.toLocaleString()}</div>
+                </div>
+              )}
+              {profileData.unique_pokedex_entries !== undefined && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">📖</div>
+                  <div className="stat-label-box">Pokédex Entries</div>
+                  <div className="stat-value-box">{profileData.unique_pokedex_entries}</div>
+                </div>
+              )}
+              {profileData.start_date && (
+                <div className="extracted-stat-box">
+                  <div className="stat-icon-box">📅</div>
+                  <div className="stat-label-box">Start Date</div>
+                  <div className="stat-value-box">{profileData.start_date}</div>
+                </div>
+              )}
+            </div>
+            <p className="auto-fill-notice-setup">
+              ✅ These values have been automatically filled in the form fields above. Review and continue!
+            </p>
           </div>
         )}
       </div>

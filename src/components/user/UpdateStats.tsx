@@ -6,6 +6,7 @@ import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
 import { Upload } from 'lucide-react'
 import { StatUpdateModal } from '../common/StatUpdateModal'
+import { extractStatsFromImage, validateExtractedStats } from '../../utils/ocrService'
 import './UserProfile.css'
 
 export const UpdateStats = () => {
@@ -62,12 +63,137 @@ export const UpdateStats = () => {
   const handleStatsFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0] || null
     setSelectedFile(file)
+    setOcrMessage(null)
+    setHasExtractedStats(false)
+    
+    if (file) {
+      console.log('📁 Image selected:', file.name, 'Size:', file.size, 'bytes')
+      console.log('✅ Preview ready. Click "Extract Stats from Image" button to process.')
+    }
+  }
+
+  const handleExtractStats = async () => {
+    if (!selectedFile) {
+      setOcrMessage('❌ Please select an image first')
+      return
+    }
+    
+    console.log('🔘 User clicked "Extract Stats" button')
+    await processOCR(selectedFile)
+  }
+
+  const processOCR = async (file: File) => {
+    console.log('🚀 Starting OCR processing for file:', file.name, 'Size:', file.size, 'bytes')
+    
+    setIsProcessingOCR(true)
+    setOcrProgress(0)
+    setOcrMessage('🔍 Analyzing screenshot...')
+
+    try {
+      console.log('📸 Calling extractStatsFromImage...')
+      
+      const result = await extractStatsFromImage(file, (progress) => {
+        console.log(`📊 OCR Progress: ${Math.round(progress)}%`)
+        setOcrProgress(Math.round(progress))
+        setOcrMessage(`🔍 Processing image... ${Math.round(progress)}%`)
+      })
+
+      console.log('✅ OCR Extraction Complete!')
+      console.log('📋 Raw OCR Text:', result.rawText)
+      console.log('📊 Extracted Stats:', result.stats)
+      console.log('🎯 Confidence Score:', result.confidence + '%')
+
+      // Check if any stats were extracted
+      const statsCount = Object.keys(result.stats).length
+      if (statsCount === 0) {
+        console.warn('⚠️ No stats were extracted from the image')
+        setOcrMessage('⚠️ Could not extract stats from image. Please ensure the screenshot shows your Pokémon GO profile with visible stats.')
+        setIsProcessingOCR(false)
+        return
+      }
+
+      console.log(`✅ Successfully extracted ${statsCount} stat(s)`)
+
+      // Validate extracted stats against current profile
+      const currentStats = {
+        total_xp: profile?.total_xp,
+        pokemon_caught: profile?.pokemon_caught,
+        distance_walked: profile?.distance_walked,
+        pokestops_visited: profile?.pokestops_visited,
+        unique_pokedex_entries: profile?.unique_pokedex_entries
+      }
+      
+      const validation = validateExtractedStats(result.stats, currentStats)
+      
+      if (!validation.valid) {
+        console.warn('⚠️ Validation warnings:', validation.errors)
+        setOcrMessage(`⚠️ Warning: ${validation.errors.join(', ')}. Please verify the values.`)
+      } else {
+        console.log('✅ All extracted stats are valid')
+        setOcrMessage('✅ Stats extracted successfully!')
+      }
+
+      // Auto-fill the form with extracted stats
+      if (editData) {
+        const updatedData = { ...editData }
+        
+        if (result.stats.total_xp !== undefined) {
+          console.log(`✓ Total XP: ${result.stats.total_xp.toLocaleString()}`)
+          updatedData.total_xp = result.stats.total_xp
+        }
+        
+        if (result.stats.pokemon_caught !== undefined) {
+          console.log(`✓ Pokémon Caught: ${result.stats.pokemon_caught.toLocaleString()}`)
+          updatedData.pokemon_caught = result.stats.pokemon_caught
+        }
+        
+        if (result.stats.distance_walked !== undefined) {
+          console.log(`✓ Distance Walked: ${result.stats.distance_walked} km`)
+          updatedData.distance_walked = result.stats.distance_walked
+        }
+        
+        if (result.stats.pokestops_visited !== undefined) {
+          console.log(`✓ PokéStops Visited: ${result.stats.pokestops_visited.toLocaleString()}`)
+          updatedData.pokestops_visited = result.stats.pokestops_visited
+        }
+        
+        if (result.stats.unique_pokedex_entries !== undefined) {
+          console.log(`✓ Pokédex Entries: ${result.stats.unique_pokedex_entries}`)
+          updatedData.unique_pokedex_entries = result.stats.unique_pokedex_entries
+        }
+
+        console.log('📝 Auto-filling form with extracted stats:', updatedData)
+        setEditData(updatedData)
+        setHasExtractedStats(true)
+      }
+
+      // Show success message (confidence logged to console only)
+      setTimeout(() => {
+        console.log(`✅ Extracted ${statsCount} stat(s) with ${Math.round(result.confidence)}% confidence`)
+        setOcrMessage('✅ Stats extracted and auto-filled successfully!')
+      }, 1000)
+
+    } catch (err: any) {
+      console.error('❌ OCR Error:', err)
+      console.error('Error details:', err.message || err)
+      setOcrMessage(`❌ Failed to extract stats: ${err.message || 'Unknown error'}. Please enter values manually.`)
+    } finally {
+      setIsProcessingOCR(false)
+      setOcrProgress(100)
+      console.log('🏁 OCR processing finished')
+    }
   }
 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [statChanges, setStatChanges] = useState<any[]>([])
   const [hasDecreasingStats, setHasDecreasingStats] = useState(false)
+  
+  // OCR state variables
+  const [isProcessingOCR, setIsProcessingOCR] = useState(false)
+  const [ocrProgress, setOcrProgress] = useState(0)
+  const [ocrMessage, setOcrMessage] = useState<string | null>(null)
+  const [hasExtractedStats, setHasExtractedStats] = useState(false)
 
   // Update image preview when file is selected
   useEffect(() => {
@@ -840,36 +966,41 @@ export const UpdateStats = () => {
             </div>
           </div>
 
-          {/* Image Preview Section */}
-          {imagePreview && (
+          {/* Image Preview Section with OCR */}
+          {imagePreview && !isProcessingOCR && !hasExtractedStats && (
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "flex-start",
-                gap: "8px",
+                gap: "12px",
                 width: "100%",
                 marginTop: "16px",
+                padding: "16px",
+                border: "2px solid #848282",
+                borderRadius: "8px",
+                backgroundColor: "#ffffff",
               }}
             >
               <label
                 style={{
                   fontFamily: "Poppins",
                   fontStyle: "normal",
-                  fontWeight: 400,
-                  fontSize: isMobile ? "12px" : "11px",
-                  lineHeight: isMobile ? "18px" : "16px",
+                  fontWeight: 600,
+                  fontSize: isMobile ? "14px" : "13px",
+                  lineHeight: isMobile ? "21px" : "19px",
                   color: "#000000",
                   width: "100%",
                   textAlign: "left",
                 }}
               >
-                Screenshot Preview
+                📸 Selected Screenshot:
               </label>
               <div
                 style={{
                   width: "100%",
-                  maxWidth: "400px",
+                  maxWidth: "300px",
+                  margin: "0 auto",
                   border: "1px solid #848282",
                   borderRadius: "6px",
                   overflow: "hidden",
@@ -882,24 +1013,230 @@ export const UpdateStats = () => {
                   style={{
                     width: "100%",
                     height: "auto",
-                    maxHeight: "300px",
+                    maxHeight: "250px",
                     objectFit: "contain",
                     display: "block",
                   }}
                 />
               </div>
-              <span
+              <button
+                type="button"
+                onClick={handleExtractStats}
                 style={{
+                  width: "100%",
+                  padding: isMobile ? "16px" : "18px",
+                  background: "linear-gradient(135deg, #ff375f, #ff6b8a)",
+                  border: "none",
+                  borderRadius: "8px",
+                  color: "#ffffff",
                   fontFamily: "Poppins",
                   fontStyle: "normal",
-                  fontWeight: 400,
-                  fontSize: isMobile ? "10px" : "9px",
-                  lineHeight: isMobile ? "15px" : "14px",
-                  color: "#666666",
+                  fontWeight: 600,
+                  fontSize: isMobile ? "16px" : "18px",
+                  lineHeight: isMobile ? "24px" : "27px",
+                  cursor: "pointer",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: "8px",
+                  boxShadow: "0 4px 15px rgba(255, 55, 95, 0.3)",
+                  transition: "all 0.3s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = "translateY(-2px)"
+                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 55, 95, 0.4)"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = "translateY(0)"
+                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(255, 55, 95, 0.3)"
                 }}
               >
-                Use this preview to help you enter your stats accurately
-              </span>
+                <span style={{ fontSize: "28px" }}>🔍</span>
+                <span>Extract Stats from Image</span>
+                <span style={{ fontSize: isMobile ? "12px" : "13px", opacity: 0.9, fontWeight: 400 }}>
+                  Click to analyze screenshot using OCR
+                </span>
+              </button>
+            </div>
+          )}
+
+          {/* OCR Processing Indicator */}
+          {isProcessingOCR && (
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                gap: "16px",
+                width: "100%",
+                marginTop: "16px",
+                padding: "24px",
+                background: "linear-gradient(135deg, rgba(255, 55, 95, 0.1), rgba(255, 55, 95, 0.05))",
+                border: "1px solid rgba(255, 55, 95, 0.3)",
+                borderRadius: "12px",
+              }}
+            >
+              <div
+                style={{
+                  width: "50px",
+                  height: "50px",
+                  border: "4px solid rgba(255, 55, 95, 0.2)",
+                  borderTopColor: "#ff375f",
+                  borderRadius: "50%",
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+              <div
+                style={{
+                  width: "100%",
+                  height: "8px",
+                  background: "rgba(0, 0, 0, 0.1)",
+                  borderRadius: "10px",
+                  overflow: "hidden",
+                }}
+              >
+                <div
+                  style={{
+                    height: "100%",
+                    width: `${ocrProgress}%`,
+                    background: "linear-gradient(90deg, #ff375f, #ff6b8a)",
+                    borderRadius: "10px",
+                    transition: "width 0.3s ease",
+                    boxShadow: "0 0 10px rgba(255, 55, 95, 0.5)",
+                  }}
+                />
+              </div>
+              <p
+                style={{
+                  fontFamily: "Poppins",
+                  fontWeight: 500,
+                  fontSize: isMobile ? "14px" : "15px",
+                  color: "#000000",
+                  margin: 0,
+                  textAlign: "center",
+                }}
+              >
+                {ocrMessage} ({ocrProgress}%)
+              </p>
+            </div>
+          )}
+
+          {/* OCR Result Message */}
+          {!isProcessingOCR && ocrMessage && (
+            <div
+              style={{
+                width: "100%",
+                padding: "12px 16px",
+                borderRadius: "8px",
+                marginTop: "12px",
+                textAlign: "center",
+                fontFamily: "Poppins",
+                fontSize: isMobile ? "13px" : "14px",
+                fontWeight: 500,
+                backgroundColor: ocrMessage.includes('✅') ? 'rgba(52, 199, 89, 0.15)' :
+                  ocrMessage.includes('❌') ? 'rgba(255, 59, 48, 0.15)' : 'rgba(255, 159, 10, 0.15)',
+                border: `1px solid ${ocrMessage.includes('✅') ? 'rgba(52, 199, 89, 0.3)' :
+                  ocrMessage.includes('❌') ? 'rgba(255, 59, 48, 0.3)' : 'rgba(255, 159, 10, 0.3)'}`,
+                color: ocrMessage.includes('✅') ? '#34c759' :
+                  ocrMessage.includes('❌') ? '#ff3b30' : '#ff9f0a',
+              }}
+            >
+              {ocrMessage}
+            </div>
+          )}
+
+          {/* Extracted Stats Display */}
+          {hasExtractedStats && editData && (
+            <div
+              style={{
+                width: "100%",
+                padding: "16px",
+                marginTop: "16px",
+                background: "linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05))",
+                border: "2px solid rgba(52, 199, 89, 0.3)",
+                borderRadius: "12px",
+              }}
+            >
+              <h3
+                style={{
+                  fontFamily: "Poppins",
+                  fontWeight: 600,
+                  fontSize: isMobile ? "16px" : "17px",
+                  color: "#34c759",
+                  marginBottom: "16px",
+                  textAlign: "center",
+                }}
+              >
+                📊 Extracted Stats from Screenshot:
+              </h3>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
+                  gap: "12px",
+                }}
+              >
+                {editData.total_xp !== profile?.total_xp && (
+                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>⭐</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Total XP</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
+                      {editData.total_xp?.toLocaleString()}
+                    </div>
+                  </div>
+                )}
+                {editData.pokemon_caught !== profile?.pokemon_caught && (
+                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>🔴</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Pokémon Caught</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
+                      {editData.pokemon_caught?.toLocaleString()}
+                    </div>
+                  </div>
+                )}
+                {editData.distance_walked !== profile?.distance_walked && (
+                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>👣</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Distance Walked</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
+                      {editData.distance_walked} km
+                    </div>
+                  </div>
+                )}
+                {editData.pokestops_visited !== profile?.pokestops_visited && (
+                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>🔵</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>PokéStops Visited</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
+                      {editData.pokestops_visited?.toLocaleString()}
+                    </div>
+                  </div>
+                )}
+                {editData.unique_pokedex_entries !== profile?.unique_pokedex_entries && (
+                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
+                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>📖</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Pokédex Entries</div>
+                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
+                      {editData.unique_pokedex_entries}
+                    </div>
+                  </div>
+                )}
+              </div>
+              <p
+                style={{
+                  marginTop: "16px",
+                  padding: "8px",
+                  background: "rgba(52, 199, 89, 0.15)",
+                  borderRadius: "6px",
+                  fontFamily: "Poppins",
+                  fontSize: isMobile ? "12px" : "13px",
+                  color: "#34c759",
+                  textAlign: "center",
+                  border: "1px solid rgba(52, 199, 89, 0.3)",
+                }}
+              >
+                ✅ These values have been automatically filled in the form fields above. Review and save!
+              </p>
             </div>
           )}
         </form>
