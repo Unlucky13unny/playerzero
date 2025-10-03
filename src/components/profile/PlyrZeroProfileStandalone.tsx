@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
-import { useValuePropModal } from '../../hooks/useValuePropModal';
 import { CountryFlag } from '../common/CountryFlag';
 
 // Import team colors from the shared constants
@@ -58,7 +57,6 @@ export function PlyrZeroProfileStandalone({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
-  const { showValueProp } = useValuePropModal();
 
   useEffect(() => {
     if (isOpen && profileId) {
@@ -84,7 +82,7 @@ export function PlyrZeroProfileStandalone({
 
   const handleViewFullProfile = () => {
     if (!trialStatus.canClickIntoProfiles) {
-      showValueProp('profile');
+      navigate('/upgrade');
       return;
     }
     navigate(`/player/${profileId}`);
@@ -143,7 +141,7 @@ export function PlyrZeroProfileStandalone({
 
   const styles = {
     container: {
-      maxWidth: "384px",
+      maxWidth: "430px",
       margin: "0",
       backgroundColor: "white",
       minHeight: "auto",
@@ -218,6 +216,8 @@ export function PlyrZeroProfileStandalone({
       alignItems: "center",
       justifyContent: "space-between",
       fontSize: "14px",
+      gap : "40px",
+      marginTop : "20px",
     },
     userInfoItem: {
       display: "flex",
@@ -245,32 +245,33 @@ export function PlyrZeroProfileStandalone({
       padding: "0 16px",
       display: "flex",
       flexDirection: "column" as const,
-      gap: "16px",
-    },
-    statsRow: {
-      display: "grid",
-      gridTemplateColumns: "1fr 1fr",
-      gap: "16px",
+      gap: "10px",
     },
     statCard: {
-      padding: "16px",
+      padding: "6px 10px",
       backgroundColor: "#f9fafb",
       border: "1px solid #e5e7eb",
       borderRadius: "8px",
+      display: "flex",
+      flexDirection: "column" as const,
+      alignItems: "center",
+      justifyContent: "center",
+      textAlign: "center" as const,
     },
     statValue: {
-      fontSize: "24px",
+      fontSize: "18px",
       fontWeight: "bold",
       color: "black",
       lineHeight: "1.2",
+      marginBottom: "3px",
     },
     statLabel: {
-      fontSize: "14px",
+      fontSize: "12px",
       color: "#6b7280",
-      marginTop: "4px",
+      fontWeight: "400",
     },
     buttonContainer: {
-      padding: "24px 16px 16px 16px",
+      padding: "20px 16px 16px 16px",
     },
     viewProfileButton: {
       width: "100%",
@@ -441,36 +442,34 @@ export function PlyrZeroProfileStandalone({
             </div>
           </div>
 
-          {/* Stats Grid */}
+          {/* Stats - Row Layout */}
           <div style={styles.statsContainer}>
-            <div style={styles.statsRow}>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>
-                  {profileData.distance_walked.toFixed(1)} km
-                </div>
-                <div style={styles.statLabel}>Distance Walked</div>
+            <div style={styles.statCard}>
+              <div style={styles.statValue}>
+                {profileData.distance_walked.toFixed(1)} km
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>
-                  {profileData.pokemon_caught.toLocaleString()}
-                </div>
-                <div style={styles.statLabel}>Pokémon Caught</div>
-              </div>
+              <div style={styles.statLabel}>Distance Walked</div>
             </div>
-
-            <div style={styles.statsRow}>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>
-                  {profileData.pokestops_visited.toLocaleString()}
-                </div>
-                <div style={styles.statLabel}>Pokéstops Visited</div>
+            
+            <div style={styles.statCard}>
+              <div style={styles.statValue}>
+                {profileData.pokemon_caught.toLocaleString()}
               </div>
-              <div style={styles.statCard}>
-                <div style={styles.statValue}>
-                  {formatXP(profileData.total_xp)}
-                </div>
-                <div style={styles.statLabel}>Total XP</div>
+              <div style={styles.statLabel}>Pokémon Caught</div>
+            </div>
+            
+            <div style={styles.statCard}>
+              <div style={styles.statValue}>
+                {profileData.pokestops_visited.toLocaleString()}
               </div>
+              <div style={styles.statLabel}>Pokéstops Visited</div>
+            </div>
+            
+            <div style={styles.statCard}>
+              <div style={styles.statValue}>
+                {formatXP(profileData.total_xp)}
+              </div>
+              <div style={styles.statLabel}>Total XP</div>
             </div>
           </div>
 
@@ -487,7 +486,6 @@ export function PlyrZeroProfileStandalone({
               onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = trialStatus.canClickIntoProfiles ? "#dc2626" : "#666")}
               title={trialStatus.canClickIntoProfiles ? "View full profile" : "Upgrade to view full profiles"}
             >
-              {!trialStatus.canClickIntoProfiles && <span>🔒 </span>}
               View Profile
             </button>
           </div>

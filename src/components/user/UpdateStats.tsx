@@ -6,6 +6,7 @@ import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
 import { Upload } from 'lucide-react'
 import { StatUpdateModal } from '../common/StatUpdateModal'
+import { SuccessModal } from '../common/SuccessModal'
 import { extractStatsFromImage, validateExtractedStats } from '../../utils/ocrService'
 import './UserProfile.css'
 
@@ -13,7 +14,6 @@ export const UpdateStats = () => {
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const navigate = useNavigate()
@@ -186,6 +186,7 @@ export const UpdateStats = () => {
 
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [statChanges, setStatChanges] = useState<any[]>([])
   const [hasDecreasingStats, setHasDecreasingStats] = useState(false)
   
@@ -285,11 +286,13 @@ export const UpdateStats = () => {
     if (editData.unique_pokedex_entries !== undefined && editData.unique_pokedex_entries !== profile.unique_pokedex_entries) {
       const newValue = parseFloat(editData.unique_pokedex_entries.toString());
       const oldValue = profile.unique_pokedex_entries || 0;
+      const isDecrease = newValue < oldValue;
+      if (isDecrease) decreasingStats.push('Pokédex Entries');
       changes.push({
         label: 'Pokédex Entries',
         oldValue: oldValue.toLocaleString(),
         newValue: newValue.toLocaleString(),
-        isDecrease: false // Pokedex can fluctuate
+        isDecrease
       });
     }
     
@@ -317,7 +320,6 @@ export const UpdateStats = () => {
 
     setSaving(true);
     setError(null);
-    setSuccess(null);
 
     try {
       // Create updates object with only the changed stats
@@ -348,16 +350,12 @@ export const UpdateStats = () => {
         // Reload profile data
         await loadProfile()
         setSelectedFile(null)
-        setSuccess('Stats updated successfully! Redirecting to your profile...')
         setError(null)
 
-        // Show success message briefly then redirect
-        setTimeout(() => {
-          navigate('/UserProfile')
-        }, 1500)
+        // Show success modal
+        setShowSuccessModal(true)
       } else {
         setError(response.message || 'Failed to update stats')
-        setSuccess(null)
       }
     } catch (err: any) {
       setError(err.message || 'Failed to update stats');
@@ -436,52 +434,6 @@ export const UpdateStats = () => {
           boxSizing: "border-box",
         }}
       >
-        {/* Success Message */}
-        {success && (
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "12px",
-              width: "100%",
-              padding: "12px 16px",
-              backgroundColor: "#dcfce7",
-              border: "1px solid #bbf7d0",
-              borderRadius: "8px",
-              marginBottom: "8px",
-            }}
-          >
-            <div
-              style={{
-                width: "20px",
-                height: "20px",
-                backgroundColor: "#22c55e",
-                borderRadius: "50%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "white",
-                fontSize: "12px",
-                fontWeight: "bold",
-                flexShrink: 0,
-              }}
-            >
-              ✓
-            </div>
-            <span
-              style={{
-                fontFamily: "Poppins",
-                fontStyle: "normal",
-                fontWeight: 400,
-                fontSize: isMobile ? "13px" : "12px",
-                lineHeight: isMobile ? "18px" : "16px",
-                color: "#166534",
-              }}
-            >
-              {success}
-            </span>
-          </div>
-        )}
 
         {/* Stats Form */}
         <form
@@ -1421,6 +1373,18 @@ export const UpdateStats = () => {
         onReview={handleReviewChanges}
         changes={statChanges}
         hasDecreasingStats={hasDecreasingStats}
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/UserProfile')
+        }}
+        title="SUCCESS!"
+        message="Stats updated successfully"
+        confirmText="Okay"
       />
       
       {/* Mobile Footer */}

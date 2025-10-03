@@ -60,9 +60,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const [lockedExpanded, setLockedExpanded] = useState(false)
 
-  const [liveExpanded, setLiveExpanded] = useState(true)
-
-  const [webLiveExpanded, setWebLiveExpanded] = useState(true)
+  // Live leaderboard limit states
+  const [liveLimit, setLiveLimit] = useState<5 | 10 | 25 | 50 | 100 | 'all'>('all')
+  const [showLiveLimitDropdown, setShowLiveLimitDropdown] = useState(false)
+  const [showWebLiveLimitDropdown, setShowWebLiveLimitDropdown] = useState(false)
 
   const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
 
@@ -175,6 +176,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         setShowStatsDropdown(false)
 
         setShowProxyDropdown(false)
+
+        setShowLiveLimitDropdown(false)
+
+        setShowWebLiveLimitDropdown(false)
 
       }
 
@@ -578,11 +583,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     
     // Don't allow clicking on aggregated data (no individual profile)
     if (!profileId) {
-      return;
-    }
-    
-    if (!trialStatus.canClickIntoProfiles) {
-      navigate('/upgrade');
       return;
     }
     setSelectedProfile(profileId === selectedProfile ? null : profileId);
@@ -2222,12 +2222,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   // Locked Results: Show top 3 by default, top 10 when expanded
   // const lockedResults = lockedExpanded ? processedData.slice(0, 10) : processedData.slice(0, 3)
 
-  // Responsive Live section: Mobile shows all users, Web shows only top 3 (except for all-time)
-  // Live section should always show current period data (weekly/monthly/all-time)
-  // For all-time period, both mobile and web should show all results
-  const liveResults = (isMobile || timePeriod === 'alltime')
+  // Responsive Live section: Use liveLimit for both mobile and web (except all-time shows all)
+  // For all-time period, show all results without limit
+  const liveResults = timePeriod === 'alltime' || liveLimit === 'all'
     ? processedData
-    : processedData.slice(0, 3)
+    : processedData.slice(0, liveLimit)
 
   
 
@@ -2888,8 +2887,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const renderWebMonthResults = () => {
 
-    // For all periods: show all results from position 1 onwards
-    const allMainResults = processedData
+    // For all periods: use liveLimit to control how many results to show
+    const allMainResults = timePeriod === 'alltime' || liveLimit === 'all'
+      ? processedData
+      : processedData.slice(0, liveLimit)
 
     
 
@@ -3000,33 +3001,85 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           {/* Dropdown Button - Hidden in All Time view */}
           {timePeriod !== 'alltime' && (
-          <button
-            onClick={() => setWebLiveExpanded(!webLiveExpanded)}
-            style={{
-              background: 'none',
-              border: 'none',
-              cursor: 'pointer',
-              padding: '0px',
-              display: 'flex',
-              alignItems: 'center',
-              marginLeft: '8px',
-            }}
-          >
-            <svg 
-              width="38" 
-              height="24" 
-              viewBox="0 0 38 24" 
-              fill="none" 
-              xmlns="http://www.w3.org/2000/svg"
+          <div style={{ position: 'relative', marginLeft: '8px' }} data-dropdown>
+            <button
+              onClick={() => setShowWebLiveLimitDropdown(!showWebLiveLimitDropdown)}
               style={{
-                transform: webLiveExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
-                transition: 'transform 0.2s ease'
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: '0px',
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
-              <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
-            </svg>
-          </button>
+              <svg 
+                width="38" 
+                height="24" 
+                viewBox="0 0 38 24" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: showWebLiveLimitDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+                <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+              </svg>
+            </button>
+            
+            {/* Dropdown Menu */}
+            {showWebLiveLimitDropdown && (
+              <div style={{
+                position: 'absolute',
+                top: '100%',
+                right: '0',
+                marginTop: '8px',
+                backgroundColor: 'white',
+                border: '1px solid #e5e7eb',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                zIndex: 1000,
+                minWidth: '120px',
+              }}>
+                {['all', 5, 10, 25, 50, 100].map((limit, index, array) => (
+                  <button
+                    key={limit}
+                    onClick={() => {
+                      setLiveLimit(limit as 5 | 10 | 25 | 50 | 100 | 'all')
+                      setShowWebLiveLimitDropdown(false)
+                    }}
+                    style={{
+                      width: '100%',
+                      padding: '10px 16px',
+                      border: 'none',
+                      background: liveLimit === limit ? '#f3f4f6' : 'white',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontFamily: 'Poppins',
+                      fontSize: '14px',
+                      fontWeight: liveLimit === limit ? '600' : '400',
+                      color: liveLimit === limit ? '#dc2626' : '#000',
+                      borderBottom: index !== array.length - 1 ? '1px solid #f3f4f6' : 'none',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (liveLimit !== limit) {
+                        e.currentTarget.style.background = '#f9fafb'
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (liveLimit !== limit) {
+                        e.currentTarget.style.background = 'white'
+                      }
+                    }}
+                  >
+                    {limit === 'all' ? 'All' : `Top ${limit}`}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           )}
 
         </div>
@@ -3039,7 +3092,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         {/* Frame 574 - Main Results Container */}
 
-        {webLiveExpanded && allMainResults.length > 0 && (
+        {allMainResults.length > 0 && (
 
         <div style={{
 
@@ -3221,13 +3274,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
-                    cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                    cursor: player.profileId ? 'pointer' : 'default',
                   }}
                   onClick={(e) => handlePreviewClick(e, player.profileId)}
-                  title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                  title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)") : ""}
                 >
                   {player.name}
-                  {!trialStatus.canClickIntoProfiles && player.profileId && <span style={{ marginLeft: '4px' }}>🔒</span>}
                 </span>
 
                   {/* Country Flag and Team */}
@@ -3557,13 +3609,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
-                  cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                  cursor: player.profileId ? 'pointer' : 'default',
                 }}
                 onClick={(e) => handlePreviewClick(e, player.profileId)}
-                title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)") : ""}
               >
                 {player.name}
-                {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
               </span>
 
 
@@ -6861,13 +6912,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       fontSize: '12px',
                       lineHeight: '18px',
                         color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
-                        cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                        cursor: player.profileId ? 'pointer' : 'default',
                       }}
                       onClick={(e) => handlePreviewClick(e, player.profileId)}
-                      title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                      title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)") : ""}
                     >
                       {player.name}
-                      {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                     </span>
 
                     
@@ -7116,13 +7166,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         fontSize: '12px',
                         lineHeight: '18px',
                           color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
-                          cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                          cursor: player.profileId ? 'pointer' : 'default',
                         }}
                         onClick={(e) => handlePreviewClick(e, player.profileId)}
-                        title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles") : ""}
+                        title={player.profileId ? (trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)") : ""}
                       >
                         {player.name}
-                        {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                       </span>
 
                       {/* Country and Team */}
@@ -7269,9 +7318,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
          {/* Live Header */}
 
-         <button
-
-           onClick={timePeriod !== 'alltime' ? () => setLiveExpanded(!liveExpanded) : undefined}
+         <div
 
            style={{
 
@@ -7284,12 +7331,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
              width: '96%',
 
              padding: '8px 0',
-
-             background: 'transparent',
-
-             border: 'none',
-
-             cursor: timePeriod !== 'alltime' ? 'pointer' : 'default',
 
            }}
 
@@ -7331,28 +7372,90 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
            {/* Dropdown Button - Hidden in All Time view */}
            {timePeriod !== 'alltime' && (
-           <svg 
-             width="38" 
-             height="24" 
-             viewBox="0 0 38 24" 
-             fill="none" 
-             xmlns="http://www.w3.org/2000/svg"
-             style={{
-               transform: liveExpanded ? 'rotate(0deg)' : 'rotate(180deg)',
-               transition: 'transform 0.2s ease',
-               marginLeft: '8px'
-             }}
-           >
-             <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
-             <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
-           </svg>
+           <div style={{ position: 'relative' }} data-dropdown>
+             <button
+               onClick={() => setShowLiveLimitDropdown(!showLiveLimitDropdown)}
+               style={{
+                 background: 'none',
+                 border: 'none',
+                 cursor: 'pointer',
+                 padding: '0px',
+                 display: 'flex',
+                 alignItems: 'center',
+               }}
+             >
+               <svg 
+                 width="38" 
+                 height="24" 
+                 viewBox="0 0 38 24" 
+                 fill="none" 
+                 xmlns="http://www.w3.org/2000/svg"
+                 style={{
+                   transform: showLiveLimitDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
+                   transition: 'transform 0.2s ease',
+                 }}
+               >
+                 <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+                 <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+               </svg>
+             </button>
+             
+             {/* Dropdown Menu */}
+             {showLiveLimitDropdown && (
+               <div style={{
+                 position: 'absolute',
+                 top: '100%',
+                 right: '0',
+                 marginTop: '8px',
+                 backgroundColor: 'white',
+                 border: '1px solid #e5e7eb',
+                 borderRadius: '8px',
+                 boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                 zIndex: 1000,
+                 minWidth: '120px',
+               }}>
+                 {['all', 5, 10, 25, 50, 100].map((limit, index, array) => (
+                   <button
+                     key={limit}
+                     onClick={() => {
+                       setLiveLimit(limit as 5 | 10 | 25 | 50 | 100 | 'all')
+                       setShowLiveLimitDropdown(false)
+                     }}
+                     style={{
+                       width: '100%',
+                       padding: '10px 16px',
+                       border: 'none',
+                       background: liveLimit === limit ? '#f3f4f6' : 'white',
+                       textAlign: 'left',
+                       cursor: 'pointer',
+                       fontFamily: 'Poppins',
+                       fontSize: '14px',
+                       fontWeight: liveLimit === limit ? '600' : '400',
+                       color: liveLimit === limit ? '#dc2626' : '#000',
+                       borderBottom: index !== array.length - 1 ? '1px solid #f3f4f6' : 'none',
+                     }}
+                     onMouseEnter={(e) => {
+                       if (liveLimit !== limit) {
+                         e.currentTarget.style.background = '#f9fafb'
+                       }
+                     }}
+                     onMouseLeave={(e) => {
+                       if (liveLimit !== limit) {
+                         e.currentTarget.style.background = 'white'
+                       }
+                     }}
+                   >
+                     {limit === 'all' ? 'All' : `Top ${limit}`}
+                   </button>
+                 ))}
+               </div>
+             )}
+           </div>
            )}
 
-         </button>
+         </div>
 
 
-
-         {liveExpanded && (
 
            <div style={{
 
@@ -7486,13 +7589,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                        fontSize: '12px',
                        lineHeight: '18px',
                          color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
-                         cursor: (trialStatus.canClickIntoProfiles && player.profileId) ? 'pointer' : 'default',
+                         cursor: 'pointer',
                        }}
                        onClick={(e) => handlePreviewClick(e, player.profileId)}
-                       title={trialStatus.canClickIntoProfiles ? "View profile" : "Upgrade to view profiles"}
+                       title={trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)"}
                      >
                        {player.name}
-                       {!trialStatus.canClickIntoProfiles && <span style={{ marginLeft: '4px' }}>🔒</span>}
                      </span>
 
                      
@@ -7718,8 +7820,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
              )}
 
            </div>
-
-         )}
 
        </div>
 

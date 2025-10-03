@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData } from '../../services/profileService'
 import { adminService } from '../../services/adminService'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
+import { ErrorModal } from '../common/ErrorModal'
+import { SuccessModal } from '../common/SuccessModal'
 import './ProfileSetup.css'
 
 const TEAM_COLORS = [
@@ -69,6 +71,8 @@ export const ProfileSetup = () => {
   })
 
   const [profileScreenshot, setProfileScreenshot] = useState<File | null>(null)
+  const [showTrainerCodeError, setShowTrainerCodeError] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   // Check if user already has a profile when component mounts
   useEffect(() => {
@@ -197,6 +201,12 @@ export const ProfileSetup = () => {
   }
 
   const handleSubmit = async () => {
+    // Validate trainer code is exactly 12 digits
+    if (profileData.trainer_code && profileData.trainer_code.length !== 12) {
+      setShowTrainerCodeError(true)
+      return
+    }
+
     setLoading(true)
     setError(null)
     
@@ -239,8 +249,8 @@ export const ProfileSetup = () => {
         throw new Error('Failed to update profile status: ' + metadataError.message)
       }
       
-      // Navigate to tutorial after successful profile completion
-      navigate('/tutorial')
+      // Show success modal instead of navigating directly
+      setShowSuccessModal(true)
     } catch (err: any) {
       setError(err.message || 'Failed to save profile. Please try again.')
       console.error(err)
@@ -319,7 +329,7 @@ export const ProfileSetup = () => {
               />
               {profileData.trainer_code && profileData.trainer_code.length < 12 && (
                 <div className="validation-message">
-                  Trainer code must be exactly 12 digits ({profileData.trainer_code.length}/12)
+                  Trainer code must be exactly 12 digits
                 </div>
               )}
               <div className="checkbox-group">
@@ -712,6 +722,28 @@ export const ProfileSetup = () => {
           </div>
         </div>
       </div>
+      
+      {/* Trainer Code Error Modal */}
+      <ErrorModal
+        isOpen={showTrainerCodeError}
+        onClose={() => setShowTrainerCodeError(false)}
+        title="ERROR!"
+        message="Trainer code must be exactly 12 digits"
+        confirmText="Retry"
+        cancelText="Cancel"
+      />
+
+      {/* Success Modal */}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/tutorial')
+        }}
+        title="SUCCESS!"
+        message="Profile setup completed successfully"
+        confirmText="Okay"
+      />
     </div>
   )
 } 

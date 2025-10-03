@@ -1108,6 +1108,50 @@ export const dashboardService = {
         return { success: false, message: 'Failed to update stats' };
       }
 
+      // Check if user has 7 or more screenshots, and delete the oldest if so
+      const { data: existingScreenshots, error: fetchError } = await supabase
+        .from('stat_verification_screenshots')
+        .select('id, screenshot_url, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true }); // Oldest first
+
+      if (fetchError) {
+        console.error('Error fetching existing screenshots:', fetchError);
+      }
+
+      // If user has 7 or more screenshots, delete the oldest one
+      if (existingScreenshots && existingScreenshots.length >= 7) {
+        const oldestScreenshot = existingScreenshots[0];
+        
+        // Delete from storage
+        try {
+          const urlParts = oldestScreenshot.screenshot_url.split('/');
+          const filePath = urlParts.slice(-2).join('/'); // Get user_id/filename
+          
+          const { error: storageDeleteError } = await supabase.storage
+            .from('stat-verification-screenshots')
+            .remove([filePath]);
+          
+          if (storageDeleteError) {
+            console.error('Error deleting old screenshot from storage:', storageDeleteError);
+          }
+        } catch (err) {
+          console.error('Error parsing screenshot URL for deletion:', err);
+        }
+
+        // Delete from database
+        const { error: dbDeleteError } = await supabase
+          .from('stat_verification_screenshots')
+          .delete()
+          .eq('id', oldestScreenshot.id);
+
+        if (dbDeleteError) {
+          console.error('Error deleting old screenshot record:', dbDeleteError);
+        } else {
+          console.log('Deleted oldest screenshot to maintain limit of 7');
+        }
+      }
+
       // Upload verification screenshot
       const screenshotResult = await dashboardService.uploadStatVerificationScreenshot(verificationScreenshot);
       if (screenshotResult.error) {

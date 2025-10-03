@@ -38,7 +38,7 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
     try {
       setLoading(true)
       setError(null)
-      const data = await dashboardService.getVerificationScreenshots(userId, 50) // Get last 50 screenshots
+      const data = await dashboardService.getVerificationScreenshots(userId, 7) // Get last 7 screenshots
       setScreenshots(data)
     } catch (err: any) {
       setError(err.message || 'Failed to load screenshots')

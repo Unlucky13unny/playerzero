@@ -69,6 +69,11 @@ export const UserSearch = () => {
     return teamColors[teamColor.toLowerCase()] || '#6B7280';
   };
 
+  const capitalizeFirstLetter = (name: string) => {
+    if (!name) return '';
+    return name.charAt(0).toUpperCase() + name.slice(1);
+  };
+
   return (
     <div className="user-search-container" ref={searchRef}>
       <div 
@@ -196,7 +201,7 @@ export const UserSearch = () => {
                     }}
                     title={profile.trainer_name}
                   >
-                    {profile.trainer_name}
+                    {capitalizeFirstLetter(profile.trainer_name)}
                   </span>
 
                   {/* Country Flag + Name */}
@@ -260,7 +265,7 @@ export const UserSearch = () => {
                         color: 'black',
                       }}
                     >
-                      {profile.team_color}
+                      {capitalizeFirstLetter(profile.team_color)}
                     </span>
                   </div>
                 </div>

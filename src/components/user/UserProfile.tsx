@@ -8,6 +8,7 @@ import { MobileFooter } from '../layout/MobileFooter'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
 import { WelcomeModal } from '../common/WelcomeModal'
+import { ErrorModal } from '../common/ErrorModal'
 import { LogOut } from 'lucide-react'
 import './UserProfile.css'
 
@@ -39,6 +40,7 @@ export const UserProfile = () => {
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false)
   const [editingPlatform, setEditingPlatform] = useState<{id: string, name: string, url: string} | null>(null)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
+  const [showTrainerCodeError, setShowTrainerCodeError] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const isMobile = useMobile()
@@ -133,12 +135,18 @@ export const UserProfile = () => {
     setEditData(profile)
     setError(null)
     setSuccess(null)
-    // Navigate back to the previous page
-    navigate(-1);
+    // Navigate to user profile page
+    navigate('/UserProfile');
   }
 
   const handleSave = async () => {
     if (!editData || !profile) return;
+
+    // Validate trainer code is exactly 12 digits
+    if (editData.trainer_code && editData.trainer_code.length !== 12) {
+      setShowTrainerCodeError(true);
+      return;
+    }
 
     setSaving(true);
     setError(null);
@@ -173,8 +181,8 @@ export const UserProfile = () => {
       setEditData(data);
       // Don't show success message for profile updates
       
-      // Navigate back to the previous page
-      navigate(-1);
+      // Navigate to user profile page
+      navigate('/UserProfile');
       
     } catch (err: any) {
       setError(err.message || 'Failed to update profile');
@@ -765,7 +773,7 @@ export const UserProfile = () => {
                     marginTop: "4px",
                     fontFamily: "Poppins"
                   }}>
-                    Trainer code must be exactly 12 digits ({editData.trainer_code.length}/12)
+                    Trainer code must be exactly 12 digits
                   </div>
                 )}
               </div>
@@ -1443,6 +1451,16 @@ export const UserProfile = () => {
       
       {/* Mobile Footer */}
       <MobileFooter currentPage="profile" />
+      
+      {/* Trainer Code Error Modal */}
+      <ErrorModal
+        isOpen={showTrainerCodeError}
+        onClose={() => setShowTrainerCodeError(false)}
+        title="ERROR!"
+        message="Trainer code must be exactly 12 digits"
+        confirmText="Retry"
+        cancelText="Cancel"
+      />
     </div>
   )
 }

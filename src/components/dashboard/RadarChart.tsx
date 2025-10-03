@@ -68,11 +68,12 @@ const getFilterButtons = (profile: ProfileWithMetadata | null) => {
 interface FilterButtonsProps {
   activeFilter: FilterType
   onFilterChange: (filter: FilterType) => void
+  onHoverChange: (filter: FilterType) => void
   profile: ProfileWithMetadata | null
   isMobile: boolean
 }
 
-function FilterButtons({ activeFilter, onFilterChange, profile, isMobile }: FilterButtonsProps) {
+function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, isMobile }: FilterButtonsProps) {
   const trialStatus = useTrialStatus()
   const isPremiumUser = trialStatus.isPaidUser
   
@@ -122,8 +123,8 @@ function FilterButtons({ activeFilter, onFilterChange, profile, isMobile }: Filt
               : (button.id === 'you' ? '40px' : button.id === 'country' ? '59px' : button.id === 'team' ? '62px' : '49px'),
             height: isMobile ? '14px' : '10px'
           }}
-          onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-          onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseEnter={() => onHoverChange(button.id)}
+          onMouseLeave={() => onHoverChange(null)}
         >
           <div
             style={{
@@ -197,6 +198,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
   const trialStatus = useTrialStatus()
   const isMobile = useMobile()
   const [activeFilter, setActiveFilter] = useState<FilterType>(null)
+  const [hoveredFilter, setHoveredFilter] = useState<FilterType>(null)
   const [chartData, setChartData] = useState<{
     communityAverages: any;
     countryAverages: any;
@@ -452,11 +454,14 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
   const getRadarElements = () => {
     const filterConfig = getFilterConfig(profile)
     
+    // Use hoveredFilter if available, otherwise use activeFilter
+    const effectiveFilter = hoveredFilter !== null ? hoveredFilter : activeFilter
+    
     // For premium users: show all 4 series with dominant filtering
     if (isPremiumUser) {
       return Object.entries(filterConfig).map(([key, config]) => {
-        // If no filter is active, show all 4 series with normal opacity
-        if (activeFilter === null) {
+        // If no filter is active or hovered, show all 4 series with normal opacity
+        if (effectiveFilter === null) {
           const strokeWidth = config.key === "Global" ? 3 : 1.5
           const fillOpacity = config.key === "Global" ? 0.1 : 
                             config.key === "Team" ? 0.65 : 
@@ -475,12 +480,14 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
+              onMouseEnter={() => setHoveredFilter(key as FilterType)}
+              onMouseLeave={() => setHoveredFilter(null)}
             />
           )
         }
         
-        // If a filter is active, show ALL series but highlight the selected one
-        const isSelected = activeFilter === key
+        // If a filter is active or hovered, show ALL series but highlight the selected one
+        const isSelected = effectiveFilter === key
         
         if (isSelected) {
           // Make selected series bold and prominent - fill matches border color
@@ -499,6 +506,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
+              onMouseEnter={() => setHoveredFilter(key as FilterType)}
+              onMouseLeave={() => setHoveredFilter(null)}
             />
           )
         } else {
@@ -518,6 +527,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
+              onMouseEnter={() => setHoveredFilter(key as FilterType)}
+              onMouseLeave={() => setHoveredFilter(null)}
             />
           )
         }
@@ -526,7 +537,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     
     // For free trial users: show only "You" and "Global" (community logic)
     else {
-      if (activeFilter === null) {
+      if (effectiveFilter === null) {
         // Show both "You" and "Global" with normal styling
         return ['you', 'global'].map((key) => {
           const config = filterConfig[key as keyof typeof filterConfig]
@@ -548,6 +559,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
+              onMouseEnter={() => setHoveredFilter(key as FilterType)}
+              onMouseLeave={() => setHoveredFilter(null)}
             />
           )
         }).filter(Boolean)
@@ -557,7 +570,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
           const config = filterConfig[key as keyof typeof filterConfig]
           if (!config) return null
           
-          const isSelected = activeFilter === key
+          const isSelected = effectiveFilter === key
           
           if (isSelected) {
             // Make selected series bold and prominent - fill matches border color
@@ -576,6 +589,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 animationDuration={0}
                 animationBegin={0}
                 isAnimationActive={false}
+                onMouseEnter={() => setHoveredFilter(key as FilterType)}
+                onMouseLeave={() => setHoveredFilter(null)}
               />
             )
           } else {
@@ -595,6 +610,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 animationDuration={0}
                 animationBegin={0}
                 isAnimationActive={false}
+                onMouseEnter={() => setHoveredFilter(key as FilterType)}
+                onMouseLeave={() => setHoveredFilter(null)}
               />
             )
           }
@@ -799,7 +816,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
         )}
       </div>
 
-      <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} profile={profile} isMobile={isMobile} />
+      <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} onHoverChange={setHoveredFilter} profile={profile} isMobile={isMobile} />
     </div>
     </>
   )
