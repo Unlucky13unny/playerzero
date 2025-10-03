@@ -7,6 +7,8 @@ import { useValuePropModal } from '../../hooks/useValuePropModal'
 import { useMobile } from '../../hooks/useMobile'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
+import { ErrorModal } from '../common/ErrorModal'
+import { SuccessModal } from '../common/SuccessModal'
 import { extractStatsFromImage } from '../../utils/ocrService'
 import logoSvg from "/images/logo.svg"
 import { Upload } from 'lucide-react'
@@ -82,6 +84,8 @@ export const ProfileSetup = () => {
   const [ocrProgress, setOcrProgress] = useState(0)
   const [ocrMessage, setOcrMessage] = useState<string | null>(null)
   const [hasExtractedStats, setHasExtractedStats] = useState(false)
+  const [showTrainerCodeError, setShowTrainerCodeError] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
 
   // Check if user already has a profile when component mounts
   useEffect(() => {
@@ -442,6 +446,12 @@ export const ProfileSetup = () => {
   }
 
   const handleSubmit = async () => {
+    // Validate trainer code is exactly 12 digits
+    if (profileData.trainer_code && profileData.trainer_code.length !== 12) {
+      setShowTrainerCodeError(true)
+      return
+    }
+
     setLoading(true)
     setError(null)
     
@@ -475,8 +485,8 @@ export const ProfileSetup = () => {
       // Update auth context
       await updateProfile({})
       
-      // Navigate to dashboard after successful profile completion with flag to show welcome modal
-      navigate('/UserProfile', { state: { fromProfileSetup: true } })
+      // Show success modal instead of navigating directly
+      setShowSuccessModal(true)
     } catch (err: any) {
       setError(err.message || 'Failed to save profile. Please try again.')
       console.error(err)
@@ -1058,6 +1068,26 @@ export const ProfileSetup = () => {
         onClose={handleCloseSocialModal}
         onConnect={handleSocialConnect}
         editingPlatform={editingPlatform}
+      />
+
+      <ErrorModal
+        isOpen={showTrainerCodeError}
+        onClose={() => setShowTrainerCodeError(false)}
+        title="ERROR!"
+        message="Trainer code must be exactly 12 digits"
+        confirmText="Retry"
+        cancelText="Cancel"
+      />
+
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => {
+          setShowSuccessModal(false)
+          navigate('/UserProfile', { state: { fromProfileSetup: true } })
+        }}
+        title="SUCCESS!"
+        message="Profile setup completed successfully"
+        confirmText="Okay"
       />
 
       {/* Mobile View */}

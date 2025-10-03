@@ -129,7 +129,7 @@ export const PublicProfile = () => {
     setScreenshotsLoading(true)
 
     try {
-      const screenshots = await dashboardService.getVerificationScreenshots(profile.user_id, 20)
+      const screenshots = await dashboardService.getVerificationScreenshots(profile.user_id, 7)
       setVerificationScreenshots(screenshots)
     } catch (err: any) {
       console.error('Error loading verification screenshots:', err)

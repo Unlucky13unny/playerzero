@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
-import { useValuePropModal } from '../../hooks/useValuePropModal';
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons';
 
 // Import team colors from the shared constants
@@ -52,7 +51,6 @@ export const QuickProfileView = ({
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
-  const { showValueProp } = useValuePropModal();
 
   useEffect(() => {
     if (isOpen && profileId) {
@@ -77,7 +75,7 @@ export const QuickProfileView = ({
 
   const handleViewFullProfile = () => {
     if (!trialStatus.canClickIntoProfiles) {
-      showValueProp('profile');
+      navigate('/upgrade');
       return;
     }
     navigate(`/player/${profileId}`);
@@ -260,36 +258,63 @@ export const QuickProfileView = ({
             </div>
           </div>
 
-          {/* Stats */}
+          {/* Stats - Row Layout */}
           <div className="quick-profile-stats" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: '1fr 1fr', 
-            gap: '12px', 
+            display: 'flex', 
+            flexDirection: 'column',
+            gap: '10px', 
             marginBottom: '20px' 
           }}>
-            <div className="stat-item" style={{ textAlign: 'center', padding: '8px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>Pokémon Caught</label>
-              <span className="stat-value" style={{ fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
+            <div className="stat-item" style={{ 
+              textAlign: 'center', 
+              padding: '14px 16px',
+              backgroundColor: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}>
+              <div className="stat-value" style={{ fontSize: '22px', fontWeight: 'bold', color: 'black', marginBottom: '3px' }}>
+                {profileData.distance_walked.toFixed(1)} km
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>Distance Walked</div>
+            </div>
+            
+            <div className="stat-item" style={{ 
+              textAlign: 'center', 
+              padding: '14px 16px',
+              backgroundColor: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}>
+              <div className="stat-value" style={{ fontSize: '22px', fontWeight: 'bold', color: 'black', marginBottom: '3px' }}>
                 {profileData.pokemon_caught.toLocaleString()}
-              </span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>Pokémon Caught</div>
             </div>
-            <div className="stat-item" style={{ textAlign: 'center', padding: '8px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>Pokéstops Visited</label>
-              <span className="stat-value" style={{ fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
+            
+            <div className="stat-item" style={{ 
+              textAlign: 'center', 
+              padding: '14px 16px',
+              backgroundColor: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}>
+              <div className="stat-value" style={{ fontSize: '22px', fontWeight: 'bold', color: 'black', marginBottom: '3px' }}>
                 {profileData.pokestops_visited.toLocaleString()}
-              </span>
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>Pokéstops Visited</div>
             </div>
-            <div className="stat-item" style={{ textAlign: 'center', padding: '8px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>Distance Walked</label>
-              <span className="stat-value" style={{ fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
-                    {profileData.distance_walked.toFixed(1)} km
-              </span>
-            </div>
-            <div className="stat-item" style={{ textAlign: 'center', padding: '8px' }}>
-              <label style={{ display: 'block', fontSize: '12px', color: '#666', marginBottom: '4px' }}>Total XP</label>
-              <span className="stat-value" style={{ fontSize: '16px', fontWeight: 'bold', color: 'black' }}>
-                    {formatXP(profileData.total_xp)}
-              </span>
+            
+            <div className="stat-item" style={{ 
+              textAlign: 'center', 
+              padding: '14px 16px',
+              backgroundColor: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '8px'
+            }}>
+              <div className="stat-value" style={{ fontSize: '22px', fontWeight: 'bold', color: 'black', marginBottom: '3px' }}>
+                {formatXP(profileData.total_xp)}
+              </div>
+              <div style={{ fontSize: '12px', color: '#6b7280', fontWeight: '400' }}>Total XP</div>
             </div>
           </div>
 
@@ -314,7 +339,6 @@ export const QuickProfileView = ({
               onMouseEnter={(e) => e.currentTarget.style.backgroundColor = trialStatus.canClickIntoProfiles ? '#B91C1C' : '#555'}
               onMouseLeave={(e) => e.currentTarget.style.backgroundColor = trialStatus.canClickIntoProfiles ? '#DC2627' : '#666'}
             >
-              {!trialStatus.canClickIntoProfiles && <span className="locked-indicator">🔒 </span>}
               View Full Profile
             </button>
           </div>
