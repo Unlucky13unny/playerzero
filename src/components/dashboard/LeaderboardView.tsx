@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, Fragment } from "react"
 
 import { useNavigate } from "react-router-dom"
 
@@ -61,7 +61,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [lockedExpanded, setLockedExpanded] = useState(false)
 
   // Live leaderboard limit states
-  const [liveLimit, setLiveLimit] = useState<5 | 10 | 25 | 50 | 100 | 'all'>('all')
+  const [liveLimit, setLiveLimit] = useState<10 | 25 | 50 | 100 | 'all'>('all')
   const [showLiveLimitDropdown, setShowLiveLimitDropdown] = useState(false)
   const [showWebLiveLimitDropdown, setShowWebLiveLimitDropdown] = useState(false)
 
@@ -72,6 +72,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [error, setError] = useState<string | null>(null)
 
   const [exporting, setExporting] = useState(false)
+
+  // Add state to store current user's profile ID
+  const [currentUserProfileId, setCurrentUserProfileId] = useState<string | null>(null)
 
 
 
@@ -130,6 +133,38 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   ]
 
 
+
+  // Load current user's profile ID for identification
+  useEffect(() => {
+    const loadCurrentUserProfile = async () => {
+      if (!user?.id) {
+        setCurrentUserProfileId(null)
+        return
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (error) {
+          console.error('Error loading current user profile:', error)
+          setCurrentUserProfileId(null)
+          return
+        }
+
+        console.log('🔑 Current user profile ID loaded:', data.id)
+        setCurrentUserProfileId(data.id)
+      } catch (err) {
+        console.error('Error loading current user profile:', err)
+        setCurrentUserProfileId(null)
+      }
+    }
+
+    loadCurrentUserProfile()
+  }, [user])
 
   // Load leaderboard data when filters change
 
@@ -2202,7 +2237,18 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   } else {
     // Normal individual trainer data
-    processedData = sortedData.map((entry, index) => ({
+    processedData = sortedData.map((entry, index) => {
+      const isCurrentUser = currentUserProfileId && entry.profile_id === currentUserProfileId
+      // Debug logging
+      if (isCurrentUser) {
+        console.log('✅ Found current user in leaderboard:', {
+          rank: index + 1,
+          name: entry.trainer_name,
+          profileId: entry.profile_id,
+          currentUserProfileId: currentUserProfileId
+        })
+      }
+      return {
       rank: index + 1,
       name: entry.trainer_name,
       countryName: entry.country,
@@ -2212,8 +2258,19 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       statValue: getStatValue(entry),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
       profileId: entry.profile_id,
-      isAggregated: false
-    }))
+        isAggregated: false,
+        isCurrentUser: isCurrentUser
+      }
+    })
+    
+    // Debug: Log if we found any current user
+    const currentUserInData = processedData.find((p: any) => p.isCurrentUser)
+    console.log('🔍 Current user check:', {
+      currentUserProfileId: currentUserProfileId,
+      foundInData: !!currentUserInData,
+      userRank: currentUserInData?.rank,
+      userName: currentUserInData?.name
+    })
   }
 
 
@@ -2224,15 +2281,167 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Responsive Live section: Use liveLimit for both mobile and web (except all-time shows all)
   // For all-time period, show all results without limit
-  const liveResults = timePeriod === 'alltime' || liveLimit === 'all'
-    ? processedData
-    : processedData.slice(0, liveLimit)
+  // If user's rank is outside the limit, append their entry separately
+  // 
+  // ═══════════════════════════════════════════════════════════════════════════════
+  // DYNAMIC USER RANK TRACKING - WORKS FOR ALL LIMIT OPTIONS
+  // ═══════════════════════════════════════════════════════════════════════════════
+  //
+  // HOW IT WORKS:
+  // - Automatically detects current logged-in user's rank
+  // - If user is WITHIN selected limit → Shows with red border at their position
+  // - If user is OUTSIDE selected limit → Shows top N + divider + user entry with red border
+  //
+  // ┌─────────────┬──────────────┬─────────────────────────────────────────────────┐
+  // │ Limit       │ Your Rank    │ What You See                                    │
+  // ├─────────────┼──────────────┼─────────────────────────────────────────────────┤
+  // │ Top 10      │ #8           │ 1-10 (with #8 having RED BORDER)                │
+  // │ Top 10      │ #67          │ 1-10 + "YOUR RANK" + #67 (RED BORDER)           │
+  // │ Top 25      │ #15          │ 1-25 (with #15 having RED BORDER)               │
+  // │ Top 25      │ #67          │ 1-25 + "YOUR RANK" + #67 (RED BORDER)           │
+  // │ Top 50      │ #35          │ 1-50 (with #35 having RED BORDER)               │
+  // │ Top 50      │ #245         │ 1-50 + "YOUR RANK" + #245 (RED BORDER)          │
+  // │ Top 100     │ #88          │ 1-100 (with #88 having RED BORDER)              │
+  // │ Top 100     │ #1,234       │ 1-100 + "YOUR RANK" + #1,234 (RED BORDER)       │
+  // │ All         │ Any          │ All entries (with your rank having RED BORDER)  │
+  // └─────────────┴──────────────┴─────────────────────────────────────────────────┘
+  //
+  // This is FULLY DYNAMIC - no hardcoded values! Works seamlessly for all options.
+  const calculateLiveResults = () => {
+    console.log('📊 calculateLiveResults called:', {
+      timePeriod,
+      liveLimit: `${liveLimit} ${typeof liveLimit === 'number' ? `(Top ${liveLimit})` : '(All)'}`,
+      activeTab,
+      totalEntries: processedData.length
+    })
+    
+    // Show all results if viewing all-time or "all" limit
+    if (timePeriod === 'alltime' || liveLimit === 'all') {
+      console.log('➡️ Showing all results (alltime or "all" limit)')
+      // Ensure no entries have isSeparatedUser flag when showing all
+      return processedData.map((entry: any) => ({
+        ...entry,
+        isSeparatedUser: false
+      }))
+    }
+    
+    // Get top N entries based on selected limit
+    // Important: Create clean entries without isSeparatedUser flag
+    const topEntries = processedData.slice(0, liveLimit).map((entry: any) => ({
+      ...entry,
+      isSeparatedUser: false  // Ensure no entry has this flag initially
+    }))
+    console.log(`📋 Top ${liveLimit} entries prepared`)
+    console.log('📋 Top entries ranks:', topEntries.map((e: any) => e.rank))
+    
+    // Only apply user separation for individual trainers (not country/team aggregations)
+    const isIndividualTrainers = activeTab === 'trainers'
+    if (!isIndividualTrainers) {
+      console.log('➡️ Not individual trainers view, returning top entries only')
+      return topEntries
+    }
+    
+    // Find current user's entry in the full dataset
+    const currentUserEntry = processedData.find((player: any) => player.isCurrentUser)
+    console.log('👤 Current user search:', {
+      found: !!currentUserEntry,
+      rank: currentUserEntry?.rank,
+      name: currentUserEntry?.name
+    })
+    
+    if (!currentUserEntry) {
+      console.log('⚠️ User not found in dataset')
+      return topEntries  // User not in dataset
+    }
+    
+    const currentUserRank = currentUserEntry.rank
+    
+    // Check if user is already in the top N entries
+    const userInTopEntries = topEntries.some((player: any) => player.isCurrentUser)
+    console.log('🔍 User position check:', {
+      userRank: currentUserRank,
+      limit: liveLimit,
+      inTopEntries: userInTopEntries
+    })
+    
+    // If user is outside the selected range (and not already shown), add them separately
+    // This works dynamically for ANY selected limit (10, 25, 50, or 100)
+    if (!userInTopEntries && currentUserRank > liveLimit) {
+      console.log(`✅ 🎯 SEPARATION TRIGGERED! User rank ${currentUserRank} is outside Top ${liveLimit}`)
+      console.log(`   Will show: Ranks 1-${liveLimit} + "YOUR RANK" divider + Rank ${currentUserRank} (with red border)`)
+      
+      // Create separated entry with explicit flags
+      const separatedUserEntry = {
+        ...currentUserEntry,
+        isSeparatedUser: true,  // Mark this entry as separated
+        isCurrentUser: true      // Ensure current user flag is set
+      }
+      
+      // CRITICAL: Double-check that ONLY the separated entry has the flag
+      const result = topEntries.map((entry: any) => ({
+        ...entry,
+        isSeparatedUser: false,  // Ensure top entries are clean
+        isCurrentUser: entry.isCurrentUser  // Keep existing isCurrentUser flag
+      }))
+      
+      // Add the separated user entry at the END
+      result.push(separatedUserEntry)
+      
+      console.log('📦 Final result:', result.length, 'entries')
+      console.log('📦 Separated entry position:', result.length - 1, 'Rank:', separatedUserEntry.rank)
+      console.log('📦 VERIFICATION - Full result array:')
+      result.forEach((p: any, idx: number) => {
+        const marker = p.isSeparatedUser ? ' ← SEPARATED ENTRY' : ''
+        console.log(`   [${idx}] Rank ${p.rank}: ${p.name} | isSeparated: ${!!p.isSeparatedUser} | isCurrentUser: ${!!p.isCurrentUser}${marker}`)
+      })
+      
+      // Final verification
+      const separatedCount = result.filter((p: any) => p.isSeparatedUser).length
+      if (separatedCount !== 1) {
+        console.error(`❌ ERROR: Expected 1 separated entry, found ${separatedCount}`)
+      }
+      const separatedIndex = result.findIndex((p: any) => p.isSeparatedUser)
+      if (separatedIndex !== result.length - 1) {
+        console.error(`❌ ERROR: Separated entry should be at index ${result.length - 1}, found at ${separatedIndex}`)
+      }
+      
+      return result
+    }
+    
+    // User is within top N or not found - return normal top entries
+    console.log('➡️ User is within top entries or already shown')
+    return topEntries
+  }
+  
+  const liveResults = calculateLiveResults()
 
   
 
   // Debug logging for Live section
 
   console.log('Data processing - isMobile:', isMobile, 'leaderboardData length:', leaderboardData.length, 'processedData length:', processedData.length, 'liveResults length:', liveResults.length)
+
+  // Debug: Show what's in liveResults
+  console.log('📋 liveResults details:', liveResults.map((p: any) => ({
+    rank: p.rank,
+    name: p.name,
+    isCurrentUser: p.isCurrentUser,
+    isSeparatedUser: p.isSeparatedUser
+  })))
+  
+  // Additional debugging for red border functionality
+  console.log('\n🔍 ========== FINAL LIVERESULTS ANALYSIS ==========')
+  console.log('📊 Total entries:', liveResults.length)
+  console.log('📊 Entries breakdown:')
+  liveResults.forEach((p: any, idx: number) => {
+    console.log(`   [${idx}] Rank ${p.rank}: ${p.name} | Separated: ${!!p.isSeparatedUser} | CurrentUser: ${!!p.isCurrentUser}`)
+  })
+  
+  const currentUserEntries = liveResults.filter((p: any) => p.isCurrentUser)
+  const separatedEntries = liveResults.filter((p: any) => p.isSeparatedUser)
+  console.log('🎯 Current user entries count:', currentUserEntries.length)
+  console.log('🎯 Separated entries count:', separatedEntries.length)
+  console.log('🔍 ================================================\n')
 
 
 
@@ -2635,7 +2844,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             }}>
 
-              {exporting ? 'Exporting...' : 'Export'}
+              Export
 
             </span>
 
@@ -2817,9 +3026,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           width: '826px',
 
-          height: timePeriod === 'alltime' ? 'auto' : '627px',
-          maxHeight: timePeriod === 'alltime' ? '800px' : '627px',
-          overflowY: timePeriod === 'alltime' ? 'auto' : 'visible',
+          height: 'auto',
 
           /* Inside auto layout */
 
@@ -2851,7 +3058,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             width: '826px',
 
-            height: '627px',
+            height: 'auto',
 
             background: 'rgba(0, 0, 0, 0.1)',
 
@@ -2888,9 +3095,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const renderWebMonthResults = () => {
 
     // For all periods: use liveLimit to control how many results to show
-    const allMainResults = timePeriod === 'alltime' || liveLimit === 'all'
-      ? processedData
-      : processedData.slice(0, liveLimit)
+    // Use the same logic as liveResults to include separated user
+    const allMainResults = calculateLiveResults()
 
     
 
@@ -3043,11 +3249,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 zIndex: 1000,
                 minWidth: '120px',
               }}>
-                {['all', 5, 10, 25, 50, 100].map((limit, index, array) => (
+                {['all', 10, 25, 50, 100].map((limit, index, array) => (
                   <button
                     key={limit}
                     onClick={() => {
-                      setLiveLimit(limit as 5 | 10 | 25 | 50 | 100 | 'all')
+                      setLiveLimit(limit as 10 | 25 | 50 | 100 | 'all')
                       setShowWebLiveLimitDropdown(false)
                     }}
                     style={{
@@ -3124,7 +3330,40 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-            {allMainResults.map((player, index) => renderWebMonthPlayerCard(player, index))}
+            {allMainResults.map((player, index) => {
+              const isSeparated = (player as any).isSeparatedUser
+              const isCurrentUser = (player as any).isCurrentUser
+              if (isSeparated) {
+                console.log('🎯 WEB: Rendering divider for separated user at index:', index, { name: (player as any).name, rank: (player as any).rank })
+              }
+              if (isCurrentUser) {
+                console.log('👤 WEB: Rendering current user at index:', index, { name: (player as any).name, rank: (player as any).rank, isSeparated })
+                console.log('🔴 WEB: RED BORDER should be applied to this entry!')
+              }
+              return (
+                <>
+                  {/* Divider for separated user */}
+                  {isSeparated && (
+                    <div key={`divider-${index}`} style={{
+                      width: '100%',
+                      textAlign: 'center',
+                      margin: '24px 0 12px 0',
+                      padding: '12px 0',
+                      borderTop: '2px solid #e5e7eb',
+                      fontFamily: 'Poppins',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color: '#6b7280',
+                      textTransform: 'uppercase' as const,
+                      letterSpacing: '0.5px'
+                    }}>
+                      Your Rank
+                    </div>
+                  )}
+                  {renderWebMonthPlayerCard(player, index)}
+                </>
+              )
+            })}
 
         </div>
 
@@ -3231,8 +3470,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   />
                 ) : (
                   <span style={{
-                    width: '6px',
-                    height: '21px',
                     fontFamily: 'Poppins',
                     fontStyle: 'normal',
                     fontWeight: 600,
@@ -3427,7 +3664,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         flexGrow: 0,
 
-        ...(index === 0 && {
+        ...((player as any).isCurrentUser && {
 
           border: '4px solid #DC2627'
 
@@ -3539,8 +3776,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               {/* Always use circle with number format for Live section */}
               <span style={{
-                width: '6px',
-                height: '21px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
@@ -6648,7 +6883,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           }}>
 
-            {exporting ? 'Export...' : 'Export'}
+            Export
 
           </span>
 
@@ -6992,7 +7227,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                           height: '10px',
 
-                          background: '#DC2627',
+                          background: getTeamColorHex(player.teamColor || player.team || ''),
 
                           borderRadius: '50%',
 
@@ -7008,7 +7243,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                           lineHeight: '15px',
 
-                          color: '#DC2627',
+                          color: getTeamColorHex(player.teamColor || player.team || ''),
 
                         }}>
 
@@ -7294,9 +7529,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
          maxWidth: '100vw',
 
-           height: '661px',
-
-           overflowY: 'scroll',
+           height: 'auto',
 
            background: 'rgba(0, 0, 0, 0.1)',
 
@@ -7414,11 +7647,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                  zIndex: 1000,
                  minWidth: '120px',
                }}>
-                 {['all', 5, 10, 25, 50, 100].map((limit, index, array) => (
+                 {['all', 10, 25, 50, 100].map((limit, index, array) => (
                    <button
                      key={limit}
                      onClick={() => {
-                       setLiveLimit(limit as 5 | 10 | 25 | 50 | 100 | 'all')
+                       setLiveLimit(limit as 10 | 25 | 50 | 100 | 'all')
                        setShowLiveLimitDropdown(false)
                      }}
                      style={{
@@ -7471,11 +7704,43 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
              {liveResults && liveResults.length > 0 ? (
 
-               liveResults.map((player, index) => (
+              liveResults.map((player, index) => {
+                const isSeparated = (player as any).isSeparatedUser
+                const isCurrentUser = (player as any).isCurrentUser
+                const teamColorHex = getTeamColorHex(player.teamColor || player.team || '')
+                
+                // Debug logging
+                if (isSeparated) {
+                  console.log('🎯 MOBILE: Rendering divider for separated user at index:', index, { name: player.name, rank: player.rank })
+                }
+                if (isCurrentUser) {
+                  console.log('👤 MOBILE: Rendering current user at index:', index, { name: player.name, rank: player.rank, isSeparated })
+                  console.log('🔴 MOBILE: RED BORDER should be applied to this entry!')
+                }
+                
+                return (
+              <Fragment key={`player-${player.rank}-${index}`}>
+                {/* Divider for separated user */}
+                {isSeparated && (
+                  <div style={{
+                    width: '100%',
+                    textAlign: 'center',
+                    margin: '16px 0 8px 0',
+                    padding: '8px 0',
+                    borderTop: '2px solid #e5e7eb',
+                    fontFamily: 'Poppins',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    color: '#6b7280',
+                    textTransform: 'uppercase' as const,
+                    letterSpacing: '0.5px'
+                  }}>
+                    Your Rank
+                  </div>
+                )}
 
                <div
 
-                 key={index}
                  className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
 
                  style={{
@@ -7501,6 +7766,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                    boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
 
                    borderRadius: '8px',
+
+                   border: isCurrentUser ? '3px solid #DC2627' : 'none',
 
                    flex: 'none',
 
@@ -7671,7 +7938,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                            height: '8px',
 
-                           background: '#DC2627',
+                           background: teamColorHex,
 
                            borderRadius: '50%',
 
@@ -7687,7 +7954,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                            lineHeight: '15px',
 
-                           color: '#DC2627',
+                           color: teamColorHex,
 
                          }}>
 
@@ -7761,7 +8028,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                </div>
 
-             ))
+               </Fragment>
+
+             )
+              })
 
              ) : (
 

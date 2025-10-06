@@ -3,6 +3,7 @@ import { X, ImageIcon } from "lucide-react"
 import { dashboardService } from '../../services/dashboardService'
 import { ReportModal } from '../moderation/ReportModal'
 import { reportService } from '../../services/reportService'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 interface VerificationScreenshotsModalProps {
   isOpen: boolean
@@ -20,6 +21,7 @@ interface ProofItem {
 }
 
 export function VerificationScreenshotsModal({ isOpen, onClose, userId }: VerificationScreenshotsModalProps) {
+  const trialStatus = useTrialStatus()
   const [screenshots, setScreenshots] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -98,8 +100,20 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
 
   return (
     <>
-      {/* Main Modal */}
-      <div className="fixed inset-0 bg-black bg-opacity-30 flex items-center justify-center z-50">
+      {/* Main Modal - Hide backdrop when image preview is open */}
+      {!selectedImage && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 50
+        }}>
         {/* Frame 735 - Main Container */}
         <div style={{
           display: 'flex',
@@ -332,10 +346,22 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
         </div>
         </div>
                         </div>
+      )}
                         
       {/* Image Preview Modal */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-60">
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 60
+        }}>
           <div style={{
             display: 'flex',
             justifyContent: 'center',
@@ -488,8 +514,8 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
               padding: '8px',
               boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)'
             }}>
-              {/* Frame 653 - Report button */}
-              {!hasReported && (
+              {/* Frame 653 - Report button - Only for paid users */}
+              {trialStatus.isPaidUser && !hasReported && (
                 <button
                   onClick={handleReportClick}
                   title="Report Suspicious Stats"
@@ -558,8 +584,8 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
                 </button>
               )}
 
-              {/* Already reported indicator */}
-              {hasReported && (
+              {/* Already reported indicator - Only for paid users */}
+              {trialStatus.isPaidUser && hasReported && (
                 <div
                   title="You have already reported this screenshot"
                   style={{
