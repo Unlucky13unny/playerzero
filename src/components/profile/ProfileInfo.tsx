@@ -1,5 +1,6 @@
 import { CountryFlag } from "../common/CountryFlag"
 import { useMobile } from "../../hooks/useMobile"
+import { useState } from "react"
 
 // Team colors matching PublicProfile implementation
 const TEAM_COLORS = [
@@ -40,13 +41,55 @@ const getSocialLink = (platform: string, value: string): string | undefined => {
       return `https://twitch.tv/${value}`
     case 'reddit':
       return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+    case 'github':
+      return `https://github.com/${value}`
+    case 'discord':
+      return value
+    case 'telegram':
+      return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
+    case 'whatsapp':
+      return `https://wa.me/${value}`
+    case 'vimeo':
+      return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
     default:
       return value
   }
 }
 
+// Social platform definitions with SVG file paths
+const getSocialPlatforms = () => [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'snapchat', name: 'Snapchat' },
+  { id: 'twitter', name: 'Twitter' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'reddit', name: 'Reddit' },
+  { id: 'discord', name: 'Discord' },
+  { id: 'telegram', name: 'Telegram' },
+  { id: 'whatsapp', name: 'WhatsApp' },
+  { id: 'vimeo', name: 'Vimeo' },
+]
+
 export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
   const isMobile = useMobile()
+  const [showAllSocial, setShowAllSocial] = useState(false)
+
+  // Get connected social platforms
+  const getConnectedPlatforms = () => {
+    const allPlatforms = getSocialPlatforms()
+    return allPlatforms.filter(platform => {
+      const value = profile?.[platform.id as keyof typeof profile];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
+  }
+
+  const connectedPlatforms = getConnectedPlatforms()
+  const visiblePlatforms = connectedPlatforms.slice(0, 4)
+  const remainingPlatforms = connectedPlatforms.slice(4)
+  const hasMorePlatforms = remainingPlatforms.length > 0
 
   const getTrainerCode = () => {
     if (!profile?.trainer_code) {
@@ -256,92 +299,100 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               </div>
 
           {/* Frame 518 - Social Icons */}
-          <div style={{
-            /* Frame 518 */
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'flex-start',
-            padding: '0px',
-            gap: '8px',
-            width: '131px',
-            height: '26.59px',
-            /* Inside auto layout */
-            flex: 'none',
-            order: 2,
-            flexGrow: 0,
-          }}>
-                {/* Facebook Icon - Only show if linked */}
-            {profile?.facebook && (
-              <div style={{
-                /* Group 396 */
-                width: '26.59px',
-                height: '26.59px',
-                /* Inside auto layout */
-                flex: 'none',
-                order: 0,
-                flexGrow: 0,
-                position: 'relative',
-              }}>
-                <a 
-                  href={getSocialLink('facebook', profile.facebook)} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  title={`Visit ${profile.facebook} on Facebook`}
-                >
-                  <img src="/images/facebook.svg" alt="Facebook" style={{ width: '26.59px', height: '26.59px' }} />
-                </a>
-              </div>
-            )}
+          {connectedPlatforms.length > 0 && (
+            <div style={{
+              /* Frame 518 */
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'flex-start',
+              padding: '0px',
+              gap: '8px',
+              width: 'auto',
+              height: '26.59px',
+              /* Inside auto layout */
+              flex: 'none',
+              order: 2,
+              flexGrow: 0,
+            }}>
+              {/* Show first 4 connected platforms */}
+              {visiblePlatforms.map((platform, index) => {
+                const isPrivate = profile?.social_links_private
+                const href = isPrivate ? undefined : getSocialLink(platform.id, profile?.[platform.id as keyof typeof profile] as string)
                 
-                {/* Instagram Icon - Only show if linked */}
-            {profile?.instagram && (
-              <div style={{
-                /* Group 397 */
-                width: '26.59px',
-                height: '26.59px',
-                /* Inside auto layout */
-                flex: 'none',
-                order: 1,
-                flexGrow: 0,
-                position: 'relative',
-              }}>
-                <a 
-                  href={getSocialLink('instagram', profile.instagram)} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  title={`Visit ${profile.instagram} on Instagram`}
+                return (
+                  <div
+                    key={platform.id}
+                    style={{
+                      width: '26.59px',
+                      height: '26.59px',
+                      flex: 'none',
+                      order: index,
+                      flexGrow: 0,
+                      position: 'relative',
+                      opacity: isPrivate ? 0.4 : 1,
+                      filter: isPrivate ? 'grayscale(100%)' : 'none',
+                      cursor: isPrivate ? 'default' : 'pointer',
+                    }}
+                    title={isPrivate ? 'Private' : `Visit on ${platform.name}`}
+                  >
+                    {isPrivate ? (
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ width: '26.59px', height: '26.59px' }} 
+                      />
+                    ) : (
+                      <a 
+                        href={href} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="hover:opacity-80 transition-opacity"
+                        title={`Visit on ${platform.name}`}
+                      >
+                        <img 
+                          src={`/images/${platform.id}.svg`} 
+                          alt={platform.name} 
+                          style={{ width: '26.59px', height: '26.59px' }} 
+                        />
+                      </a>
+                    )}
+                  </div>
+                )
+              })}
+              
+              {/* +N Button if there are more than 4 connected platforms */}
+              {hasMorePlatforms && (
+                <div
+                  onClick={() => !profile?.social_links_private && setShowAllSocial(true)}
+                  style={{
+                    width: '26.59px',
+                    height: '26.59px',
+                    background: profile?.social_links_private ? '#848282' : '#000000',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: profile?.social_links_private ? 'default' : 'pointer',
+                    flex: 'none',
+                    order: 4,
+                    flexGrow: 0,
+                    opacity: profile?.social_links_private ? 0.4 : 1,
+                  }}
+                  className={profile?.social_links_private ? '' : 'hover:opacity-80 transition-opacity'}
+                  title={profile?.social_links_private ? 'Private' : 'View more social accounts'}
                 >
-                  <img src="/images/instagram.svg" alt="Instagram" style={{ width: '26.59px', height: '26.59px' }} />
-                </a>
-              </div>
-            )}
-                
-                {/* Snapchat Icon - Only show if linked */}
-            {profile?.snapchat && (
-              <div style={{
-                /* Group 398 */
-                width: '26.59px',
-                height: '26.59px',
-                /* Inside auto layout */
-                flex: 'none',
-                order: 2,
-                flexGrow: 0,
-                position: 'relative',
-              }}>
-                <a 
-                  href={getSocialLink('snapchat', profile.snapchat)} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="hover:opacity-80 transition-opacity"
-                  title={`Add ${profile.snapchat} on Snapchat`}
-                >
-                  <img src="/images/snapchat.svg" alt="Snapchat" style={{ width: '26.59px', height: '26.59px' }} />
-                </a>
-              </div>
-            )}
-          </div>
+                  <span style={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    color: '#FFFFFF',
+                  }}>
+                    +{remainingPlatforms.length}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
@@ -545,6 +596,132 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       </div>
       </div>
 
+      {/* Modal for all social accounts - Matching SocialConnectModal design */}
+      {showAllSocial && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAllSocial(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              width: '351px',
+              height: 'auto',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllSocial(false)}
+              style={{
+                position: 'absolute',
+                width: '24px',
+                height: '24px',
+                right: '13px',
+                top: '13px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Social Accounts Grid - Matching SocialConnectModal */}
+            <div
+              style={{
+                padding: '60px 16px 24px 16px',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '28.25px 31.33px',
+                  width: '100%',
+                  justifyItems: 'center',
+                }}
+              >
+                {connectedPlatforms.map((platform) => {
+                  const isPrivate = profile?.social_links_private
+                  const href = isPrivate ? undefined : getSocialLink(platform.id, profile?.[platform.id as keyof typeof profile] as string)
+                  
+                  return isPrivate ? (
+                    <div
+                      key={platform.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.4,
+                        filter: 'grayscale(100%)',
+                        cursor: 'default',
+                      }}
+                      title="Private"
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ 
+                          width: '44px', 
+                          height: '44px',
+                        }} 
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      key={platform.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                      }}
+                      className="hover:opacity-80 transition-opacity"
+                      title={`Visit on ${platform.name}`}
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ 
+                          width: '44px', 
+                          height: '44px',
+                        }} 
+                      />
+                    </a>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   )
