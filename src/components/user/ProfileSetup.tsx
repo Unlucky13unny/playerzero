@@ -1118,7 +1118,7 @@ export const ProfileSetup = () => {
         isOpen={showSuccessModal}
         onClose={() => {
           setShowSuccessModal(false)
-          navigate('/UserProfile', { state: { fromProfileSetup: true } })
+          navigate('/paywall')
         }}
         title="SUCCESS!"
         message="Profile setup completed successfully"
