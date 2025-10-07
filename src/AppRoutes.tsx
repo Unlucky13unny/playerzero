@@ -4,6 +4,7 @@ import { SignupForm } from './components/auth/SignupForm'
 import { ForgotPassword } from './components/auth/ForgotPassword'
 import { ResetPassword } from './components/auth/ResetPassword'
 import { SignupSuccess } from './components/auth/SignupSuccess'
+import { PaywallPage } from './components/auth/PaywallPage'
 import { UserProfile } from './components/user/UserProfile'
 import { UpdateStats } from './components/user/UpdateStats'
 import { ProfileSetup } from './components/user/ProfileSetup'
@@ -55,6 +56,13 @@ const AppRoutes = () => {
       <Route path="/profile-setup" element={
         <ProtectedRoute>
           <ProfileSetup />
+        </ProtectedRoute>
+      } />
+      
+      {/* Paywall route - after profile setup, before tutorial */}
+      <Route path="/paywall" element={
+        <ProtectedRoute>
+          <PaywallPage />
         </ProtectedRoute>
       } />
       
