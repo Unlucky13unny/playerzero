@@ -7722,7 +7722,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               <Fragment key={`player-${player.rank}-${index}`}>
                 {/* Divider for separated user */}
                 {isSeparated && (
-                  <div style={{
+                  <div key={`divider-${player.rank}-${index}`} style={{
                     width: '100%',
                     textAlign: 'center',
                     margin: '16px 0 8px 0',
@@ -7733,13 +7733,16 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     fontWeight: 600,
                     color: '#6b7280',
                     textTransform: 'uppercase' as const,
-                    letterSpacing: '0.5px'
+                    letterSpacing: '0.5px',
+                    order: 9999,
                   }}>
                     Your Rank
                   </div>
                 )}
 
                <div
+
+                 key={`card-${player.rank}-${index}`}
 
                  className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
 
@@ -7771,7 +7774,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    flex: 'none',
 
-                   order: index,
+                   order: isSeparated ? 10000 : index,
 
                    alignSelf: 'stretch',
 
