@@ -1,7 +1,7 @@
- import { useNavigate } from 'react-router-dom'
-import { FaTimes } from 'react-icons/fa'
+import { useNavigate } from 'react-router-dom'
 import type { ProfileWithMetadata } from '../../services/profileService'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { ErrorModal } from '../common/ErrorModal'
 
 interface GrindCardProps {
   profile: ProfileWithMetadata | null
@@ -19,32 +19,18 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
 
   if (!profile) return null
 
-  // Show locked content if user is not subscribed and not in trial
+  // Show error modal if user is not subscribed and not in trial
   if (!isPaidUser && !trialStatus.isInTrial) {
     return (
-      <div className="export-modal-overlay" onClick={onClose}>
-        <div className="export-modal-content" onClick={(e) => e.stopPropagation()}>
-          <div className="export-modal-header">
-            <h2>Grind Card</h2>
-            <button className="modal-close-button" onClick={onClose}>
-              <FaTimes />
-            </button>
-          </div>
-          <div className="locked-content">
-            <div className="locked-icon">🔒</div>
-            <h3 className="locked-title">Private Mode Ended</h3>
-            <p className="locked-description">
-              To keep tracking your grind and unlock your leaderboard placement, upgrade for $5.99.
-            </p>
-            <button 
-              className="upgrade-button"
-              onClick={handleUpgradeClick}
-            >
-              Upgrade Now
-            </button>
-          </div>
-        </div>
-      </div>
+      <ErrorModal
+        isOpen={true}
+        onClose={onClose}
+        title="Premium Feature"
+        message="Sharing cards is a premium feature. Upgrade to unlock and flex your stats."
+        confirmText="Upgrade Now"
+        cancelText="Close"
+        onConfirm={handleUpgradeClick}
+      />
     )
   }
 
@@ -107,7 +93,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           margin: 0,
           padding: 0,
           border: 'none',
-          borderRadius: '0',
+          borderRadius: '14px',
           overflow: 'hidden',
           fontFamily: 'Poppins, sans-serif'
         }}

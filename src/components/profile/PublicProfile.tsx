@@ -8,6 +8,23 @@ import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
 import { VerificationScreenshotsModal } from '../shareables/VerificationScreenshotsModal'
 
+// Social platform definitions matching ProfileInfo
+const getSocialPlatformsConfig = () => [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'snapchat', name: 'Snapchat' },
+  { id: 'twitter', name: 'Twitter' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'reddit', name: 'Reddit' },
+  { id: 'discord', name: 'Discord' },
+  { id: 'telegram', name: 'Telegram' },
+  { id: 'whatsapp', name: 'WhatsApp' },
+  { id: 'vimeo', name: 'Vimeo' },
+]
+
 interface TeamColor {
   value: string
   label: string
@@ -34,12 +51,33 @@ export const PublicProfile = () => {
   const [error, setError] = useState<string | null>(null)
   const [selectedTeam, setSelectedTeam] = useState<TeamColor | null>(null)
   const [selectedTimeframe, setSelectedTimeframe] = useState<'weekly' | 'monthly' | 'alltime'>('monthly')
+  const [showAllSocial, setShowAllSocial] = useState(false)
 
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
   const [showVerificationModal, setShowVerificationModal] = useState(false)
   const trialStatus = useTrialStatus()
+  
+  // Determine if trainer code should be shown based on viewer status
+  const shouldShowTrainerCode = () => {
+    // Trial users can never see trainer codes
+    if (!trialStatus.isPaidUser) {
+      return false
+    }
+    // Paid users see trainer codes if the profile owner has made it public
+    return profile?.is_paid_user && profile?.trainer_code && !profile?.trainer_code_private
+  }
+  
+  // Determine if social links should be shown based on viewer status
+  const shouldShowSocialLinks = () => {
+    // Trial users can never see social links
+    if (!trialStatus.isPaidUser) {
+      return false
+    }
+    // Paid users see social links if the profile owner has made them public
+    return profile?.is_paid_user && !profile?.social_links_private
+  }
 
   useEffect(() => {
     loadProfile()
@@ -158,10 +196,35 @@ export const PublicProfile = () => {
         return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
       case 'snapchat':
         return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
+      case 'github':
+        return `https://github.com/${value}`
+      case 'discord':
+        return value
+      case 'telegram':
+        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
+      case 'whatsapp':
+        return `https://wa.me/${value}`
+      case 'vimeo':
+        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
       default:
         return value
     }
   }
+
+  // Get connected social platforms
+  const getConnectedPlatforms = () => {
+    if (!profile) return [];
+    const allPlatforms = getSocialPlatformsConfig();
+    return allPlatforms.filter(platform => {
+      const value = profile[platform.id as keyof PublicProfileData];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
+  };
+
+  const connectedPlatforms = getConnectedPlatforms();
+  const visiblePlatforms = connectedPlatforms.slice(0, 4);
+  const remainingPlatforms = connectedPlatforms.slice(4);
+  const hasMorePlatforms = remainingPlatforms.length > 0;
 
   const copyTrainerCode = () => {
     if (profile?.trainer_code) {
@@ -221,11 +284,61 @@ export const PublicProfile = () => {
                   {profile.country && <CountryFlag countryName={profile.country} size={16} />}
                   <span>{profile.country || 'Unknown'}</span>
                 </div>
-                <div className="social-icons">
-                  <SocialIcon platform="facebook" size={24} color="currentColor" />
-                  <SocialIcon platform="instagram" size={24} color="currentColor" />
-                  <SocialIcon platform="snapchat" size={24} color="currentColor" />
-                </div>
+                {/* Social Icons - Show up to 4 with +N button */}
+                {connectedPlatforms.length > 0 && (
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    marginTop: '8px',
+                    alignItems: 'center',
+                  }}>
+                    {/* Show first 4 connected platforms */}
+                    {visiblePlatforms.map((platform) => (
+                      <a
+                        key={platform.id}
+                        href={getSocialLink(platform.id, profile[platform.id as keyof PublicProfileData] as string)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-80 transition-opacity"
+                        title={`Visit on ${platform.name}`}
+                      >
+                        <img 
+                          src={`/images/${platform.id}.svg`} 
+                          alt={platform.name} 
+                          style={{ width: '26.59px', height: '26.59px' }} 
+                        />
+                      </a>
+                    ))}
+                    
+                    {/* +N Button if there are more than 4 connected platforms */}
+                    {hasMorePlatforms && (
+                      <div
+                        onClick={() => setShowAllSocial(true)}
+                        style={{
+                          width: '26.59px',
+                          height: '26.59px',
+                          background: '#000000',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          cursor: 'pointer',
+                        }}
+                        className="hover:opacity-80 transition-opacity"
+                        title="View more social accounts"
+                      >
+                        <span style={{
+                          fontFamily: 'Poppins',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          color: '#FFFFFF',
+                        }}>
+                          +{remainingPlatforms.length}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               
               <div className="public-mode-badge">Public mode</div>
@@ -255,14 +368,16 @@ export const PublicProfile = () => {
               </div>
               <div className="stat-row">
                 <span className="stat-label">Trainer Code:</span>
-                <span className="stat-value">
-                {profile.is_paid_user && profile.trainer_code && !profile.trainer_code_private ? (
+                <span className="stat-value" style={{
+                  color: shouldShowTrainerCode() ? '#000000' : '#848282'
+                }}>
+                {shouldShowTrainerCode() ? (
                     <>
                       {profile.trainer_code}
                       <span className="copy-icon" onClick={copyTrainerCode}>📋</span>
                     </>
                 ) : (
-                  'No trainer code'
+                  '205***********'
                 )}
                 </span>
               </div>
@@ -392,7 +507,7 @@ export const PublicProfile = () => {
         <h2>Social Links</h2>
       </div>
       <div className="social-links-container">
-        {profile?.is_paid_user ? (
+        {shouldShowSocialLinks() ? (
           <div className="social-links-grid">
             {SOCIAL_MEDIA.map(platform => {
               const value = profile[platform.key as keyof typeof profile];
@@ -414,7 +529,30 @@ export const PublicProfile = () => {
             })}
           </div>
         ) : (
-          <p className="private-notice">This user's social links are private</p>
+          <div className="social-links-grid">
+            {SOCIAL_MEDIA.map(platform => {
+              const value = profile?.[platform.key as keyof typeof profile];
+              if (value && value !== '' && typeof value === 'string') {
+                return (
+                  <div 
+                    key={platform.key}
+                    className="social-link"
+                    style={{
+                      opacity: 0.4,
+                      filter: 'grayscale(100%)',
+                      cursor: 'default',
+                      pointerEvents: 'none'
+                    }}
+                    title="Private"
+                  >
+                    <SocialIcon platform={platform.key} size={24} color="currentColor" />
+                    <span>{value}</span>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </div>
         )}
       </div>
 
@@ -548,6 +686,106 @@ export const PublicProfile = () => {
         userId={id || ''}
         userName={profile?.trainer_name}
       />
+
+      {/* Modal for all social accounts - Matching SocialConnectModal design */}
+      {showAllSocial && profile && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAllSocial(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              width: '351px',
+              height: 'auto',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllSocial(false)}
+              style={{
+                position: 'absolute',
+                width: '24px',
+                height: '24px',
+                right: '13px',
+                top: '13px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Social Accounts Grid - Matching SocialConnectModal */}
+            <div
+              style={{
+                padding: '60px 16px 24px 16px',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '28.25px 31.33px',
+                  width: '100%',
+                  justifyItems: 'center',
+                }}
+              >
+                {connectedPlatforms.map((platform) => (
+                  <a
+                    key={platform.id}
+                    href={getSocialLink(platform.id, profile[platform.id as keyof PublicProfileData] as string)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textDecoration: 'none',
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit on ${platform.name}`}
+                  >
+                    <img 
+                      src={`/images/${platform.id}.svg`} 
+                      alt={platform.name} 
+                      style={{ 
+                        width: '44px', 
+                        height: '44px',
+                      }} 
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 } 

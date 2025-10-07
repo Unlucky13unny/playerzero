@@ -12,7 +12,23 @@ import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
 import { dashboardService } from '../../services/dashboardService'
-import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
+
+// Social platform definitions matching ProfileInfo
+const getSocialPlatformsConfig = () => [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'snapchat', name: 'Snapchat' },
+  { id: 'twitter', name: 'Twitter' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'reddit', name: 'Reddit' },
+  { id: 'discord', name: 'Discord' },
+  { id: 'telegram', name: 'Telegram' },
+  { id: 'whatsapp', name: 'WhatsApp' },
+  { id: 'vimeo', name: 'Vimeo' },
+]
 
 interface PlayerProfileProps {
   viewMode: "public" | "private" | "team" | "own"
@@ -35,6 +51,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
+  const [showAllSocial, setShowAllSocial] = useState(false)
   const showMobileFooter = isMobile
 
   // Calculate header props - these are used in the conditional render
@@ -287,10 +304,35 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
       case 'snapchat':
         return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
+      case 'github':
+        return `https://github.com/${value}`
+      case 'discord':
+        return value
+      case 'telegram':
+        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
+      case 'whatsapp':
+        return `https://wa.me/${value}`
+      case 'vimeo':
+        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
       default:
         return value
     }
   }
+
+  // Get connected social platforms
+  const getConnectedPlatforms = () => {
+    if (!profile) return [];
+    const allPlatforms = getSocialPlatformsConfig();
+    return allPlatforms.filter(platform => {
+      const value = profile[platform.id as keyof typeof profile];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
+  };
+
+  const connectedPlatforms = getConnectedPlatforms();
+  const visiblePlatforms = connectedPlatforms.slice(0, 4);
+  const remainingPlatforms = connectedPlatforms.slice(4);
+  const hasMorePlatforms = remainingPlatforms.length > 0;
 
   if (loading) {
     return (
@@ -1824,32 +1866,65 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         </div>
 
         {/* Social Links Section - Only show in public mode */}
-        {viewMode === "public" && (
+        {viewMode === "public" && connectedPlatforms.length > 0 && (
           <>
             <div className="section-header">
               <h2>Social Links</h2>
             </div>
             <div className="social-links-container">
               {profile?.is_paid_user ? (
-                <div className="social-links-grid">
-                  {SOCIAL_MEDIA.map(platform => {
-                    const value = profile[platform.key as keyof typeof profile];
-                    if (value && value !== '' && typeof value === 'string') {
-                      return (
-                        <a 
-                          key={platform.key}
-                          href={getSocialLink(platform.key, value)} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="social-link"
-                        >
-                          <SocialIcon platform={platform.key} size={24} color="currentColor" />
-                          <span>{value}</span>
-                        </a>
-                      );
-                    }
-                    return null;
-                  })}
+                <div style={{ 
+                  display: 'flex', 
+                  gap: '12px', 
+                  padding: '20px',
+                  flexWrap: 'wrap',
+                  alignItems: 'center',
+                }}>
+                  {/* Show first 4 connected platforms */}
+                  {visiblePlatforms.map((platform) => (
+                    <a
+                      key={platform.id}
+                      href={getSocialLink(platform.id, profile[platform.id as keyof typeof profile] as string)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                      title={`Visit on ${platform.name}`}
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ width: '44px', height: '44px' }} 
+                      />
+                    </a>
+                  ))}
+                  
+                  {/* +N Button if there are more than 4 connected platforms */}
+                  {hasMorePlatforms && (
+                    <div
+                      onClick={() => setShowAllSocial(true)}
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        background: '#000000',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                      className="hover:opacity-80 transition-opacity"
+                      title="View more social accounts"
+                    >
+                      <span style={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '14px',
+                        color: '#FFFFFF',
+                      }}>
+                        +{remainingPlatforms.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <p className="private-notice">This user's social links are private</p>
@@ -1991,6 +2066,106 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         profile={profile}
         isPaidUser={userType === "upgraded"}
       />
+
+      {/* Modal for all social accounts - Matching SocialConnectModal design */}
+      {showAllSocial && profile && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAllSocial(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              width: '351px',
+              height: 'auto',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllSocial(false)}
+              style={{
+                position: 'absolute',
+                width: '24px',
+                height: '24px',
+                right: '13px',
+                top: '13px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Social Accounts Grid - Matching SocialConnectModal */}
+            <div
+              style={{
+                padding: '60px 16px 24px 16px',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '28.25px 31.33px',
+                  width: '100%',
+                  justifyItems: 'center',
+                }}
+              >
+                {connectedPlatforms.map((platform) => (
+                  <a
+                    key={platform.id}
+                    href={getSocialLink(platform.id, profile[platform.id as keyof typeof profile] as string)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textDecoration: 'none',
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit on ${platform.name}`}
+                  >
+                    <img 
+                      src={`/images/${platform.id}.svg`} 
+                      alt={platform.name} 
+                      style={{ 
+                        width: '44px', 
+                        height: '44px',
+                      }} 
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

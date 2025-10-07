@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
@@ -41,10 +42,12 @@ export const UserProfile = () => {
   const [editingPlatform, setEditingPlatform] = useState<{id: string, name: string, url: string} | null>(null)
   const [showWelcomeModal, setShowWelcomeModal] = useState(false)
   const [showTrainerCodeError, setShowTrainerCodeError] = useState(false)
+  const [showPrivacyUpgradeModal, setShowPrivacyUpgradeModal] = useState(false)
   const navigate = useNavigate()
   const location = useLocation()
   const isMobile = useMobile()
   const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
+  const trialStatus = useTrialStatus()
 
   // Check if user is coming from profile setup
   useEffect(() => {
@@ -102,10 +105,46 @@ export const UserProfile = () => {
         const limitedValue = digitsOnly.slice(0, 12);
         
         setEditData(prev => ({ ...prev!, [field]: limitedValue }))
-      } else {
+      } 
+      // Special handling for trainer_level to enforce 1-50 range
+      else if (field === 'trainer_level') {
+        const numValue = parseInt(value) || 1;
+        // Cap between 1 and 50
+        const cappedValue = Math.max(1, Math.min(50, numValue));
+        setEditData(prev => ({ ...prev!, [field]: cappedValue }))
+      } 
+      else {
         setEditData(prev => ({ ...prev!, [field]: value }))
       }
     }
+  }
+
+  // Handle trainer code privacy toggle with trial restriction
+  const handleTrainerCodePrivacyToggle = () => {
+    if (!editData) return
+    
+    // If user is trial and trying to set to public (false), show upgrade modal
+    if (!trialStatus.isPaidUser && !editData.trainer_code_private) {
+      setShowPrivacyUpgradeModal(true)
+      return
+    }
+    
+    // Otherwise, allow the toggle
+    handleInputChange('trainer_code_private', !editData.trainer_code_private)
+  }
+
+  // Handle social links privacy toggle with trial restriction
+  const handleSocialLinksPrivacyToggle = () => {
+    if (!editData) return
+    
+    // If user is trial and trying to set to public (false), show upgrade modal
+    if (!trialStatus.isPaidUser && !editData.social_links_private) {
+      setShowPrivacyUpgradeModal(true)
+      return
+    }
+    
+    // Otherwise, allow the toggle
+    handleInputChange('social_links_private', !editData.social_links_private)
   }
 
   const handleCancelEdit = () => {
@@ -165,10 +204,20 @@ export const UserProfile = () => {
       }
 
       // Ensure trainer code privacy is properly set
-      updatedData.trainer_code_private = editData.trainer_code_private || false;
+      // For trial users, force privacy to private (true)
+      if (!trialStatus.isPaidUser) {
+        updatedData.trainer_code_private = true;
+      } else {
+        updatedData.trainer_code_private = editData.trainer_code_private || false;
+      }
       
       // Ensure social links privacy is properly set
-      updatedData.social_links_private = editData.social_links_private || false;
+      // For trial users, force privacy to private (true)
+      if (!trialStatus.isPaidUser) {
+        updatedData.social_links_private = true;
+      } else {
+        updatedData.social_links_private = editData.social_links_private || false;
+      }
 
       // Update profile in database
       const { data, error } = await profileService.updateProfile(updatedData);
@@ -803,7 +852,7 @@ export const UserProfile = () => {
                 </span>
                 <button
                   type="button"
-                  onClick={() => handleInputChange('trainer_code_private', !editData?.trainer_code_private)}
+                  onClick={handleTrainerCodePrivacyToggle}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -1218,7 +1267,7 @@ export const UserProfile = () => {
                 </span>
                 <button
                   type="button"
-                  onClick={() => handleInputChange('social_links_private', !editData?.social_links_private)}
+                  onClick={handleSocialLinksPrivacyToggle}
                   style={{
                     display: "flex",
                     flexDirection: "row",
@@ -1460,6 +1509,17 @@ export const UserProfile = () => {
         message="Trainer code must be exactly 12 digits"
         confirmText="Retry"
         cancelText="Cancel"
+      />
+
+      {/* Privacy Upgrade Modal */}
+      <ErrorModal
+        isOpen={showPrivacyUpgradeModal}
+        onClose={() => setShowPrivacyUpgradeModal(false)}
+        title="Premium Feature"
+        message="Sharing your Trainer Code and Socials is a premium feature. Upgrade to unlock."
+        confirmText="Upgrade Now"
+        cancelText="Cancel"
+        onConfirm={() => navigate('/upgrade')}
       />
     </div>
   )

@@ -495,6 +495,16 @@ export const profileService = {
           facebook,
           instagram,
           snapchat,
+          twitter,
+          tiktok,
+          youtube,
+          twitch,
+          github,
+          reddit,
+          discord,
+          telegram,
+          whatsapp,
+          vimeo,
           is_paid_user,
           social_links_private
         `)

@@ -477,6 +477,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
+              dot={false}
+              activeDot={false}
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
@@ -503,6 +505,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={4}
               strokeOpacity={1}
+              dot={false}
+              activeDot={false}
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
@@ -524,6 +528,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={config.key === "Global" ? 2 : 1.5}
               strokeOpacity={0.6}
+              dot={false}
+              activeDot={false}
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
@@ -556,6 +562,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
               fillOpacity={fillOpacity}
               strokeWidth={strokeWidth}
               strokeOpacity={1}
+              dot={false}
+              activeDot={false}
               animationDuration={0}
               animationBegin={0}
               isAnimationActive={false}
@@ -586,6 +594,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 fillOpacity={fillOpacity}
                 strokeWidth={config.key === "Global" ? 4 : 4}
                 strokeOpacity={1}
+                dot={false}
+                activeDot={false}
                 animationDuration={0}
                 animationBegin={0}
                 isAnimationActive={false}
@@ -607,6 +617,8 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
                 fillOpacity={fillOpacity}
                 strokeWidth={config.key === "Global" ? 2 : 1.5}
                 strokeOpacity={0.6}
+                dot={false}
+                activeDot={false}
                 animationDuration={0}
                 animationBegin={0}
                 isAnimationActive={false}

@@ -34,6 +34,8 @@ interface QuickProfileData {
   distance_walked: number;
   pokestops_visited: number;
   profile_screenshot_url?: string;
+  trainer_code?: string;
+  trainer_code_private?: boolean;
   // Social Media fields
   instagram?: string;
   tiktok?: string;
@@ -43,9 +45,31 @@ interface QuickProfileData {
   reddit?: string;
   facebook?: string;
   snapchat?: string;
+  github?: string;
+  discord?: string;
+  telegram?: string;
+  whatsapp?: string;
+  vimeo?: string;
   social_links_private?: boolean;
   is_paid_user?: boolean;
 }
+
+// Social platform definitions matching ProfileInfo
+const getSocialPlatforms = () => [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'snapchat', name: 'Snapchat' },
+  { id: 'twitter', name: 'Twitter' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'reddit', name: 'Reddit' },
+  { id: 'discord', name: 'Discord' },
+  { id: 'telegram', name: 'Telegram' },
+  { id: 'whatsapp', name: 'WhatsApp' },
+  { id: 'vimeo', name: 'Vimeo' },
+]
 
 export function PlyrZeroProfileStandalone({ 
   profileId, 
@@ -55,6 +79,7 @@ export function PlyrZeroProfileStandalone({
   const [profileData, setProfileData] = useState<QuickProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAllSocial, setShowAllSocial] = useState(false);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
 
@@ -133,9 +158,44 @@ export function PlyrZeroProfileStandalone({
         return `https://twitch.tv/${value}`;
       case 'reddit':
         return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`;
+      case 'github':
+        return `https://github.com/${value}`;
+      case 'discord':
+        return value;
+      case 'telegram':
+        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`;
+      case 'whatsapp':
+        return `https://wa.me/${value}`;
+      case 'vimeo':
+        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`;
       default:
         return value;
     }
+  };
+
+  // Get connected social platforms
+  const getConnectedPlatforms = () => {
+    if (!profileData) return [];
+    const allPlatforms = getSocialPlatforms();
+    return allPlatforms.filter(platform => {
+      const value = profileData[platform.id as keyof QuickProfileData];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
+  };
+
+  const connectedPlatforms = getConnectedPlatforms();
+  const visiblePlatforms = connectedPlatforms.slice(0, 4);
+  const remainingPlatforms = connectedPlatforms.slice(4);
+  const hasMorePlatforms = remainingPlatforms.length > 0;
+
+  // Determine if social links should be shown based on viewer status
+  const shouldShowSocialLinks = () => {
+    // Trial users can never see social links
+    if (!trialStatus.isPaidUser) {
+      return false;
+    }
+    // Paid users see social links if the profile owner has made them public
+    return profileData?.is_paid_user && !profileData?.social_links_private;
   };
 
 
@@ -310,49 +370,83 @@ export function PlyrZeroProfileStandalone({
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', flex: 1 }}>
           <h1 style={styles.title}>{profileData?.trainer_name || "PlyrZero"}</h1>
           
-          {/* Social Media Icons - Below username, left-aligned */}
-          {(() => {
-            // Get available social media accounts
-            const availableSocial = [];
-            if (profileData?.facebook) availableSocial.push({ type: 'facebook', value: profileData.facebook });
-            if (profileData?.instagram) availableSocial.push({ type: 'instagram', value: profileData.instagram });
-            if (profileData?.snapchat) availableSocial.push({ type: 'snapchat', value: profileData.snapchat });
-            
-            // Only show if there are social links and they're not private
-            if (availableSocial.length === 0 || profileData?.social_links_private) return null;
-            
-            // Show up to 3 social icons
-            const socialToShow = availableSocial.slice(0, 3);
-            
-            return (
-              <div style={{ 
-                display: 'flex', 
-                gap: '2px', 
-                marginTop: '8px',
-                alignItems: 'center'
-              }}>
-                {socialToShow.map((social, index) => {
-                  const { type, value } = social;
-                  return (
-                    <a 
-                      key={`${type}-${index}`}
-                      href={getSocialLink(type, value)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      title={`Visit ${value} on ${type.charAt(0).toUpperCase() + type.slice(1)}`}
-                      style={{ display: 'block' }}
-                    >
-                      <img 
-                        src={`/images/${type}.svg`} 
-                        alt={type.charAt(0).toUpperCase() + type.slice(1)} 
-                        style={{ width: '26.59px', height: '26.59px' }} 
-                      />
-                    </a>
-                  );
-                })}
-              </div>
-            );
-          })()}
+          {/* Social Media Icons - Show up to 4 with +N button */}
+          {connectedPlatforms.length > 0 && (
+            <div style={{ 
+              display: 'flex', 
+              gap: '8px', 
+              marginTop: '8px',
+              alignItems: 'center'
+            }}>
+              {/* Show first 4 connected platforms */}
+              {visiblePlatforms.map((platform) => {
+                const isPrivate = !shouldShowSocialLinks();
+                const href = isPrivate ? undefined : getSocialLink(platform.id, (profileData?.[platform.id as keyof QuickProfileData] as string) || '');
+                
+                return isPrivate ? (
+                  <div
+                    key={platform.id}
+                    style={{
+                      opacity: 0.4,
+                      filter: 'grayscale(100%)',
+                      cursor: 'default',
+                    }}
+                    title="Private"
+                  >
+                    <img 
+                      src={`/images/${platform.id}.svg`} 
+                      alt={platform.name} 
+                      style={{ width: '26.59px', height: '26.59px' }} 
+                    />
+                  </div>
+                ) : (
+                  <a
+                    key={platform.id}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit on ${platform.name}`}
+                  >
+                    <img 
+                      src={`/images/${platform.id}.svg`} 
+                      alt={platform.name} 
+                      style={{ width: '26.59px', height: '26.59px' }} 
+                    />
+                  </a>
+                );
+              })}
+              
+              {/* +N Button if there are more than 4 connected platforms */}
+              {hasMorePlatforms && (
+                <div
+                  onClick={() => shouldShowSocialLinks() && setShowAllSocial(true)}
+                  style={{
+                    width: '26.59px',
+                    height: '26.59px',
+                    background: shouldShowSocialLinks() ? '#000000' : '#848282',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: shouldShowSocialLinks() ? 'pointer' : 'default',
+                    opacity: shouldShowSocialLinks() ? 1 : 0.4,
+                  }}
+                  className={shouldShowSocialLinks() ? 'hover:opacity-80 transition-opacity' : ''}
+                  title={shouldShowSocialLinks() ? 'View more social accounts' : 'Private'}
+                >
+                  <span style={{
+                    fontFamily: 'Poppins',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    color: '#FFFFFF',
+                  }}>
+                    +{remainingPlatforms.length}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         <button
@@ -504,6 +598,133 @@ export function PlyrZeroProfileStandalone({
           }
         `
       }} />
+
+      {/* Modal for all social accounts - Matching SocialConnectModal design */}
+      {showAllSocial && profileData && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAllSocial(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              width: '351px',
+              height: 'auto',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllSocial(false)}
+              style={{
+                position: 'absolute',
+                width: '24px',
+                height: '24px',
+                right: '13px',
+                top: '13px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Social Accounts Grid - Matching SocialConnectModal */}
+            <div
+              style={{
+                padding: '60px 16px 24px 16px',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '28.25px 31.33px',
+                  width: '100%',
+                  justifyItems: 'center',
+                }}
+              >
+                {connectedPlatforms.map((platform) => {
+                  const isPrivate = !shouldShowSocialLinks();
+                  const href = isPrivate ? undefined : getSocialLink(platform.id, (profileData?.[platform.id as keyof QuickProfileData] as string) || '');
+                  
+                  return isPrivate ? (
+                    <div
+                      key={platform.id}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        opacity: 0.4,
+                        filter: 'grayscale(100%)',
+                        cursor: 'default',
+                      }}
+                      title="Private"
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ 
+                          width: '44px', 
+                          height: '44px',
+                        }} 
+                      />
+                    </div>
+                  ) : (
+                    <a
+                      key={platform.id}
+                      href={href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textDecoration: 'none',
+                      }}
+                      className="hover:opacity-80 transition-opacity"
+                      title={`Visit on ${platform.name}`}
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ 
+                          width: '44px', 
+                          height: '44px',
+                        }} 
+                      />
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

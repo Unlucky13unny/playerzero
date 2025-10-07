@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
-import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons';
 
 // Import team colors from the shared constants
 const TEAM_COLORS = [
@@ -34,12 +33,38 @@ interface QuickProfileData {
   profile_screenshot_url?: string;
   // Social Media fields
   instagram?: string;
-  
   facebook?: string;
   snapchat?: string;
+  twitter?: string;
+  tiktok?: string;
+  youtube?: string;
+  twitch?: string;
+  github?: string;
+  reddit?: string;
+  discord?: string;
+  telegram?: string;
+  whatsapp?: string;
+  vimeo?: string;
   social_links_private?: boolean;
   is_paid_user?: boolean;
 }
+
+// Social platform definitions matching ProfileInfo
+const getSocialPlatforms = () => [
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'facebook', name: 'Facebook' },
+  { id: 'snapchat', name: 'Snapchat' },
+  { id: 'twitter', name: 'Twitter' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'github', name: 'GitHub' },
+  { id: 'reddit', name: 'Reddit' },
+  { id: 'discord', name: 'Discord' },
+  { id: 'telegram', name: 'Telegram' },
+  { id: 'whatsapp', name: 'WhatsApp' },
+  { id: 'vimeo', name: 'Vimeo' },
+]
 
 export const QuickProfileView = ({ 
   profileId, 
@@ -49,6 +74,7 @@ export const QuickProfileView = ({
   const [profileData, setProfileData] = useState<QuickProfileData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAllSocial, setShowAllSocial] = useState(false);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
 
@@ -126,10 +152,35 @@ export const QuickProfileView = ({
         return `https://twitch.tv/${value}`;
       case 'reddit':
         return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`;
+      case 'github':
+        return `https://github.com/${value}`;
+      case 'discord':
+        return value;
+      case 'telegram':
+        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`;
+      case 'whatsapp':
+        return `https://wa.me/${value}`;
+      case 'vimeo':
+        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`;
       default:
         return value;
     }
   };
+
+  // Get connected social platforms
+  const getConnectedPlatforms = () => {
+    if (!profileData) return [];
+    const allPlatforms = getSocialPlatforms();
+    return allPlatforms.filter(platform => {
+      const value = profileData[platform.id as keyof QuickProfileData];
+      return value && typeof value === 'string' && value.trim() !== '';
+    });
+  };
+
+  const connectedPlatforms = getConnectedPlatforms();
+  const visiblePlatforms = connectedPlatforms.slice(0, 4);
+  const remainingPlatforms = connectedPlatforms.slice(4);
+  const hasMorePlatforms = remainingPlatforms.length > 0;
 
   if (!isOpen) return null;
 
@@ -168,46 +219,58 @@ export const QuickProfileView = ({
               </h3>
               
               {/* Social Links - Below username */}
-              {profileData.is_paid_user && !profileData.social_links_private ? (
-                <div className="social-links-container" style={{ 
+              {!profileData.social_links_private && connectedPlatforms.length > 0 ? (
+                <div style={{ 
                   display: 'flex', 
-                  flexWrap: 'wrap', 
                   gap: '8px', 
                   marginBottom: '12px',
-                  justifyContent: 'flex-start'
+                  alignItems: 'center',
                 }}>
-                  {SOCIAL_MEDIA.map(platform => {
-                    const value = profileData[platform.key as keyof typeof profileData];
-                    if (value && value !== '' && typeof value === 'string') {
-                      return (
-                        <a 
-                          key={platform.key}
-                          href={getSocialLink(platform.key, value)} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="social-link"
-              style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            padding: '4px 8px',
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: '6px',
-                            textDecoration: 'none',
-                            color: 'black',
-                            fontSize: '12px',
-                            transition: 'background-color 0.2s'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#e5e5e5'}
-                          onMouseLeave={(e) => e.currentTarget.style.backgroundColor = '#f5f5f5'}
-                        >
-                          <SocialIcon platform={platform.key} size={16} color="currentColor" />
-                          <span>{value}</span>
-                        </a>
-                      );
-                    }
-                    return null;
-                  })}
+                    {/* Show first 4 connected platforms */}
+                  {visiblePlatforms.map((platform) => (
+                    <a
+                      key={platform.id}
+                      href={getSocialLink(platform.id, profileData[platform.id as keyof QuickProfileData] as string)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="hover:opacity-80 transition-opacity"
+                      title={`Visit on ${platform.name}`}
+                    >
+                      <img 
+                        src={`/images/${platform.id}.svg`} 
+                        alt={platform.name} 
+                        style={{ width: '26.59px', height: '26.59px' }} 
+                      />
+                    </a>
+                  ))}
+                  
+                  {/* +N Button if there are more than 4 connected platforms */}
+                  {hasMorePlatforms && (
+                    <div
+                      onClick={() => setShowAllSocial(true)}
+                      style={{
+                        width: '26.59px',
+                        height: '26.59px',
+                        background: '#000000',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                      }}
+                      className="hover:opacity-80 transition-opacity"
+                      title="View more social accounts"
+                    >
+                      <span style={{
+                        fontFamily: 'Poppins',
+                        fontWeight: 600,
+                        fontSize: '12px',
+                        color: '#FFFFFF',
+                      }}>
+                        +{remainingPlatforms.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : profileData.social_links_private ? (
                 <p style={{ color: '#666', fontSize: '12px', margin: '0 0 12px 0' }}>
@@ -344,6 +407,106 @@ export const QuickProfileView = ({
           </div>
         </div>
       ) : null}
+
+      {/* Modal for all social accounts - Matching SocialConnectModal design */}
+      {showAllSocial && profileData && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+          }}
+          onClick={() => setShowAllSocial(false)}
+        >
+          <div
+            style={{
+              backgroundColor: '#FFFFFF',
+              borderRadius: '12px',
+              width: '351px',
+              height: 'auto',
+              maxHeight: '90vh',
+              overflow: 'auto',
+              position: 'relative',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowAllSocial(false)}
+              style={{
+                position: 'absolute',
+                width: '24px',
+                height: '24px',
+                right: '13px',
+                top: '13px',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              className="hover:opacity-70 transition-opacity"
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Social Accounts Grid - Matching SocialConnectModal */}
+            <div
+              style={{
+                padding: '60px 16px 24px 16px',
+                width: '100%',
+              }}
+            >
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(3, 1fr)',
+                  gap: '28.25px 31.33px',
+                  width: '100%',
+                  justifyItems: 'center',
+                }}
+              >
+                {connectedPlatforms.map((platform) => (
+                  <a
+                    key={platform.id}
+                    href={getSocialLink(platform.id, profileData[platform.id as keyof QuickProfileData] as string)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textDecoration: 'none',
+                    }}
+                    className="hover:opacity-80 transition-opacity"
+                    title={`Visit on ${platform.name}`}
+                  >
+                    <img 
+                      src={`/images/${platform.id}.svg`} 
+                      alt={platform.name} 
+                      style={{ 
+                        width: '44px', 
+                        height: '44px',
+                      }} 
+                    />
+                  </a>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }; 

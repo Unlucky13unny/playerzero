@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData } from '../../services/profileService'
 import { adminService } from '../../services/adminService'
 import { useValuePropModal } from '../../hooks/useValuePropModal'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { useMobile } from '../../hooks/useMobile'
 import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
@@ -36,6 +37,7 @@ export const ProfileSetup = () => {
   const navigate = useNavigate()
   const isMobile = useMobile()
   const { isOpen, closeValueProp, daysRemaining } = useValuePropModal()
+  const trialStatus = useTrialStatus()
   
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
@@ -46,11 +48,12 @@ export const ProfileSetup = () => {
   const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000)
   const [isSocialModalOpen, setIsSocialModalOpen] = useState(false)
   const [editingPlatform, setEditingPlatform] = useState<{id: string, name: string, url: string} | null>(null)
+  const [showPrivacyUpgradeModal, setShowPrivacyUpgradeModal] = useState(false)
   
   const [profileData, setProfileData] = useState<ProfileData>({
     trainer_name: '',
     trainer_code: '',
-    trainer_code_private: false,
+    trainer_code_private: true,  // Default to private for trial users
     trainer_level: 1,
     start_date: '', // No default date - user must select
     country: '',
@@ -75,7 +78,7 @@ export const ProfileSetup = () => {
     discord: '',
     telegram: '',
     whatsapp: '',
-    social_links_private: false
+    social_links_private: true  // Default to private for trial users
   })
 
   const [profileScreenshot, setProfileScreenshot] = useState<File | null>(null)
@@ -137,9 +140,41 @@ export const ProfileSetup = () => {
       const limitedValue = digitsOnly.slice(0, 12);
       
       setProfileData(prev => ({ ...prev, [field]: limitedValue }))
-    } else {
+    } 
+    // Special handling for trainer_level to enforce 1-50 range
+    else if (field === 'trainer_level') {
+      const numValue = parseInt(value) || 1;
+      // Cap between 1 and 50
+      const cappedValue = Math.max(1, Math.min(50, numValue));
+      setProfileData(prev => ({ ...prev, [field]: cappedValue }))
+    } 
+    else {
       setProfileData(prev => ({ ...prev, [field]: value }))
     }
+  }
+
+  // Handle trainer code privacy toggle with trial restriction
+  const handleTrainerCodePrivacyToggle = (checked: boolean) => {
+    // If user is trial and trying to set to public (false), show upgrade modal
+    if (!trialStatus.isPaidUser && !checked) {
+      setShowPrivacyUpgradeModal(true)
+      return
+    }
+    
+    // Otherwise, allow the toggle
+    handleInputChange('trainer_code_private', checked)
+  }
+
+  // Handle social links privacy toggle with trial restriction
+  const handleSocialLinksPrivacyToggle = (checked: boolean) => {
+    // If user is trial and trying to set to public (false), show upgrade modal
+    if (!trialStatus.isPaidUser && !checked) {
+      setShowPrivacyUpgradeModal(true)
+      return
+    }
+    
+    // Otherwise, allow the toggle
+    handleInputChange('social_links_private', checked)
   }
 
   // Social Platform Management (from UserProfile)
@@ -556,7 +591,7 @@ export const ProfileSetup = () => {
             <input
               type="checkbox"
               checked={profileData.trainer_code_private}
-              onChange={(e) => handleInputChange('trainer_code_private', e.target.checked)}
+              onChange={(e) => handleTrainerCodePrivacyToggle(e.target.checked)}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -758,7 +793,7 @@ export const ProfileSetup = () => {
             <input
               type="checkbox"
               checked={profileData.social_links_private}
-              onChange={(e) => handleInputChange('social_links_private', e.target.checked)}
+              onChange={(e) => handleSocialLinksPrivacyToggle(e.target.checked)}
             />
             <span className="toggle-slider"></span>
           </label>
@@ -1088,6 +1123,17 @@ export const ProfileSetup = () => {
         title="SUCCESS!"
         message="Profile setup completed successfully"
         confirmText="Okay"
+      />
+
+      {/* Privacy Upgrade Modal */}
+      <ErrorModal
+        isOpen={showPrivacyUpgradeModal}
+        onClose={() => setShowPrivacyUpgradeModal(false)}
+        title="Premium Feature"
+        message="Sharing your Trainer Code and Socials is a premium feature. Upgrade to unlock."
+        confirmText="Upgrade Now"
+        cancelText="Cancel"
+        onConfirm={() => navigate('/upgrade')}
       />
 
       {/* Mobile View */}
