@@ -30,7 +30,20 @@ export interface PrivateModeStatus {
 
 export const useTrialStatus = (): PrivateModeStatus => {
   const { user } = useAuth()
-  const [isPaidUser, setIsPaidUser] = useState(false)
+  
+  // Initialize from localStorage to prevent badge flashing
+  const getInitialPaidStatus = () => {
+    try {
+      const userId = user?.id
+      if (!userId) return false
+      const cached = localStorage.getItem(`paid_status_${userId}`)
+      return cached ? JSON.parse(cached) : false
+    } catch {
+      return false
+    }
+  }
+  
+  const [isPaidUser, setIsPaidUser] = useState(getInitialPaidStatus)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [lastUpdateTime, setLastUpdateTime] = useState(0)
@@ -40,13 +53,18 @@ export const useTrialStatus = (): PrivateModeStatus => {
       setLoading(true)
       const { isPaid } = await profileService.isPaidUser()
       setIsPaidUser(isPaid)
+      
+      // Cache the paid status to prevent flashing on refresh
+      if (user?.id) {
+        localStorage.setItem(`paid_status_${user.id}`, JSON.stringify(isPaid))
+      }
     } catch (error) {
       console.error('Error checking paid status:', error)
-      setIsPaidUser(false)
+      // Don't change isPaidUser on error - keep cached value
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [user?.id])
 
   // Update current time every second for live countdown, but only if user is in trial
   useEffect(() => {
@@ -64,6 +82,15 @@ export const useTrialStatus = (): PrivateModeStatus => {
 
   useEffect(() => {
     if (user) {
+      // Update from cache when user changes
+      try {
+        const cached = localStorage.getItem(`paid_status_${user.id}`)
+        if (cached) {
+          setIsPaidUser(JSON.parse(cached))
+        }
+      } catch {
+        // If cache read fails, let the API call update it
+      }
       checkPaidStatus()
     } else {
       setIsPaidUser(false)
@@ -72,8 +99,8 @@ export const useTrialStatus = (): PrivateModeStatus => {
   }, [user, checkPaidStatus])
 
   const calculatePrivateModeStatus = useCallback((): PrivateModeStatus => {
-    // Default values for logged out users or while loading
-    if (!user || loading) {
+    // Default values for logged out users
+    if (!user) {
       return {
         isInTrial: false,
         daysRemaining: 0,
@@ -87,7 +114,45 @@ export const useTrialStatus = (): PrivateModeStatus => {
         canClickIntoProfiles: false,
         canShowTrainerCode: false,
         canShowSocialLinks: false,
-        loading
+        loading: false
+      }
+    }
+    
+    // While loading, use cached isPaidUser value to prevent badge flashing
+    if (loading) {
+      // If cached as paid user, give them full access immediately
+      if (isPaidUser) {
+        return {
+          isInTrial: false,
+          daysRemaining: 0,
+          timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
+          isPaidUser: true,
+          canGenerateAllTimeCard: true,
+          canShareGrindCard: true,
+          canViewWeeklyMonthlyCards: true,
+          canAppearOnLeaderboard: true,
+          canViewLeaderboard: true,
+          canClickIntoProfiles: true,
+          canShowTrainerCode: true,
+          canShowSocialLinks: true,
+          loading: true
+        }
+      }
+      // If not cached as paid, show limited trial access while loading
+      return {
+        isInTrial: false,
+        daysRemaining: 0,
+        timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
+        isPaidUser: false,
+        canGenerateAllTimeCard: false,
+        canShareGrindCard: false,
+        canViewWeeklyMonthlyCards: false,
+        canAppearOnLeaderboard: false,
+        canViewLeaderboard: false,
+        canClickIntoProfiles: false,
+        canShowTrainerCode: false,
+        canShowSocialLinks: false,
+        loading: true
       }
     }
     

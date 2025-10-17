@@ -7,12 +7,14 @@ CREATE TABLE profiles (
   trainer_name TEXT NOT NULL,
   trainer_code TEXT NOT NULL,
   trainer_code_private BOOLEAN DEFAULT false,
+  social_links_private BOOLEAN DEFAULT false,
   trainer_level INTEGER NOT NULL CHECK (trainer_level >= 1 AND trainer_level <= 50),
-  start_date DATE,
+  start_date DATE DEFAULT CURRENT_DATE,
   country TEXT,
   team_color TEXT,
   average_daily_xp INTEGER DEFAULT 0,
   last_name_change_date TIMESTAMP WITH TIME ZONE,
+  is_profile_setup BOOLEAN DEFAULT false,
   
   -- Subscription Status
   is_paid_user BOOLEAN DEFAULT false,

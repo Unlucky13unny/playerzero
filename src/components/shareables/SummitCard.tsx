@@ -1,4 +1,6 @@
 import { useNavigate } from 'react-router-dom'
+import { useRef, useState, useEffect } from 'react'
+import html2canvas from 'html2canvas'
 import type { ProfileWithMetadata } from '../../services/profileService'
 import { calculateSummitDate } from '../../services/profileService'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
@@ -13,10 +15,121 @@ interface SummitCardProps {
 export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) => {
   const navigate = useNavigate()
   const trialStatus = useTrialStatus()
+  const cardRef = useRef<HTMLDivElement>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
 
   const handleUpgradeClick = () => {
     navigate('/upgrade')
   }
+
+  // Auto-download when component mounts
+  useEffect(() => {
+    let isMounted = true
+
+    const downloadCard = async () => {
+      if (!cardRef.current || !profile) return
+
+      try {
+        setIsDownloading(true)
+
+        // Determine which background image to use based on achievement status
+        const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
+        const backgroundImage = hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'
+        
+        // Preload the background image first
+        const img = new Image()
+        img.crossOrigin = 'anonymous'
+        await new Promise((resolve) => {
+          img.onload = () => {
+            console.log('Summit background image loaded')
+            resolve(true)
+          }
+          img.onerror = (error) => {
+            console.warn('Background image failed to load, continuing anyway:', error)
+            resolve(true) // Continue even if image fails
+          }
+          img.src = backgroundImage
+        })
+
+        // Wait for the card to render properly
+        await new Promise(resolve => setTimeout(resolve, 500))
+
+        if (!isMounted || !cardRef.current) return
+
+        // Sanitize CSS to remove unsupported color functions
+        const sanitizeCSS = () => {
+          if (!cardRef.current) return
+          const allElements = cardRef.current.querySelectorAll('*')
+          allElements.forEach((element: any) => {
+            const computedStyle = window.getComputedStyle(element)
+            const style = element.style
+            
+            // Replace unsupported color functions with fallback colors
+            const colorProperties = ['color', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor']
+            
+            colorProperties.forEach(prop => {
+              const value = (computedStyle as any)[prop]
+              if (value && (value.includes('oklch') || value.includes('lch') || value.includes('lab') || value.includes('color-mix'))) {
+                // Use appropriate fallback based on property
+                if (prop === 'backgroundColor') {
+                  (style as any)[prop] = '#ffffff' // White background
+                } else {
+                  (style as any)[prop] = '#000000' // Black text/border
+                }
+              }
+            })
+          })
+        }
+        
+        sanitizeCSS()
+
+        const canvas = await html2canvas(cardRef.current, {
+          backgroundColor: null,
+          scale: 2,
+          useCORS: true,
+          allowTaint: true,
+          logging: false,
+          scrollX: 0,
+          scrollY: 0,
+          windowWidth: window.innerWidth,
+          windowHeight: window.innerHeight
+        })
+
+        if (!isMounted) return
+
+        // Create download link
+        const link = document.createElement('a')
+        link.download = `playerzero-${profile.trainer_name}-summit-card.png`
+        link.href = canvas.toDataURL('image/png', 1.0)
+        link.click()
+
+        // Close after download
+        setTimeout(() => {
+          if (isMounted) {
+            onClose()
+          }
+        }, 300)
+      } catch (error) {
+        console.error('Download failed:', error)
+        if (isMounted) {
+          alert('Failed to download card. Please try again.')
+          onClose()
+        }
+      } finally {
+        if (isMounted) {
+          setIsDownloading(false)
+        }
+      }
+    }
+
+    if (profile && isPaidUser) {
+      downloadCard()
+    }
+
+    return () => {
+      isMounted = false
+    }
+  }, [profile, isPaidUser, onClose])
 
   if (!profile) return null
 
@@ -37,6 +150,9 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
 
   // Check if mobile view
   const isMobile = window.innerWidth <= 768
+
+  // Check if user has achieved level 50 (176 million XP)
+  const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
 
   const startDate = profile.start_date 
     ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-GB', { 
@@ -61,17 +177,30 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backgroundColor: 'rgba(0, 0, 0, 0.8)',
         display: 'flex',
+        flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
+        gap: '20px'
       }}
-      onClick={onClose}
     >
+      {/* Loading message */}
+      <div style={{
+        color: '#FFFFFF',
+        fontFamily: 'Poppins, sans-serif',
+        fontSize: '18px',
+        fontWeight: '600',
+        textAlign: 'center'
+      }}>
+        {isDownloading ? 'Generating your card...' : 'Preparing download...'}
+      </div>
+
       <div 
+        ref={cardRef}
         style={{ 
-          backgroundImage: 'url(/images/summit.png)',
+          backgroundImage: `url(${hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -82,9 +211,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           padding: 0,
           border: 'none',
           overflow: 'hidden',
-          borderRadius: isMobile ? '31px' : '55px'
+          borderRadius: isMobile ? '12px' : '20px'
         }}
-        onClick={(e) => e.stopPropagation()}
       >
         {/* Trainer Name - Top Left */}
         <div style={{ 

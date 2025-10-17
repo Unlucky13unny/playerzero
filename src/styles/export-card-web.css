@@ -33,7 +33,7 @@
 /* Web Card Text Positioning - All-Time Card */
 .web-card .trainer-name {
   position: absolute;
-  top: 50px;
+  top: 51px;
   left: 20px;
   color: black;
   font-weight: bold;
@@ -43,7 +43,7 @@
 
 .web-card .start-date {
   position: absolute;
-  top: 55px;
+  top: 51px;
   right: 30px;
   color: black;
   font-size: 15px;

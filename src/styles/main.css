@@ -968,7 +968,8 @@ body {
 }
 
 .footer-link:hover {
-  color: var(--white-pure);
+  color: #000000;
+  opacity: 0.8;
 }
 
 .footer-link:hover::after {
@@ -10276,7 +10277,7 @@ body {
   line-height: 24px;
   text-align: left;
   text-decoration-line: underline;
-  color: #000000;
+  color: #dc2626;
   flex: none;
   order: 0;
   align-self: flex-start;

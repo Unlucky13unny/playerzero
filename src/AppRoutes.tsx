@@ -27,6 +27,8 @@ import { Leaderboards } from './components/dashboard/Leaderboards'
 import { useTrialStatus } from './hooks/useTrialStatus'
 import { SearchPage } from './components/search/SearchPage';
 import { ContactHelp } from './components/ContactHelp';
+import { TermsOfService } from './components/legal/TermsOfService';
+import { PrivacyPolicy } from './components/legal/PrivacyPolicy';
 
 // Wrapper component to handle isPaidUser prop
 const LeaderboardsWrapper = () => {
@@ -43,6 +45,8 @@ const AppRoutes = () => {
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
       <Route path="/signup-success" element={<SignupSuccess />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       
       {/* Landing Page - Public but redirects if authenticated */}
       <Route path="/" element={

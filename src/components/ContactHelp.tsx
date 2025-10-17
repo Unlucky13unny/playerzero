@@ -55,8 +55,8 @@ export const ContactHelp = () => {
 
         {/* Footer Links - Frame 739 */}
         <div className="help-footer">
-          <Link to="/terms" className="footer-link">Terms of Service</Link>
-          <Link to="/privacy" className="footer-link">Privacy Policy</Link>
+          <Link to="/terms-of-service" className="footer-link">Terms of Service</Link>
+          <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
         </div>
       </div>
     </div>

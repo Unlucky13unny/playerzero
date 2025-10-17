@@ -124,6 +124,49 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
     }
   }
 
+  // Calculate Summit Date based on XP progression
+  const calculateSummitDate = () => {
+    const GOAL_XP = 176_000_000
+    const currentXP = profile?.total_xp || 0
+    
+    // If already completed
+    if (currentXP >= GOAL_XP) {
+      return 'Complete'
+    }
+    
+    // If no start date, can't calculate
+    if (!profile?.start_date) {
+      return 'Calculating...'
+    }
+    
+    // Calculate days since start
+    const startDate = new Date(profile.start_date + 'T00:00:00')
+    const today = new Date()
+    const daysSinceStart = Math.max(1, Math.floor((today.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
+    
+    // Calculate average daily XP
+    const averageDailyXP = currentXP / daysSinceStart
+    
+    if (averageDailyXP <= 0) {
+      return 'Calculating...'
+    }
+    
+    // Calculate XP needed and days needed
+    const xpNeeded = GOAL_XP - currentXP
+    const daysNeeded = Math.ceil(xpNeeded / averageDailyXP)
+    
+    // Calculate summit date
+    const summitDate = new Date()
+    summitDate.setDate(summitDate.getDate() + daysNeeded)
+    
+    // Format date as MM/DD/YYYY
+    return summitDate.toLocaleDateString('en-US', {
+      month: '2-digit',
+      day: '2-digit',
+      year: 'numeric'
+    })
+  }
+
   return (
     <div style={{
       /* Frame 517 - ProfileInfo Container */
@@ -525,7 +568,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               color: '#000000',
               textAlign: 'left',
             }}>
-              {(profile?.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+              {calculateSummitDate()}
             </span>
         </div>
 
