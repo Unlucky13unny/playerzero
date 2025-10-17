@@ -356,15 +356,13 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
             zIndex: 10
           }}
         >
-          <div style={{
+          <div           style={{
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: isMobile ? 'left' : 'center',
-            gap: '16px',
-            filter: 'blur(2px)',
-            opacity: 0.7
+            gap: '16px'
           }}>
             <p style={{
               color: '#6B7280',

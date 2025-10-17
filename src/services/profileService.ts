@@ -98,11 +98,6 @@ const LEVEL_50_XP = 176_000_000;
 
 // Calculate summit date based on current XP and start date (more accurate than stored average)
 export const calculateSummitDate = (currentXp: number, averageDailyXp: number, startDate?: string): string => {
-  // If already level 50
-  if (currentXp >= LEVEL_50_XP) {
-    return 'Complete';
-  }
-  
   // If we have a start date, calculate more accurate daily XP rate
   let dailyXpRate = averageDailyXp;
   
@@ -116,7 +111,28 @@ export const calculateSummitDate = (currentXp: number, averageDailyXp: number, s
     return 'Calculating...';
   }
 
-  // Calculate days needed
+  // If already level 50, calculate when they achieved it
+  if (currentXp >= LEVEL_50_XP) {
+    if (!startDate) {
+      return 'Achieved';
+    }
+    
+    // Calculate how many days it took to reach level 50
+    const daysToReach50 = Math.floor(LEVEL_50_XP / dailyXpRate);
+    
+    // Calculate the achievement date
+    const achievementDate = new Date(startDate);
+    achievementDate.setDate(achievementDate.getDate() + daysToReach50);
+    
+    // Format date as DD.MM.YYYY
+    return achievementDate.toLocaleDateString('en-GB', { 
+      year: 'numeric', 
+      month: 'numeric', 
+      day: 'numeric' 
+    }).replace(/\//g, '.');
+  }
+
+  // Calculate days needed for users who haven't reached level 50
   const xpNeeded = LEVEL_50_XP - currentXp;
   const daysNeeded = Math.ceil(xpNeeded / dailyXpRate);
   

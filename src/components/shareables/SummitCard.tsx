@@ -32,6 +32,10 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       try {
         setIsDownloading(true)
 
+        // Determine which background image to use based on achievement status
+        const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
+        const backgroundImage = hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'
+        
         // Preload the background image first
         const img = new Image()
         img.crossOrigin = 'anonymous'
@@ -44,7 +48,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             console.warn('Background image failed to load, continuing anyway:', error)
             resolve(true) // Continue even if image fails
           }
-          img.src = '/images/summit.png'
+          img.src = backgroundImage
         })
 
         // Wait for the card to render properly
@@ -147,6 +151,9 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
   // Check if mobile view
   const isMobile = window.innerWidth <= 768
 
+  // Check if user has achieved level 50 (176 million XP)
+  const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
+
   const startDate = profile.start_date 
     ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-GB', { 
         day: 'numeric', 
@@ -193,7 +200,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       <div 
         ref={cardRef}
         style={{ 
-          backgroundImage: 'url(/images/summit.png)',
+          backgroundImage: `url(${hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
