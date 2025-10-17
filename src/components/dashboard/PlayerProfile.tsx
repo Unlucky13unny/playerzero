@@ -46,8 +46,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const [timePeriod, setTimePeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly')
   const [filteredStats, setFilteredStats] = useState<any>(null)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(false)
-  const [chartLoading, setChartLoading] = useState(false)
+  const [statsLoading, setStatsLoading] = useState(true)
+  const [chartLoading, setChartLoading] = useState(true)
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
@@ -216,6 +216,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
       }
     } finally {
       setStatsLoading(false)
+      setChartLoading(false)
     }
   }, [user?.id, profile, timePeriod])
 
@@ -232,12 +233,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)
     setTimePeriod(period)
+    setStatsLoading(true)
     setChartLoading(true)
-    // Don't clear filtered stats to prevent data vanishing - let new data overwrite
-    // setFilteredStats(null) - REMOVED to fix vanishing issue
-    
-    // Clear chart loading after a delay to simulate chart re-rendering
-    setTimeout(() => setChartLoading(false), 1000)
+    // The loading states will be cleared by calculateFilteredStats when data is ready
   }
 
   const formatNumber = (num: number | null | undefined) => {
@@ -247,7 +245,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
 
   const formatDistance = (distance: number | null | undefined) => {
     if (!distance || distance === 0) return '0.0'
-    return distance.toFixed(1)
+    return distance.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
   }
 
   const getStatValue = (statType: 'distance_walked' | 'pokemon_caught' | 'pokestops_visited' | 'total_xp') => {
@@ -364,16 +362,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
             alignItems: 'center',
             justifyContent: 'center',
             textAlign: isMobile ? 'left' : 'center',
-            gap: '16px'
+            gap: '16px',
+            filter: 'blur(2px)',
+            opacity: 0.7
           }}>
-            <div style={{
-              width: '48px',
-              height: '48px',
-              border: '2px solid transparent',
-              borderTop: '2px solid #DC2627',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}></div>
             <p style={{
               color: '#6B7280',
               fontSize: '18px',
@@ -1034,19 +1026,19 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     alignSelf: 'stretch',
                     flexGrow: 0
                   }}>
-                    {statsLoading ? (
-                      <div className="bg-white rounded-lg p-6">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-                        <p className="text-center text-gray-600">Loading stats...</p>
-                      </div>
-                    ) : (
+                  <div style={{ 
+                    filter: statsLoading ? 'blur(4px)' : 'none', 
+                    opacity: statsLoading ? 0.6 : 1, 
+                    pointerEvents: statsLoading ? 'none' : 'auto',
+                    transition: 'filter 0.3s ease, opacity 0.3s ease'
+                  }}>
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
-                    )}
+                  </div>
                   </div>
 
                   {/* Frame 548 - Performance Overview Container */}
@@ -1619,20 +1611,21 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
                         borderRadius: '8px'
                       }}>
-                    <div style={{ width: '100%', height: '100%', position: 'relative' }}>
-                          {chartLoading ? (
-                            <div className="flex items-center justify-center h-64">
-                              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4"></div>
-                              <p className="text-gray-600 ml-4">Loading chart...</p>
-                            </div>
-                          ) : (
+                    <div style={{ 
+                      width: '100%', 
+                      height: '100%', 
+                      position: 'relative',
+                      filter: chartLoading ? 'blur(4px)' : 'none',
+                      opacity: chartLoading ? 0.6 : 1,
+                      pointerEvents: chartLoading ? 'none' : 'auto',
+                      transition: 'filter 0.3s ease, opacity 0.3s ease'
+                    }}>
                       <PerformanceRadarChart 
                         profile={profile} 
                         isPaidUser={userType === "upgraded"} 
                         showHeader={false}
                       />
-                          )}
-                        </div>
+                    </div>
                     </div>
                   </div>
 
@@ -1716,19 +1709,19 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
               ) : (
                 /* Desktop Layout - Keep existing */
                 <>
-                  {statsLoading ? (
-                    <div className="bg-white rounded-lg p-6">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-                      <p className="text-center text-gray-600">Loading stats...</p>
-                    </div>
-                  ) : (
+                  <div style={{ 
+                    filter: statsLoading ? 'blur(4px)' : 'none', 
+                    opacity: statsLoading ? 0.6 : 1, 
+                    pointerEvents: statsLoading ? 'none' : 'auto',
+                    transition: 'filter 0.3s ease, opacity 0.3s ease'
+                  }}>
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
-                  )}
+                  </div>
               
               {/* Performance Overview Heading - Aligned with weekly/monthly buttons */}
               <div style={{
@@ -1805,18 +1798,18 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     transform: 'translateZ(0)', // Force GPU acceleration
                   }}
                 >
-                  {chartLoading ? (
-                    <div className="flex items-center justify-center h-64">
-                      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mb-4"></div>
-                      <p className="text-gray-600 ml-4">Loading chart...</p>
-                    </div>
-                  ) : (
+                  <div style={{ 
+                    filter: chartLoading ? 'blur(4px)' : 'none',
+                    opacity: chartLoading ? 0.6 : 1,
+                    pointerEvents: chartLoading ? 'none' : 'auto',
+                    transition: 'filter 0.3s ease, opacity 0.3s ease'
+                  }}>
                   <PerformanceRadarChart 
                     profile={profile} 
                     isPaidUser={userType === "upgraded"} 
                     showHeader={false}
                   />
-                  )}
+                  </div>
                 </div>
               </div>
 
@@ -1971,8 +1964,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                 {showScreenshots && (
                   <>
                     {screenshotsLoading ? (
-                      <div className="screenshots-loading-state">
-                        <div className="loading-spinner-large"></div>
+                      <div className="screenshots-loading-state" style={{ filter: 'blur(4px)', opacity: 0.6, pointerEvents: 'none' }}>
                         <h3>Loading Screenshots</h3>
                         <p>Fetching verification history...</p>
                       </div>
@@ -2026,7 +2018,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                                 <div className="stat-badge distance-badge">
                                   <span className="stat-icon">👣</span>
                                   <span className="stat-label">Distance</span>
-                                  <span className="stat-value">{screenshot.stat_entries.distance_walked?.toFixed(1)}km</span>
+                                  <span className="stat-value">{screenshot.stat_entries.distance_walked?.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</span>
                                 </div>
                                 <div className="stat-badge stops-badge">
                                   <span className="stat-icon">🔵</span>

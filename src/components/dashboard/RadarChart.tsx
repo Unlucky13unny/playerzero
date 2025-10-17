@@ -328,26 +328,12 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
           height: isMobile ? '310px' : '487px',
           background: isMobile ? 'transparent' : 'rgba(0, 0, 0, 0.02)',
           borderRadius: isMobile ? '0px' : '8px',
+          filter: 'blur(4px)',
+          opacity: 0.6,
+          pointerEvents: 'none'
         }}
       >
-        <div 
-          style={{
-            width: '40px',
-            height: '40px',
-            border: '3px solid #f3f4f6',
-            borderTop: '3px solid #dc2626',
-            borderRadius: '50%',
-            animation: 'spin 1s linear infinite',
-            marginBottom: '16px'
-          }}
-        ></div>
-        <p style={{ color: '#000000', fontSize: '14px', textAlign: 'center' }}>Loading performance data...</p>
-        <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+        <p style={{ color: '#6B7280', fontSize: '14px', textAlign: 'center', fontWeight: '500' }}>Loading performance data...</p>
       </div>
     )
   }

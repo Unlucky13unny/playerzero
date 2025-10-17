@@ -9,19 +9,11 @@ interface GrindStatsProps {
   profile?: any
 }
 
-// Memoize the GrindStats component to prevent unnecessary re-renders
-// CSS animation for spinner
-const spinnerAnimation = `
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-`;
+// Memoize the GrindStats component to prevent unnecessary re-renders;
 
 export const GrindStats = memo(function GrindStats({ isMobile = false, profile }: GrindStatsProps) {
   const { user } = useAuth()
   const [backendStats, setBackendStats] = useState<any>(null)
-  const [loading, setLoading] = useState(false)
 
   // Load all-time stats from backend when component mounts or profile changes
   useEffect(() => {
@@ -32,22 +24,18 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
       // Define the async function inside useEffect
       const loadBackendStats = async () => {
         try {
-          setLoading(true)
-          
           // Always load all-time stats for GrindStats table (gets latest calculated values)
           const result = await dashboardService.calculateAllTimeGrindStats(targetUserId)
 
           // Only update state if component is still mounted
           if (isMounted) {
             setBackendStats(result)
-            setLoading(false)
           }
         } catch (error) {
           // Only update state if component is still mounted
           if (isMounted) {
             console.warn('Failed to load all-time backend stats for GrindStats:', error)
             setBackendStats(null)
-            setLoading(false)
           }
         }
       }
@@ -164,7 +152,6 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
 
   return (
     <>
-      <style>{spinnerAnimation}</style>
       <div 
         className="bg-white rounded-lg p-6"
       style={{
@@ -257,38 +244,6 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
           position: 'relative',
           boxSizing: 'border-box',
         }}>
-          {/* Transparent loading overlay */}
-          {loading && (
-            <div 
-              className="loading-overlay"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                borderRadius: '4px',
-              }}
-            >
-              <div 
-                className="loading-spinner"
-                style={{
-                  width: '30px',
-                  height: '30px',
-                  border: '2px solid #f3f4f6',
-                  borderTop: '2px solid #dc2626',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  animationTimingFunction: 'linear',
-                }}
-              ></div>
-            </div>
-          )}
           {/* Frame 531 - Distance Stat */}
           <div style={{
             /* Frame 531 */
@@ -531,38 +486,7 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
             position: 'relative',
             boxSizing: 'border-box',
         }}>
-          {/* Transparent loading overlay */}
-          {loading && (
-            <div 
-              className="loading-overlay"
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundColor: 'rgba(255, 255, 255, 0.7)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-                borderRadius: '4px',
-              }}
-            >
-              <div 
-                className="loading-spinner"
-                style={{
-                  width: '40px',
-                  height: '40px',
-                  border: '3px solid #f3f4f6',
-                  borderTop: '3px solid #dc2626',
-                  borderRadius: '50%',
-                  animation: 'spin 1s linear infinite',
-                  animationTimingFunction: 'linear',
-                }}
-              ></div>
-            </div>
-          )}
+          {/* Blur loading overlay */}
           {/* Distance Stat Card - Frame 531 */}
           <div 
             className="bg-gray-50 hover:bg-gray-300 transition-colors duration-200 ease-in-out cursor-pointer"

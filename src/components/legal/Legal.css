@@ -1,0 +1,145 @@
+/* Legal Pages - Terms of Service & Privacy Policy */
+
+.legal-container {
+  flex: 1;
+  background-color: #ffffff;
+  padding: 2rem 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.legal-content {
+  max-width: 900px;
+  width: 100%;
+  text-align: left;
+  color: #333333;
+  line-height: 1.6;
+}
+
+.legal-content h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.legal-content h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #000000;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.legal-content p {
+  font-size: 1rem;
+  color: #333333;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.legal-content .last-updated {
+  font-size: 0.9rem;
+  color: #666666;
+  margin-bottom: 0.5rem;
+}
+
+.legal-section {
+  margin-bottom: 1.5rem;
+}
+
+.legal-content ul {
+  margin-left: 1.5rem;
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+.legal-content ul li {
+  font-size: 1rem;
+  color: #333333;
+  margin-bottom: 0.5rem;
+  list-style-type: disc;
+}
+
+.legal-content a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.legal-content a:hover {
+  text-decoration: underline;
+}
+
+/* Legal Footer */
+.legal-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 0;
+  gap: 8px;
+  margin-top: 3rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+.legal-footer-copyright {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 21px;
+  text-align: center;
+  color: #666666;
+}
+
+.legal-footer-tagline {
+  font-family: 'Poppins', sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 12px;
+  line-height: 18px;
+  text-align: center;
+  color: #999999;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .legal-container {
+    padding: 1rem 0.75rem;
+  }
+
+  .legal-content h1 {
+    font-size: 1.5rem;
+  }
+
+  .legal-content h2 {
+    font-size: 1.25rem;
+    margin-top: 1.5rem;
+  }
+
+  .legal-content p,
+  .legal-content ul li {
+    font-size: 0.9rem;
+  }
+
+  .legal-content ul {
+    margin-left: 1rem;
+  }
+  
+  .legal-footer {
+    padding: 1.5rem 0;
+    margin-top: 2rem;
+  }
+  
+  .legal-footer-copyright {
+    font-size: 12px;
+    line-height: 18px;
+  }
+  
+  .legal-footer-tagline {
+    font-size: 11px;
+    line-height: 16px;
+  }
+}
+
