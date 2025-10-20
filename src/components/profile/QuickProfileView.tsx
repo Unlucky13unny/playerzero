@@ -32,38 +32,30 @@ interface QuickProfileData {
   pokestops_visited: number;
   profile_screenshot_url?: string;
   // Social Media fields
-  instagram?: string;
+  x?: string;
+  bluesky?: string;
   facebook?: string;
-  snapchat?: string;
-  twitter?: string;
-  tiktok?: string;
-  youtube?: string;
-  twitch?: string;
-  github?: string;
-  reddit?: string;
   discord?: string;
-  telegram?: string;
-  whatsapp?: string;
-  vimeo?: string;
+  instagram?: string;
+  youtube?: string;
+  tiktok?: string;
+  twitch?: string;
+  reddit?: string;
   social_links_private?: boolean;
   is_paid_user?: boolean;
 }
 
 // Social platform definitions matching ProfileInfo
 const getSocialPlatforms = () => [
-  { id: 'instagram', name: 'Instagram' },
+  { id: 'x', name: 'X (Twitter)' },
+  { id: 'bluesky', name: 'Bluesky' },
   { id: 'facebook', name: 'Facebook' },
-  { id: 'snapchat', name: 'Snapchat' },
-  { id: 'twitter', name: 'Twitter' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'twitch', name: 'Twitch' },
-  { id: 'github', name: 'GitHub' },
-  { id: 'reddit', name: 'Reddit' },
   { id: 'discord', name: 'Discord' },
-  { id: 'telegram', name: 'Telegram' },
-  { id: 'whatsapp', name: 'WhatsApp' },
-  { id: 'vimeo', name: 'Vimeo' },
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'reddit', name: 'Reddit' },
 ]
 
 export const QuickProfileView = ({ 
@@ -135,33 +127,30 @@ export const QuickProfileView = ({
   const getSocialLink = (platform: string, value: string): string | undefined => {
     if (!value) return undefined;
     
+    // If value is already a full URL, return it as is
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value;
+    }
+    
     switch (platform) {
-      case 'instagram':
-        return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`;
+      case 'x':
+        return `https://x.com/${value.replace('@', '')}`;
+      case 'bluesky':
+        return `https://bsky.app/profile/${value.replace('@', '')}`;
       case 'facebook':
-        return value.includes('facebook.com') ? value : `https://facebook.com/${value}`;
-      case 'snapchat':
-        return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`;
-      case 'twitter':
-        return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`;
-      case 'tiktok':
-        return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`;
-      case 'youtube':
-        return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`;
-      case 'twitch':
-        return `https://twitch.tv/${value}`;
-      case 'reddit':
-        return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`;
-      case 'github':
-        return `https://github.com/${value}`;
+        return `https://www.facebook.com/${value.replace('@', '')}`;
       case 'discord':
-        return value;
-      case 'telegram':
-        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`;
-      case 'whatsapp':
-        return `https://wa.me/${value}`;
-      case 'vimeo':
-        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`;
+        return value; // Discord doesn't have URLs
+      case 'instagram':
+        return `https://www.instagram.com/${value.replace('@', '')}`;
+      case 'youtube':
+        return `https://www.youtube.com/@${value.replace('@', '')}`;
+      case 'tiktok':
+        return `https://www.tiktok.com/@${value.replace('@', '')}`;
+      case 'twitch':
+        return `https://www.twitch.tv/${value.replace('@', '')}`;
+      case 'reddit':
+        return `https://www.reddit.com/user/${value.replace('@', '')}`;
       default:
         return value;
     }

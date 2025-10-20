@@ -141,11 +141,11 @@ export const ProfileSetup = () => {
       
       setProfileData(prev => ({ ...prev, [field]: limitedValue }))
     } 
-    // Special handling for trainer_level to enforce 1-50 range
+    // Special handling for trainer_level to enforce 1-80 range
     else if (field === 'trainer_level') {
       const numValue = parseInt(value) || 1;
-      // Cap between 1 and 50
-      const cappedValue = Math.max(1, Math.min(50, numValue));
+      // Cap between 1 and 80
+      const cappedValue = Math.max(1, Math.min(80, numValue));
       setProfileData(prev => ({ ...prev, [field]: cappedValue }))
     } 
     else {
@@ -565,11 +565,11 @@ export const ProfileSetup = () => {
         <input
           type="number"
           min="1"
-          max="50"
+          max="80"
           value={profileData.trainer_level}
           onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
           className="form-input"
-          placeholder="50"
+          placeholder="80"
         />
       </div>
 

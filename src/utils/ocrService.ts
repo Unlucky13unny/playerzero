@@ -354,12 +354,12 @@ const extractStatsFromText = (text: string): ExtractedStats => {
       }
     }
 
-    // CRITICAL RULE 3: Level MUST be a small number (1-50) near "LEVEL" keyword
+    // CRITICAL RULE 3: Level MUST be a small number (1-80) near "LEVEL" keyword
     if (!stats.trainer_level) {
       const levelContext = cleanText.match(/(\d{1,2}).*?LEVEL|LEVEL.*?(\d{1,2})/i);
       if (levelContext) {
         const value = parseInt(levelContext[1] || levelContext[2]);
-        if (!isNaN(value) && value >= 1 && value <= 50) {
+        if (!isNaN(value) && value >= 1 && value <= 80) {
           stats.trainer_level = value;
           console.log(`⚠️ Trainer Level (fallback): ${value}`);
         }

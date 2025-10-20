@@ -9,6 +9,7 @@ import { useTrialStatus } from '../../hooks/useTrialStatus';
 import { FaDownload } from 'react-icons/fa';
 import { PlayerProfile } from './PlayerProfile';
 import { WelcomeModal } from '../common/WelcomeModal';
+import { dashboardService } from '../../services/dashboardService';
 
 // Styles for the new layout
 const chartStyles = {
@@ -255,32 +256,46 @@ export const UserHome = () => {
 
       switch (activeTimeFilter) {
         case 'weekly':
-          // Calculate daily average for last 7 days
-          const weeklyDailyDistance = (stats.distance_walked || 0) / 365 * 7; // Assuming 365 days total
-          const weeklyDailyCaught = (stats.pokemon_caught || 0) / 365 * 7;
-          const weeklyDailyStops = (stats.pokestops_visited || 0) / 365 * 7;
-          const weeklyDailyXP = (stats.total_xp || 0) / 365 * 7;
-          
-          filteredData = {
-            distance_walked: Math.round(weeklyDailyDistance),
-            pokemon_caught: Math.round(weeklyDailyCaught),
-            pokestops_visited: Math.round(weeklyDailyStops),
-            total_xp: Math.round(weeklyDailyXP)
-          };
+          try {
+            // Use the new current week calculation (Sunday-Saturday UTC)
+            const weekStats = await dashboardService.calculateCurrentWeekGrindStats(user.id);
+            filteredData = {
+              distance_walked: Math.round(weekStats.distanceWalked * 10) / 10, // One decimal place
+              pokemon_caught: Math.round(weekStats.pokemonCaught), // Whole number
+              pokestops_visited: Math.round(weekStats.pokestopsVisited), // Whole number
+              total_xp: Math.round(weekStats.totalXP) // Whole number
+            };
+          } catch (weekError) {
+            console.error('Error loading weekly stats:', weekError);
+            // Fallback to zeros if error
+            filteredData = {
+              distance_walked: 0,
+              pokemon_caught: 0,
+              pokestops_visited: 0,
+              total_xp: 0
+            };
+          }
           break;
         case 'monthly':
-          // Calculate daily average for last 30 days
-          const monthlyDailyDistance = (stats.distance_walked || 0) / 365 * 30;
-          const monthlyDailyCaught = (stats.pokemon_caught || 0) / 365 * 30;
-          const monthlyDailyStops = (stats.pokestops_visited || 0) / 365 * 30;
-          const monthlyDailyXP = (stats.total_xp || 0) / 365 * 30;
-          
-          filteredData = {
-            distance_walked: Math.round(monthlyDailyDistance),
-            pokemon_caught: Math.round(monthlyDailyCaught),
-            pokestops_visited: Math.round(monthlyDailyStops),
-            total_xp: Math.round(monthlyDailyXP)
-          };
+          try {
+            // Use the monthly calculation from dashboardService
+            const monthStats = await dashboardService.calculateMonthlyGrindStats(user.id);
+            filteredData = {
+              distance_walked: Math.round(monthStats.distanceWalked * 10) / 10, // One decimal place
+              pokemon_caught: Math.round(monthStats.pokemonCaught), // Whole number
+              pokestops_visited: Math.round(monthStats.pokestopsVisited), // Whole number
+              total_xp: Math.round(monthStats.totalXP) // Whole number
+            };
+          } catch (monthError) {
+            console.error('Error loading monthly stats:', monthError);
+            // Fallback to zeros if error
+            filteredData = {
+              distance_walked: 0,
+              pokemon_caught: 0,
+              pokestops_visited: 0,
+              total_xp: 0
+            };
+          }
           break;
         case 'all-time':
           filteredData = {
@@ -306,8 +321,14 @@ export const UserHome = () => {
     }
   };
 
-  const formatNumber = (num: number | null | undefined) => {
+  const formatNumber = (num: number | null | undefined, decimals?: number) => {
     if (num == null) return '0';
+    if (decimals !== undefined) {
+      return new Intl.NumberFormat('en-US', { 
+        minimumFractionDigits: decimals, 
+        maximumFractionDigits: decimals 
+      }).format(num);
+    }
     return new Intl.NumberFormat().format(num);
   };
 
@@ -601,7 +622,9 @@ export const UserHome = () => {
                     e.currentTarget.style.backgroundColor = "#111827";
                   }}
                 >
-                  {formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
+                  {activeTimeFilter === 'weekly' || activeTimeFilter === 'monthly' 
+                    ? formatNumber(filteredStats?.distance_walked || 0, 1) 
+                    : formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
                 </div>
                 
                 {/* Pokémon Caught */}
@@ -779,7 +802,9 @@ export const UserHome = () => {
                     e.currentTarget.style.backgroundColor = "#111827";
                   }}
                 >
-                  {formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
+                  {activeTimeFilter === 'weekly' || activeTimeFilter === 'monthly' 
+                    ? formatNumber(filteredStats?.distance_walked || 0, 1) 
+                    : formatNumber(filteredStats?.distance_walked || stats?.distance_walked)} km
                 </div>
                 
                 {/* Pokémon Caught */}

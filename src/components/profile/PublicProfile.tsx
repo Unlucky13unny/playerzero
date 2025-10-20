@@ -363,7 +363,7 @@ export const PublicProfile = () => {
               <div className="stat-row">
                 <span className="stat-label">Summit Date:</span>
                 <span className="stat-value">
-                {(profile.trainer_level || 0) >= 50 ? 'Complete' : 'In Progress'}
+                {(profile.trainer_level || 0) >= 80 ? 'Complete' : 'In Progress'}
                 </span>
               </div>
               <div className="stat-row">

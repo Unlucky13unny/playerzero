@@ -5435,7 +5435,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           gap: '8px',
 
-          width: '353px',
+          width: '100%',
+
+          maxWidth: '353px',
+
+          margin: '0 auto',
 
           height: '48px',
 
@@ -5765,8 +5769,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           width: '100%',
 
-          minWidth: '353px',
-
           maxWidth: '100vw',
 
           height: 'auto',
@@ -5807,7 +5809,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             width: '100%',
 
-            maxWidth: '353px',
+            maxWidth: '100%',
 
             height: 'auto',
 
@@ -5845,7 +5847,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           gap: '16px',
 
-          width: '353px',
+          width: '100%',
 
           height: '36px',
 
@@ -6400,7 +6402,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               width: '100%',
 
-              maxWidth: '353px',
+              maxWidth: '100%',
 
               //height: '36px',
 
@@ -6517,8 +6519,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           padding: '0px 8px',
 
           width: '100%',
-
-          minWidth: '353px',
 
           maxWidth: '100vw',
 
@@ -6911,8 +6911,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           width: '100%',
 
-          minWidth: '353px',
-
           maxWidth: '100vw',
 
           height: lockedExpanded ? 'auto' : '213px',
@@ -7031,7 +7029,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           }}>
 
           {/* Always show top 3 results */}
-          {processedData.slice(0, 3).map((player, index) => (
+          {processedData.slice(0, 3).map((player, index) => {
+            const isCurrentUser = (player as any).isCurrentUser
+            return (
 
               <div
 
@@ -7041,6 +7041,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 style={{
 
                   /* Frame 532/533/534 - Top 3 entries */
+
+                  boxSizing: 'border-box',
 
                   display: 'flex',
 
@@ -7056,11 +7058,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   height: '47px',
 
-                  background: player.rank === 1 ? '#FFFFFF' : '#FFFFFF',
+                  background: '#FFFFFF',
 
-                  border: player.rank === 1 ? '3px solid #DC2627' : 'none',
+                  border: isCurrentUser ? '3px solid #DC2627' : 'none',
 
-                  boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                  boxShadow: isCurrentUser ? '0px 0px 8px rgba(220, 38, 39, 0.5), 0px 4px 4px rgba(0, 0, 0, 0.25)' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
 
                   borderRadius: '8px',
 
@@ -7319,16 +7321,20 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               </div>
 
-            ))}
+            )
+          })}
 
           {/* Additional results (positions 4-10) shown only when expanded */}
           {lockedExpanded && (
             <>
-              {processedData.slice(3, 10).map((player, index) => (
+              {processedData.slice(3, 10).map((player, index) => {
+                const isCurrentUser = (player as any).isCurrentUser
+                return (
                 <div
                   key={index + 3}
                   className="hover:scale-105 transition-transform duration-200 ease-in-out cursor-pointer"
                   style={{
+                    boxSizing: 'border-box',
                     display: 'flex',
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -7337,7 +7343,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     width: '337px',
                     height: '47px',
                     background: '#FFFFFF',
-                    boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                    border: isCurrentUser ? '3px solid #DC2627' : 'none',
+                    boxShadow: isCurrentUser ? '0px 0px 8px rgba(220, 38, 39, 0.5), 0px 4px 4px rgba(0, 0, 0, 0.25)' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
                     borderRadius: '8px',
                     flex: 'none',
                     order: index + 3,
@@ -7494,7 +7501,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     </span>
                   </div>
                 </div>
-              ))}
+              )
+            })}
             </>
         )}
 
@@ -7524,8 +7532,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
            gap: '8px',
 
                     width: '100%',
-
-         minWidth: '353px',
 
          maxWidth: '100vw',
 
@@ -7561,7 +7567,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
              justifyContent: 'space-between',
 
-             width: '96%',
+             width: '100%',
 
              padding: '8px 0',
 
@@ -7617,20 +7623,21 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                  alignItems: 'center',
                }}
              >
-               <svg 
-                 width="38" 
-                 height="24" 
-                 viewBox="0 0 38 24" 
-                 fill="none" 
-                 xmlns="http://www.w3.org/2000/svg"
-                 style={{
-                   transform: showLiveLimitDropdown ? 'rotate(180deg)' : 'rotate(0deg)',
-                   transition: 'transform 0.2s ease',
-                 }}
-               >
-                 <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
-                 <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
-               </svg>
+              <svg 
+                width="38" 
+                height="24" 
+                viewBox="0 0 38 24" 
+                fill="none" 
+                xmlns="http://www.w3.org/2000/svg"
+                style={{
+                  transform: showLiveLimitDropdown ? 'rotate(0deg)' : 'rotate(180deg)',
+                  transition: 'transform 0.2s ease',
+                  marginLeft: '8px'
+                }}
+              >
+                <rect x="0.5" y="0.5" width="37" height="23" rx="11.5" stroke="black"/>
+                <path d="M18.7642 14.4707C18.8267 14.5332 18.9121 14.5684 19.0005 14.5684C19.0887 14.5683 19.1734 14.5331 19.2358 14.4707L23.5962 10.1094L23.1245 9.63867L19.354 13.4102L19.0005 13.7637L14.8755 9.63867L14.4038 10.1104L18.7642 14.4707Z" fill="black" stroke="black"/>
+              </svg>
              </button>
              
              {/* Dropdown Menu */}
@@ -7750,6 +7757,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    /* Frame 540 */
 
+                   boxSizing: 'border-box',
+
                    display: 'flex',
 
                    flexDirection: 'row',
@@ -7766,7 +7775,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    background: '#FFFFFF',
 
-                   boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+                   boxShadow: isCurrentUser ? '0px 0px 8px rgba(220, 38, 39, 0.5), 0px 4px 4px rgba(0, 0, 0, 0.25)' : '0px 4px 4px rgba(0, 0, 0, 0.25)',
 
                    borderRadius: '8px',
 

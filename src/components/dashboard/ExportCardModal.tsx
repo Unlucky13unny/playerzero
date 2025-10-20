@@ -494,7 +494,7 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
         )
 
       case 'summit':
-        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
+        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date, profile.trainer_level)
         return (
           <div className="card-template summit-card" style={{ 
             backgroundImage: 'url(/images/summit.png)',
@@ -733,10 +733,13 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
         )
 
       case 'summit':
-        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
+        const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date, profile.trainer_level)
+        // Determine background: Gold card only when BOTH XP >= 203,353,000 AND level >= 80
+        const hasAchievedLevel80WebSummit = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
+        const summitBackgroundWeb = hasAchievedLevel80WebSummit ? '/images/achieved.png' : '/images/summit.png'
         return (
           <div className="card-template summit-card web-card" style={{ 
-            backgroundImage: 'url(/images/summit.png)',
+            backgroundImage: `url(${summitBackgroundWeb})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -774,18 +777,20 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
               <div style={{ fontWeight: 'bold' }}>{startDate}</div>
             </div>
 
-            {/* Summit Date - Above Total XP */}
-            <div style={{ 
-              position: 'absolute',
-              bottom: '400px',
-              left: '20px',
-              color: 'red',
-              fontSize: '24px',
-              fontWeight: 'bold',
-              textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
-            }}>
-              {summitDate}
-            </div>
+            {/* Summit Date - Above Total XP (Hidden on Gold Achievement Card) */}
+            {!hasAchievedLevel80WebSummit && (
+              <div style={{ 
+                position: 'absolute',
+                bottom: '400px',
+                left: '20px',
+                color: 'red',
+                fontSize: '24px',
+                fontWeight: 'bold',
+                textShadow: '-1px -1px 0 white, 1px -1px 0 white, -1px 1px 0 white, 1px 1px 0 white'
+              }}>
+                {summitDate}
+              </div>
+            )}
 
             {/* Total XP - Bottom Left */}
             <div style={{ 

@@ -167,9 +167,9 @@ export default function ProfileCard({
 
         {/* Summit Date */}
         <div className="flex justify-between">
-          <span className="text-gray-600">50 Summit</span>
+          <span className="text-gray-600">80 Summit</span>
           <span>
-            {(stats?.trainer_level || 0) >= 50 ? "Complete" : "In Progress"}
+            {(stats?.trainer_level || 0) >= 80 ? "Complete" : "In Progress"}
           </span>
         </div>
 

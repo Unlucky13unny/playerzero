@@ -24,33 +24,30 @@ interface ProfileInfoProps {
 const getSocialLink = (platform: string, value: string): string | undefined => {
   if (!value) return undefined
   
+  // If value is already a full URL, return it as is
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value
+  }
+  
   switch (platform) {
-    case 'instagram':
-      return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
+    case 'x':
+      return `https://x.com/${value.replace('@', '')}`
+    case 'bluesky':
+      return `https://bsky.app/profile/${value.replace('@', '')}`
     case 'facebook':
-      return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
-    case 'snapchat':
-      return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
-    case 'twitter':
-      return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
-    case 'tiktok':
-      return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
-    case 'youtube':
-      return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
-    case 'twitch':
-      return `https://twitch.tv/${value}`
-    case 'reddit':
-      return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
-    case 'github':
-      return `https://github.com/${value}`
+      return `https://www.facebook.com/${value.replace('@', '')}`
     case 'discord':
-      return value
-    case 'telegram':
-      return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
-    case 'whatsapp':
-      return `https://wa.me/${value}`
-    case 'vimeo':
-      return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
+      return value // Discord doesn't have URLs
+    case 'instagram':
+      return `https://www.instagram.com/${value.replace('@', '')}`
+    case 'youtube':
+      return `https://www.youtube.com/@${value.replace('@', '')}`
+    case 'tiktok':
+      return `https://www.tiktok.com/@${value.replace('@', '')}`
+    case 'twitch':
+      return `https://www.twitch.tv/${value.replace('@', '')}`
+    case 'reddit':
+      return `https://www.reddit.com/user/${value.replace('@', '')}`
     default:
       return value
   }
@@ -58,19 +55,15 @@ const getSocialLink = (platform: string, value: string): string | undefined => {
 
 // Social platform definitions with SVG file paths
 const getSocialPlatforms = () => [
-  { id: 'instagram', name: 'Instagram' },
+  { id: 'x', name: 'X (Twitter)' },
+  { id: 'bluesky', name: 'Bluesky' },
   { id: 'facebook', name: 'Facebook' },
-  { id: 'snapchat', name: 'Snapchat' },
-  { id: 'twitter', name: 'Twitter' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'twitch', name: 'Twitch' },
-  { id: 'github', name: 'GitHub' },
-  { id: 'reddit', name: 'Reddit' },
   { id: 'discord', name: 'Discord' },
-  { id: 'telegram', name: 'Telegram' },
-  { id: 'whatsapp', name: 'WhatsApp' },
-  { id: 'vimeo', name: 'Vimeo' },
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'reddit', name: 'Reddit' },
 ]
 
 export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
@@ -124,19 +117,25 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
     }
   }
 
-  // Calculate Summit Date based on XP progression
+  // Calculate Summit Date based on XP progression and Level 80 threshold
   const calculateSummitDate = () => {
-    const GOAL_XP = 176_000_000
+    const GOAL_XP = 203_353_000 // Level 80 XP threshold
     const currentXP = profile?.total_xp || 0
+    const currentLevel = profile?.trainer_level || 0
     
-    // If already completed
+    // If reached Level 80 XP threshold
     if (currentXP >= GOAL_XP) {
-      return 'Complete'
+      // Check if they've also confirmed Level 80
+      if (currentLevel >= 80) {
+        return 'Complete'
+      }
+      // They have the XP but haven't updated their level yet
+      return 'XP Achieved'
     }
     
-    // If no start date, can't calculate
+    // Below Level 80 XP threshold - calculate projected date
     if (!profile?.start_date) {
-      return 'Calculating...'
+      return 'In Progress'
     }
     
     // Calculate days since start
@@ -148,21 +147,21 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
     const averageDailyXP = currentXP / daysSinceStart
     
     if (averageDailyXP <= 0) {
-      return 'Calculating...'
+      return 'In Progress'
     }
     
     // Calculate XP needed and days needed
     const xpNeeded = GOAL_XP - currentXP
-    const daysNeeded = Math.ceil(xpNeeded / averageDailyXP)
+    const daysNeeded = Math.round(xpNeeded / averageDailyXP) // Round to nearest whole day
     
     // Calculate summit date
     const summitDate = new Date()
     summitDate.setDate(summitDate.getDate() + daysNeeded)
     
-    // Format date as MM/DD/YYYY
+    // Format date as Month Day, Year (e.g., "March 2, 2028")
     return summitDate.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
+      month: 'long',
+      day: 'numeric',
       year: 'numeric'
     })
   }

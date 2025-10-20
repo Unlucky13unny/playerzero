@@ -33,8 +33,9 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         setIsDownloading(true)
 
         // Determine which background image to use based on achievement status
-        const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
-        const backgroundImage = hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'
+        // Gold card only when BOTH XP >= 203,353,000 AND level >= 80
+        const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
+        const backgroundImage = hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'
         
         // Preload the background image first
         const img = new Image()
@@ -151,8 +152,9 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
   // Check if mobile view
   const isMobile = window.innerWidth <= 768
 
-  // Check if user has achieved level 50 (176 million XP)
-  const hasAchievedLevel50 = (profile.total_xp || 0) >= 176_000_000
+  // Check if user has achieved level 80 (203.353 million XP AND level 80)
+  // Gold card only when BOTH XP >= 203,353,000 AND level >= 80
+  const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
 
   const startDate = profile.start_date 
     ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-GB', { 
@@ -166,8 +168,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         year: 'numeric' 
       }).replace(/\//g, '.')
 
-  // Calculate summit date (same as ExportCardModal)
-  const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date)
+  // Calculate summit date with level parameter
+  const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date, profile.trainer_level)
 
   return (
     <div 
@@ -200,7 +202,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       <div 
         ref={cardRef}
         style={{ 
-          backgroundImage: `url(${hasAchievedLevel50 ? '/images/achieved.png' : '/images/summit.png'})`,
+          backgroundImage: `url(${hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'})`,
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -253,24 +255,26 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           {startDate}
         </div>
 
-        {/* Summit Date - Center */}
-        <div style={{ 
-          position: 'absolute',
-          top: isMobile ? '75px' : '130px',
-          left: isMobile ? '18px' : '32px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '700',
-          fontSize: isMobile ? '16px' : '28px',
-          lineHeight: isMobile ? '24px' : '42px',
-          color: '#DC2627',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-          flex: 'none',
-          order: 0,
-          flexGrow: 0
-        }}>
-          {summitDate}
-        </div>
+        {/* Summit Date - Center (Hidden on Gold Achievement Card) */}
+        {!hasAchievedLevel80 && (
+          <div style={{ 
+            position: 'absolute',
+            top: isMobile ? '75px' : '130px',
+            left: isMobile ? '18px' : '32px',
+            fontFamily: 'Poppins, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: '700',
+            fontSize: isMobile ? '16px' : '28px',
+            lineHeight: isMobile ? '24px' : '42px',
+            color: '#DC2627',
+            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0
+          }}>
+            {summitDate}
+          </div>
+        )}
 
         {/* Total XP - Bottom */}
         <div style={{ 

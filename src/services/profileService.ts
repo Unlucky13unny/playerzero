@@ -33,17 +33,19 @@ export type ProfileData = {
   profile_screenshot_url: string
   
   // Social Media (optional)
-  instagram?: string
-  tiktok?: string
+  x?: string
   twitter?: string
+  bluesky?: string
+  facebook?: string
+  discord?: string
+  instagram?: string
   youtube?: string
+  tiktok?: string
   twitch?: string
   reddit?: string
-  facebook?: string
   snapchat?: string
   github?: string
   vimeo?: string
-  discord?: string
   telegram?: string
   whatsapp?: string
 }
@@ -71,19 +73,15 @@ export interface PublicProfileData {
   pokestops_visited: number
   unique_pokedex_entries: number
   profile_screenshot_url: string
+  x: string
+  bluesky: string
+  facebook: string
+  discord: string
   instagram: string
-  tiktok: string
-  twitter: string
   youtube: string
+  tiktok: string
   twitch: string
   reddit: string
-  facebook: string
-  snapchat: string
-  github: string
-  vimeo: string
-  discord: string
-  telegram: string
-  whatsapp: string
   created_at: string
   updated_at: string
   is_paid_user: boolean
@@ -94,10 +92,10 @@ export interface PublicProfileData {
 }
 
 // XP requirements for each level
-const LEVEL_50_XP = 176_000_000;
+const LEVEL_80_XP = 203_353_000;
 
-// Calculate summit date based on current XP and start date (more accurate than stored average)
-export const calculateSummitDate = (currentXp: number, averageDailyXp: number, startDate?: string): string => {
+// Calculate summit date based on current XP, level, and start date
+export const calculateSummitDate = (currentXp: number, averageDailyXp: number, startDate?: string, currentLevel?: number): string => {
   // If we have a start date, calculate more accurate daily XP rate
   let dailyXpRate = averageDailyXp;
   
@@ -107,45 +105,35 @@ export const calculateSummitDate = (currentXp: number, averageDailyXp: number, s
     dailyXpRate = currentXp / daysSinceStart;
   }
   
-  if (!dailyXpRate || dailyXpRate <= 0) {
-    return 'Calculating...';
-  }
-
-  // If already level 50, calculate when they achieved it
-  if (currentXp >= LEVEL_50_XP) {
-    if (!startDate) {
-      return 'Achieved';
+  // If already reached Level 80 XP threshold
+  if (currentXp >= LEVEL_80_XP) {
+    // Check if they've also confirmed Level 80
+    if (currentLevel && currentLevel >= 80) {
+      return 'Complete';
     }
-    
-    // Calculate how many days it took to reach level 50
-    const daysToReach50 = Math.floor(LEVEL_50_XP / dailyXpRate);
-    
-    // Calculate the achievement date
-    const achievementDate = new Date(startDate);
-    achievementDate.setDate(achievementDate.getDate() + daysToReach50);
-    
-    // Format date as DD.MM.YYYY
-    return achievementDate.toLocaleDateString('en-GB', { 
-      year: 'numeric', 
-      month: 'numeric', 
-      day: 'numeric' 
-    }).replace(/\//g, '.');
+    // They have the XP but haven't updated their level yet
+    return 'XP Achieved';
   }
 
-  // Calculate days needed for users who haven't reached level 50
-  const xpNeeded = LEVEL_50_XP - currentXp;
-  const daysNeeded = Math.ceil(xpNeeded / dailyXpRate);
+  // Below Level 80 XP threshold - calculate projected date
+  if (!dailyXpRate || dailyXpRate <= 0) {
+    return 'In Progress';
+  }
+
+  // Calculate days needed to reach Level 80
+  const xpNeeded = LEVEL_80_XP - currentXp;
+  const daysNeeded = Math.round(xpNeeded / dailyXpRate); // Round to nearest whole day
   
   // Calculate future date
   const summitDate = new Date();
   summitDate.setDate(summitDate.getDate() + daysNeeded);
   
-  // Format date as DD.MM.YYYY
-  return summitDate.toLocaleDateString('en-GB', { 
+  // Format date as Month Day, Year (e.g., "March 2, 2028")
+  return summitDate.toLocaleDateString('en-US', { 
     year: 'numeric', 
-    month: 'numeric', 
+    month: 'long', 
     day: 'numeric' 
-  }).replace(/\//g, '.');
+  });
 };
 
 export const profileService = {
