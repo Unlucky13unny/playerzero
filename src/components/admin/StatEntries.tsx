@@ -328,7 +328,7 @@ export const StatEntries = () => {
                       onChange={(e) => handleFieldChange('trainer_level', parseInt(e.target.value))}
                       className="form-input"
                       min="1"
-                      max="50"
+                      max="80"
                       required
                     />
                   </div>

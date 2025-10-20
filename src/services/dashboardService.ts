@@ -606,6 +606,136 @@ export const dashboardService = {
     }
   },
 
+  // Calculate current week grind stats (Sunday 00:00 UTC to Saturday 23:59 UTC)
+  async calculateCurrentWeekGrindStats(userId?: string): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const targetUserId = userId || user?.id
+      
+      if (!targetUserId) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile to check start date
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date')
+        .eq('user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      // Calculate current week boundaries (Sunday 00:00 UTC to Saturday 23:59 UTC)
+      const now = new Date()
+      const currentDayOfWeek = now.getUTCDay() // 0 = Sunday, 6 = Saturday
+      
+      // Calculate start of current week (Sunday 00:00 UTC)
+      const weekStart = new Date(now)
+      weekStart.setUTCDate(now.getUTCDate() - currentDayOfWeek)
+      weekStart.setUTCHours(0, 0, 0, 0)
+      
+      // Calculate end of current week (Saturday 23:59 UTC)
+      const weekEnd = new Date(weekStart)
+      weekEnd.setUTCDate(weekStart.getUTCDate() + 6)
+      weekEnd.setUTCHours(23, 59, 59, 999)
+
+      // Calculate 4-hour buffer window before week start (Saturday 20:00 UTC to Sunday 00:00 UTC)
+      const bufferStart = new Date(weekStart)
+      bufferStart.setUTCHours(bufferStart.getUTCHours() - 4) // Saturday 20:00 UTC
+
+      const weekStartStr = weekStart.toISOString().split('T')[0]
+      const weekEndStr = weekEnd.toISOString().split('T')[0]
+      const bufferStartStr = bufferStart.toISOString()
+
+      // Get all stat entries in the current week
+      const { data: weekData, error: weekError } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('entry_date', weekStartStr)
+        .lte('entry_date', weekEndStr)
+        .order('entry_date', { ascending: true })
+
+      if (weekError) {
+        throw new Error('Failed to fetch weekly stat entries')
+      }
+
+      // Get potential baseline from buffer window (Saturday 20:00 - Sunday 00:00 UTC)
+      const { data: bufferData, error: bufferError } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('created_at', bufferStartStr)
+        .lt('entry_date', weekStartStr)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (bufferError) {
+        console.error('Error fetching buffer data:', bufferError)
+      }
+
+      let baselineEntry = null
+      let latestEntry = null
+
+      // Determine baseline: buffer upload OR earliest upload in week
+      if (bufferData && bufferData.length > 0) {
+        baselineEntry = bufferData[0]
+      } else if (weekData && weekData.length > 0) {
+        baselineEntry = weekData[0]
+      }
+
+      // Determine latest: most recent upload in week
+      if (weekData && weekData.length > 0) {
+        latestEntry = weekData[weekData.length - 1]
+      }
+
+      // If we don't have at least a baseline and latest (or if they're the same), return zeros
+      if (!baselineEntry || !latestEntry || baselineEntry.id === latestEntry.id) {
+        return {
+          totalXP: 0,
+          pokemonCaught: 0,
+          distanceWalked: 0,
+          pokestopsVisited: 0,
+          uniquePokedexEntries: 0,
+          xpPerDay: 0,
+          catchesPerDay: 0,
+          distancePerDay: 0,
+          stopsPerDay: 0,
+          startDate: weekStartStr,
+          endDate: weekEndStr
+        }
+      }
+
+      // Calculate deltas (latest - baseline)
+      const totalXP = Math.max(0, latestEntry.total_xp - baselineEntry.total_xp)
+      const pokemonCaught = Math.max(0, latestEntry.pokemon_caught - baselineEntry.pokemon_caught)
+      const distanceWalked = Math.max(0, latestEntry.distance_walked - baselineEntry.distance_walked)
+      const pokestopsVisited = Math.max(0, latestEntry.pokestops_visited - baselineEntry.pokestops_visited)
+      const uniquePokedexEntries = Math.max(0, latestEntry.unique_pokedex_entries - baselineEntry.unique_pokedex_entries)
+
+      // Calculate days in week (always 7 for current week)
+      const daysDiff = 7
+
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked: Math.round(distanceWalked * 10) / 10, // One decimal place
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / daysDiff),
+        catchesPerDay: Math.round(pokemonCaught / daysDiff),
+        distancePerDay: Math.round((distanceWalked / daysDiff) * 10) / 10,
+        stopsPerDay: Math.round(pokestopsVisited / daysDiff),
+        startDate: weekStartStr,
+        endDate: weekEndStr
+      }
+    } catch (error) {
+      throw error
+    }
+  },
+
   // Calculate monthly grind stats (last 30 days)
   async calculateMonthlyGrindStats(userId?: string): Promise<StatCalculationResult> {
     try {

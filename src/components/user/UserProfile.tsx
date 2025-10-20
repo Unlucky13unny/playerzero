@@ -106,11 +106,11 @@ export const UserProfile = () => {
         
         setEditData(prev => ({ ...prev!, [field]: limitedValue }))
       } 
-      // Special handling for trainer_level to enforce 1-50 range
+      // Special handling for trainer_level to enforce 1-80 range
       else if (field === 'trainer_level') {
         const numValue = parseInt(value) || 1;
-        // Cap between 1 and 50
-        const cappedValue = Math.max(1, Math.min(50, numValue));
+        // Cap between 1 and 80
+        const cappedValue = Math.max(1, Math.min(80, numValue));
         setEditData(prev => ({ ...prev!, [field]: cappedValue }))
       } 
       else {
@@ -301,14 +301,14 @@ export const UserProfile = () => {
     
     const platforms = [
       { 
-        id: 'instagram', 
-        name: 'Instagram',
-        icon: <img src="/images/instagram.svg" alt="Instagram" width="20" height="20" />
+        id: 'x', 
+        name: 'X (Twitter)',
+        icon: <img src="/images/x.svg" alt="X (Twitter)" width="20" height="20" />
       },
       { 
-        id: 'github', 
-        name: 'GitHub',
-        icon: <img src="/images/github.svg" alt="GitHub" width="20" height="20" />
+        id: 'bluesky', 
+        name: 'Bluesky',
+        icon: <img src="/images/bluesky.svg" alt="Bluesky" width="20" height="20" />
       },
       { 
         id: 'facebook', 
@@ -316,24 +316,14 @@ export const UserProfile = () => {
         icon: <img src="/images/facebook.svg" alt="Facebook" width="20" height="20" />
       },
       { 
-        id: 'vimeo', 
-        name: 'Vimeo',
-        icon: <img src="/images/vimeo.svg" alt="Vimeo" width="20" height="20" />
-      },
-      { 
         id: 'discord', 
         name: 'Discord',
         icon: <img src="/images/discord.svg" alt="Discord" width="20" height="20" />
       },
       { 
-        id: 'snapchat', 
-        name: 'Snapchat',
-        icon: <img src="/images/snapchat.svg" alt="Snapchat" width="20" height="20" />
-      },
-      { 
-        id: 'telegram', 
-        name: 'Telegram',
-        icon: <img src="/images/telegram.svg" alt="Telegram" width="20" height="20" />
+        id: 'instagram', 
+        name: 'Instagram',
+        icon: <img src="/images/instagram.svg" alt="Instagram" width="20" height="20" />
       },
       { 
         id: 'youtube', 
@@ -349,11 +339,6 @@ export const UserProfile = () => {
         id: 'twitch', 
         name: 'Twitch',
         icon: <img src="/images/twitch.svg" alt="Twitch" width="20" height="20" />
-      },
-      { 
-        id: 'whatsapp', 
-        name: 'WhatsApp',
-        icon: <img src="/images/whatsapp.svg" alt="WhatsApp" width="20" height="20" />
       },
       { 
         id: 'reddit', 
@@ -665,7 +650,7 @@ export const UserProfile = () => {
               <input
                 type="number"
                 min="1"
-                max="50"
+                max="80"
                 value={editData?.trainer_level || 1}
                 onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
                 style={{

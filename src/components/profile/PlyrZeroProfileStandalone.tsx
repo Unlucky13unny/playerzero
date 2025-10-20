@@ -37,38 +37,30 @@ interface QuickProfileData {
   trainer_code?: string;
   trainer_code_private?: boolean;
   // Social Media fields
+  x?: string;
+  bluesky?: string;
+  facebook?: string;
+  discord?: string;
   instagram?: string;
-  tiktok?: string;
-  twitter?: string;
   youtube?: string;
+  tiktok?: string;
   twitch?: string;
   reddit?: string;
-  facebook?: string;
-  snapchat?: string;
-  github?: string;
-  discord?: string;
-  telegram?: string;
-  whatsapp?: string;
-  vimeo?: string;
   social_links_private?: boolean;
   is_paid_user?: boolean;
 }
 
 // Social platform definitions matching ProfileInfo
 const getSocialPlatforms = () => [
-  { id: 'instagram', name: 'Instagram' },
+  { id: 'x', name: 'X (Twitter)' },
+  { id: 'bluesky', name: 'Bluesky' },
   { id: 'facebook', name: 'Facebook' },
-  { id: 'snapchat', name: 'Snapchat' },
-  { id: 'twitter', name: 'Twitter' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'twitch', name: 'Twitch' },
-  { id: 'github', name: 'GitHub' },
-  { id: 'reddit', name: 'Reddit' },
   { id: 'discord', name: 'Discord' },
-  { id: 'telegram', name: 'Telegram' },
-  { id: 'whatsapp', name: 'WhatsApp' },
-  { id: 'vimeo', name: 'Vimeo' },
+  { id: 'instagram', name: 'Instagram' },
+  { id: 'youtube', name: 'YouTube' },
+  { id: 'tiktok', name: 'TikTok' },
+  { id: 'twitch', name: 'Twitch' },
+  { id: 'reddit', name: 'Reddit' },
 ]
 
 export function PlyrZeroProfileStandalone({ 

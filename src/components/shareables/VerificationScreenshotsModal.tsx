@@ -360,25 +360,27 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 60
+          zIndex: 60,
+          padding: '20px',
+          overflowY: 'auto'
         }}>
-          <div style={{
+          <div className="verification-screenshot-wrapper" style={{
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
             width: '100%',
             maxWidth: '1000px',
-            padding: '0 20px'
+            gap: '20px'
           }}>
             {/* Main container - positioned to the left */}
-            <div style={{
+            <div className="upload-list-sidebar" style={{
               position: 'relative',
               width: '352px',
               height: '422px',
               background: 'white',
               borderRadius: '8px',
               boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.1)',
-              marginRight: '20px'
+              flexShrink: 0
             }}>
               {/* This is a duplicate of the main modal to maintain visual consistency */}
               <div style={{
@@ -505,14 +507,15 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
         </div>
 
             {/* Image preview container */}
-            <div style={{
+            <div className="screenshot-display-panel" style={{
               position: 'relative',
               width: '352px',
               height: '422px',
               background: 'white',
               borderRadius: '8px',
               padding: '8px',
-              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)'
+              boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.15)',
+              flexShrink: 0
             }}>
               {/* Frame 653 - Report button - Only for paid users */}
               {trialStatus.isPaidUser && !hasReported && (
@@ -716,6 +719,89 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+          /* On mobile, center everything */
+          .verification-screenshot-wrapper {
+            flex-direction: column !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 0 !important;
+            max-width: 100% !important;
+            padding: 0 20px !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+          }
+
+          /* Hide the upload list sidebar on mobile */
+          .upload-list-sidebar {
+            display: none !important;
+          }
+
+          /* Center the screenshot panel on mobile - truly centered */
+          .screenshot-display-panel {
+            width: 90vw !important;
+            max-width: 500px !important;
+            height: auto !important;
+            min-height: 400px !important;
+            max-height: 80vh !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            position: relative !important;
+            left: 0 !important;
+            right: 0 !important;
+            transform: translateX(0) !important;
+            display: flex !important;
+            flex-direction: column !important;
+          }
+
+          /* Ensure image container is centered */
+          .screenshot-display-panel > div {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          /* Ensure image scales properly on mobile */
+          .screenshot-display-panel img {
+            max-width: 100% !important;
+            max-height: calc(80vh - 80px) !important;
+            object-fit: contain !important;
+            display: block !important;
+            margin: 0 auto !important;
+          }
+        }
+
+        /* Extra small mobile devices */
+        @media (max-width: 480px) {
+          .screenshot-display-panel {
+            width: calc(100vw - 40px) !important;
+            max-width: 100% !important;
+            min-height: 300px !important;
+          }
+
+          .screenshot-display-panel img {
+            max-height: calc(70vh - 60px) !important;
+          }
+        }
+
+        /* Tablet and Desktop - side by side layout */
+        @media (min-width: 769px) {
+          .verification-screenshot-wrapper {
+            flex-direction: row !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
+
+          .upload-list-sidebar {
+            display: block !important;
+          }
+
+          .screenshot-display-panel {
+            display: block !important;
+          }
         }
       `}</style>
     </>

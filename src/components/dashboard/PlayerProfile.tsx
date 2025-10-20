@@ -46,8 +46,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const [timePeriod, setTimePeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly')
   const [filteredStats, setFilteredStats] = useState<any>(null)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [statsLoading, setStatsLoading] = useState(true)
-  const [chartLoading, setChartLoading] = useState(true)
   const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
   const [screenshotsLoading, setScreenshotsLoading] = useState(false)
   const [showScreenshots, setShowScreenshots] = useState(false)
@@ -99,7 +97,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
     }
 
     try {
-      setStatsLoading(true)
       let statsResult
 
       switch (timePeriod) {
@@ -214,9 +211,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
           total_xp: 0
         })
       }
-    } finally {
-      setStatsLoading(false)
-      setChartLoading(false)
     }
   }, [user?.id, profile, timePeriod])
 
@@ -233,9 +227,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)
     setTimePeriod(period)
-    setStatsLoading(true)
-    setChartLoading(true)
-    // The loading states will be cleared by calculateFilteredStats when data is ready
   }
 
   const formatNumber = (num: number | null | undefined) => {
@@ -1024,19 +1015,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     alignSelf: 'stretch',
                     flexGrow: 0
                   }}>
-                  <div style={{ 
-                    filter: statsLoading ? 'blur(4px)' : 'none', 
-                    opacity: statsLoading ? 0.6 : 1, 
-                    pointerEvents: statsLoading ? 'none' : 'auto',
-                    transition: 'filter 0.3s ease, opacity 0.3s ease'
-                  }}>
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
-                  </div>
                   </div>
 
                   {/* Frame 548 - Performance Overview Container */}
@@ -1612,11 +1596,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     <div style={{ 
                       width: '100%', 
                       height: '100%', 
-                      position: 'relative',
-                      filter: chartLoading ? 'blur(4px)' : 'none',
-                      opacity: chartLoading ? 0.6 : 1,
-                      pointerEvents: chartLoading ? 'none' : 'auto',
-                      transition: 'filter 0.3s ease, opacity 0.3s ease'
+                      position: 'relative'
                     }}>
                       <PerformanceRadarChart 
                         profile={profile} 
@@ -1707,19 +1687,12 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
               ) : (
                 /* Desktop Layout - Keep existing */
                 <>
-                  <div style={{ 
-                    filter: statsLoading ? 'blur(4px)' : 'none', 
-                    opacity: statsLoading ? 0.6 : 1, 
-                    pointerEvents: statsLoading ? 'none' : 'auto',
-                    transition: 'filter 0.3s ease, opacity 0.3s ease'
-                  }}>
                   <GrindStats 
                     isMobile={isMobile} 
                     viewMode={viewMode} 
                     userType={userType} 
                     profile={profile}
                   />
-                  </div>
               
               {/* Performance Overview Heading - Aligned with weekly/monthly buttons */}
               <div style={{
@@ -1796,12 +1769,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     transform: 'translateZ(0)', // Force GPU acceleration
                   }}
                 >
-                  <div style={{ 
-                    filter: chartLoading ? 'blur(4px)' : 'none',
-                    opacity: chartLoading ? 0.6 : 1,
-                    pointerEvents: chartLoading ? 'none' : 'auto',
-                    transition: 'filter 0.3s ease, opacity 0.3s ease'
-                  }}>
+                  <div>
                   <PerformanceRadarChart 
                     profile={profile} 
                     isPaidUser={userType === "upgraded"} 
