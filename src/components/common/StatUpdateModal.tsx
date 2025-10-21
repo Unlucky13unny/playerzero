@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { X, AlertTriangle, CheckCircle2, XCircle } from 'lucide-react'
+import { X } from 'lucide-react'
 
 interface StatChange {
   label: string
@@ -21,7 +21,6 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
   isOpen,
   onConfirm,
   onCancel,
-  onReview,
   changes,
   hasDecreasingStats
 }) => {
@@ -36,6 +35,9 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
   
   if (!isOpen) return null
 
+  // Detect mobile
+  const isMobile = window.innerWidth <= 768
+
   return (
     <div style={{
       position: 'fixed',
@@ -49,262 +51,374 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
       justifyContent: 'center',
       zIndex: 9999,
       padding: '20px',
-      animation: 'fadeIn 0.2s ease-out',
     }}>
-      <style>{`
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-        @keyframes slideUp {
-          from {
-            transform: translateY(20px);
-            opacity: 0;
-          }
-          to {
-            transform: translateY(0);
-            opacity: 1;
-          }
-        }
-        @keyframes pulse {
-          0%, 100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.05);
-          }
-        }
-      `}</style>
-      
+      {/* Modal Container - Figma: New Upload */}
       <div style={{
-        backgroundColor: '#ffffff',
-        borderRadius: '12px',
-        maxWidth: '500px',
-        width: '100%',
-        maxHeight: '80vh',
+        position: 'relative',
+        width: isMobile ? '353px' : '400px',
+        height: isMobile ? '484px' : '550px',
+        maxHeight: isMobile ? '90vh' : '90vh',
+        
+        background: '#FFFFFF',
+        borderRadius: '24px',
+        
+        filter: 'drop-shadow(0px 0px 48px rgba(0, 0, 0, 0.04))',
+        boxSizing: 'border-box',
         overflow: 'hidden',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)',
-        animation: 'slideUp 0.3s ease-out',
         display: 'flex',
         flexDirection: 'column',
       }}>
-        {/* Header */}
+        {/* bg */}
         <div style={{
-          padding: '20px 24px',
-          borderBottom: '1px solid #e5e7eb',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          background: hasDecreasingStats ? 'linear-gradient(135deg, #fff5f5 0%, #ffffff 100%)' : '#ffffff',
-        }}>
+          position: 'absolute',
+          left: '0px',
+          right: '0px',
+          top: '0px',
+          bottom: '0px',
+          background: '#FFFFFF',
+          borderRadius: '24px',
+        }} />
+
+        {/* Drag Area - Flat Grey background */}
           <div style={{
             display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'flex-start',
             alignItems: 'center',
-            gap: '12px',
-          }}>
-            {hasDecreasingStats ? (
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                animation: 'pulse 2s infinite',
-              }}>
-                <AlertTriangle size={20} color="white" />
-              </div>
-            ) : (
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '50%',
-                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}>
-                <CheckCircle2 size={20} color="white" />
-              </div>
-            )}
-            <h2 style={{
-              margin: 0,
-              fontSize: '20px',
-              fontWeight: '600',
-              fontFamily: 'Poppins, sans-serif',
-              color: '#111827',
-            }}>
-              {hasDecreasingStats ? 'Stat Correction Review' : 'Review Stat Updates'}
-            </h2>
-          </div>
-          <button
-            onClick={onCancel}
-            style={{
-              background: 'transparent',
-              border: 'none',
-              padding: '8px',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.2s',
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.background = '#f3f4f6'}
-            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-          >
-            <X size={20} color="#6b7280" />
-          </button>
-        </div>
-
-        {/* Content */}
-        <div style={{
-          padding: '24px',
+          padding: '32px',
+          paddingTop: '16px',
+          gap: '10px',
+          
+          position: 'absolute',
+          left: '0px',
+          right: '0px',
+          top: '0px',
+          bottom: '0px',
+          
+          background: '#F8F8F8',
+          borderRadius: '24px',
+          boxSizing: 'border-box',
           overflowY: 'auto',
-          flex: 1,
+          overflowX: 'hidden',
         }}>
-          {/* Stats Table */}
-          <div style={{
-            background: '#f9fafb',
-            borderRadius: '8px',
-            padding: '16px',
+          {/* Frame 756 - Main content container */}
+              <div style={{
+                display: 'flex',
+            flexDirection: 'column',
+                alignItems: 'center',
+            padding: '0px',
+            gap: '17px',
+            
+            width: isMobile ? '310px' : '360px',
+            maxWidth: '100%',
+            marginTop: '20px',
             marginBottom: '20px',
           }}>
-            <h3 style={{
-              margin: '0 0 16px 0',
-              fontSize: '14px',
-              fontWeight: '500',
-              fontFamily: 'Poppins, sans-serif',
-              color: '#6b7280',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
+            {/* Title: Review Stats Update */}
+              <div style={{
+              width: '100%',
+              height: '30px',
+              fontFamily: 'Poppins',
+              fontStyle: 'normal',
+              fontWeight: 600,
+              fontSize: '20px',
+              lineHeight: '30px',
+              textAlign: 'center',
+              color: '#000000',
+              flex: 'none',
+              order: 0,
+              alignSelf: 'stretch',
+              flexGrow: 0,
             }}>
-              Your Changes
-            </h3>
-            
+              Review Stats Update
+        </div>
+
+            {/* Frame 755 - Stats comparison container */}
             <div style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '12px',
+              alignItems: 'flex-start',
+              padding: '0px',
+              gap: '8px',
+              
+              width: '100%',
+              
+              flex: 'none',
+              order: 1,
+              alignSelf: 'stretch',
+              flexGrow: 0,
             }}>
               {changes.map((change, index) => (
                 <div key={index} style={{
                   display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '6px',
-                  border: change.isDecrease ? '1px solid #fecaca' : '1px solid #e5e7eb',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0px',
+                  gap: '2px',
+                  width: '100%',
+                  flex: 'none',
+                  order: index,
+                  alignSelf: 'stretch',
+                  flexGrow: 0,
                 }}>
+                  {/* Label */}
                   <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    flex: 1,
-                  }}>
-                    <span style={{
-                      fontSize: '14px',
-                      fontWeight: '500',
-                      fontFamily: 'Poppins, sans-serif',
-                      color: '#374151',
-                      minWidth: '140px',
+                    width: '100%',
+                    height: '17px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    fontSize: '11px',
+                    lineHeight: '16px',
+                    color: '#000000',
+                    flex: 'none',
+                    order: 0,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
                     }}>
                       {change.label}
-                    </span>
+                  </div>
+
+                  {/* Frame 757/758 - Comparison row */}
                     <div style={{
                       display: 'flex',
+                    flexDirection: 'row',
                       alignItems: 'center',
+                    padding: '0px',
                       gap: '8px',
+                    
+                    width: '100%',
+                    maxWidth: '310px',
+                    height: '36px',
+                    
+                    flex: 'none',
+                    order: 1,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                  }}>
+                    {/* Old Value - Frame 654 */}
+                    <div style={{
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: change.label === 'Distance Walked' ? 'space-between' : 'flex-start',
+                      alignItems: 'center',
+                      padding: '9px',
+                      gap: '10px',
+                      
+                      width: '135px',
+                      height: '36px',
+                      
+                      border: '1px solid #848282',
+                      borderRadius: '6px',
+                      
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0,
                     }}>
                       <span style={{
-                        fontSize: '14px',
-                        fontFamily: 'Poppins, sans-serif',
-                        color: '#6b7280',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: '#000000',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
                       }}>
                         {change.oldValue}
                       </span>
+                      {change.label === 'Distance Walked' && (
                       <span style={{
-                        fontSize: '14px',
-                        fontFamily: 'Poppins, sans-serif',
-                        color: '#9ca3af',
-                      }}>
-                        →
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: '#000000',
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>
+                          km
                       </span>
+                      )}
+                    </div>
+
+                    {/* ArrowRight */}
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      <svg width="18" height="15" viewBox="0 0 18 15" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M1 7.5H17M17 7.5L10.5 1M17 7.5L10.5 14" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                      </svg>
+                    </div>
+
+                    {/* New Value - Frame 655 */}
+                    <div style={{
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: change.label === 'Distance Walked' ? 'space-between' : 'flex-start',
+                      alignItems: 'center',
+                      padding: '9px',
+                      gap: '10px',
+                      
+                      width: '135px',
+                      height: '36px',
+                      
+                      border: `1px solid ${change.isDecrease ? '#FCA5A5' : '#848282'}`,
+                      borderRadius: '6px',
+                      
+                      flex: 'none',
+                      order: 2,
+                      flexGrow: 0,
+                    }}>
                       <span style={{
-                        fontSize: '14px',
-                        fontWeight: '600',
-                        fontFamily: 'Poppins, sans-serif',
-                        color: change.isDecrease ? '#dc2626' : '#059669',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        color: change.isDecrease ? '#DC2626' : '#000000',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
                       }}>
                         {change.newValue}
                       </span>
+                      {change.label === 'Distance Walked' && (
+                        <span style={{
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          color: change.isDecrease ? '#DC2626' : '#000000',
+                          flex: 'none',
+                          order: 1,
+                          flexGrow: 0,
+                        }}>
+                          km
+                        </span>
+                      )}
                     </div>
                   </div>
-                  {change.isDecrease && (
-                    <XCircle size={20} color="#dc2626" />
-                  )}
                 </div>
               ))}
-            </div>
           </div>
 
-          {/* Warning Message */}
-          {hasDecreasingStats && (
+            {/* Frame 597 - Info box */}
             <div style={{
-              background: '#fef2f2',
-              border: '1px solid #fecaca',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '20px',
+              boxSizing: 'border-box',
               display: 'flex',
-              gap: '12px',
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: '8px',
+              gap: isMobile ? '8px' : '24px',
+              
+              width: '100%',
+              minHeight: '65px',
+              
+              background: 'rgba(43, 196, 156, 0.09)',
+              border: '1px solid #2BC49C',
+              borderRadius: '8px',
+              
+              flex: 'none',
+              order: 2,
+              alignSelf: 'stretch',
+              flexGrow: 0,
             }}>
-              <AlertTriangle size={20} color="#dc2626" style={{ flexShrink: 0, marginTop: '2px' }} />
-              <div>
-                <h4 style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '14px',
-                  fontWeight: '600',
-                  fontFamily: 'Poppins, sans-serif',
-                  color: '#dc2626',
-                }}>
-                  Stats Correction Notice
-                </h4>
-                <p style={{
-                  margin: '0 0 8px 0',
-                  fontSize: '13px',
-                  fontFamily: 'Poppins, sans-serif',
-                  color: '#7f1d1d',
-                  lineHeight: '1.5',
-                }}>
-                  One or more stats are lower than your previous values. This is allowed for correcting mistakes.
-                </p>
-                <p style={{
-                  margin: '0 0 12px 0',
-                  fontSize: '12px',
-                  fontFamily: 'Poppins, sans-serif',
-                  color: '#991b1b',
-                  fontWeight: '500',
-                }}>
-                  ⚠️ Warning: Repeated stat decreases may result in temporary account restrictions. Please ensure accuracy before confirming.
-                </p>
+              {/* Frame 598 - Content */}
+              <div style={{
+              display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                padding: '0px',
+                gap: '8px',
                 
-                {/* Acknowledgment Checkbox */}
+                flex: '1',
+                order: 0,
+              }}>
+                {/* charm:shield-tick icon */}
                 <div style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '3px 4px',
+                  gap: '10px',
+                  
+                  width: '40px',
+                  height: '40px',
+                  
+                  background: 'rgba(43, 196, 156, 0.09)',
+                  border: '1px solid #2BC49C',
+                  borderRadius: '4px',
+                  
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  flexShrink: 0,
+                }}>
+                  <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M8 0.75L1 3.75V8.75C1 13.55 4.84 17.74 8 18.75C11.16 17.74 15 13.55 15 8.75V3.75L8 0.75Z" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M5.5 9.5L7.5 11.5L11 8" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
+
+                {/* Frame 596 - Text */}
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'flex-start',
+                  padding: '0px',
+                  gap: '2px',
+                  
+                  flex: '1',
+                  order: 1,
+                }}>
+                <p style={{
+                    margin: 0,
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                  fontSize: '12px',
+                    lineHeight: '18px',
+                    color: hasDecreasingStats ? '#DC2626' : '#2BC49C',
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                  }}>
+                    {hasDecreasingStats 
+                      ? '⚠️ Your stats are decreasing. Please verify the values are correct before confirming.'
+                      : 'Your stats are increasing as expected. Please verify the values are correct before confirming.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Acknowledgment Checkbox for Decreasing Stats */}
+            {hasDecreasingStats && (
+                <div style={{
+                width: '100%',
+                padding: '12px',
+                background: '#FEF2F2',
+                border: '1px solid #FECACA',
+                borderRadius: '8px',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '8px',
                   marginTop: '8px',
-                  padding: '12px',
-                  background: '#ffffff',
-                  borderRadius: '6px',
-                  border: '1px solid #fecaca',
                 }}>
                   <input
                     type="checkbox"
@@ -316,7 +430,8 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       height: '16px',
                       marginTop: '2px',
                       cursor: 'pointer',
-                      accentColor: '#dc2626',
+                    accentColor: '#DC2627',
+                    flexShrink: 0,
                     }}
                   />
                   <label
@@ -324,7 +439,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                     style={{
                       fontSize: '12px',
                       fontFamily: 'Poppins, sans-serif',
-                      color: '#7f1d1d',
+                    color: '#7F1D1D',
                       cursor: 'pointer',
                       lineHeight: '1.5',
                       userSelect: 'none',
@@ -332,121 +447,161 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                   >
                     I understand that I'm correcting a previous mistake. I acknowledge that repeated stat decreases may lead to account restrictions.
                   </label>
-                </div>
-              </div>
             </div>
           )}
 
-          {/* Accuracy Check / Normal Update Notice */}
+            {/* Frame 215 - Buttons */}
           <div style={{
-            background: hasDecreasingStats ? '#eff6ff' : '#f0fdf4',
-            border: hasDecreasingStats ? '1px solid #bfdbfe' : '1px solid #bbf7d0',
-            borderRadius: '8px',
-            padding: '16px',
             display: 'flex',
-            gap: '12px',
-          }}>
-            <CheckCircle2 
-              size={20} 
-              color={hasDecreasingStats ? "#2563eb" : "#22c55e"} 
-              style={{ flexShrink: 0, marginTop: '2px' }} 
-            />
-            <div>
-              <h4 style={{
-                margin: '0 0 8px 0',
-                fontSize: '14px',
-                fontWeight: '600',
-                fontFamily: 'Poppins, sans-serif',
-                color: hasDecreasingStats ? '#1e40af' : '#166534',
-              }}>
-                {hasDecreasingStats ? 'Accuracy Check' : 'Stat Update Ready'}
-              </h4>
-              <p style={{
-                margin: 0,
-                fontSize: '13px',
-                fontFamily: 'Poppins, sans-serif',
-                color: hasDecreasingStats ? '#1e3a8a' : '#166534',
-                lineHeight: '1.5',
-              }}>
-                {hasDecreasingStats 
-                  ? 'Please double-check that all values are accurate before confirming. Frequent incorrect updates may result in temporary restrictions.'
-                  : 'Your stats are increasing as expected. Please verify the values are correct before confirming.'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div style={{
-          padding: '20px 24px',
-          borderTop: '1px solid #e5e7eb',
-          display: 'flex',
-          gap: '12px',
-          justifyContent: 'flex-end',
-          background: '#f9fafb',
-        }}>
+              flexDirection: 'row',
+              alignItems: 'center',
+              padding: '0px',
+              gap: '8px',
+              
+              width: '190px',
+              height: '38px',
+              
+              flex: 'none',
+              order: 3,
+              flexGrow: 0,
+            }}>
+              {/* Confirm Button */}
           <button
-            onClick={onReview}
-            style={{
-              padding: '10px 20px',
-              background: '#ffffff',
-              border: '1px solid #d1d5db',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '500',
-              fontFamily: 'Poppins, sans-serif',
-              color: '#374151',
-              cursor: 'pointer',
-              transition: 'all 0.2s',
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = '#f3f4f6'
-              e.currentTarget.style.borderColor = '#9ca3af'
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = '#ffffff'
-              e.currentTarget.style.borderColor = '#d1d5db'
-            }}
-          >
-            Review
-          </button>
-          <button
+                type="button"
             onClick={onConfirm}
             disabled={hasDecreasingStats && !acknowledged}
             style={{
-              padding: '10px 24px',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '8px 16px',
+                  gap: '10px',
+                  
+                  width: '95px',
+                  height: '38px',
+                  
               background: hasDecreasingStats 
-                ? (acknowledged 
-                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-                  : 'linear-gradient(135deg, #9ca3af 0%, #6b7280 100%)')
-                : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                    ? (acknowledged ? '#DC2627' : '#9CA3AF')
+                    : '#DC2627',
+                  borderRadius: '6px',
               border: 'none',
-              borderRadius: '8px',
-              fontSize: '14px',
-              fontWeight: '600',
-              fontFamily: 'Poppins, sans-serif',
-              color: '#ffffff',
+                  
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  
               cursor: hasDecreasingStats && !acknowledged ? 'not-allowed' : 'pointer',
-              transition: 'transform 0.2s',
-              boxShadow: hasDecreasingStats 
-                ? (acknowledged 
-                  ? '0 4px 14px rgba(239, 68, 68, 0.3)'
-                  : '0 2px 8px rgba(107, 114, 128, 0.2)')
-                : '0 4px 14px rgba(16, 185, 129, 0.3)',
+                  transition: 'all 0.2s',
               opacity: hasDecreasingStats && !acknowledged ? 0.6 : 1,
             }}
             onMouseEnter={(e) => {
               if (!hasDecreasingStats || acknowledged) {
-                e.currentTarget.style.transform = 'scale(1.05)'
+                    e.currentTarget.style.background = '#B91C1C'
               }
             }}
             onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1)'
-            }}
-          >
-            {hasDecreasingStats && !acknowledged ? 'Please Acknowledge Above' : 'Confirm'}
+                  if (!hasDecreasingStats || acknowledged) {
+                    e.currentTarget.style.background = '#DC2627'
+                  } else {
+                    e.currentTarget.style.background = '#9CA3AF'
+                  }
+                }}
+              >
+                <span style={{
+                  width: '63px',
+                  height: '23px',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  lineHeight: '23px',
+                  color: '#FFFFFF',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Confirm
+                </span>
+              </button>
+
+              {/* Cancel Button */}
+              <button
+                type="button"
+                onClick={onCancel}
+                style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: '8px 16px',
+                  gap: '10px',
+                  
+                  width: '87px',
+                  height: '38px',
+                  
+                  border: '1px solid #000000',
+                  borderRadius: '6px',
+                  background: 'transparent',
+                  
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                  
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent'
+                }}
+              >
+                <span style={{
+                  width: '55px',
+                  height: '23px',
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '15px',
+                  lineHeight: '23px',
+                  color: '#000000',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Cancel
+                </span>
           </button>
         </div>
+          </div>
+        </div>
+
+        {/* Close Button */}
+        <button
+          onClick={onCancel}
+          style={{
+            position: 'absolute',
+            top: '16px',
+            right: '16px',
+            background: 'transparent',
+            border: 'none',
+            padding: '8px',
+            cursor: 'pointer',
+            borderRadius: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.2s',
+            zIndex: 1000,
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(0, 0, 0, 0.05)'}
+          onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+        >
+          <X size={20} color="#6b7280" />
+        </button>
       </div>
     </div>
   )
