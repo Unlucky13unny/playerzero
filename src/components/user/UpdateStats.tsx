@@ -4,9 +4,10 @@ import { profileService, type ProfileData, type ProfileWithMetadata } from '../.
 import { dashboardService } from '../../services/dashboardService'
 import { useMobile } from '../../hooks/useMobile'
 import { MobileFooter } from '../layout/MobileFooter'
-import { Upload } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import { StatUpdateModal } from '../common/StatUpdateModal'
 import { SuccessModal } from '../common/SuccessModal'
+import { ErrorModal } from '../common/ErrorModal'
 import { extractStatsFromImage, validateExtractedStats } from '../../utils/ocrService'
 import './UserProfile.css'
 
@@ -21,6 +22,11 @@ export const UpdateStats = () => {
   
   // Screenshot state (same as StatUpdater)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  
+  // NEW: Upload mode selection modal state
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_uploadMode, setUploadMode] = useState<'manual' | 'extract' | null>(null)
 
   useEffect(() => {
     loadProfile()
@@ -49,6 +55,39 @@ export const UpdateStats = () => {
     setEditData(profile)
     setSelectedFile(null)
     setError(null)
+  }
+
+  // NEW: Handle opening the upload mode selection modal
+  const handleOpenUploadModal = () => {
+    setShowUploadModal(true)
+    setUploadMode(null)
+  }
+
+  // NEW: Handle manual entry mode selection
+  const handleSelectManualMode = () => {
+    setShowUploadModal(false)
+    setUploadMode('manual')
+    // DON'T discard the uploaded screenshot - keep it for verification
+    // setSelectedFile(null) - REMOVED
+    setOcrMessage(null)
+    setHasExtractedStats(false)
+  }
+
+  // NEW: Handle direct extract mode selection
+  const handleSelectExtractMode = () => {
+    setShowUploadModal(false)
+    setUploadMode('extract')
+    // Trigger file input click
+    const fileInput = document.getElementById('screenshot-upload') as HTMLInputElement
+    if (fileInput) {
+      fileInput.click()
+    }
+  }
+
+  // NEW: Close upload modal
+  const handleCloseUploadModal = () => {
+    setShowUploadModal(false)
+    setUploadMode(null)
   }
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
@@ -107,8 +146,8 @@ export const UpdateStats = () => {
       const statsCount = Object.keys(result.stats).length
       if (statsCount === 0) {
         console.warn('⚠️ No stats were extracted from the image')
-        setOcrMessage('⚠️ Could not extract stats from image. Please ensure the screenshot shows your Pokémon GO profile with visible stats.')
         setIsProcessingOCR(false)
+        setShowOCRErrorModal(true)
         return
       }
 
@@ -133,45 +172,16 @@ export const UpdateStats = () => {
         setOcrMessage('✅ Stats extracted successfully!')
       }
 
-      // Auto-fill the form with extracted stats
-      if (editData) {
-        const updatedData = { ...editData }
-        
-        if (result.stats.total_xp !== undefined) {
-          console.log(`✓ Total XP: ${result.stats.total_xp.toLocaleString()}`)
-          updatedData.total_xp = result.stats.total_xp
-        }
-        
-        if (result.stats.pokemon_caught !== undefined) {
-          console.log(`✓ Pokémon Caught: ${result.stats.pokemon_caught.toLocaleString()}`)
-          updatedData.pokemon_caught = result.stats.pokemon_caught
-        }
-        
-        if (result.stats.distance_walked !== undefined) {
-          console.log(`✓ Distance Walked: ${result.stats.distance_walked} km`)
-          updatedData.distance_walked = result.stats.distance_walked
-        }
-        
-        if (result.stats.pokestops_visited !== undefined) {
-          console.log(`✓ PokéStops Visited: ${result.stats.pokestops_visited.toLocaleString()}`)
-          updatedData.pokestops_visited = result.stats.pokestops_visited
-        }
-        
-        if (result.stats.unique_pokedex_entries !== undefined) {
-          console.log(`✓ Pokédex Entries: ${result.stats.unique_pokedex_entries}`)
-          updatedData.unique_pokedex_entries = result.stats.unique_pokedex_entries
-        }
-
-        console.log('📝 Auto-filling form with extracted stats:', updatedData)
-        setEditData(updatedData)
+      // Store extracted stats and show review modal
+      console.log('📝 Storing extracted stats for review')
+      setExtractedStatsData(result.stats)
         setHasExtractedStats(true)
-      }
 
-      // Show success message (confidence logged to console only)
+      // Show review modal after a brief delay
       setTimeout(() => {
         console.log(`✅ Extracted ${statsCount} stat(s) with ${Math.round(result.confidence)}% confidence`)
-        setOcrMessage('✅ Stats extracted and auto-filled successfully!')
-      }, 1000)
+        setShowReviewModal(true)
+      }, 500)
 
     } catch (err: any) {
       console.error('❌ OCR Error:', err)
@@ -193,8 +203,17 @@ export const UpdateStats = () => {
   // OCR state variables
   const [isProcessingOCR, setIsProcessingOCR] = useState(false)
   const [ocrProgress, setOcrProgress] = useState(0)
-  const [ocrMessage, setOcrMessage] = useState<string | null>(null)
-  const [hasExtractedStats, setHasExtractedStats] = useState(false)
+  const [_ocrMessage, setOcrMessage] = useState<string | null>(null)
+  const [_hasExtractedStats, setHasExtractedStats] = useState(false)
+  
+  // NEW: Review modal state for extracted stats
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [extractedStatsData, setExtractedStatsData] = useState<any>(null)
+  
+  // NEW: Reminder modal state for secondary stats
+  const [showReminderModal, setShowReminderModal] = useState(false)
+  // OCR Error modal state
+  const [showOCRErrorModal, setShowOCRErrorModal] = useState(false)
 
   // Update image preview when file is selected
   useEffect(() => {
@@ -826,7 +845,7 @@ export const UpdateStats = () => {
               />
             </div>
 
-            {/* Upload new screenshot */}
+            {/* Upload new screenshot - NEW: Opens mode selection modal */}
             <div
               style={{
                 display: "flex",
@@ -850,7 +869,9 @@ export const UpdateStats = () => {
               >
                 Upload new screenshot
               </label>
-              <div
+              <button
+                type="button"
+                onClick={handleOpenUploadModal}
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -863,334 +884,175 @@ export const UpdateStats = () => {
                   padding: isMobile ? "12px" : "9px",
                   gap: "10px",
                   boxSizing: "border-box",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.borderColor = "#555"
+                  e.currentTarget.style.backgroundColor = "#f9f9f9"
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.borderColor = "#848282"
+                  e.currentTarget.style.backgroundColor = "#FFFFFF"
                 }}
               >
-                <input
-                  type="file"
-                  id="screenshot-upload"
-                  onChange={handleStatsFileChange}
-                  accept="image/*"
-                  style={{ display: "none" }}
-                />
-                <label
-                  htmlFor="screenshot-upload"
-                  style={{
-                    display: "flex",
-                    flexDirection: "row",
-                    alignItems: "center",
-                    gap: "8px",
-                    cursor: "pointer",
-                  }}
-                >
-                  <Upload style={{ width: isMobile ? "20px" : "16px", height: isMobile ? "20px" : "16px", color: "#000000" }} />
-                  <span
-                    style={{
-                      fontFamily: "Poppins",
-                      fontStyle: "normal",
-                      fontWeight: 400,
-                      fontSize: isMobile ? "14px" : "12px",
-                      lineHeight: isMobile ? "20px" : "18px",
-                      color: "#000000",
-                    }}
-                  >
-                    Choose file
-                  </span>
-                </label>
+                <Upload style={{ width: isMobile ? "20px" : "16px", height: isMobile ? "20px" : "16px", color: "#000000" }} />
                 <span
                   style={{
                     fontFamily: "Poppins",
                     fontStyle: "normal",
                     fontWeight: 400,
-                    fontSize: isMobile ? "12px" : "12px",
-                    lineHeight: isMobile ? "18px" : "18px",
-                    color: "#666666",
-                    marginLeft: "auto",
-                    textAlign: "right",
-                    maxWidth: isMobile ? "150px" : "200px",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    fontSize: isMobile ? "14px" : "12px",
+                    lineHeight: isMobile ? "20px" : "18px",
+                    color: "#000000",
                   }}
                 >
-                  {selectedFile ? selectedFile.name : "No file chosen"}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Image Preview Section with OCR */}
-          {imagePreview && !isProcessingOCR && !hasExtractedStats && (
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "flex-start",
-                gap: "12px",
-                width: "100%",
-                marginTop: "16px",
-                padding: "16px",
-                border: "2px solid #848282",
-                borderRadius: "8px",
-                backgroundColor: "#ffffff",
-              }}
-            >
-              <label
-                style={{
-                  fontFamily: "Poppins",
-                  fontStyle: "normal",
-                  fontWeight: 600,
-                  fontSize: isMobile ? "14px" : "13px",
-                  lineHeight: isMobile ? "21px" : "19px",
-                  color: "#000000",
-                  width: "100%",
-                  textAlign: "left",
-                }}
-              >
-                📸 Selected Screenshot:
-              </label>
-              <div
-                style={{
-                  width: "100%",
-                  maxWidth: "300px",
-                  margin: "0 auto",
-                  border: "1px solid #848282",
-                  borderRadius: "6px",
-                  overflow: "hidden",
-                  backgroundColor: "#f9f9f9",
-                }}
-              >
-                <img
-                  src={imagePreview}
-                  alt="Screenshot preview"
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    maxHeight: "250px",
-                    objectFit: "contain",
-                    display: "block",
-                  }}
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleExtractStats}
-                style={{
-                  width: "100%",
-                  padding: isMobile ? "16px" : "18px",
-                  background: "linear-gradient(135deg, #ff375f, #ff6b8a)",
-                  border: "none",
-                  borderRadius: "8px",
-                  color: "#ffffff",
-                  fontFamily: "Poppins",
-                  fontStyle: "normal",
-                  fontWeight: 600,
-                  fontSize: isMobile ? "16px" : "18px",
-                  lineHeight: isMobile ? "24px" : "27px",
-                  cursor: "pointer",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  gap: "8px",
-                  boxShadow: "0 4px 15px rgba(255, 55, 95, 0.3)",
-                  transition: "all 0.3s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = "translateY(-2px)"
-                  e.currentTarget.style.boxShadow = "0 6px 20px rgba(255, 55, 95, 0.4)"
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = "translateY(0)"
-                  e.currentTarget.style.boxShadow = "0 4px 15px rgba(255, 55, 95, 0.3)"
-                }}
-              >
-                <span style={{ fontSize: "28px" }}>🔍</span>
-                <span>Extract Stats from Image</span>
-                <span style={{ fontSize: isMobile ? "12px" : "13px", opacity: 0.9, fontWeight: 400 }}>
-                  Click to analyze screenshot using OCR
+                  Choose upload method
                 </span>
               </button>
+              <span
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
+                  color: "#666666",
+                }}
+              >
+                {selectedFile ? `✓ ${selectedFile.name}` : "Manual entry or OCR extraction"}
+              </span>
             </div>
-          )}
 
-          {/* OCR Processing Indicator */}
+            {/* Hidden file input for direct extraction mode */}
+            <input
+              type="file"
+              id="screenshot-upload"
+              onChange={handleStatsFileChange}
+              accept="image/*"
+              style={{ display: "none" }}
+            />
+          </div>
+
+          {/* OCR Processing Indicator - Figma: Frame 754 */}
           {isProcessingOCR && (
             <div
               style={{
+                boxSizing: "border-box",
+                
+                // Auto layout
                 display: "flex",
                 flexDirection: "column",
-                alignItems: "center",
-                gap: "16px",
-                width: "100%",
+                alignItems: "flex-start",
+                padding: "16px 8px",
+                gap: "10px",
+                
+                width: isMobile ? "353px" : "100%",
+                height: "60px",
+                
+                border: "0.5px solid #DC2627",
+                borderRadius: "6px",
+                
+                // Inside auto layout
+                flex: "none",
+                order: 2,
+                alignSelf: "stretch",
+                flexGrow: 0,
+                
                 marginTop: "16px",
-                padding: "24px",
-                background: "linear-gradient(135deg, rgba(255, 55, 95, 0.1), rgba(255, 55, 95, 0.05))",
-                border: "1px solid rgba(255, 55, 95, 0.3)",
-                borderRadius: "12px",
               }}
             >
+              {/* Progress component */}
               <div
                 style={{
-                  width: "50px",
-                  height: "50px",
-                  border: "4px solid rgba(255, 55, 95, 0.2)",
-                  borderTopColor: "#ff375f",
-                  borderRadius: "50%",
-                  animation: "spin 1s linear infinite",
-                }}
-              />
-              <div
-                style={{
-                  width: "100%",
-                  height: "8px",
-                  background: "rgba(0, 0, 0, 0.1)",
-                  borderRadius: "10px",
-                  overflow: "hidden",
+                  // Auto layout
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                  padding: "0px",
+                  gap: "8px",
+                  
+                  width: isMobile ? "337px" : "calc(100% - 16px)",
+                  height: "28px",
+                  
+                  // Inside auto layout
+                  flex: "none",
+                  order: 0,
+                  alignSelf: "stretch",
+                  flexGrow: 0,
                 }}
               >
-                <div
-                  style={{
-                    height: "100%",
-                    width: `${ocrProgress}%`,
-                    background: "linear-gradient(90deg, #ff375f, #ff6b8a)",
-                    borderRadius: "10px",
-                    transition: "width 0.3s ease",
-                    boxShadow: "0 0 10px rgba(255, 55, 95, 0.5)",
+                {/* Progress percentage text */}
+              <div
+                style={{
+                    width: isMobile ? "173px" : "auto",
+                    height: "16px",
+                  fontFamily: "Poppins",
+                    fontStyle: "normal",
+                    fontWeight: 400,
+                    fontSize: "12px",
+                    lineHeight: "16px",
+                    textAlign: "right",
+                    color: "#90A1B9",
+                    
+                    // Inside auto layout
+                    flex: "none",
+                    order: 0,
+                    flexGrow: 0,
+                    
+                    alignSelf: "flex-end",
                   }}
-                />
-              </div>
-              <p
-                style={{
-                  fontFamily: "Poppins",
-                  fontWeight: 500,
-                  fontSize: isMobile ? "14px" : "15px",
-                  color: "#000000",
-                  margin: 0,
-                  textAlign: "center",
-                }}
-              >
-                {ocrMessage} ({ocrProgress}%)
-              </p>
+                >
+                  {ocrProgress}%
             </div>
-          )}
 
-          {/* OCR Result Message */}
-          {!isProcessingOCR && ocrMessage && (
+                {/* Progress bar container */}
             <div
               style={{
-                width: "100%",
-                padding: "12px 16px",
-                borderRadius: "8px",
-                marginTop: "12px",
-                textAlign: "center",
-                fontFamily: "Poppins",
-                fontSize: isMobile ? "13px" : "14px",
-                fontWeight: 500,
-                backgroundColor: ocrMessage.includes('✅') ? 'rgba(52, 199, 89, 0.15)' :
-                  ocrMessage.includes('❌') ? 'rgba(255, 59, 48, 0.15)' : 'rgba(255, 159, 10, 0.15)',
-                border: `1px solid ${ocrMessage.includes('✅') ? 'rgba(52, 199, 89, 0.3)' :
-                  ocrMessage.includes('❌') ? 'rgba(255, 59, 48, 0.3)' : 'rgba(255, 159, 10, 0.3)'}`,
-                color: ocrMessage.includes('✅') ? '#34c759' :
-                  ocrMessage.includes('❌') ? '#ff3b30' : '#ff9f0a',
-              }}
-            >
-              {ocrMessage}
-            </div>
-          )}
-
-          {/* Extracted Stats Display */}
-          {hasExtractedStats && editData && (
+                    position: "relative",
+                    width: isMobile ? "337px" : "100%",
+                    height: "4px",
+                    
+                    // Inside auto layout
+                    flex: "none",
+                    order: 1,
+                    alignSelf: "stretch",
+                    flexGrow: 0,
+                  }}
+                >
+                  {/* BG (background bar) */}
             <div
               style={{
-                width: "100%",
-                padding: "16px",
-                marginTop: "16px",
-                background: "linear-gradient(135deg, rgba(52, 199, 89, 0.1), rgba(52, 199, 89, 0.05))",
-                border: "2px solid rgba(52, 199, 89, 0.3)",
-                borderRadius: "12px",
-              }}
-            >
-              <h3
-                style={{
-                  fontFamily: "Poppins",
-                  fontWeight: 600,
-                  fontSize: isMobile ? "16px" : "17px",
-                  color: "#34c759",
-                  marginBottom: "16px",
-                  textAlign: "center",
-                }}
-              >
-                📊 Extracted Stats from Screenshot:
-              </h3>
+                      position: "absolute",
+                      height: "4px",
+                      left: "0%",
+                      right: "0%",
+                      top: "0px",
+                      
+                      background: "#E2E8F0",
+                      borderRadius: "999px",
+                    }}
+                  />
+                  
+                  {/* Progress (filled portion) */}
               <div
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: isMobile ? "1fr" : "repeat(2, 1fr)",
-                  gap: "12px",
-                }}
-              >
-                {editData.total_xp !== profile?.total_xp && (
-                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>⭐</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Total XP</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
-                      {editData.total_xp?.toLocaleString()}
+                      position: "absolute",
+                      height: "4px",
+                      left: "0%",
+                      right: `${100 - ocrProgress}%`,
+                      top: "0px",
+                      
+                      background: "#FB2C36",
+                      borderRadius: "999px",
+                      transition: "right 0.3s ease",
+                    }}
+                  />
+                    </div>
                     </div>
                   </div>
                 )}
-                {editData.pokemon_caught !== profile?.pokemon_caught && (
-                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>🔴</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Pokémon Caught</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
-                      {editData.pokemon_caught?.toLocaleString()}
-                    </div>
-                  </div>
-                )}
-                {editData.distance_walked !== profile?.distance_walked && (
-                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>👣</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Distance Walked</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
-                      {editData.distance_walked} km
-                    </div>
-                  </div>
-                )}
-                {editData.pokestops_visited !== profile?.pokestops_visited && (
-                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>🔵</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>PokéStops Visited</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
-                      {editData.pokestops_visited?.toLocaleString()}
-                    </div>
-                  </div>
-                )}
-                {editData.unique_pokedex_entries !== profile?.unique_pokedex_entries && (
-                  <div style={{ padding: "12px", background: "rgba(0, 0, 0, 0.05)", borderRadius: "8px" }}>
-                    <div style={{ fontSize: "18px", marginBottom: "4px" }}>📖</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "11px", color: "#666", marginBottom: "4px" }}>Pokédex Entries</div>
-                    <div style={{ fontFamily: "Poppins", fontSize: "16px", fontWeight: 600, color: "#000" }}>
-                      {editData.unique_pokedex_entries}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <p
-                style={{
-                  marginTop: "16px",
-                  padding: "8px",
-                  background: "rgba(52, 199, 89, 0.15)",
-                  borderRadius: "6px",
-                  fontFamily: "Poppins",
-                  fontSize: isMobile ? "12px" : "13px",
-                  color: "#34c759",
-                  textAlign: "center",
-                  border: "1px solid rgba(52, 199, 89, 0.3)",
-                }}
-              >
-                ✅ These values have been automatically filled in the form fields above. Review and save!
-              </p>
-            </div>
-          )}
+
         </form>
 
         {/* Action Buttons - Frame 666 */}
@@ -1386,6 +1248,1261 @@ export const UpdateStats = () => {
         message="Stats updated successfully"
         confirmText="Okay"
       />
+
+      {/* OCR Error Modal */}
+      <ErrorModal
+        isOpen={showOCRErrorModal}
+        onClose={() => setShowOCRErrorModal(false)}
+        title="Failed to extract stats"
+        message="Failed to extract stats from image. Please enter stats manually"
+        confirmText="Okay"
+      />
+
+      {/* NEW: Upload Mode Selection Modal - Figma Design */}
+      {showUploadModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          {/* Modal Container - Figma: New Upload */}
+          <div style={{
+            // Exact Figma specs
+            position: 'relative',
+            width: isMobile ? '353px' : '400px',
+            height: selectedFile 
+              ? (isMobile ? '613px' : '680px')  // Figma height: 613px for mobile
+              : (isMobile ? '241px' : '280px'), // Original height
+            
+            // Background - Figma: bg (White)
+            background: '#FFFFFF',
+            borderRadius: '24px',
+            
+            // Filter/Shadow from Figma
+            filter: 'drop-shadow(0px 0px 48px rgba(0, 0, 0, 0.04))',
+            boxSizing: 'border-box',
+            transition: 'height 0.3s ease', // Smooth transition
+          }}>
+            {/* Toggle Section - Figma: Toggle */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                padding: '4px 5px',
+                gap: '4px',
+                
+                // Positioning - Exact Figma specs
+                position: 'absolute',
+                width: isMobile ? '266px' : '300px',
+                height: '36px',
+                left: isMobile ? 'calc(50% - 266px/2 + 0.5px)' : 'calc(50% - 300px/2)',
+                top: '16px',
+                
+                // Grey 01 background
+                background: '#F7F9FB',
+                boxShadow: 'inset 0px 0px 2px rgba(0, 0, 0, 0.1)',
+                borderRadius: '40px',
+              }}
+            >
+              {/* Extract Stats Button - Figma: Button / Secondary (Active) */}
+              <button
+                type="button"
+                onClick={handleSelectExtractMode}
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  padding: '7px 20px',
+                  gap: '10px',
+                  
+                  // Exact Figma size
+                  width: '114px',
+                  height: '28px',
+                  
+                  // Style - Red when active
+                  background: '#DC2627',
+                  borderRadius: '40px',
+                  border: 'none',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#DC2627'
+                }}
+              >
+                <span style={{
+                  // Label - Exact Figma specs
+                  width: '74px',
+                  height: '14px',
+                  fontFamily: 'Inter',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  textAlign: 'center',
+                  color: '#FFFFFF',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Extract stats
+                </span>
+              </button>
+
+              {/* Update Manually Button - Figma: Button / Secondary (Inactive) */}
+              <button
+                type="button"
+                onClick={handleSelectManualMode}
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  padding: '7px 20px',
+                  gap: '10px',
+                  
+                  // Exact Figma size
+                  width: '138px',
+                  height: '28px',
+                  
+                  // Style - Grey 01 background
+                  background: '#F7F9FB',
+                  borderRadius: '40px',
+                  border: 'none',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                  
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#EBEFF2'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#F7F9FB'
+                }}
+              >
+                <span style={{
+                  // Label - Exact Figma specs
+                  width: '98px',
+                  height: '14px',
+                  fontFamily: 'Inter',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  textAlign: 'center',
+                  color: '#DC2627',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Update manually
+                </span>
+              </button>
+            </div>
+
+            {/* Divider Line - Figma: li (Grey 02) */}
+            <div
+              style={{
+                position: 'absolute',
+                height: '1px',
+                left: '0px',
+                right: '0px',
+                top: '68px',
+                background: '#EBEFF2',
+              }}
+            />
+
+            {/* Content Area - Figma: Drag Area (Flat Grey) */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '32px',
+                gap: '10px',
+                
+                // Positioning
+                position: 'absolute',
+                left: '0px',
+                right: '0px',
+                top: '68px',
+                bottom: '0px',
+                
+                // Style - Flat Grey
+                background: '#F8F8F8',
+                borderRadius: '0px 0px 24px 24px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {selectedFile && imagePreview ? (
+                // Image Preview Mode - Figma: Wrap with content
+                <div
+                  style={{
+                    boxSizing: 'border-box',
+                    
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px 32px',
+                    gap: '8px',
+                    
+                    // Exact Figma size for Wrap
+                    width: isMobile ? '289px' : '336px',
+                    height: isMobile ? '481px' : '560px',
+                    
+                    // Style - Grey 03 dashed border
+                    border: '2px dashed #E2E6EA',
+                    borderRadius: '24px',
+                    background: '#FFFFFF',
+                    
+                    // Inside auto layout
+                    flex: 'none',
+                    order: 0,
+                    alignSelf: 'stretch',
+                    flexGrow: 1,
+                  }}
+                >
+                  {/* "Selected image" label - Figma specs */}
+                  <div
+                    style={{
+                      width: isMobile ? '225px' : '272px',
+                      height: '21px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '21px',
+                      textAlign: 'center',
+                      color: '#242634',
+                      opacity: 0.5,
+                      flex: 'none',
+                      order: 0,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                    }}
+                  >
+                    Selected image
+                  </div>
+
+                  {/* Image Container - Figma: thumb with rounded corners */}
+                  <div
+                    style={{
+                      width: isMobile ? '181px' : '220px',
+                      height: isMobile ? '356px' : '420px',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                      backgroundColor: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Screenshot preview"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Frame 760 - Button container */}
+                  <div
+                    style={{
+                      // Auto layout
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '0px',
+                      gap: '4px',
+                      
+                      width: isMobile ? '225px' : '272px',
+                      height: '50px',
+                      
+                      // Inside auto layout
+                      flex: 'none',
+                      order: 2,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                    }}
+                  >
+                    {/* Extract Stats Button - Figma: Button / Secondary (Red) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUploadModal(false);
+                        handleExtractStats();
+                      }}
+                      style={{
+                        // Auto layout
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        padding: '7px 20px',
+                        gap: '10px',
+                        
+                        // Exact Figma size
+                        width: isMobile ? '214px' : '252px',
+                        height: '28px',
+                        
+                        // Style
+                        background: '#DB161B',
+                        borderRadius: '6px',
+                        border: 'none',
+                        
+                        // Inside auto layout
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                        
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#B91C1C'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#DB161B'
+                      }}
+                    >
+                      <span
+                        style={{
+                          // Label - Figma specs
+                          width: isMobile ? '174px' : '212px',
+                          height: '14px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          lineHeight: '14px',
+                          textAlign: 'center',
+                          color: '#FFFFFF',
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}
+                      >
+                        Extract stats from the image
+                      </span>
+                    </button>
+
+                    {/* OCR text - Figma specs */}
+                    <div
+                      style={{
+                        width: isMobile ? '225px' : '272px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        textAlign: 'center',
+                        color: '#242634',
+                        opacity: 0.5,
+                        flex: 'none',
+                        order: 1,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      Click to analize image using OCR
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Dashed Upload Box (Original)
+                <div
+                  style={{
+                    boxSizing: 'border-box',
+                    
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px 32px',
+                    
+                    // Size
+                    width: '100%',
+                    flex: 1,
+                    
+                    // Style
+                    border: '2px dashed #E2E6EA',
+                    borderRadius: '24px',
+                    background: '#FFFFFF',
+                    margin: '16px',
+                    
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#DC2627'
+                    e.currentTarget.style.background = 'rgba(220, 38, 39, 0.05)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#E2E6EA'
+                    e.currentTarget.style.background = '#FFFFFF'
+                  }}
+                  onClick={() => {
+                    const fileInput = document.getElementById('screenshot-upload') as HTMLInputElement
+                    if (fileInput) fileInput.click()
+                  }}
+                >
+                  {/* Text - Figma specs */}
+                  <p
+                    style={{
+                      // Typography - Figma specs
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '21px',
+                      textAlign: 'center',
+                      
+                      // Color - Grey 05
+                      color: '#242634',
+                      opacity: 0.5,
+                      
+                      // Reset
+                      margin: 0,
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    Click to upload your Trainer{'\n'}Profile screenshot
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={handleCloseUploadModal}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                background: 'transparent',
+                border: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <X size={20} color="#6b7280" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Review Stats Update Modal - Figma Design */}
+      {showReviewModal && extractedStatsData && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          {/* Modal Container - Figma: New Upload */}
+          <div style={{
+            // Exact Figma specs
+            position: 'relative',
+            width: isMobile ? '353px' : '400px',
+            height: isMobile ? '459px' : '520px',
+            
+            // Background - Figma: bg (White)
+            background: '#FFFFFF',
+            borderRadius: '24px',
+            
+            // Filter/Shadow from Figma
+            filter: 'drop-shadow(0px 0px 48px rgba(0, 0, 0, 0.04))',
+            boxSizing: 'border-box',
+          }}>
+            {/* Drag Area - Figma: Flat Grey background */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '32px',
+                gap: '10px',
+                
+                // Positioning
+                position: 'absolute',
+                left: '0px',
+                right: '0px',
+                top: '0px',
+                bottom: '0px',
+                
+                // Style - Flat Grey
+                background: '#F8F8F8',
+                borderRadius: '24px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {/* Frame 756 - Main content container */}
+              <div
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '17px',
+                  
+                  position: 'absolute',
+                  width: isMobile ? '310px' : '350px',
+                  height: isMobile ? '399px' : '450px',
+                  left: isMobile ? 'calc(50% - 310px/2 + 0.5px)' : 'calc(50% - 350px/2)',
+                  top: '36px',
+                }}
+              >
+                {/* Title: "Extracted files from image" */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '30px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 600,
+                    fontSize: '20px',
+                    lineHeight: '30px',
+                    textAlign: 'center',
+                    color: '#000000',
+                    flex: 'none',
+                    order: 0,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                  }}
+                >
+                  Extracted files from image
+                </div>
+
+                {/* Frame 755 - Stats fields container */}
+                <div
+                  style={{
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'flex-start',
+                    padding: '0px',
+                    gap: '8px',
+                    
+                    width: '100%',
+                      
+                      // Inside auto layout
+                    flex: 'none',
+                    order: 1,
+                    alignSelf: 'stretch',
+                    flexGrow: 0,
+                  }}
+                >
+                  {/* Distance Walked */}
+                  {extractedStatsData.distance_walked !== undefined && (
+                    <div
+                      style={{
+                        // Frame 665
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0px',
+                        gap: '2px',
+                        width: '100%',
+                      flex: 'none',
+                      order: 0,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                    }}
+                  >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '17px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '11px',
+                          lineHeight: '16px',
+                          color: '#000000',
+                          flex: 'none',
+                          order: 0,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Distance Walked
+                      </div>
+                      <div
+                        style={{
+                          boxSizing: 'border-box',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          padding: '9px',
+                          gap: '10px',
+                          width: '100%',
+                          height: '36px',
+                          border: '1px solid #848282',
+                          borderRadius: '6px',
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '12px',
+                            lineHeight: '18px',
+                            color: '#000000',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          {extractedStatsData.distance_walked}
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '12px',
+                            lineHeight: '18px',
+                            color: '#000000',
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0,
+                          }}
+                        >
+                          km
+                        </span>
+                      </div>
+                </div>
+              )}
+
+                  {/* Pokémon Caught */}
+                  {extractedStatsData.pokemon_caught !== undefined && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0px',
+                        gap: '2px',
+                        width: '100%',
+                        flex: 'none',
+                        order: 1,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '17px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '11px',
+                          lineHeight: '16px',
+                          color: '#000000',
+                          flex: 'none',
+                          order: 0,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Pokémon Caught
+                      </div>
+                      <div
+                        style={{
+                          boxSizing: 'border-box',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          padding: '9px',
+                          gap: '10px',
+                          width: '100%',
+                          height: '36px',
+                          border: '1px solid #848282',
+                          borderRadius: '6px',
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '12px',
+                            lineHeight: '18px',
+                            color: '#000000',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          {extractedStatsData.pokemon_caught.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Pokéstops Visited */}
+                  {extractedStatsData.pokestops_visited !== undefined && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0px',
+                        gap: '2px',
+                        width: '100%',
+                        flex: 'none',
+                        order: 2,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '17px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '11px',
+                          lineHeight: '16px',
+                          color: '#000000',
+                          flex: 'none',
+                          order: 0,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Pokéstops Visited
+                      </div>
+                      <div
+                        style={{
+                          boxSizing: 'border-box',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          padding: '9px',
+                          gap: '10px',
+                          width: '100%',
+                          height: '36px',
+                          border: '1px solid #848282',
+                          borderRadius: '6px',
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '12px',
+                            lineHeight: '18px',
+                            color: '#000000',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          {extractedStatsData.pokestops_visited.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Total XP */}
+                  {extractedStatsData.total_xp !== undefined && (
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'flex-start',
+                        padding: '0px',
+                        gap: '2px',
+                        width: '100%',
+                        flex: 'none',
+                        order: 3,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '17px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '11px',
+                          lineHeight: '16px',
+                          color: '#000000',
+                          flex: 'none',
+                          order: 0,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Total XP
+                      </div>
+                      <div
+                        style={{
+                          boxSizing: 'border-box',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          alignItems: 'center',
+                          padding: '9px',
+                          gap: '10px',
+                          width: '100%',
+                          height: '36px',
+                          border: '1px solid #848282',
+                          borderRadius: '6px',
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 400,
+                            fontSize: '12px',
+                            lineHeight: '18px',
+                            color: '#000000',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          {extractedStatsData.total_xp.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Description text */}
+                <div
+                  style={{
+                    width: '100%',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 400,
+                    fontSize: '12px',
+                    lineHeight: '18px',
+                    textAlign: 'center',
+                    color: '#636874',
+                    flex: 'none',
+                    order: 2,
+                    flexGrow: 0,
+                  }}
+                >
+                  These values have been automatically field in the form fields above. Review and confirm!
+                </div>
+
+                {/* Frame 215 - Buttons container */}
+                <div
+                  style={{
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    padding: '0px',
+                    gap: '8px',
+                    
+                    width: isMobile ? '189px' : '200px',
+                    height: '38px',
+                    
+                    // Inside auto layout
+                    flex: 'none',
+                    order: 3,
+                    flexGrow: 0,
+                  }}
+                >
+                  {/* Confirm Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Apply extracted stats to editData
+                      if (editData) {
+                        const updatedData = { ...editData }
+                        if (extractedStatsData.total_xp !== undefined) updatedData.total_xp = extractedStatsData.total_xp
+                        if (extractedStatsData.pokemon_caught !== undefined) updatedData.pokemon_caught = extractedStatsData.pokemon_caught
+                        if (extractedStatsData.distance_walked !== undefined) updatedData.distance_walked = extractedStatsData.distance_walked
+                        if (extractedStatsData.pokestops_visited !== undefined) updatedData.pokestops_visited = extractedStatsData.pokestops_visited
+                        if (extractedStatsData.unique_pokedex_entries !== undefined) updatedData.unique_pokedex_entries = extractedStatsData.unique_pokedex_entries
+                        setEditData(updatedData)
+                      }
+                      setShowReviewModal(false)
+                      // Show reminder modal
+                      setShowReminderModal(true)
+                    }}
+                    style={{
+                      // Auto layout
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '8px 16px',
+                      gap: '10px',
+                      
+                      width: isMobile ? '95px' : '100px',
+                      height: '38px',
+                      
+                      background: '#DC2627',
+                      borderRadius: '6px',
+                      border: 'none',
+                      
+                      // Inside auto layout
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0,
+                      
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = '#B91C1C'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = '#DC2627'
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '15px',
+                        lineHeight: '23px',
+                        color: '#FFFFFF',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                      }}
+                    >
+                      Confirm
+                    </span>
+                  </button>
+
+                  {/* Cancel Button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowReviewModal(false)
+                      setExtractedStatsData(null)
+                      setHasExtractedStats(false)
+                    }}
+                    style={{
+                      boxSizing: 'border-box',
+                      
+                      // Auto layout
+                      display: 'flex',
+                      flexDirection: 'row',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '8px 16px',
+                      gap: '10px',
+                      
+                      width: isMobile ? '86px' : '92px',
+                      height: '38px',
+                      
+                      border: '1px solid #636874',
+                      borderRadius: '6px',
+                      background: 'transparent',
+                      
+                      // Inside auto layout
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                      
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(99, 104, 116, 0.1)'
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent'
+                    }}
+                  >
+                    <span
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '15px',
+                        lineHeight: '23px',
+                        color: '#636874',
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                      }}
+                    >
+                      Cancel
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => {
+                setShowReviewModal(false)
+                setExtractedStatsData(null)
+                setHasExtractedStats(false)
+              }}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                background: 'transparent',
+                border: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <X size={20} color="#6b7280" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Reminder Modal - Don't forget to update Secondary Stats */}
+      {showReminderModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px',
+        }}>
+          {/* Modal Container - Figma: Submit */}
+          <div style={{
+            position: 'relative',
+            width: isMobile ? '356px' : '400px',
+            height: '158px',
+            
+            background: '#FFFFFF',
+            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+            borderRadius: '20px',
+          }}>
+            {/* Frame 214 - Content container */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '0px',
+                gap: '24px',
+                
+                position: 'absolute',
+                width: isMobile ? '355px' : '390px',
+                height: '116px',
+                left: isMobile ? 'calc(50% - 355px/2 + 0.5px)' : 'calc(50% - 390px/2)',
+                top: 'calc(50% - 116px/2 - 0.63px)',
+              }}
+            >
+              {/* Group 225 - Message text */}
+              <div
+                style={{
+                  width: isMobile ? '330px' : '360px',
+                  height: '54px',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  
+                  position: 'relative',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '54px',
+                    left: 'calc(50% - 330px/2)',
+                    top: '0px',
+                    
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    fontSize: '18px',
+                    lineHeight: '27px',
+                    textAlign: 'center',
+                    
+                    color: '#000000',
+                    
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  Don't forget to update Secondary Stats
+                </div>
+              </div>
+
+              {/* Frame 215 - Button container */}
+              <div
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '8px',
+                  
+                  width: '152px',
+                  height: '38px',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}
+              >
+                {/* Okay Button */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReminderModal(false)
+                    // Scroll to save button
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' })
+                  }}
+                  style={{
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '8px 16px',
+                    gap: '10px',
+                    
+                    width: '152px',
+                    height: '38px',
+                    
+                    background: '#DC2627',
+                    borderRadius: '6px',
+                    border: 'none',
+                    
+                    // Inside auto layout
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                    
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#B91C1C'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#DC2627'
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '40px',
+                      height: '23px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      lineHeight: '23px',
+                      color: '#FFFFFF',
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0,
+                    }}
+                  >
+                    Okay
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Mobile Footer */}
       <MobileFooter currentPage="profile" />

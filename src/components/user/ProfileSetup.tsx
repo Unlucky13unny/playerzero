@@ -10,9 +10,10 @@ import { ValuePropModal } from '../upgrade/ValuePropModal'
 import { SocialConnectModal } from '../social/SocialConnectModal'
 import { ErrorModal } from '../common/ErrorModal'
 import { SuccessModal } from '../common/SuccessModal'
+import { StatUpdateModal } from '../common/StatUpdateModal'
 import { extractStatsFromImage } from '../../utils/ocrService'
 import logoSvg from "/images/logo.svg"
-import { Upload } from 'lucide-react'
+import { Upload, X } from 'lucide-react'
 import './ProfileSetup.css'
 
 const TEAM_COLORS = [
@@ -85,10 +86,25 @@ export const ProfileSetup = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [isProcessingOCR, setIsProcessingOCR] = useState(false)
   const [ocrProgress, setOcrProgress] = useState(0)
-  const [ocrMessage, setOcrMessage] = useState<string | null>(null)
-  const [hasExtractedStats, setHasExtractedStats] = useState(false)
+  const [_ocrMessage, setOcrMessage] = useState<string | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_hasExtractedStats, setHasExtractedStats] = useState(false)
   const [showTrainerCodeError, setShowTrainerCodeError] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
+  
+  // NEW: Upload mode selection modal state
+  const [showUploadModal, setShowUploadModal] = useState(false)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const [_uploadMode, setUploadMode] = useState<'manual' | 'extract' | null>(null)
+  
+  // NEW: Review modal state for extracted stats
+  const [showReviewModal, setShowReviewModal] = useState(false)
+  const [extractedStatsData, setExtractedStatsData] = useState<Partial<ProfileData> | null>(null)
+  
+  // NEW: Reminder modal state
+  const [showReminderModal, setShowReminderModal] = useState(false)
+  // OCR Error modal state
+  const [showOCRErrorModal, setShowOCRErrorModal] = useState(false)
 
   // Check if user already has a profile when component mounts
   useEffect(() => {
@@ -282,6 +298,38 @@ export const ProfileSetup = () => {
     }
   }
 
+  // NEW: Handle opening the upload mode selection modal
+  const handleOpenUploadModal = () => {
+    setShowUploadModal(true)
+    setUploadMode(null)
+  }
+
+  // NEW: Handle manual entry mode selection
+  const handleSelectManualMode = () => {
+    setShowUploadModal(false)
+    setUploadMode('manual')
+    // DON'T discard the uploaded screenshot - keep it for verification
+    setOcrMessage(null)
+    setHasExtractedStats(false)
+  }
+
+  // NEW: Handle direct extract mode selection
+  const handleSelectExtractMode = () => {
+    setShowUploadModal(false)
+    setUploadMode('extract')
+    // Trigger file input click
+    const fileInput = document.getElementById('profile-screenshot-upload') as HTMLInputElement
+    if (fileInput) {
+      fileInput.click()
+    }
+  }
+
+  // NEW: Close upload modal
+  const handleCloseUploadModal = () => {
+    setShowUploadModal(false)
+    setUploadMode(null)
+  }
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null
     setProfileScreenshot(file)
@@ -338,8 +386,8 @@ export const ProfileSetup = () => {
       const statsCount = Object.keys(result.stats).length
       if (statsCount === 0) {
         console.warn('⚠️ No stats were extracted from the image')
-        setOcrMessage('⚠️ Could not extract stats from image. Please ensure the screenshot shows your Pokémon GO profile with visible stats.')
         setIsProcessingOCR(false)
+        setShowOCRErrorModal(true)
         return
       }
 
@@ -348,42 +396,42 @@ export const ProfileSetup = () => {
       // No validation needed for profile setup (no current stats to compare against)
       setOcrMessage('✅ Stats extracted successfully!')
 
-      // Auto-fill the form with extracted stats
-      const updatedData = { ...profileData }
+      // Prepare extracted stats data
+      const extractedData: Partial<ProfileData> = {}
       
       if (result.stats.total_xp !== undefined) {
         console.log(`✓ Total XP: ${result.stats.total_xp.toLocaleString()}`)
-        updatedData.total_xp = result.stats.total_xp
+        extractedData.total_xp = result.stats.total_xp
       }
       
       if (result.stats.pokemon_caught !== undefined) {
         console.log(`✓ Pokémon Caught: ${result.stats.pokemon_caught.toLocaleString()}`)
-        updatedData.pokemon_caught = result.stats.pokemon_caught
+        extractedData.pokemon_caught = result.stats.pokemon_caught
       }
       
       if (result.stats.distance_walked !== undefined) {
         console.log(`✓ Distance Walked: ${result.stats.distance_walked} km`)
-        updatedData.distance_walked = result.stats.distance_walked
+        extractedData.distance_walked = result.stats.distance_walked
       }
       
       if (result.stats.pokestops_visited !== undefined) {
         console.log(`✓ PokéStops Visited: ${result.stats.pokestops_visited.toLocaleString()}`)
-        updatedData.pokestops_visited = result.stats.pokestops_visited
+        extractedData.pokestops_visited = result.stats.pokestops_visited
       }
       
       if (result.stats.unique_pokedex_entries !== undefined) {
         console.log(`✓ Pokédex Entries: ${result.stats.unique_pokedex_entries}`)
-        updatedData.unique_pokedex_entries = result.stats.unique_pokedex_entries
+        extractedData.unique_pokedex_entries = result.stats.unique_pokedex_entries
       }
 
       if (result.stats.trainer_level !== undefined) {
         console.log(`✓ Trainer Level: ${result.stats.trainer_level}`)
-        updatedData.trainer_level = result.stats.trainer_level
+        extractedData.trainer_level = result.stats.trainer_level
       }
 
       if (result.stats.username !== undefined) {
         console.log(`✓ Username: ${result.stats.username}`)
-        updatedData.trainer_name = result.stats.username
+        extractedData.trainer_name = result.stats.username
       }
 
       if (result.stats.start_date !== undefined) {
@@ -391,19 +439,19 @@ export const ProfileSetup = () => {
         // Convert from MM/DD/YYYY to YYYY-MM-DD
         const dateParts = result.stats.start_date.split('/')
         if (dateParts.length === 3) {
-          updatedData.start_date = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
+          extractedData.start_date = `${dateParts[2]}-${dateParts[0].padStart(2, '0')}-${dateParts[1].padStart(2, '0')}`
         }
       }
 
-      console.log('📝 Auto-filling form with extracted stats:', updatedData)
-      setProfileData(updatedData)
-      setHasExtractedStats(true)
+      console.log('📝 Extracted stats prepared for review:', extractedData)
+      
+      // Store extracted stats and show review modal
+      setExtractedStatsData(extractedData)
+      setIsProcessingOCR(false)
+      setShowReviewModal(true)
 
-      // Show success message (confidence logged to console only)
-      setTimeout(() => {
+      // Log confidence to console
         console.log(`✅ Extracted ${statsCount} stat(s) with ${Math.round(result.confidence)}% confidence`)
-        setOcrMessage('✅ Stats extracted and auto-filled successfully!')
-      }, 1000)
 
     } catch (err: any) {
       console.error('❌ OCR Error:', err)
@@ -881,132 +929,188 @@ export const ProfileSetup = () => {
           />
       </div>
 
-        {/* Screenshot Upload */}
+        {/* Screenshot Upload - SAME AS UPDATESTATS.TSX */}
       <div className="upload-section">
-        <label className="form-label">Upload a screenshot of your Trainer Profile to verify your stats and auto-fill using OCR.</label>
-        <div className="upload-area">
-          <input
-            type="file"
-            id="screenshot-upload"
-            accept="image/*"
-            onChange={handleFileChange}
-            style={{ display: 'none' }}
-            disabled={isProcessingOCR}
-          />
-          <label htmlFor="screenshot-upload" className="upload-label" style={{ opacity: isProcessingOCR ? 0.6 : 1, cursor: isProcessingOCR ? 'not-allowed' : 'pointer' }}>
-              <Upload size={16} />
-            <span>Choose file</span>
-              <span className="file-hint">{profileScreenshot ? profileScreenshot.name : 'No file chosen'}</span>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "flex-start",
+            gap: "2px",
+            width: "100%",
+          }}
+        >
+          <label
+            style={{
+              fontFamily: "Poppins",
+              fontStyle: "normal",
+              fontWeight: 400,
+              fontSize: isMobile ? "12px" : "11px",
+              lineHeight: isMobile ? "18px" : "16px",
+              color: "#000000",
+              width: "100%",
+              textAlign: "left",
+            }}
+          >
+            Upload new screenshot
           </label>
-        </div>
-        {profileScreenshot && !isProcessingOCR && !hasExtractedStats && (
-          <div className="file-selected">
-              ✓ {profileScreenshot.name}
-          </div>
-        )}
-
-        {/* Image Preview with Extract Button */}
-        {imagePreview && !isProcessingOCR && !hasExtractedStats && (
-          <div className="image-preview-with-ocr">
-            <div className="preview-header">📸 Selected Screenshot:</div>
-            <img src={imagePreview} alt="Screenshot preview" className="screenshot-preview-image" />
             <button 
               type="button"
-              onClick={handleExtractStats}
-              className="extract-button"
+            onClick={handleOpenUploadModal}
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              alignItems: "center",
+              width: "100%",
+              height: isMobile ? "44px" : "36px",
+              background: "#FFFFFF",
+              border: "1px dashed #848282",
+              borderRadius: "6px",
+              padding: isMobile ? "12px" : "9px",
+              gap: "10px",
+              boxSizing: "border-box",
+              cursor: "pointer",
+              transition: "all 0.2s ease",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = "#555"
+              e.currentTarget.style.backgroundColor = "#f9f9f9"
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = "#848282"
+              e.currentTarget.style.backgroundColor = "#FFFFFF"
+            }}
+          >
+            <Upload style={{ width: isMobile ? "20px" : "16px", height: isMobile ? "20px" : "16px", color: "#000000" }} />
+            <span
+              style={{
+                fontFamily: "Poppins",
+                fontStyle: "normal",
+                fontWeight: 400,
+                fontSize: isMobile ? "14px" : "12px",
+                lineHeight: isMobile ? "20px" : "18px",
+                color: "#000000",
+              }}
             >
-              <span className="extract-icon">🔍</span>
-              <span className="extract-text">Extract Stats from Image</span>
-              <span className="extract-subtitle">Click to analyze screenshot using OCR</span>
+              Choose upload method
+            </span>
             </button>
+          <span
+            style={{
+              fontFamily: "Poppins",
+              fontStyle: "normal",
+              fontWeight: 400,
+              fontSize: isMobile ? "12px" : "11px",
+              lineHeight: isMobile ? "18px" : "16px",
+              color: "#666666",
+            }}
+          >
+            {profileScreenshot ? `✓ ${profileScreenshot.name}` : "Manual entry or OCR extraction"}
+          </span>
           </div>
-        )}
 
-        {/* OCR Processing Indicator */}
+        {/* Hidden file input for direct extraction mode */}
+        <input
+          type="file"
+          id="profile-screenshot-upload"
+          onChange={handleFileChange}
+          accept="image/*"
+          style={{ display: "none" }}
+        />
+        
+        {/* OCR Processing Indicator - NEW DESIGN */}
         {isProcessingOCR && (
-          <div className="ocr-processing-container">
-            <div className="ocr-spinner-ring"></div>
-            <div className="ocr-progress-bar-container">
-              <div className="ocr-progress-bar-fill" style={{ width: `${ocrProgress}%` }}></div>
+          <div
+            style={{
+              boxSizing: "border-box",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "flex-start",
+              padding: "16px 8px",
+              gap: "10px",
+              width: isMobile ? "353px" : "100%",
+              height: "60px",
+              border: "0.5px solid #DC2627",
+              borderRadius: "6px",
+              flex: "none",
+              order: 2,
+              alignSelf: "stretch",
+              flexGrow: 0,
+              marginTop: "16px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "flex-start",
+                padding: "0px",
+                gap: "8px",
+                width: isMobile ? "337px" : "calc(100% - 16px)",
+                height: "28px",
+                flex: "none",
+                order: 0,
+                alignSelf: "stretch",
+                flexGrow: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: isMobile ? "173px" : "auto",
+                  height: "16px",
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: "12px",
+                  lineHeight: "16px",
+                  textAlign: "right",
+                  color: "#90A1B9",
+                  flex: "none",
+                  order: 0,
+                  flexGrow: 0,
+                  alignSelf: "flex-end",
+                }}
+              >
+                {ocrProgress}%
             </div>
-            <p className="ocr-status-text">{ocrMessage} ({ocrProgress}%)</p>
+              <div
+                style={{
+                  position: "relative",
+                  width: isMobile ? "337px" : "100%",
+                  height: "4px",
+                  flex: "none",
+                  order: 1,
+                  alignSelf: "stretch",
+                  flexGrow: 0,
+                }}
+              >
+                <div
+                  style={{
+                    position: "absolute",
+                    height: "4px",
+                    left: "0%",
+                    right: "0%",
+                    top: "0px",
+                    background: "#E2E8F0",
+                    borderRadius: "999px",
+                  }}
+                />
+                <div
+                  style={{
+                    position: "absolute",
+                    height: "4px",
+                    left: "0%",
+                    right: `${100 - ocrProgress}%`,
+                    top: "0px",
+                    background: "#FB2C36",
+                    borderRadius: "999px",
+                    transition: "right 0.3s ease",
+                  }}
+                />
           </div>
-        )}
-
-        {/* OCR Result Message */}
-        {!isProcessingOCR && ocrMessage && (
-          <div className={`ocr-result-message ${ocrMessage.includes('✅') ? 'success' : ocrMessage.includes('❌') ? 'error' : 'warning'}`}>
-            {ocrMessage}
           </div>
-        )}
-
-        {/* Extracted Stats Display */}
-        {hasExtractedStats && (
-          <div className="extracted-stats-card">
-            <h3 className="extracted-stats-title">📊 Extracted Stats from Screenshot:</h3>
-            <div className="extracted-stats-grid-setup">
-              {profileData.trainer_name && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">👤</div>
-                  <div className="stat-label-box">Username</div>
-                  <div className="stat-value-box">{profileData.trainer_name}</div>
                 </div>
               )}
-              {profileData.trainer_level && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">🎖️</div>
-                  <div className="stat-label-box">Level</div>
-                  <div className="stat-value-box">{profileData.trainer_level}</div>
-                </div>
-              )}
-              {profileData.total_xp !== undefined && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">⭐</div>
-                  <div className="stat-label-box">Total XP</div>
-                  <div className="stat-value-box">{profileData.total_xp.toLocaleString()}</div>
-                </div>
-              )}
-              {profileData.pokemon_caught !== undefined && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">🔴</div>
-                  <div className="stat-label-box">Pokémon Caught</div>
-                  <div className="stat-value-box">{profileData.pokemon_caught.toLocaleString()}</div>
-                </div>
-              )}
-              {profileData.distance_walked !== undefined && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">👣</div>
-                  <div className="stat-label-box">Distance Walked</div>
-                  <div className="stat-value-box">{profileData.distance_walked} km</div>
-                </div>
-              )}
-              {profileData.pokestops_visited !== undefined && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">🔵</div>
-                  <div className="stat-label-box">PokéStops Visited</div>
-                  <div className="stat-value-box">{profileData.pokestops_visited.toLocaleString()}</div>
-                </div>
-              )}
-              {profileData.unique_pokedex_entries !== undefined && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">📖</div>
-                  <div className="stat-label-box">Pokédex Entries</div>
-                  <div className="stat-value-box">{profileData.unique_pokedex_entries}</div>
-                </div>
-              )}
-              {profileData.start_date && (
-                <div className="extracted-stat-box">
-                  <div className="stat-icon-box">📅</div>
-                  <div className="stat-label-box">Start Date</div>
-                  <div className="stat-value-box">{profileData.start_date}</div>
-                </div>
-              )}
-            </div>
-            <p className="auto-fill-notice-setup">
-              ✅ These values have been automatically filled in the form fields above. Review and continue!
-            </p>
-          </div>
-        )}
       </div>
     </div>
     </>
@@ -1074,15 +1178,7 @@ export const ProfileSetup = () => {
             className="btn-next"
               disabled={loading}
             >
-              {loading ? (
-                <span className="loading-spinner">
-                  <svg className="spinner" viewBox="0 0 24 24">
-                    <circle className="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
-                    <path className="spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Saving...
-                </span>
-            ) : currentStep === 2 ? 'Save' : 'Next'}
+              {loading ? 'Saving...' : currentStep === 2 ? 'Save' : 'Next'}
             </button>
           </div>
         </div>
@@ -1091,7 +1187,683 @@ export const ProfileSetup = () => {
 
   return (
     <>
-      {/* Modals */}
+      {/* NEW: Upload Mode Selection Modal - EXACT COPY FROM UPDATESTATS.TSX */}
+      {showUploadModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px',
+        }}>
+          {/* Modal Container - Figma: New Upload */}
+          <div style={{
+            // Exact Figma specs
+            position: 'relative',
+            width: isMobile ? '353px' : '400px',
+            height: profileScreenshot 
+              ? (isMobile ? '613px' : '680px')  // Figma height: 613px for mobile
+              : (isMobile ? '241px' : '280px'), // Original height
+            
+            // Background - Figma: bg (White)
+            background: '#FFFFFF',
+            borderRadius: '24px',
+            
+            // Filter/Shadow from Figma
+            filter: 'drop-shadow(0px 0px 48px rgba(0, 0, 0, 0.04))',
+            boxSizing: 'border-box',
+            transition: 'height 0.3s ease', // Smooth transition
+          }}>
+            {/* Toggle Section - Figma: Toggle */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'flex-start',
+                padding: '4px 5px',
+                gap: '4px',
+                
+                // Positioning - Exact Figma specs
+                position: 'absolute',
+                width: isMobile ? '266px' : '300px',
+                height: '36px',
+                left: isMobile ? 'calc(50% - 266px/2 + 0.5px)' : 'calc(50% - 300px/2)',
+                top: '16px',
+                
+                // Grey 01 background
+                background: '#F7F9FB',
+                boxShadow: 'inset 0px 0px 2px rgba(0, 0, 0, 0.1)',
+                borderRadius: '40px',
+              }}
+            >
+              {/* Extract Stats Button - Figma: Button / Secondary (Active) */}
+              <button
+                type="button"
+                onClick={handleSelectExtractMode}
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  padding: '7px 20px',
+                  gap: '10px',
+                  
+                  // Exact Figma size
+                  width: '114px',
+                  height: '28px',
+                  
+                  // Style - Red when active
+                  background: '#DC2627',
+                  borderRadius: '40px',
+                  border: 'none',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#B91C1C'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#DC2627'
+                }}
+              >
+                <span style={{
+                  // Label - Exact Figma specs
+                  width: '74px',
+                  height: '14px',
+                  fontFamily: 'Inter',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  textAlign: 'center',
+                  color: '#FFFFFF',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Extract stats
+                </span>
+              </button>
+
+              {/* Update Manually Button - Figma: Button / Secondary (Inactive) */}
+              <button
+                type="button"
+                onClick={handleSelectManualMode}
+                style={{
+                  // Auto layout
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'flex-end',
+                  alignItems: 'center',
+                  padding: '7px 20px',
+                  gap: '10px',
+                  
+                  // Exact Figma size
+                  width: '138px',
+                  height: '28px',
+                  
+                  // Style - Grey 01 background
+                  background: '#F7F9FB',
+                  borderRadius: '40px',
+                  border: 'none',
+                  
+                  // Inside auto layout
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                  
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = '#EBEFF2'
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = '#F7F9FB'
+                }}
+              >
+                <span style={{
+                  // Label - Exact Figma specs
+                  width: '98px',
+                  height: '14px',
+                  fontFamily: 'Inter',
+                  fontStyle: 'normal',
+                  fontWeight: 600,
+                  fontSize: '12px',
+                  lineHeight: '14px',
+                  textAlign: 'center',
+                  color: '#DC2627',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                }}>
+                  Update manually
+                </span>
+              </button>
+            </div>
+
+            {/* Divider Line - Figma: li (Grey 02) */}
+            <div
+              style={{
+                position: 'absolute',
+                height: '1px',
+                left: '0px',
+                right: '0px',
+                top: '68px',
+                background: '#EBEFF2',
+              }}
+            />
+
+            {/* Content Area - Figma: Drag Area (Flat Grey) */}
+            <div
+              style={{
+                // Auto layout
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                padding: '32px',
+                gap: '10px',
+                
+                // Positioning
+                position: 'absolute',
+                left: '0px',
+                right: '0px',
+                top: '68px',
+                bottom: '0px',
+                
+                // Style - Flat Grey
+                background: '#F8F8F8',
+                borderRadius: '0px 0px 24px 24px',
+                boxSizing: 'border-box',
+              }}
+            >
+              {profileScreenshot && imagePreview ? (
+                // Image Preview Mode - Figma: Wrap with content
+                <div
+                  style={{
+                    boxSizing: 'border-box',
+                    
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px 32px',
+                    gap: '8px',
+                    
+                    // Exact Figma size for Wrap
+                    width: isMobile ? '289px' : '336px',
+                    height: isMobile ? '481px' : '560px',
+                    
+                    // Style - Grey 03 dashed border
+                    border: '2px dashed #E2E6EA',
+                    borderRadius: '24px',
+                    background: '#FFFFFF',
+                    
+                    // Inside auto layout
+                    flex: 'none',
+                    order: 0,
+                    alignSelf: 'stretch',
+                    flexGrow: 1,
+                  }}
+                >
+                  {/* "Selected image" label - Figma specs */}
+                  <div
+                    style={{
+                      width: isMobile ? '225px' : '272px',
+                      height: '21px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 500,
+                      fontSize: '14px',
+                      lineHeight: '21px',
+                      textAlign: 'center',
+                      color: '#242634',
+                      opacity: 0.5,
+                      flex: 'none',
+                      order: 0,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                    }}
+                  >
+                    Selected image
+                  </div>
+
+                  {/* Image Container - Figma: thumb with rounded corners */}
+                  <div
+                    style={{
+                      width: isMobile ? '181px' : '220px',
+                      height: isMobile ? '356px' : '420px',
+                      borderRadius: '2px',
+                      overflow: 'hidden',
+                      backgroundColor: '#FFFFFF',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
+                    }}
+                  >
+                    <img
+                      src={imagePreview}
+                      alt="Screenshot preview"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover',
+                        display: 'block',
+                      }}
+                    />
+                  </div>
+                  
+                  {/* Frame 760 - Button container */}
+                  <div
+                    style={{
+                      // Auto layout
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '0px',
+                      gap: '4px',
+                      
+                      width: isMobile ? '225px' : '272px',
+                      height: '50px',
+                      
+                      // Inside auto layout
+                      flex: 'none',
+                      order: 2,
+                      alignSelf: 'stretch',
+                      flexGrow: 0,
+                    }}
+                  >
+                    {/* Extract Stats Button - Figma: Button / Secondary (Red) */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setShowUploadModal(false);
+                        handleExtractStats();
+                      }}
+                      style={{
+                        // Auto layout
+                        display: 'flex',
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
+                        alignItems: 'center',
+                        padding: '7px 20px',
+                        gap: '10px',
+                        
+                        // Exact Figma size
+                        width: isMobile ? '214px' : '252px',
+                        height: '28px',
+                        
+                        // Style
+                        background: '#DB161B',
+                        borderRadius: '6px',
+                        border: 'none',
+                        
+                        // Inside auto layout
+                        flex: 'none',
+                        order: 0,
+                        flexGrow: 0,
+                        
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#B91C1C'
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#DB161B'
+                      }}
+                    >
+                      <span
+                        style={{
+                          // Label - Figma specs
+                          width: isMobile ? '174px' : '212px',
+                          height: '14px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 600,
+                          fontSize: '12px',
+                          lineHeight: '14px',
+                          textAlign: 'center',
+                          color: '#FFFFFF',
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}
+                      >
+                        Extract stats from the image
+                      </span>
+                    </button>
+
+                    {/* OCR text - Figma specs */}
+                    <div
+                      style={{
+                        width: isMobile ? '225px' : '272px',
+                        height: '18px',
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '12px',
+                        lineHeight: '18px',
+                        textAlign: 'center',
+                        color: '#242634',
+                        opacity: 0.5,
+                        flex: 'none',
+                        order: 1,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      Click to analize image using OCR
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Dashed Upload Box (Original)
+                <div
+                  style={{
+                    boxSizing: 'border-box',
+                    
+                    // Auto layout
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '0px 32px',
+                    
+                    // Size
+                    width: '100%',
+                    flex: 1,
+                    
+                    // Style
+                    border: '2px dashed #E2E6EA',
+                    borderRadius: '24px',
+                    background: '#FFFFFF',
+                    margin: '16px',
+                    
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = '#DC2627'
+                    e.currentTarget.style.background = 'rgba(220, 38, 39, 0.05)'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = '#E2E6EA'
+                    e.currentTarget.style.background = '#FFFFFF'
+                  }}
+                  onClick={() => {
+                    const fileInput = document.getElementById('profile-screenshot-upload') as HTMLInputElement
+                    if (fileInput) fileInput.click()
+                  }}
+                >
+                  {/* Text - Figma specs */}
+                  <p
+                    style={{
+                      // Typography - Figma specs
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
+                      fontSize: '14px',
+                      lineHeight: '21px',
+                      textAlign: 'center',
+                      
+                      // Color - Grey 05
+                      color: '#242634',
+                      opacity: 0.5,
+                      
+                      // Reset
+                      margin: 0,
+                      whiteSpace: 'pre-line',
+                    }}
+                  >
+                    Click to upload your Trainer{'\n'}Profile screenshot
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={handleCloseUploadModal}
+              style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                background: 'transparent',
+                border: 'none',
+                padding: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                zIndex: 1000,
+              }}
+            >
+              <X size={20} color="#6b7280" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* NEW: Review Stats Update Modal */}
+      {showReviewModal && extractedStatsData && (
+        <StatUpdateModal
+          isOpen={showReviewModal}
+          onConfirm={() => {
+            // Apply the extracted stats to the form
+            setProfileData(prev => ({
+              ...prev,
+              ...extractedStatsData
+            }))
+            setHasExtractedStats(true)
+            setShowReviewModal(false)
+            setShowReminderModal(true)
+          }}
+          onCancel={() => {
+            setShowReviewModal(false)
+            setExtractedStatsData(null)
+          }}
+          onReview={() => {}}
+          changes={[
+            ...(extractedStatsData.distance_walked !== undefined ? [{
+              label: 'Distance Walked',
+              oldValue: profileData.distance_walked ? `${profileData.distance_walked}` : '0',
+              newValue: `${extractedStatsData.distance_walked}`,
+              isDecrease: false
+            }] : []),
+            ...(extractedStatsData.pokemon_caught !== undefined ? [{
+              label: 'Pokémon Caught',
+              oldValue: profileData.pokemon_caught?.toLocaleString() || '0',
+              newValue: extractedStatsData.pokemon_caught.toLocaleString(),
+              isDecrease: false
+            }] : []),
+            ...(extractedStatsData.pokestops_visited !== undefined ? [{
+              label: 'Pokéstops Visited',
+              oldValue: profileData.pokestops_visited?.toLocaleString() || '0',
+              newValue: extractedStatsData.pokestops_visited.toLocaleString(),
+              isDecrease: false
+            }] : []),
+            ...(extractedStatsData.total_xp !== undefined ? [{
+              label: 'Total XP',
+              oldValue: profileData.total_xp?.toLocaleString() || '0',
+              newValue: extractedStatsData.total_xp.toLocaleString(),
+              isDecrease: false
+            }] : []),
+            ...(extractedStatsData.unique_pokedex_entries !== undefined ? [{
+              label: 'Unique Pokédex Entries',
+              oldValue: profileData.unique_pokedex_entries?.toString() || '0',
+              newValue: extractedStatsData.unique_pokedex_entries.toString(),
+              isDecrease: false
+            }] : []),
+          ]}
+          hasDecreasingStats={false}
+        />
+      )}
+
+      {/* NEW: Reminder Modal */}
+      {showReminderModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.6)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px',
+        }}>
+          <div style={{
+            position: 'relative',
+            width: isMobile ? '356px' : '400px',
+            height: '158px',
+            background: '#FFFFFF',
+            boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
+            borderRadius: '20px',
+          }}>
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                padding: '0px',
+                gap: '24px',
+                position: 'absolute',
+                width: isMobile ? '355px' : '390px',
+                height: '116px',
+                left: isMobile ? 'calc(50% - 355px/2 + 0.5px)' : 'calc(50% - 390px/2)',
+                top: 'calc(50% - 116px/2 - 0.63px)',
+              }}
+            >
+              <div
+                style={{
+                  width: isMobile ? '330px' : '360px',
+                  height: '54px',
+                  flex: 'none',
+                  order: 0,
+                  flexGrow: 0,
+                  position: 'relative',
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: '100%',
+                    height: '54px',
+                    left: 'calc(50% - 330px/2)',
+                    top: '0px',
+                    fontFamily: 'Poppins',
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    fontSize: '18px',
+                    lineHeight: '27px',
+                    textAlign: 'center',
+                    color: '#000000',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  Don't forget to update Secondary Stats
+                </div>
+              </div>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  padding: '0px',
+                  gap: '8px',
+                  width: '152px',
+                  height: '38px',
+                  flex: 'none',
+                  order: 1,
+                  flexGrow: 0,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReminderModal(false)
+                    // Scroll to secondary stats section
+                    setTimeout(() => {
+                      const secondaryStatsHeading = document.querySelector('.secondary-stats-heading')
+                      if (secondaryStatsHeading) {
+                        secondaryStatsHeading.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                      }
+                    }, 100)
+                  }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    padding: '8px 16px',
+                    gap: '10px',
+                    width: '152px',
+                    height: '38px',
+                    background: '#DC2627',
+                    borderRadius: '6px',
+                    border: 'none',
+                    flex: 'none',
+                    order: 0,
+                    flexGrow: 0,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#B91C1C'
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = '#DC2627'
+                  }}
+                >
+                  <span
+                    style={{
+                      width: '40px',
+                      height: '23px',
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 600,
+                      fontSize: '15px',
+                      lineHeight: '23px',
+                      color: '#FFFFFF',
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0,
+                    }}
+                  >
+                    Okay
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Existing Modals */}
       <ValuePropModal 
         isOpen={isOpen} 
         onClose={closeValueProp} 
@@ -1134,6 +1906,15 @@ export const ProfileSetup = () => {
         confirmText="Upgrade Now"
         cancelText="Cancel"
         onConfirm={() => navigate('/upgrade')}
+      />
+
+      {/* OCR Error Modal */}
+      <ErrorModal
+        isOpen={showOCRErrorModal}
+        onClose={() => setShowOCRErrorModal(false)}
+        title="Failed to extract stats"
+        message="Failed to extract stats from image. Please enter stats manually"
+        confirmText="Okay"
       />
 
       {/* Mobile View */}

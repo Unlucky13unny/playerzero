@@ -102,29 +102,24 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
       switch (timePeriod) {
         case 'weekly':
           try {
-            statsResult = await dashboardService.calculateWeeklyGrindStats(user.id)
+            statsResult = await dashboardService.calculateCurrentWeekGrindStats(user.id)
             console.log('Week stats loaded:', statsResult)
-            // Ensure we have valid data before proceeding
-            if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
-                               statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
-              console.log('Week stats are all zero, using profile data as fallback')
-              statsResult = {
-                totalXP: profile.total_xp || 0,
-                pokemonCaught: profile.pokemon_caught || 0,
-                distanceWalked: profile.distance_walked || 0,
-                pokestopsVisited: profile.pokestops_visited || 0,
-                uniquePokedexEntries: profile.unique_pokedex_entries || 0
-              }
-            }
+            // Weekly stats should show zeros if no data for current week - NO FALLBACK
           } catch (weeklyError) {
-            console.warn('Week stats calculation failed, using profile fallback:', weeklyError)
-            // Use profile data as fallback instead of null
+            console.warn('Week stats calculation failed:', weeklyError)
+            // Return zeros on error for weekly (don't use all-time data)
             statsResult = {
-              totalXP: profile.total_xp || 0,
-              pokemonCaught: profile.pokemon_caught || 0,
-              distanceWalked: profile.distance_walked || 0,
-              pokestopsVisited: profile.pokestops_visited || 0,
-              uniquePokedexEntries: profile.unique_pokedex_entries || 0
+              totalXP: 0,
+              pokemonCaught: 0,
+              distanceWalked: 0,
+              pokestopsVisited: 0,
+              uniquePokedexEntries: 0,
+              xpPerDay: 0,
+              catchesPerDay: 0,
+              distancePerDay: 0,
+              stopsPerDay: 0,
+              startDate: '',
+              endDate: ''
             }
           }
           break

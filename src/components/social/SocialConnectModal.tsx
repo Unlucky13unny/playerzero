@@ -380,8 +380,8 @@ export function SocialConnectModal({ isOpen, onClose, onConnect, editingPlatform
                     className="relative flex items-center justify-center rounded-full"
                     style={{
                       width: "44px",
-                      height: "44px",
-                      backgroundColor: selectedPlatform.isGray ? "#848282" : "#000000",
+                    height: "44px",
+                    backgroundColor: selectedPlatform.isGray ? "#848282" : "#000000",
                   }}
                 >
                   {selectedPlatform.icon}

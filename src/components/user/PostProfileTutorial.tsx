@@ -5,6 +5,7 @@ import { PerformanceRadarChart } from '../dashboard/RadarChart'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
 
 export const PostProfileTutorial = () => {
+  const [showWelcome] = useState(true)
   const [currentSlide, setCurrentSlide] = useState(1)
   const [profile, setProfile] = useState<ProfileWithMetadata | null>(null)
   const navigate = useNavigate()
@@ -337,6 +338,106 @@ export const PostProfileTutorial = () => {
     </div>
   )
 
+  // Welcome screen
+  if (showWelcome) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        background: 'linear-gradient(135deg, #f8f9fa 0%, #e5e7eb 100%)',
+        padding: '2rem',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 9999
+      }}>
+        <div style={{
+          background: 'white',
+          borderRadius: '20px',
+          padding: '4rem 3rem',
+          boxShadow: '0 20px 60px rgba(0,0,0,0.15)',
+          textAlign: 'center',
+          maxWidth: '450px',
+          width: '90%',
+          animation: 'fadeInScale 0.5s ease-out'
+        }}>
+          <style>{`
+            @keyframes fadeInScale {
+              from {
+                opacity: 0;
+                transform: scale(0.9);
+              }
+              to {
+                opacity: 1;
+                transform: scale(1);
+              }
+            }
+          `}</style>
+          
+          <h2 style={{
+            fontSize: '1.8rem',
+            fontWeight: '600',
+            marginBottom: '2.5rem',
+            color: '#1f2937',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            Welcome to
+          </h2>
+          
+          <div style={{
+            marginBottom: '3rem',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center'
+          }}>
+            <img 
+              src="/images/logo.svg" 
+              alt="PlayerZERO" 
+              style={{
+                width: '280px',
+                height: 'auto',
+                maxWidth: '100%'
+              }}
+            />
+          </div>
+          
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              background: '#EF4444',
+              color: 'white',
+              border: 'none',
+              borderRadius: '12px',
+              padding: '1rem 3.5rem',
+              fontSize: '1.15rem',
+              fontWeight: '600',
+              fontFamily: 'Poppins, sans-serif',
+              cursor: 'pointer',
+              transition: 'all 0.3s ease',
+              boxShadow: '0 4px 20px rgba(239, 68, 68, 0.25)',
+              transform: 'translateY(0)'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 25px rgba(239, 68, 68, 0.35)'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 20px rgba(239, 68, 68, 0.25)'
+            }}
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // Tutorial slides
   return (
     <div className="profile-setup-container">
       <div className="profile-setup-wrapper">
