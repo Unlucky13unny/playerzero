@@ -80,7 +80,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
 
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: 2,
+          scale: 1, // Download at 400×600 for perfect text rendering
           useCORS: true,
           allowTaint: true,
           logging: false,
@@ -223,7 +223,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         {/* Trainer Name - Top Left */}
         <div style={{ 
           position: 'absolute',
-          top: isMobile ? '28px' : '51px',
+          top: isMobile ? '18px' : '45px',
           left: isMobile ? '12px' : '20px',
           fontFamily: 'Poppins, sans-serif',
           fontStyle: 'normal',
@@ -241,7 +241,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         {/* Start Date - Top Right */}
         <div style={{ 
           position: 'absolute',
-          top: isMobile ? '28px' : '51px',
+          top: isMobile ? '18px' : '45px',
           right: isMobile ? '12px' : '20px',
           textAlign: 'right',
           zIndex: 10

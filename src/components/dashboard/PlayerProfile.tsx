@@ -125,29 +125,24 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
           break
         case 'monthly':
           try {
-            statsResult = await dashboardService.calculateMonthlyGrindStats(user.id)
+            statsResult = await dashboardService.calculateCurrentMonthGrindStats(user.id)
             console.log('Month stats loaded:', statsResult)
-            // Ensure we have valid data before proceeding
-            if (!statsResult || (statsResult.totalXP === 0 && statsResult.pokemonCaught === 0 && 
-                               statsResult.distanceWalked === 0 && statsResult.pokestopsVisited === 0)) {
-              console.log('Month stats are all zero, using profile data as fallback')
-              statsResult = {
-                totalXP: profile.total_xp || 0,
-                pokemonCaught: profile.pokemon_caught || 0, 
-                distanceWalked: profile.distance_walked || 0,
-                pokestopsVisited: profile.pokestops_visited || 0,
-                uniquePokedexEntries: profile.unique_pokedex_entries || 0
-              }
-            }
+            // Monthly stats should show zeros if no data for current month - NO FALLBACK
           } catch (monthlyError) {
-            console.warn('Month stats calculation failed, using profile fallback:', monthlyError)
-            // Use profile data as fallback instead of null
+            console.warn('Month stats calculation failed:', monthlyError)
+            // Return zeros on error for monthly (don't use all-time data)
             statsResult = {
-              totalXP: profile.total_xp || 0,
-              pokemonCaught: profile.pokemon_caught || 0,
-              distanceWalked: profile.distance_walked || 0,
-              pokestopsVisited: profile.pokestops_visited || 0,
-              uniquePokedexEntries: profile.unique_pokedex_entries || 0
+              totalXP: 0,
+              pokemonCaught: 0,
+              distanceWalked: 0,
+              pokestopsVisited: 0,
+              uniquePokedexEntries: 0,
+              xpPerDay: 0,
+              catchesPerDay: 0,
+              distancePerDay: 0,
+              stopsPerDay: 0,
+              startDate: '',
+              endDate: ''
             }
           }
           break

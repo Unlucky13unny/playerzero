@@ -787,7 +787,200 @@ export const dashboardService = {
     }
   },
 
-  // Calculate monthly grind stats (last 30 days)
+  // Calculate current month grind stats (1st day to last day of current month)
+  async calculateCurrentMonthGrindStats(userId?: string): Promise<StatCalculationResult> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      const targetUserId = userId || user?.id
+      
+      if (!targetUserId) {
+        throw new Error('User not authenticated')
+      }
+
+      // Get user's profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('start_date')
+        .eq('user_id', targetUserId)
+        .single()
+
+      if (profileError || !profile) {
+        throw new Error('Profile not found')
+      }
+
+      // Calculate current month boundaries (1st day 00:00 UTC to last day 23:59 UTC)
+      const now = new Date()
+      
+      // Start of current month (1st day at 00:00 UTC)
+      const monthStart = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        1,  // 1st day of month
+        0, 0, 0, 0
+      ))
+      
+      // End of current month (last day at 23:59 UTC)
+      const monthEnd = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth() + 1,  // Next month
+        0,  // 0th day = last day of current month
+        23, 59, 59, 999
+      ))
+
+      // Calculate 4-hour buffer window before month start
+      // Last day of previous month, 20:00 - first day of month, 00:00 UTC
+      const bufferStart = new Date(Date.UTC(
+        monthStart.getUTCFullYear(),
+        monthStart.getUTCMonth(),
+        0,  // Last day of previous month
+        20, 0, 0, 0  // 20:00 UTC
+      ))
+
+      const monthStartStr = monthStart.toISOString().split('T')[0]
+      const monthEndStr = monthEnd.toISOString().split('T')[0]
+      const bufferStartStr = bufferStart.toISOString()
+      const monthStartFullStr = monthStart.toISOString()
+
+      console.log('Month Calculation Debug:', {
+        monthStart: monthStartStr,
+        monthEnd: monthEndStr,
+        bufferStart: bufferStartStr,
+        today: now.toISOString().split('T')[0]
+      })
+
+      // Get all stat entries in the current month
+      const { data: monthData, error: monthError } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('entry_date', monthStartStr)
+        .lte('entry_date', monthEndStr)
+        .order('entry_date', { ascending: true })
+
+      if (monthError) {
+        console.error('Month data error:', monthError)
+        throw new Error('Failed to fetch monthly stat entries')
+      }
+
+      console.log('Month Data Found:', monthData?.length || 0, 'entries')
+
+      // Get potential baseline from buffer window
+      const { data: bufferData, error: bufferError } = await supabase
+        .from('stat_entries')
+        .select('*')
+        .eq('user_id', targetUserId)
+        .gte('created_at', bufferStartStr)
+        .lt('created_at', monthStartFullStr)
+        .lt('entry_date', monthStartStr)
+        .order('created_at', { ascending: false })
+        .limit(1)
+
+      if (bufferError) {
+        console.error('Error fetching buffer data:', bufferError)
+      }
+
+      console.log('Buffer Data Found:', bufferData?.length || 0, 'entries')
+
+      let baselineEntry = null
+      let latestEntry = null
+
+      // Determine baseline: buffer upload OR earliest upload in month
+      if (bufferData && bufferData.length > 0) {
+        baselineEntry = bufferData[0]
+        console.log('Using buffer as baseline:', baselineEntry.entry_date)
+      } else if (monthData && monthData.length > 0) {
+        baselineEntry = monthData[0]
+        console.log('Using first month entry as baseline:', baselineEntry.entry_date)
+      } else {
+        console.log('No baseline found - returning zeros')
+      }
+
+      // Determine latest: most recent upload in month
+      if (monthData && monthData.length > 0) {
+        latestEntry = monthData[monthData.length - 1]
+        console.log('Latest entry selected:', latestEntry.entry_date)
+      } else {
+        console.log('No latest found - returning zeros')
+      }
+
+      // Strict validation: Must have BOTH baseline and latest, AND they must be different
+      if (!baselineEntry || !latestEntry) {
+        console.log('Missing baseline or latest - returning zeros')
+        return {
+          totalXP: 0,
+          pokemonCaught: 0,
+          distanceWalked: 0,
+          pokestopsVisited: 0,
+          uniquePokedexEntries: 0,
+          xpPerDay: 0,
+          catchesPerDay: 0,
+          distancePerDay: 0,
+          stopsPerDay: 0,
+          startDate: monthStartStr,
+          endDate: monthEndStr
+        }
+      }
+
+      // Check if baseline and latest are the same entry
+      if (baselineEntry.id === latestEntry.id) {
+        console.log('Baseline equals latest (same entry) - returning zeros')
+        return {
+          totalXP: 0,
+          pokemonCaught: 0,
+          distanceWalked: 0,
+          pokestopsVisited: 0,
+          uniquePokedexEntries: 0,
+          xpPerDay: 0,
+          catchesPerDay: 0,
+          distancePerDay: 0,
+          stopsPerDay: 0,
+          startDate: monthStartStr,
+          endDate: monthEndStr
+        }
+      }
+
+      // Calculate deltas (latest - baseline)
+      const totalXP = Math.max(0, latestEntry.total_xp - baselineEntry.total_xp)
+      const pokemonCaught = Math.max(0, latestEntry.pokemon_caught - baselineEntry.pokemon_caught)
+      const distanceWalked = Math.max(0, latestEntry.distance_walked - baselineEntry.distance_walked)
+      const pokestopsVisited = Math.max(0, latestEntry.pokestops_visited - baselineEntry.pokestops_visited)
+      const uniquePokedexEntries = Math.max(0, latestEntry.unique_pokedex_entries - baselineEntry.unique_pokedex_entries)
+
+      // Calculate days in current month so far
+      const daysInMonth = now.getUTCDate() // Days from 1st to today
+
+      console.log('Calculated Monthly Deltas:', {
+        distance: distanceWalked,
+        caught: pokemonCaught,
+        stops: pokestopsVisited,
+        xp: totalXP,
+        baseline: baselineEntry.entry_date,
+        latest: latestEntry.entry_date,
+        daysInMonth
+      })
+
+      // Return the calculated deltas with proper formatting
+      return {
+        totalXP,
+        pokemonCaught,
+        distanceWalked: Math.round(distanceWalked * 10) / 10, // One decimal place
+        pokestopsVisited,
+        uniquePokedexEntries,
+        xpPerDay: Math.round(totalXP / daysInMonth),
+        catchesPerDay: Math.round(pokemonCaught / daysInMonth),
+        distancePerDay: Math.round((distanceWalked / daysInMonth) * 10) / 10,
+        stopsPerDay: Math.round(pokestopsVisited / daysInMonth),
+        startDate: monthStartStr,
+        endDate: monthEndStr
+      }
+    } catch (error) {
+      console.error('Error in calculateCurrentMonthGrindStats:', error)
+      throw error
+    }
+  },
+
+  // OLD FUNCTION - Calculate monthly grind stats (last 30 days)
+  // DEPRECATED: Use calculateCurrentMonthGrindStats instead
   async calculateMonthlyGrindStats(userId?: string): Promise<StatCalculationResult> {
     try {
       const { data: { user } } = await supabase.auth.getUser()
