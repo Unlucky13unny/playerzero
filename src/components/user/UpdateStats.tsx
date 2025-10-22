@@ -25,8 +25,8 @@ export const UpdateStats = () => {
   
   // NEW: Upload mode selection modal state
   const [showUploadModal, setShowUploadModal] = useState(false)
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [_uploadMode, setUploadMode] = useState<'manual' | 'extract' | null>(null)
+  const [uploadMode, setUploadMode] = useState<'manual' | 'extract' | null>(null)
+  const [manualModeConfirmed, setManualModeConfirmed] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -60,34 +60,57 @@ export const UpdateStats = () => {
   // NEW: Handle opening the upload mode selection modal
   const handleOpenUploadModal = () => {
     setShowUploadModal(true)
-    setUploadMode(null)
+    // If already in manual mode and have a file, don't reset
+    if (!manualModeConfirmed) {
+      setUploadMode(null)
+    }
+    // Immediately trigger file upload if no file selected yet
+    if (!selectedFile) {
+      setTimeout(() => {
+        const fileInput = document.getElementById('screenshot-upload') as HTMLInputElement
+        if (fileInput) {
+          fileInput.click()
+        }
+      }, 100)
+    }
   }
 
   // NEW: Handle manual entry mode selection
   const handleSelectManualMode = () => {
-    setShowUploadModal(false)
+    // DON'T close modal - show confirmation instead
     setUploadMode('manual')
-    // DON'T discard the uploaded screenshot - keep it for verification
-    // setSelectedFile(null) - REMOVED
+    setManualModeConfirmed(true)
     setOcrMessage(null)
     setHasExtractedStats(false)
   }
 
   // NEW: Handle direct extract mode selection
-  const handleSelectExtractMode = () => {
+  const handleSelectExtractMode = async () => {
+    // Close modal and trigger OCR extraction
     setShowUploadModal(false)
     setUploadMode('extract')
-    // Trigger file input click
-    const fileInput = document.getElementById('screenshot-upload') as HTMLInputElement
-    if (fileInput) {
-      fileInput.click()
+    setManualModeConfirmed(false)
+    if (selectedFile) {
+      await processOCR(selectedFile)
     }
+  }
+
+  // NEW: Confirm manual mode and close modal
+  const handleConfirmManualMode = () => {
+    setShowUploadModal(false)
+    // Keep uploadMode as 'manual' and file attached
+    // Scroll to form
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // NEW: Close upload modal
   const handleCloseUploadModal = () => {
     setShowUploadModal(false)
-    setUploadMode(null)
+    // Reset if user cancels
+    if (!manualModeConfirmed && uploadMode !== 'extract') {
+      setUploadMode(null)
+      setSelectedFile(null)
+    }
   }
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
@@ -107,18 +130,8 @@ export const UpdateStats = () => {
     
     if (file) {
       console.log('📁 Image selected:', file.name, 'Size:', file.size, 'bytes')
-      console.log('✅ Preview ready. Click "Extract Stats from Image" button to process.')
+      console.log('✅ Preview ready. Choose extraction method from toggle buttons.')
     }
-  }
-
-  const handleExtractStats = async () => {
-    if (!selectedFile) {
-      setOcrMessage('❌ Please select an image first')
-      return
-    }
-    
-    console.log('🔘 User clicked "Extract Stats" button')
-    await processOCR(selectedFile)
   }
 
   const processOCR = async (file: File) => {
@@ -1279,7 +1292,9 @@ export const UpdateStats = () => {
             position: 'relative',
             width: isMobile ? '353px' : '400px',
             height: selectedFile 
-              ? (isMobile ? '613px' : '680px')  // Figma height: 613px for mobile
+              ? (uploadMode === 'manual' && manualModeConfirmed 
+                  ? (isMobile ? '540px' : '600px')  // Confirmation view height
+                  : (isMobile ? '613px' : '680px'))  // Image preview height
               : (isMobile ? '241px' : '280px'), // Original height
             
             // Background - Figma: bg (White)
@@ -1314,15 +1329,16 @@ export const UpdateStats = () => {
                 borderRadius: '40px',
               }}
             >
-              {/* Extract Stats Button - Figma: Button / Secondary (Active) */}
+              {/* Extract Stats Button */}
               <button
                 type="button"
                 onClick={handleSelectExtractMode}
+                disabled={!selectedFile || (uploadMode === 'manual' && manualModeConfirmed)}
                 style={{
                   // Auto layout
                   display: 'flex',
                   flexDirection: 'row',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'center',
                   alignItems: 'center',
                   padding: '7px 20px',
                   gap: '10px',
@@ -1331,8 +1347,8 @@ export const UpdateStats = () => {
                   width: '114px',
                   height: '28px',
                   
-                  // Style - Red when active
-                  background: '#DC2627',
+                  // Style - Red when active, grey otherwise
+                  background: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? '#E5E7EB' : '#DC2627',
                   borderRadius: '40px',
                   border: 'none',
                   
@@ -1341,27 +1357,30 @@ export const UpdateStats = () => {
                   order: 0,
                   flexGrow: 0,
                   
-                  cursor: 'pointer',
+                  cursor: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
+                  opacity: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#B91C1C'
+                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
+                    e.currentTarget.style.background = '#B91C1C'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#DC2627'
+                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
+                    e.currentTarget.style.background = '#DC2627'
+                  }
                 }}
               >
                 <span style={{
-                  // Label - Exact Figma specs
-                  width: '74px',
-                  height: '14px',
-                  fontFamily: 'Inter',
+                  // FIXED: Using Poppins to match app font
+                  fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',
                   lineHeight: '14px',
                   textAlign: 'center',
-                  color: '#FFFFFF',
+                  color: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? '#9CA3AF' : '#FFFFFF',
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
@@ -1370,15 +1389,16 @@ export const UpdateStats = () => {
                 </span>
               </button>
 
-              {/* Update Manually Button - Figma: Button / Secondary (Inactive) */}
+              {/* Update Manually Button */}
               <button
                 type="button"
                 onClick={handleSelectManualMode}
+                disabled={!selectedFile}
                 style={{
                   // Auto layout
                   display: 'flex',
                   flexDirection: 'row',
-                  justifyContent: 'flex-end',
+                  justifyContent: 'center',
                   alignItems: 'center',
                   padding: '7px 20px',
                   gap: '10px',
@@ -1387,8 +1407,8 @@ export const UpdateStats = () => {
                   width: '138px',
                   height: '28px',
                   
-                  // Style - Grey 01 background
-                  background: '#F7F9FB',
+                  // Style - Red when manual mode selected, grey otherwise
+                  background: (uploadMode === 'manual' && manualModeConfirmed) ? '#DC2627' : '#F7F9FB',
                   borderRadius: '40px',
                   border: 'none',
                   
@@ -1397,27 +1417,30 @@ export const UpdateStats = () => {
                   order: 1,
                   flexGrow: 0,
                   
-                  cursor: 'pointer',
+                  cursor: !selectedFile ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
+                  opacity: !selectedFile ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.background = '#EBEFF2'
+                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
+                    e.currentTarget.style.background = '#EBEFF2'
+                  }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.background = '#F7F9FB'
+                  if (selectedFile) {
+                    e.currentTarget.style.background = (uploadMode === 'manual' && manualModeConfirmed) ? '#DC2627' : '#F7F9FB'
+                  }
                 }}
               >
                 <span style={{
-                  // Label - Exact Figma specs
-                  width: '98px',
-                  height: '14px',
-                  fontFamily: 'Inter',
+                  // FIXED: Using Poppins to match app font
+                  fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',
                   lineHeight: '14px',
                   textAlign: 'center',
-                  color: '#DC2627',
+                  color: !selectedFile ? '#9CA3AF' : ((uploadMode === 'manual' && manualModeConfirmed) ? '#FFFFFF' : '#DC2627'),
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
@@ -1464,189 +1487,281 @@ export const UpdateStats = () => {
               }}
             >
               {selectedFile && imagePreview ? (
-                // Image Preview Mode - Figma: Wrap with content
-                <div
-                  style={{
-                    boxSizing: 'border-box',
-                    
-                    // Auto layout
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'center',
-                    alignItems: 'center',
-                    padding: '0px 32px',
-                    gap: '8px',
-                    
-                    // Exact Figma size for Wrap
-                    width: isMobile ? '289px' : '336px',
-                    height: isMobile ? '481px' : '560px',
-                    
-                    // Style - Grey 03 dashed border
-                    border: '2px dashed #E2E6EA',
-                    borderRadius: '24px',
-                    background: '#FFFFFF',
-                    
-                    // Inside auto layout
-                    flex: 'none',
-                    order: 0,
-                    alignSelf: 'stretch',
-                    flexGrow: 1,
-                  }}
-                >
-                  {/* "Selected image" label - Figma specs */}
+                uploadMode === 'manual' && manualModeConfirmed ? (
+                  // Manual Mode Confirmation View
                   <div
                     style={{
-                      width: isMobile ? '225px' : '272px',
-                      height: '21px',
-                      fontFamily: 'Poppins',
-                      fontStyle: 'normal',
-                      fontWeight: 500,
-                      fontSize: '14px',
-                      lineHeight: '21px',
-                      textAlign: 'center',
-                      color: '#242634',
-                      opacity: 0.5,
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '24px 32px',
+                      gap: '16px',
+                      width: isMobile ? '289px' : '336px',
+                      minHeight: isMobile ? '300px' : '350px',
+                      border: '2px solid #10B981',
+                      borderRadius: '24px',
+                      background: '#ECFDF5',
                       flex: 'none',
                       order: 0,
                       alignSelf: 'stretch',
-                      flexGrow: 0,
+                      flexGrow: 1,
                     }}
                   >
-                    Selected image
-                  </div>
-
-                  {/* Image Container - Figma: thumb with rounded corners */}
-                  <div
-                    style={{
-                      width: isMobile ? '181px' : '220px',
-                      height: isMobile ? '356px' : '420px',
-                      borderRadius: '2px',
-                      overflow: 'hidden',
-                      backgroundColor: '#FFFFFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      flex: 'none',
-                      order: 1,
-                      flexGrow: 0,
-                    }}
-                  >
-                    <img
-                      src={imagePreview}
-                      alt="Screenshot preview"
+                    {/* Success checkmark */}
+                    <div
                       style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover',
-                        display: 'block',
+                        width: '64px',
+                        height: '64px',
+                        borderRadius: '50%',
+                        background: '#10B981',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                       }}
-                    />
-                  </div>
-                  
-                  {/* Frame 760 - Button container */}
-                  <div
-                    style={{
-                      // Auto layout
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      padding: '0px',
-                      gap: '4px',
-                      
-                      width: isMobile ? '225px' : '272px',
-                      height: '50px',
-                      
-                      // Inside auto layout
-                      flex: 'none',
-                      order: 2,
-                      alignSelf: 'stretch',
-                      flexGrow: 0,
-                    }}
-                  >
-                    {/* Extract Stats Button - Figma: Button / Secondary (Red) */}
+                    >
+                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+
+                    {/* Title */}
+                    <div
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 600,
+                        fontSize: '18px',
+                        lineHeight: '27px',
+                        textAlign: 'center',
+                        color: '#065F46',
+                      }}
+                    >
+                      Screenshot Attached
+                    </div>
+
+                    {/* Image thumbnail */}
+                    <div
+                      style={{
+                        width: isMobile ? '120px' : '140px',
+                        height: isMobile ? '160px' : '180px',
+                        borderRadius: '8px',
+                        overflow: 'hidden',
+                        border: '2px solid #10B981',
+                        backgroundColor: '#FFFFFF',
+                      }}
+                    >
+                      <img
+                        src={imagePreview}
+                        alt="Screenshot preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </div>
+
+                    {/* Filename */}
+                    <div
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 500,
+                        fontSize: '13px',
+                        lineHeight: '20px',
+                        textAlign: 'center',
+                        color: '#065F46',
+                        maxWidth: '100%',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      {selectedFile.name}
+                    </div>
+
+                    {/* Message */}
+                    <div
+                      style={{
+                        fontFamily: 'Poppins',
+                        fontStyle: 'normal',
+                        fontWeight: 400,
+                        fontSize: '14px',
+                        lineHeight: '21px',
+                        textAlign: 'center',
+                        color: '#047857',
+                      }}
+                    >
+                      Your verification screenshot is attached. You can now manually enter your stats in the form above.
+                    </div>
+
+                    {/* Continue Button */}
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowUploadModal(false);
-                        handleExtractStats();
-                      }}
+                      onClick={handleConfirmManualMode}
                       style={{
-                        // Auto layout
                         display: 'flex',
                         flexDirection: 'row',
-                        justifyContent: 'flex-end',
+                        justifyContent: 'center',
                         alignItems: 'center',
-                        padding: '7px 20px',
+                        padding: '10px 24px',
                         gap: '10px',
-                        
-                        // Exact Figma size
-                        width: isMobile ? '214px' : '252px',
-                        height: '28px',
-                        
-                        // Style
-                        background: '#DB161B',
+                        width: '100%',
+                        maxWidth: '200px',
+                        height: '40px',
+                        background: '#10B981',
                         borderRadius: '6px',
                         border: 'none',
-                        
-                        // Inside auto layout
-                        flex: 'none',
-                        order: 0,
-                        flexGrow: 0,
-                        
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
+                        marginTop: '8px',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#B91C1C'
+                        e.currentTarget.style.background = '#059669'
                       }}
                       onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#DB161B'
+                        e.currentTarget.style.background = '#10B981'
                       }}
                     >
                       <span
                         style={{
-                          // Label - Figma specs
-                          width: isMobile ? '174px' : '212px',
-                          height: '14px',
                           fontFamily: 'Poppins',
                           fontStyle: 'normal',
                           fontWeight: 600,
-                          fontSize: '12px',
-                          lineHeight: '14px',
-                          textAlign: 'center',
+                          fontSize: '15px',
+                          lineHeight: '23px',
                           color: '#FFFFFF',
-                          flex: 'none',
-                          order: 0,
-                          flexGrow: 0,
                         }}
                       >
-                        Extract stats from the image
+                        Continue
                       </span>
                     </button>
-
-                    {/* OCR text - Figma specs */}
+                  </div>
+                ) : (
+                  // Image Preview Mode - Figma: Wrap with content
+                  <div
+                    style={{
+                      boxSizing: 'border-box',
+                      
+                      // Auto layout
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0px 32px',
+                      gap: '8px',
+                      
+                      // Exact Figma size for Wrap
+                      width: isMobile ? '289px' : '336px',
+                      height: isMobile ? '481px' : '560px',
+                      
+                      // Style - Grey 03 dashed border
+                      border: '2px dashed #E2E6EA',
+                      borderRadius: '24px',
+                      background: '#FFFFFF',
+                      
+                      // Inside auto layout
+                      flex: 'none',
+                      order: 0,
+                      alignSelf: 'stretch',
+                      flexGrow: 1,
+                    }}
+                  >
+                    {/* "Selected image" label - Figma specs */}
                     <div
                       style={{
                         width: isMobile ? '225px' : '272px',
-                        height: '18px',
+                        height: '21px',
                         fontFamily: 'Poppins',
                         fontStyle: 'normal',
-                        fontWeight: 400,
-                        fontSize: '12px',
-                        lineHeight: '18px',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '21px',
                         textAlign: 'center',
                         color: '#242634',
                         opacity: 0.5,
                         flex: 'none',
-                        order: 1,
+                        order: 0,
                         alignSelf: 'stretch',
                         flexGrow: 0,
                       }}
                     >
-                      Click to analize image using OCR
+                      Selected image
+                    </div>
+
+                    {/* Image Container - Figma: thumb with rounded corners */}
+                    <div
+                      style={{
+                        width: isMobile ? '181px' : '220px',
+                        height: isMobile ? '356px' : '420px',
+                        borderRadius: '2px',
+                        overflow: 'hidden',
+                        backgroundColor: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0,
+                      }}
+                    >
+                      <img
+                        src={imagePreview}
+                        alt="Screenshot preview"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          display: 'block',
+                        }}
+                      />
+                    </div>
+                    
+                    {/* Frame 760 - Button container */}
+                    <div
+                      style={{
+                        // Auto layout
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '0px',
+                        gap: '4px',
+                        
+                        width: isMobile ? '225px' : '272px',
+                        height: '50px',
+                        
+                        // Inside auto layout
+                        flex: 'none',
+                        order: 2,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      {/* Instructions text */}
+                      <div
+                        style={{
+                          width: isMobile ? '225px' : '272px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          textAlign: 'center',
+                          color: '#242634',
+                          opacity: 0.7,
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Choose "Extract stats" to auto-fill with OCR, or "Update manually" to enter values yourself
+                      </div>
                     </div>
                   </div>
-                </div>
+                )
               ) : (
                 // Dashed Upload Box (Original)
                 <div
@@ -1706,7 +1821,8 @@ export const UpdateStats = () => {
                       whiteSpace: 'pre-line',
                     }}
                   >
-                    Click to upload your Trainer{'\n'}Profile screenshot
+                    upload a screenshot.
+
                   </p>
                 </div>
               )}

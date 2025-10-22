@@ -278,8 +278,8 @@ export const UserHome = () => {
           break;
         case 'monthly':
           try {
-            // Use the monthly calculation from dashboardService
-            const monthStats = await dashboardService.calculateMonthlyGrindStats(user.id);
+            // Use the new current month calculation
+            const monthStats = await dashboardService.calculateCurrentMonthGrindStats(user.id);
             filteredData = {
               distance_walked: Math.round(monthStats.distanceWalked * 10) / 10, // One decimal place
               pokemon_caught: Math.round(monthStats.pokemonCaught), // Whole number

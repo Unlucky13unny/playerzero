@@ -378,8 +378,8 @@ export function SocialConnectModal({ isOpen, onClose, onConnect, editingPlatform
                   {/* Group 384 - Icon container */}
                   <div
                     className="relative flex items-center justify-center rounded-full"
-                    style={{
-                      width: "44px",
+                  style={{
+                    width: "44px",
                     height: "44px",
                     backgroundColor: selectedPlatform.isGray ? "#848282" : "#000000",
                   }}
