@@ -114,7 +114,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
             marginTop: '20px',
             marginBottom: '20px',
           }}>
-            {/* Title: Review Stats Update */}
+            {/* Title: Stat correction review */}
               <div style={{
               width: '100%',
               height: '30px',
@@ -130,7 +130,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               alignSelf: 'stretch',
               flexGrow: 0,
             }}>
-              Review Stats Update
+              Stat correction review
         </div>
 
             {/* Frame 755 - Stats comparison container */}
@@ -201,7 +201,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       boxSizing: 'border-box',
                       display: 'flex',
                       flexDirection: 'row',
-                      justifyContent: change.label === 'Distance Walked' ? 'space-between' : 'flex-start',
+                      justifyContent: 'flex-start',
                       alignItems: 'center',
                       padding: '9px',
                       gap: '10px',
@@ -229,21 +229,6 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       }}>
                         {change.oldValue}
                       </span>
-                      {change.label === 'Distance Walked' && (
-                      <span style={{
-                          fontFamily: 'Poppins',
-                          fontStyle: 'normal',
-                          fontWeight: 400,
-                          fontSize: '12px',
-                          lineHeight: '18px',
-                          color: '#000000',
-                          flex: 'none',
-                          order: 1,
-                          flexGrow: 0,
-                        }}>
-                          km
-                      </span>
-                      )}
                     </div>
 
                     {/* ArrowRight */}
@@ -267,7 +252,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       boxSizing: 'border-box',
                       display: 'flex',
                       flexDirection: 'row',
-                      justifyContent: change.label === 'Distance Walked' ? 'space-between' : 'flex-start',
+                      justifyContent: 'space-between',
                       alignItems: 'center',
                       padding: '9px',
                       gap: '10px',
@@ -275,40 +260,46 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       width: '135px',
                       height: '36px',
                       
-                      border: `1px solid ${change.isDecrease ? '#FCA5A5' : '#848282'}`,
+                      border: `1px solid ${change.isDecrease ? '#DC2627' : '#848282'}`,
                       borderRadius: '6px',
                       
                       flex: 'none',
                       order: 2,
                       flexGrow: 0,
                     }}>
+                      {/* Value text */}
                       <span style={{
+                        margin: '0 auto',
                         fontFamily: 'Poppins',
                         fontStyle: 'normal',
                         fontWeight: 400,
                         fontSize: '12px',
                         lineHeight: '18px',
-                        color: change.isDecrease ? '#DC2626' : '#000000',
+                        color: change.isDecrease ? '#DC2627' : '#000000',
                         flex: 'none',
                         order: 0,
                         flexGrow: 0,
                       }}>
                         {change.newValue}
                       </span>
-                      {change.label === 'Distance Walked' && (
-                        <span style={{
-                          fontFamily: 'Poppins',
-                          fontStyle: 'normal',
-                          fontWeight: 400,
-                          fontSize: '12px',
-                          lineHeight: '18px',
-                          color: change.isDecrease ? '#DC2626' : '#000000',
-                          flex: 'none',
-                          order: 1,
-                          flexGrow: 0,
-                        }}>
-                          km
-                        </span>
+                      
+                      {/* Red X Icon INSIDE the box for decreasing stats */}
+                      {change.isDecrease && (
+                          <div style={{
+                            marginLeft: 'auto',
+                            marginRight: '0',
+                            width: '20px',
+                            height: '20px',
+                            flex: 'none',
+                            order: 1,
+                            flexGrow: 0,
+                            flexShrink: 0,
+                          }}>
+                           <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                              <circle cx="10" cy="10" r="9" fill="white" stroke="#DC2627" strokeWidth="2"/>
+                              <path d="M6 6L14 14M14 6L6 14" stroke="#DC2627" strokeWidth="2" strokeLinecap="round"/>
+                            </svg>
+                          </div>
                       )}
                     </div>
                   </div>
@@ -316,20 +307,22 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               ))}
           </div>
 
-            {/* Frame 597 - Info box */}
+            {/* Frame 597 - Info/Warning box */}
+            {/* Verification status */}
             <div style={{
               boxSizing: 'border-box',
               display: 'flex',
-              flexDirection: 'row',
-              alignItems: 'center',
-              padding: '8px',
-              gap: isMobile ? '8px' : '24px',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'flex-start',
+              padding: '0px 8px',
+              gap: '8px',
               
-              width: '100%',
-              minHeight: '65px',
+              width: '310px',
+              height: '208px',
               
-              background: 'rgba(43, 196, 156, 0.09)',
-              border: '1px solid #2BC49C',
+              background: 'rgba(220, 38, 39, 0.05)',
+              border: '1px solid #DC2627',
               borderRadius: '8px',
               
               flex: 'none',
@@ -337,18 +330,22 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               alignSelf: 'stretch',
               flexGrow: 0,
             }}>
-              {/* Frame 598 - Content */}
+              {/* Frame 598 */}
               <div style={{
-              display: 'flex',
+                display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '0px',
-                gap: '8px',
+                gap: '16px',
                 
-                flex: '1',
+                width: '286px',
+                height: '54px',
+                
+                flex: 'none',
                 order: 0,
+                flexGrow: 0,
               }}>
-                {/* charm:shield-tick icon */}
+                {/* charm:shield-tick / lucide:info */}
                 <div style={{
                   boxSizing: 'border-box',
                   display: 'flex',
@@ -361,22 +358,32 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                   width: '40px',
                   height: '40px',
                   
-                  background: 'rgba(43, 196, 156, 0.09)',
-                  border: '1px solid #2BC49C',
+                  background: 'rgba(220, 38, 39, 0.05)',
+                  border: '1px solid #DC2627',
                   borderRadius: '4px',
                   
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
-                  flexShrink: 0,
                 }}>
-                  <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M8 0.75L1 3.75V8.75C1 13.55 4.84 17.74 8 18.75C11.16 17.74 15 13.55 15 8.75V3.75L8 0.75Z" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
-                    <path d="M5.5 9.5L7.5 11.5L11 8" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
+                  {hasDecreasingStats ? (
+                    // lucide:info icon
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <g>
+                        <circle cx="12" cy="12" r="10" stroke="#DC2627" strokeWidth="2"/>
+                        <path d="M12 12L12 16" stroke="#DC2627" strokeWidth="2" strokeLinecap="round"/>
+                        <circle cx="12" cy="8" r="0.5" fill="#DC2627" stroke="#DC2627" strokeWidth="2"/>
+                      </g>
+                    </svg>
+                  ) : (
+                    <svg width="16" height="19" viewBox="0 0 16 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M8 0.75L1 3.75V8.75C1 13.55 4.84 17.74 8 18.75C11.16 17.74 15 13.55 15 8.75V3.75L8 0.75Z" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M5.5 9.5L7.5 11.5L11 8" stroke="#2BC49C" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
                 </div>
 
-                {/* Frame 596 - Text */}
+                {/* Frame 596 - Text container */}
                 <div style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -384,71 +391,123 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                   padding: '0px',
                   gap: '2px',
                   
-                  flex: '1',
+                  width: '230px',
+                  height: '54px',
+                  
+                  flex: 'none',
                   order: 1,
+                  flexGrow: 0,
                 }}>
-                <p style={{
+                  {/* One or more stats are lower than your previous values. This is allowed for correcting mistakes. */}
+                  <p style={{
                     margin: 0,
+                    width: '232px',
+                    height: '54px',
+                    
                     fontFamily: 'Poppins',
                     fontStyle: 'normal',
                     fontWeight: 400,
-                  fontSize: '12px',
+                    fontSize: '12px',
                     lineHeight: '18px',
-                    color: hasDecreasingStats ? '#DC2626' : '#2BC49C',
+                    
+                    color: '#DC2627',
+                    
                     flex: 'none',
                     order: 0,
                     flexGrow: 0,
                   }}>
                     {hasDecreasingStats 
-                      ? '⚠️ Your stats are decreasing. Please verify the values are correct before confirming.'
-                      : 'Your stats are increasing as expected. Please verify the values are correct before confirming.'}
+                      ? 'One or more stats are lower than your previous values. This is allowed for correcting mistakes.'
+                      : 'Your stats are increasing as expected.'}
                   </p>
                 </div>
               </div>
-            </div>
 
-            {/* Acknowledgment Checkbox for Decreasing Stats */}
-            {hasDecreasingStats && (
-                <div style={{
-                width: '100%',
-                padding: '12px',
-                background: '#FEF2F2',
-                border: '1px solid #FECACA',
-                borderRadius: '8px',
-                  display: 'flex',
-                  alignItems: 'flex-start',
-                  gap: '8px',
-                  marginTop: '8px',
+              {/* Warning: Repeated stat decreases may result in temporary account restrictions. Please ensure accuracy before confirming. */}
+              {hasDecreasingStats && (
+                <p style={{
+                  margin: 0,
+                  width: '294px',
+                  height: '54px',
+                  
+                  fontFamily: 'Poppins',
+                  fontStyle: 'normal',
+                  fontWeight: 700,
+                  fontSize: '12px',
+                  lineHeight: '18px',
+                  
+                  color: '#DC2627',
+                  
+                  flex: 'none',
+                  order: 2,
+                  alignSelf: 'stretch',
+                  flexGrow: 0,
                 }}>
+                  Warning: Repeated stat decreases may result in temporary account restrictions. Please ensure accuracy before confirming.
+                </p>
+              )}
+
+              {/* Frame 759 - Acknowledgment Checkbox INSIDE the warning box */}
+              {hasDecreasingStats && (
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  padding: '0px',
+                  gap: '8px',
+                  
+                  width: '284px',
+                  height: '72px',
+                  
+                  flex: 'none',
+                  order: 3,
+                  flexGrow: 0,
+                }}>
+                  {/* CheckSquare */}
                   <input
                     type="checkbox"
                     id="acknowledge-decrease"
                     checked={acknowledged}
                     onChange={(e) => setAcknowledged(e.target.checked)}
                     style={{
-                      width: '16px',
-                      height: '16px',
-                      marginTop: '2px',
+                      width: '24px',
+                      height: '24px',
                       cursor: 'pointer',
-                    accentColor: '#DC2627',
-                    flexShrink: 0,
+                      accentColor: '#000000',
+                      
+                      flex: 'none',
+                      order: 0,
+                      flexGrow: 0,
+                      flexShrink: 0,
                     }}
                   />
+                  {/* I understand that I'm correcting a previous mistake. I acknowledge that repeated stat decreases may lead to account restrictions. */}
                   <label
                     htmlFor="acknowledge-decrease"
                     style={{
+                      width: '252px',
+                      height: '72px',
+                      
+                      fontFamily: 'Poppins',
+                      fontStyle: 'normal',
+                      fontWeight: 400,
                       fontSize: '12px',
-                      fontFamily: 'Poppins, sans-serif',
-                    color: '#7F1D1D',
+                      lineHeight: '18px',
+                      
+                      color: '#848282',
+                      
+                      flex: 'none',
+                      order: 1,
+                      flexGrow: 0,
                       cursor: 'pointer',
-                      lineHeight: '1.5',
                       userSelect: 'none',
                     }}
                   >
                     I understand that I'm correcting a previous mistake. I acknowledge that repeated stat decreases may lead to account restrictions.
                   </label>
+                </div>
+              )}
             </div>
-          )}
 
             {/* Frame 215 - Buttons */}
           <div style={{

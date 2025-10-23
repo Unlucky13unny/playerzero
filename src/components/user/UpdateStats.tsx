@@ -27,6 +27,7 @@ export const UpdateStats = () => {
   const [showUploadModal, setShowUploadModal] = useState(false)
   const [uploadMode, setUploadMode] = useState<'manual' | 'extract' | null>(null)
   const [manualModeConfirmed, setManualModeConfirmed] = useState(false)
+  const [_extractModeConfirmed, setExtractModeConfirmed] = useState(false)
 
   useEffect(() => {
     loadProfile()
@@ -77,19 +78,28 @@ export const UpdateStats = () => {
 
   // NEW: Handle manual entry mode selection
   const handleSelectManualMode = () => {
-    // DON'T close modal - show confirmation instead
+    // Just toggle the mode - don't confirm yet
     setUploadMode('manual')
-    setManualModeConfirmed(true)
+    setManualModeConfirmed(false)
+    setExtractModeConfirmed(false)
     setOcrMessage(null)
     setHasExtractedStats(false)
   }
 
   // NEW: Handle direct extract mode selection
-  const handleSelectExtractMode = async () => {
-    // Close modal and trigger OCR extraction
-    setShowUploadModal(false)
+  const handleSelectExtractMode = () => {
+    // Just toggle the mode - don't confirm yet
     setUploadMode('extract')
+    setExtractModeConfirmed(false)
     setManualModeConfirmed(false)
+    setOcrMessage(null)
+    setHasExtractedStats(false)
+  }
+  
+  // NEW: Confirm extract mode and trigger OCR
+  const handleConfirmExtractMode = async () => {
+    setExtractModeConfirmed(true)
+    setShowUploadModal(false)
     if (selectedFile) {
       await processOCR(selectedFile)
     }
@@ -97,6 +107,7 @@ export const UpdateStats = () => {
 
   // NEW: Confirm manual mode and close modal
   const handleConfirmManualMode = () => {
+    setManualModeConfirmed(true)
     setShowUploadModal(false)
     // Keep uploadMode as 'manual' and file attached
     // Scroll to form
@@ -1333,7 +1344,7 @@ export const UpdateStats = () => {
               <button
                 type="button"
                 onClick={handleSelectExtractMode}
-                disabled={!selectedFile || (uploadMode === 'manual' && manualModeConfirmed)}
+                disabled={!selectedFile}
                 style={{
                   // Auto layout
                   display: 'flex',
@@ -1347,8 +1358,8 @@ export const UpdateStats = () => {
                   width: '114px',
                   height: '28px',
                   
-                  // Style - Red when active, grey otherwise
-                  background: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? '#E5E7EB' : '#DC2627',
+                  // Style - Red when extract mode selected, grey otherwise
+                  background: !selectedFile ? '#E5E7EB' : (uploadMode === 'extract' ? '#000000' : '#F7F9FB'),
                   borderRadius: '40px',
                   border: 'none',
                   
@@ -1357,30 +1368,29 @@ export const UpdateStats = () => {
                   order: 0,
                   flexGrow: 0,
                   
-                  cursor: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? 'not-allowed' : 'pointer',
+                  cursor: !selectedFile ? 'not-allowed' : 'pointer',
                   transition: 'all 0.2s ease',
-                  opacity: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? 0.6 : 1,
+                  opacity: !selectedFile ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
-                    e.currentTarget.style.background = '#B91C1C'
+                  if (selectedFile && uploadMode !== 'extract') {
+                    e.currentTarget.style.background = '#EBEFF2'
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
-                    e.currentTarget.style.background = '#DC2627'
+                  if (selectedFile) {
+                    e.currentTarget.style.background = uploadMode === 'extract' ? '#000000' : '#F7F9FB'
                   }
                 }}
               >
                 <span style={{
-                  // FIXED: Using Poppins to match app font
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',
                   lineHeight: '14px',
                   textAlign: 'center',
-                  color: !selectedFile || (uploadMode === 'manual' && manualModeConfirmed) ? '#9CA3AF' : '#FFFFFF',
+                  color: !selectedFile ? '#9CA3AF' : (uploadMode === 'extract' ? '#FFFFFF' : '#000000'),
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
@@ -1407,8 +1417,8 @@ export const UpdateStats = () => {
                   width: '138px',
                   height: '28px',
                   
-                  // Style - Red when manual mode selected, grey otherwise
-                  background: (uploadMode === 'manual' && manualModeConfirmed) ? '#DC2627' : '#F7F9FB',
+                  // Style - Black when manual mode selected, grey otherwise
+                  background: uploadMode === 'manual' ? '#000000' : '#F7F9FB',
                   borderRadius: '40px',
                   border: 'none',
                   
@@ -1422,25 +1432,24 @@ export const UpdateStats = () => {
                   opacity: !selectedFile ? 0.6 : 1,
                 }}
                 onMouseEnter={(e) => {
-                  if (selectedFile && !(uploadMode === 'manual' && manualModeConfirmed)) {
+                  if (selectedFile && uploadMode !== 'manual') {
                     e.currentTarget.style.background = '#EBEFF2'
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (selectedFile) {
-                    e.currentTarget.style.background = (uploadMode === 'manual' && manualModeConfirmed) ? '#DC2627' : '#F7F9FB'
+                    e.currentTarget.style.background = uploadMode === 'manual' ? '#000000' : '#F7F9FB'
                   }
                 }}
               >
                 <span style={{
-                  // FIXED: Using Poppins to match app font
-                  fontFamily: 'Poppins',
+                  fontFamily: 'Inter',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',
                   lineHeight: '14px',
                   textAlign: 'center',
-                  color: !selectedFile ? '#9CA3AF' : ((uploadMode === 'manual' && manualModeConfirmed) ? '#FFFFFF' : '#DC2627'),
+                  color: !selectedFile ? '#9CA3AF' : (uploadMode === 'manual' ? '#FFFFFF' : '#000000'),
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
@@ -1487,8 +1496,8 @@ export const UpdateStats = () => {
               }}
             >
               {selectedFile && imagePreview ? (
-                uploadMode === 'manual' && manualModeConfirmed ? (
-                  // Manual Mode Confirmation View
+                uploadMode === 'manual' ? (
+                  // Manual Mode Confirmation View - Exact CSS from design
                   <div
                     style={{
                       boxSizing: 'border-box',
@@ -1496,60 +1505,50 @@ export const UpdateStats = () => {
                       flexDirection: 'column',
                       justifyContent: 'center',
                       alignItems: 'center',
-                      padding: '24px 32px',
-                      gap: '16px',
-                      width: isMobile ? '289px' : '336px',
-                      minHeight: isMobile ? '300px' : '350px',
-                      border: '2px solid #10B981',
+                      padding: '0px 32px',
+                      gap: '8px',
+                      width: '289px',
+                      height: '481px',
+                      border: '2px dashed #E2E6EA',
                       borderRadius: '24px',
-                      background: '#ECFDF5',
                       flex: 'none',
                       order: 0,
                       alignSelf: 'stretch',
                       flexGrow: 1,
                     }}
                   >
-                    {/* Success checkmark */}
+                    {/* "Selected image" label - Exact CSS */}
                     <div
                       style={{
-                        width: '64px',
-                        height: '64px',
-                        borderRadius: '50%',
-                        background: '#10B981',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-
-                    {/* Title */}
-                    <div
-                      style={{
+                        width: '225px',
+                        height: '21px',
                         fontFamily: 'Poppins',
                         fontStyle: 'normal',
-                        fontWeight: 600,
-                        fontSize: '18px',
-                        lineHeight: '27px',
+                        fontWeight: 500,
+                        fontSize: '14px',
+                        lineHeight: '21px',
                         textAlign: 'center',
-                        color: '#065F46',
+                        color: '#242634',
+                        opacity: 0.5,
+                        flex: 'none',
+                        order: 0,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
                       }}
                     >
-                      Screenshot Attached
+                      Selected image
                     </div>
 
-                    {/* Image thumbnail */}
+                    {/* thumb - Image display - Exact CSS */}
                     <div
                       style={{
-                        width: isMobile ? '120px' : '140px',
-                        height: isMobile ? '160px' : '180px',
-                        borderRadius: '8px',
+                        width: '181px',
+                        height: '356px',
+                        borderRadius: '2px',
                         overflow: 'hidden',
-                        border: '2px solid #10B981',
-                        backgroundColor: '#FFFFFF',
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0,
                       }}
                     >
                       <img
@@ -1563,81 +1562,249 @@ export const UpdateStats = () => {
                       />
                     </div>
 
-                    {/* Filename */}
+                    {/* Frame 760 - Button container - Exact CSS */}
                     <div
                       style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '0px',
+                        gap: '4px',
+                        width: '225px',
+                        height: '50px',
+                        flex: 'none',
+                        order: 2,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      {/* "Update stats manually" button - Exact CSS */}
+                      <button
+                        type="button"
+                        onClick={handleConfirmManualMode}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'flex-end',
+                          alignItems: 'center',
+                          padding: '7px 20px',
+                          gap: '10px',
+                          width: '179px',
+                          height: '28px',
+                          background: '#DB161B',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#B91C1C'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#DB161B'
+                        }}
+                      >
+                        {/* Label - Exact CSS */}
+                        <span
+                          style={{
+                            width: '139px',
+                            height: '14px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '11px',
+                            lineHeight: '14px',
+                            textAlign: 'center',
+                            color: '#FFFFFF',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          Update stats manually
+                        </span>
+                      </button>
+
+                      {/* Helper text - Exact CSS */}
+                      <div
+                        style={{
+                          width: '225px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          textAlign: 'center',
+                          color: '#242634',
+                          opacity: 0.5,
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Click to manually update the stats
+                      </div>
+                    </div>
+                  </div>
+                ) : uploadMode === 'extract' ? (
+                  // Extract Mode Confirmation View - Exact CSS from design
+                  <div
+                    style={{
+                      boxSizing: 'border-box',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0px 32px',
+                      gap: '8px',
+                      width: '289px',
+                      height: '481px',
+                      border: '2px dashed #E2E6EA',
+                      borderRadius: '24px',
+                      flex: 'none',
+                      order: 0,
+                      alignSelf: 'stretch',
+                      flexGrow: 1,
+                    }}
+                  >
+                    {/* "Selected image" label - Exact CSS */}
+                    <div
+                      style={{
+                        width: '225px',
+                        height: '21px',
                         fontFamily: 'Poppins',
                         fontStyle: 'normal',
                         fontWeight: 500,
-                        fontSize: '13px',
-                        lineHeight: '20px',
-                        textAlign: 'center',
-                        color: '#065F46',
-                        maxWidth: '100%',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {selectedFile.name}
-                    </div>
-
-                    {/* Message */}
-                    <div
-                      style={{
-                        fontFamily: 'Poppins',
-                        fontStyle: 'normal',
-                        fontWeight: 400,
                         fontSize: '14px',
                         lineHeight: '21px',
                         textAlign: 'center',
-                        color: '#047857',
+                        color: '#242634',
+                        opacity: 0.5,
+                        flex: 'none',
+                        order: 0,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
                       }}
                     >
-                      Your verification screenshot is attached. You can now manually enter your stats in the form above.
+                      Selected image
                     </div>
 
-                    {/* Continue Button */}
-                    <button
-                      type="button"
-                      onClick={handleConfirmManualMode}
+                    {/* thumb - Image display - Exact CSS */}
+                    <div
                       style={{
-                        display: 'flex',
-                        flexDirection: 'row',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        padding: '10px 24px',
-                        gap: '10px',
-                        width: '100%',
-                        maxWidth: '200px',
-                        height: '40px',
-                        background: '#10B981',
-                        borderRadius: '6px',
-                        border: 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        marginTop: '8px',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#059669'
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = '#10B981'
+                        width: '181px',
+                        height: '356px',
+                        borderRadius: '2px',
+                        overflow: 'hidden',
+                        flex: 'none',
+                        order: 1,
+                        flexGrow: 0,
                       }}
                     >
-                      <span
+                      <img
+                        src={imagePreview}
+                        alt="Screenshot preview"
                         style={{
-                          fontFamily: 'Poppins',
-                          fontStyle: 'normal',
-                          fontWeight: 600,
-                          fontSize: '15px',
-                          lineHeight: '23px',
-                          color: '#FFFFFF',
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                        }}
+                      />
+                    </div>
+
+                    {/* Frame 760 - Button container - Exact CSS */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        padding: '0px',
+                        gap: '4px',
+                        width: '225px',
+                        height: '50px',
+                        flex: 'none',
+                        order: 2,
+                        alignSelf: 'stretch',
+                        flexGrow: 0,
+                      }}
+                    >
+                      {/* "Extract stats" button - Exact CSS */}
+                      <button
+                        type="button"
+                        onClick={handleConfirmExtractMode}
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'row',
+                          justifyContent: 'center',
+                          alignItems: 'center',
+                          padding: '7px 20px',
+                          gap: '10px',
+                          width: '179px',
+                          height: '28px',
+                          background: '#DB161B',
+                          borderRadius: '6px',
+                          border: 'none',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease',
+                          flex: 'none',
+                          order: 0,
+                          flexGrow: 0,
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#B91C1C'
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#DB161B'
                         }}
                       >
-                        Continue
-                      </span>
-                    </button>
+                        {/* Label - Exact CSS */}
+                        <span
+                          style={{
+                            width: '165px',
+                            height: '14px',
+                            fontFamily: 'Poppins',
+                            fontStyle: 'normal',
+                            fontWeight: 600,
+                            fontSize: '11px',
+                            lineHeight: '14px',
+                            textAlign: 'center',
+                            color: '#FFFFFF',
+                            flex: 'none',
+                            order: 0,
+                            flexGrow: 0,
+                          }}
+                        >
+                          Extract stats from the image
+                        </span>
+                      </button>
+
+                      {/* Helper text - Exact CSS */}
+                      <div
+                        style={{
+                          width: '225px',
+                          height: '18px',
+                          fontFamily: 'Poppins',
+                          fontStyle: 'normal',
+                          fontWeight: 400,
+                          fontSize: '12px',
+                          lineHeight: '18px',
+                          textAlign: 'center',
+                          color: '#242634',
+                          opacity: 0.5,
+                          flex: 'none',
+                          order: 1,
+                          alignSelf: 'stretch',
+                          flexGrow: 0,
+                        }}
+                      >
+                        Click to extract stats automatically
+                      </div>
+                    </div>
                   </div>
                 ) : (
                   // Image Preview Mode - Figma: Wrap with content
