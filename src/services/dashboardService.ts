@@ -24,10 +24,12 @@ export interface LeaderboardEntry {
   catches_delta?: number
   distance_delta?: number
   pokestops_delta?: number
+  dex_delta?: number
   total_xp?: number
   pokemon_caught?: number
   distance_walked?: number
   pokestops_visited?: number
+  unique_pokedex_entries?: number
   last_update: string
 }
 
@@ -78,7 +80,7 @@ export interface StatUpdateResponse {
 
 export interface LeaderboardParams {
   period: 'weekly' | 'monthly' | 'all-time';
-  sortBy: 'xp' | 'catches' | 'distance' | 'pokestops';
+  sortBy: 'xp' | 'catches' | 'distance' | 'pokestops' | 'dex';
   view: 'all' | 'country' | 'team' | 'search';
   filterValue?: string; // country code, team color, or search query when view is filtered
 }
@@ -106,8 +108,8 @@ export interface StatBounds {
 }
 
 export const dashboardService = {
-  // Get leaderboard data
-  async getLeaderboard(params: LeaderboardParams) {
+  // Get LIVE leaderboard data (current period)
+  async getLiveLeaderboard(params: LeaderboardParams) {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) {
       throw new Error('User not authenticated')
@@ -116,20 +118,8 @@ export const dashboardService = {
     let query: string
     
     if (params.period === 'weekly') {
-      // Try to get completed week leaderboard, fallback to current week if none exists
-      const completedResult = await this.getCompletedPeriodLeaderboard('weekly', params)
-      if (completedResult.data && completedResult.data.length > 0) {
-        return completedResult
-      }
-      // Fallback to current week if no completed periods
       query = 'current_weekly_leaderboard'
     } else if (params.period === 'monthly') {
-      // Try to get completed month leaderboard, fallback to current month if none exists
-      const completedResult = await this.getCompletedPeriodLeaderboard('monthly', params)
-      if (completedResult.data && completedResult.data.length > 0) {
-        return completedResult
-      }
-      // Fallback to current month if no completed periods
       query = 'current_monthly_leaderboard'
     } else {
       // All-time shows live current totals
@@ -145,23 +135,129 @@ export const dashboardService = {
       dbQuery = dbQuery.eq('team_color', params.filterValue)
     }
 
-    const { data, error } = await dbQuery.limit(100)
+    const { data, error } = await dbQuery.limit(1000)
 
     if (error) {
-      console.error('Leaderboard query error:', error)
+      console.error('Live leaderboard query error:', error)
       throw error
     }
 
-    // Sort the data for all-time only (weekly/monthly are handled by getCompletedPeriodLeaderboard)
-    if (data && data.length > 0 && params.period === 'all-time') {
-      const sortField = params.sortBy === 'xp' ? 'total_xp' : 
-                       params.sortBy === 'catches' ? 'pokemon_caught' : 
-                       params.sortBy === 'distance' ? 'distance_walked' : 'pokestops_visited'
+    // Debug: Check if unique_pokedex_entries is present in data
+    if (params.sortBy === 'dex' && data && data.length > 0) {
+      console.log('🔍 Dex data check:', {
+        period: params.period,
+        viewName: query,
+        sampleEntry: {
+          trainer: data[0]?.trainer_name,
+          unique_pokedex_entries: data[0]?.unique_pokedex_entries,
+          dex_delta: data[0]?.dex_delta,
+          allFields: Object.keys(data[0] || {})
+        }
+      })
+    }
+
+    // Sort the data
+    if (data && data.length > 0) {
+      const sortField = params.period === 'all-time' 
+        ? (params.sortBy === 'xp' ? 'total_xp' : 
+           params.sortBy === 'catches' ? 'pokemon_caught' : 
+           params.sortBy === 'distance' ? 'distance_walked' : 
+           params.sortBy === 'dex' ? 'unique_pokedex_entries' : 'pokestops_visited')
+        : (params.sortBy === 'xp' ? 'xp_delta' : 
+           params.sortBy === 'catches' ? 'catches_delta' : 
+           params.sortBy === 'distance' ? 'distance_delta' : 
+           params.sortBy === 'dex' ? 'dex_delta' : 'pokestops_delta')
       
       data.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
     }
 
     return { data: data as LeaderboardEntry[], error: null }
+  },
+
+  // Get LOCKED leaderboard data (previous period winners)
+  async getLockedLeaderboard(params: LeaderboardParams) {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) {
+      throw new Error('User not authenticated')
+    }
+
+    // All-time has no locked results
+    if (params.period === 'all-time') {
+      return { data: [], error: null }
+    }
+
+    // Use the dedicated previous period winner views
+    const viewName = params.period === 'weekly' ? 'previous_week_winners' : 'previous_month_winners'
+
+    let dbQuery = supabase.from(viewName).select('*')
+
+    // Apply view filters
+    if (params.view === 'country' && params.filterValue) {
+      dbQuery = dbQuery.eq('country', params.filterValue)
+    } else if (params.view === 'team' && params.filterValue) {
+      dbQuery = dbQuery.eq('team_color', params.filterValue)
+    }
+
+    const { data, error } = await dbQuery
+
+    if (error) {
+      console.error('Locked leaderboard error:', error)
+      return { data: [], error: null }
+    }
+
+    if (!data || data.length === 0) {
+      console.log(`No data found in ${viewName}`)
+      return { data: [], error: null }
+    }
+
+    // Debug: Check if dex_delta is present in locked data
+    if (params.sortBy === 'dex' && data && data.length > 0) {
+      console.log('🔍 Locked Dex data check:', {
+        period: params.period,
+        viewName: viewName,
+        sampleEntry: {
+          trainer: data[0]?.trainer_name,
+          dex_delta: data[0]?.dex_delta,
+          allFields: Object.keys(data[0] || {})
+        }
+      })
+    }
+
+    // Sort by the requested stat
+    const sortField = params.sortBy === 'xp' ? 'xp_delta' : 
+                     params.sortBy === 'catches' ? 'catches_delta' : 
+                     params.sortBy === 'distance' ? 'distance_delta' : 
+                     params.sortBy === 'dex' ? 'dex_delta' : 'pokestops_delta'
+    
+    const sortedData = [...data].sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
+
+    // Convert to LeaderboardEntry format
+    const formattedData = sortedData.map((entry: any) => ({
+      profile_id: entry.profile_id,
+      trainer_name: entry.trainer_name,
+      country: entry.country,
+      team_color: entry.team_color,
+      profile_screenshot_url: entry.profile_screenshot_url,
+      xp_delta: entry.xp_delta,
+      catches_delta: entry.catches_delta,
+      distance_delta: entry.distance_delta,
+      pokestops_delta: entry.pokestops_delta,
+      dex_delta: entry.dex_delta,
+      total_xp: undefined,
+      pokemon_caught: undefined,
+      distance_walked: undefined,
+      pokestops_visited: undefined,
+      unique_pokedex_entries: undefined,
+      last_update: entry.last_update
+    }))
+
+    return { data: formattedData as LeaderboardEntry[], error: null }
+  },
+
+  // Legacy function for backward compatibility
+  async getLeaderboard(params: LeaderboardParams) {
+    // Default to live leaderboard
+    return this.getLiveLeaderboard(params)
   },
 
   // Get completed period leaderboard
@@ -1303,6 +1399,150 @@ export const dashboardService = {
       pokestops_visited: Math.round(data.reduce((sum: number, p: any) => sum + p.pokestops_visited, 0) / count),
       unique_pokedex_entries: Math.round(data.reduce((sum: number, p: any) => sum + p.unique_pokedex_entries, 0) / count),
       trainer_level: Math.round(data.reduce((sum: number, p: any) => sum + p.trainer_level, 0) / count)
+    }
+  },
+
+  // OPTIMIZED: Get all period stats in a single query with aggregations
+  async getPeriodRadarData(profileId: string, country: string, teamColor: string, period: 'weekly' | 'monthly') {
+    const viewName = period === 'weekly' ? 'current_weekly_leaderboard' : 'current_monthly_leaderboard'
+    
+    // Single optimized query to get all data at once
+    const { data, error } = await supabase
+      .from(viewName)
+      .select('profile_id, country, team_color, xp_delta, catches_delta, distance_delta, pokestops_delta, dex_delta')
+      .limit(1000) // Reasonable limit for performance
+
+    if (error) {
+      console.error('Period radar data error:', error)
+      throw error
+    }
+
+    if (!data || data.length === 0) {
+      // Return empty structure
+      return {
+        playerStats: null,
+        globalAverages: { total_xp: 0, pokemon_caught: 0, distance_walked: 0, pokestops_visited: 0, unique_pokedex_entries: 0 },
+        countryAverages: { total_xp: 0, pokemon_caught: 0, distance_walked: 0, pokestops_visited: 0, unique_pokedex_entries: 0 },
+        teamAverages: { total_xp: 0, pokemon_caught: 0, distance_walked: 0, pokestops_visited: 0, unique_pokedex_entries: 0 },
+        allUserStats: [],
+        statBounds: {
+          total_xp: { min: 0, max: 1 },
+          pokemon_caught: { min: 0, max: 1 },
+          distance_walked: { min: 0, max: 1 },
+          pokestops_visited: { min: 0, max: 1 },
+          unique_pokedex_entries: { min: 0, max: 1 }
+        }
+      }
+    }
+
+    // Process all data in a single pass for efficiency
+    let playerStats = null
+    let globalSum = { xp: 0, catches: 0, distance: 0, stops: 0, dex: 0 }
+    let countrySum = { xp: 0, catches: 0, distance: 0, stops: 0, dex: 0, count: 0 }
+    let teamSum = { xp: 0, catches: 0, distance: 0, stops: 0, dex: 0, count: 0 }
+    const allStats: any[] = []
+    const xpValues: number[] = []
+    const catchesValues: number[] = []
+    const distanceValues: number[] = []
+    const stopsValues: number[] = []
+    const dexValues: number[] = []
+
+    // Single iteration through data
+    data.forEach((entry: any) => {
+      const xp = entry.xp_delta || 0
+      const catches = entry.catches_delta || 0
+      const distance = entry.distance_delta || 0
+      const stops = entry.pokestops_delta || 0
+      const dex = entry.dex_delta || 0
+
+      // Check if this is the player
+      if (entry.profile_id === profileId) {
+        playerStats = {
+          total_xp: xp,
+          pokemon_caught: catches,
+          distance_walked: distance,
+          pokestops_visited: stops,
+          unique_pokedex_entries: dex
+        }
+      }
+
+      // Global aggregation
+      globalSum.xp += xp
+      globalSum.catches += catches
+      globalSum.distance += distance
+      globalSum.stops += stops
+      globalSum.dex += dex
+
+      // Country aggregation
+      if (entry.country === country) {
+        countrySum.xp += xp
+        countrySum.catches += catches
+        countrySum.distance += distance
+        countrySum.stops += stops
+        countrySum.dex += dex
+        countrySum.count++
+      }
+
+      // Team aggregation
+      if (entry.team_color === teamColor) {
+        teamSum.xp += xp
+        teamSum.catches += catches
+        teamSum.distance += distance
+        teamSum.stops += stops
+        teamSum.dex += dex
+        teamSum.count++
+      }
+
+      // For normalization
+      allStats.push({
+        total_xp: xp,
+        pokemon_caught: catches,
+        distance_walked: distance,
+        pokestops_visited: stops,
+        unique_pokedex_entries: dex
+      })
+
+      // For bounds calculation
+      xpValues.push(xp)
+      catchesValues.push(catches)
+      distanceValues.push(distance)
+      stopsValues.push(stops)
+      dexValues.push(dex)
+    })
+
+    const totalCount = data.length
+
+    return {
+      playerStats,
+      globalAverages: {
+        total_xp: totalCount > 0 ? Math.round(globalSum.xp / totalCount) : 0,
+        pokemon_caught: totalCount > 0 ? Math.round(globalSum.catches / totalCount) : 0,
+        distance_walked: totalCount > 0 ? Math.round((globalSum.distance / totalCount) * 10) / 10 : 0,
+        pokestops_visited: totalCount > 0 ? Math.round(globalSum.stops / totalCount) : 0,
+        unique_pokedex_entries: totalCount > 0 ? Math.round(globalSum.dex / totalCount) : 0
+      },
+      countryAverages: {
+        total_xp: countrySum.count > 0 ? Math.round(countrySum.xp / countrySum.count) : 0,
+        pokemon_caught: countrySum.count > 0 ? Math.round(countrySum.catches / countrySum.count) : 0,
+        distance_walked: countrySum.count > 0 ? Math.round((countrySum.distance / countrySum.count) * 10) / 10 : 0,
+        pokestops_visited: countrySum.count > 0 ? Math.round(countrySum.stops / countrySum.count) : 0,
+        unique_pokedex_entries: countrySum.count > 0 ? Math.round(countrySum.dex / countrySum.count) : 0
+      },
+      teamAverages: {
+        total_xp: teamSum.count > 0 ? Math.round(teamSum.xp / teamSum.count) : 0,
+        pokemon_caught: teamSum.count > 0 ? Math.round(teamSum.catches / teamSum.count) : 0,
+        distance_walked: teamSum.count > 0 ? Math.round((teamSum.distance / teamSum.count) * 10) / 10 : 0,
+        pokestops_visited: teamSum.count > 0 ? Math.round(teamSum.stops / teamSum.count) : 0,
+        unique_pokedex_entries: teamSum.count > 0 ? Math.round(teamSum.dex / teamSum.count) : 0
+      },
+      allUserStats: allStats,
+      statBounds: {
+        total_xp: { min: Math.min(...xpValues), max: Math.max(...xpValues) },
+        pokemon_caught: { min: Math.min(...catchesValues), max: Math.max(...catchesValues) },
+        distance_walked: { min: Math.min(...distanceValues), max: Math.max(...distanceValues) },
+        pokestops_visited: { min: Math.min(...stopsValues), max: Math.max(...stopsValues) },
+        unique_pokedex_entries: { min: Math.min(...dexValues), max: Math.max(...dexValues) }
+      }
     }
   },
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, memo } from "react"
+import { useState, useEffect, memo, useMemo, useCallback } from "react"
 import { Radar, RadarChart as RechartsRadarChart, PolarGrid, PolarAngleAxis, ResponsiveContainer } from "recharts"
 import { type ProfileWithMetadata } from '../../services/profileService'
 import { dashboardService, type StatBounds } from '../../services/dashboardService'
@@ -13,6 +13,7 @@ interface PerformanceRadarChartProps {
   profile: ProfileWithMetadata | null
   isPaidUser: boolean
   showHeader?: boolean
+  timePeriod?: 'weekly' | 'monthly' | 'alltime'
 }
 
 // Dynamic filter configuration based on user's actual country and team
@@ -71,9 +72,10 @@ interface FilterButtonsProps {
   onHoverChange: (filter: FilterType) => void
   profile: ProfileWithMetadata | null
   isMobile: boolean
+  playerHasData: boolean
 }
 
-function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, isMobile }: FilterButtonsProps) {
+function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, isMobile, playerHasData }: FilterButtonsProps) {
   const trialStatus = useTrialStatus()
   const isPremiumUser = trialStatus.isPaidUser
   
@@ -100,10 +102,15 @@ function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, i
       flexGrow: 0,
       flexWrap: 'wrap'
     }}>
-      {filterButtons.map((button) => (
+      {filterButtons.map((button) => {
+        const isYouButton = button.id === 'you'
+        const isDisabled = isYouButton && !playerHasData
+        
+        return (
         <div
           key={button.id}
-          onClick={() => onFilterChange(activeFilter === button.id ? null : button.id)}
+          onClick={() => !isDisabled && onFilterChange(activeFilter === button.id ? null : button.id)}
+          title={isDisabled ? 'No data this period' : undefined}
           style={{
             /* Frame 635/636/637/638 */
             display: 'flex',
@@ -111,9 +118,10 @@ function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, i
             alignItems: 'center',
             padding: '0px',
             gap: isMobile ? '2.54px' : '4px',
-            cursor: 'pointer',
+            cursor: isDisabled ? 'not-allowed' : 'pointer',
             background: 'transparent',
             border: 'none',
+            opacity: isDisabled ? 0.4 : 1,
             /* Inside auto layout */
             flex: 'none',
             order: button.id === 'you' ? 0 : button.id === 'country' ? 1 : button.id === 'team' ? 2 : 3,
@@ -123,7 +131,7 @@ function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, i
               : (button.id === 'you' ? '40px' : button.id === 'country' ? '59px' : button.id === 'team' ? '62px' : '49px'),
             height: isMobile ? '14px' : '10px'
           }}
-          onMouseEnter={() => onHoverChange(button.id)}
+          onMouseEnter={() => !isDisabled && onHoverChange(button.id)}
           onMouseLeave={() => onHoverChange(null)}
         >
           <div
@@ -163,7 +171,8 @@ function FilterButtons({ activeFilter, onFilterChange, onHoverChange, profile, i
             {button.label}
           </span>
         </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -194,7 +203,7 @@ const chartStyles = `
   }
 `;
 
-export const PerformanceRadarChart = memo(({ profile, showHeader = true }: PerformanceRadarChartProps) => {
+export const PerformanceRadarChart = memo(({ profile, showHeader = true, timePeriod = 'alltime' }: PerformanceRadarChartProps) => {
   const trialStatus = useTrialStatus()
   const isMobile = useMobile()
   const [activeFilter, setActiveFilter] = useState<FilterType>(null)
@@ -205,13 +214,16 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     teamAverages: any;
     statBounds: StatBounds | null;
     allUserStats: any;
+    playerStats: any;
   }>({
     communityAverages: null,
     countryAverages: null,
     teamAverages: null,
     statBounds: null,
-    allUserStats: null
+    allUserStats: null,
+    playerStats: null
   })
+  const [playerHasData, setPlayerHasData] = useState(true)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -226,7 +238,9 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     const loadData = async () => {
       try {
         if (isPremiumUser && profile) {
-          // Premium users get enhanced data with country and team averages
+          // Fetch data based on time period
+          if (timePeriod === 'alltime') {
+            // All-time: use cumulative totals
           const [averages, countryAvg, teamAvg, bounds, allStats] = await Promise.all([
             dashboardService.getAverageStats(),
             dashboardService.getCountryAverageStats(profile.country || 'US'),
@@ -235,35 +249,126 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
             dashboardService.getAllUserStats()
           ])
           
-          // Only update state if component is still mounted
+            // Use profile's all-time stats
+            const playerStats = {
+              total_xp: profile.total_xp || 0,
+              pokemon_caught: profile.pokemon_caught || 0,
+              distance_walked: profile.distance_walked || 0,
+              pokestops_visited: profile.pokestops_visited || 0,
+              unique_pokedex_entries: profile.unique_pokedex_entries || 0
+            }
+            
           if (isMounted) {
             setChartData({
               communityAverages: averages,
               countryAverages: countryAvg,
               teamAverages: teamAvg,
               statBounds: bounds,
-              allUserStats: allStats
+                allUserStats: allStats,
+                playerStats
             });
+              setPlayerHasData(true);
             setLoading(false);
+            }
+          } else {
+            // OPTIMIZED: Weekly/Monthly - single query for all data
+            const periodData = await dashboardService.getPeriodRadarData(
+              profile.id,
+              profile.country || 'US',
+              profile.team_color || 'valor',
+              timePeriod
+            )
+            
+            // Check if player has meaningful data for this period
+            const hasData = periodData.playerStats !== null && (
+              ((periodData.playerStats as any).total_xp || 0) > 0 ||
+              ((periodData.playerStats as any).pokemon_caught || 0) > 0 ||
+              ((periodData.playerStats as any).distance_walked || 0) > 0 ||
+              ((periodData.playerStats as any).pokestops_visited || 0) > 0
+            )
+            
+            if (isMounted) {
+              setChartData({
+                communityAverages: periodData.globalAverages,
+                countryAverages: periodData.countryAverages,
+                teamAverages: periodData.teamAverages,
+                statBounds: periodData.statBounds,
+                allUserStats: periodData.allUserStats,
+                playerStats: periodData.playerStats || {
+                  total_xp: 0,
+                  pokemon_caught: 0,
+                  distance_walked: 0,
+                  pokestops_visited: 0,
+                  unique_pokedex_entries: 0
+                }
+              });
+              setPlayerHasData(hasData);
+              setLoading(false);
+            }
           }
         } else {
           // Free users get basic comparison only
+          if (timePeriod === 'alltime') {
           const [averages, bounds, allStats] = await Promise.all([
             dashboardService.getAverageStats(),
             dashboardService.getPaidUserStatBounds(),
             dashboardService.getAllUserStats()
           ])
           
-          // Only update state if component is still mounted
+            const playerStats = {
+              total_xp: profile?.total_xp || 0,
+              pokemon_caught: profile?.pokemon_caught || 0,
+              distance_walked: profile?.distance_walked || 0,
+              pokestops_visited: profile?.pokestops_visited || 0,
+              unique_pokedex_entries: profile?.unique_pokedex_entries || 0
+            }
+            
           if (isMounted) {
             setChartData({
               communityAverages: averages,
               countryAverages: null,
               teamAverages: null,
               statBounds: bounds,
-              allUserStats: allStats
+                allUserStats: allStats,
+                playerStats
             });
+              setPlayerHasData(true);
             setLoading(false);
+            }
+          } else {
+            // OPTIMIZED: Free users - single query for all data
+            const periodData = await dashboardService.getPeriodRadarData(
+              profile?.id || '',
+              profile?.country || 'US',
+              profile?.team_color || 'valor',
+              timePeriod
+            )
+            
+            const hasData = periodData.playerStats !== null && (
+              ((periodData.playerStats as any).total_xp || 0) > 0 ||
+              ((periodData.playerStats as any).pokemon_caught || 0) > 0 ||
+              ((periodData.playerStats as any).distance_walked || 0) > 0 ||
+              ((periodData.playerStats as any).pokestops_visited || 0) > 0
+            )
+            
+            if (isMounted) {
+              setChartData({
+                communityAverages: periodData.globalAverages,
+                countryAverages: null,
+                teamAverages: null,
+                statBounds: periodData.statBounds,
+                allUserStats: periodData.allUserStats,
+                playerStats: periodData.playerStats || {
+                  total_xp: 0,
+                  pokemon_caught: 0,
+                  distance_walked: 0,
+                  pokestops_visited: 0,
+                  unique_pokedex_entries: 0
+                }
+              });
+              setPlayerHasData(hasData);
+              setLoading(false);
+            }
           }
         }
       } catch (err) {
@@ -281,42 +386,110 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     return () => {
       isMounted = false;
     };
-  }, [isPremiumUser, profile?.country, profile?.team_color, profile?.id])
+  }, [isPremiumUser, profile?.country, profile?.team_color, profile?.id, timePeriod])
 
   // Destructure chart data for easier access
-  const { communityAverages, countryAverages, teamAverages, statBounds, allUserStats } = chartData;
+  const { communityAverages, countryAverages, teamAverages, statBounds, allUserStats, playerStats } = chartData;
 
-  // Percentile-based normalization for better visual representation
-  const normalizeStats = (value: number, stat: string) => {
-    if (!allUserStats || !allUserStats.length) return 0
-    
-    // Get all values for this stat and sort them
+  // OPTIMIZED: Pre-calculate percentile ranges for all stats (memoized)
+  const percentileCache = useMemo(() => {
+    if (!allUserStats || !allUserStats.length) {
+      return null
+    }
+
+    const stats = ['total_xp', 'pokemon_caught', 'distance_walked', 'pokestops_visited', 'unique_pokedex_entries']
+    const cache: Record<string, { p5: number; p95: number; allValues: number[] }> = {}
+
+    stats.forEach(stat => {
     const allValues = allUserStats
       .map((user: any) => user[stat] || 0)
-      .filter((val: number) => val > 0) // Remove zeros for better distribution
+        .filter((val: number) => val > 0)
       .sort((a: number, b: number) => a - b)
     
-    if (allValues.length === 0) return 0
-    
-    // Calculate 5th and 95th percentiles for robust scaling
+      if (allValues.length > 0) {
     const p5Index = Math.floor(allValues.length * 0.05)
     const p95Index = Math.floor(allValues.length * 0.95)
-    const p5 = allValues[p5Index] || allValues[0]
-    const p95 = allValues[p95Index] || allValues[allValues.length - 1]
+        cache[stat] = {
+          p5: allValues[p5Index] || allValues[0],
+          p95: allValues[p95Index] || allValues[allValues.length - 1],
+          allValues
+        }
+      }
+    })
+
+    return cache
+  }, [allUserStats])
+
+  // OPTIMIZED: Percentile-based normalization using cached percentiles (memoized callback)
+  const normalizeStats = useCallback((value: number, stat: string) => {
+    if (!percentileCache || !percentileCache[stat]) return 0
+    if (value <= 0) return 0
     
-    // Handle edge case where p5 = p95
-    if (p5 === p95) return 50
+    const { p5, p95 } = percentileCache[stat]
+    
+    // Handle edge case where p5 = p95 (all values are the same)
+    if (p5 === p95) {
+      if (value === p5) return 50
+      return value > p5 ? 75 : 25
+    }
     
     // Scale value between 5th and 95th percentiles
     let normalized = ((value - p5) / (p95 - p5)) * 100
     
     // Soft clamp to 0-100 range
-    normalized = Math.max(0, Math.min(100, normalized))
+    normalized = Math.max(5, Math.min(100, normalized))
     
     return normalized
-  }
+  }, [percentileCache])
 
-  if (!profile || loading || !communityAverages || !statBounds || !allUserStats || (isPremiumUser && (!countryAverages || !teamAverages))) {
+  // OPTIMIZED: Memoize performance data to prevent recalculations
+  // NOTE: This hook MUST be called before any conditional returns (Rules of Hooks)
+  const performanceData = useMemo(() => {
+    if (!playerStats || !communityAverages) return []
+    
+    return [
+      {
+        metric: "XP",
+        You: playerHasData ? normalizeStats(playerStats.total_xp || 0, 'total_xp') : 0,
+        Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.total_xp, 'total_xp') : 0,
+        Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.total_xp, 'total_xp') : 0,
+        Global: normalizeStats(communityAverages.total_xp, 'total_xp'),
+      },
+      {
+        metric: "Caught",
+        You: playerHasData ? normalizeStats(playerStats.pokemon_caught || 0, 'pokemon_caught') : 0,
+        Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokemon_caught, 'pokemon_caught') : 0,
+        Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokemon_caught, 'pokemon_caught') : 0,
+        Global: normalizeStats(communityAverages.pokemon_caught, 'pokemon_caught'),
+      },
+      {
+        metric: "Stops",
+        You: playerHasData ? normalizeStats(playerStats.pokestops_visited || 0, 'pokestops_visited') : 0,
+        Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokestops_visited, 'pokestops_visited') : 0,
+        Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokestops_visited, 'pokestops_visited') : 0,
+        Global: normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
+      },
+      {
+        metric: "Dex",
+        You: playerHasData ? normalizeStats(playerStats.unique_pokedex_entries || 0, 'unique_pokedex_entries') : 0,
+        Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
+        Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
+        Global: normalizeStats(communityAverages.unique_pokedex_entries, 'unique_pokedex_entries'),
+      },
+      {
+        metric: "Distance",
+        You: playerHasData ? normalizeStats(playerStats.distance_walked || 0, 'distance_walked') : 0,
+        Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.distance_walked, 'distance_walked') : 0,
+        Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.distance_walked, 'distance_walked') : 0,
+        Global: normalizeStats(communityAverages.distance_walked, 'distance_walked'),
+      },
+    ]
+  }, [playerStats, communityAverages, countryAverages, teamAverages, playerHasData, isPremiumUser, timePeriod, normalizeStats])
+
+  // ALL HOOKS MUST BE CALLED ABOVE THIS LINE
+  // Conditional returns can only happen AFTER all hooks are called
+  
+  if (!profile || loading || !communityAverages || !statBounds || !allUserStats || !playerStats || (isPremiumUser && (!countryAverages || !teamAverages))) {
     return (
       <div 
         style={{
@@ -353,74 +526,35 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     )
   }
 
-  // Create performance data for the radar chart
-  const performanceData = [
-    {
-      metric: "XP",
-      You: normalizeStats(profile.total_xp || 0, 'total_xp'),
-      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.total_xp, 'total_xp') : 0,
-      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.total_xp, 'total_xp') : 0,
-      Global: normalizeStats(communityAverages.total_xp, 'total_xp'),
-    },
-    {
-      metric: "Caught",
-      You: normalizeStats(profile.pokemon_caught || 0, 'pokemon_caught'),
-      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokemon_caught, 'pokemon_caught') : 0,
-      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokemon_caught, 'pokemon_caught') : 0,
-      Global: normalizeStats(communityAverages.pokemon_caught, 'pokemon_caught'),
-    },
-    {
-      metric: "Stops",
-      You: normalizeStats(profile.pokestops_visited || 0, 'pokestops_visited'),
-      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.pokestops_visited, 'pokestops_visited') : 0,
-      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.pokestops_visited, 'pokestops_visited') : 0,
-      Global: normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
-    },
-    {
-      metric: "Dex",
-      You: normalizeStats(profile.unique_pokedex_entries || 0, 'unique_pokedex_entries'),
-      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
-      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
-      Global: normalizeStats(communityAverages.unique_pokedex_entries, 'unique_pokedex_entries'),
-    },
-    {
-      metric: "Distance",
-      You: normalizeStats(profile.distance_walked || 0, 'distance_walked'),
-      Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.distance_walked, 'distance_walked') : 0,
-      Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.distance_walked, 'distance_walked') : 0,
-      Global: normalizeStats(communityAverages.distance_walked, 'distance_walked'),
-    },
-  ]
-
-  // Create actual values for tooltip/reference
+  // Create actual values for tooltip/reference (AFTER null checks)
   const actualValues = {
     XP: {
-      You: profile.total_xp || 0,
-      Global: communityAverages.total_xp,
+      You: playerStats?.total_xp || 0,
+      Global: communityAverages?.total_xp || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.total_xp : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.total_xp : 0,
     },
     Caught: {
-      You: profile.pokemon_caught || 0,
-      Global: communityAverages.pokemon_caught,
+      You: playerStats?.pokemon_caught || 0,
+      Global: communityAverages?.pokemon_caught || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.pokemon_caught : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.pokemon_caught : 0,
     },
     Stops: {
-      You: profile.pokestops_visited || 0,
-      Global: communityAverages.pokestops_visited,
+      You: playerStats?.pokestops_visited || 0,
+      Global: communityAverages?.pokestops_visited || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.pokestops_visited : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.pokestops_visited : 0,
     },
     Dex: {
-      You: profile.unique_pokedex_entries || 0,
-      Global: communityAverages.unique_pokedex_entries,
+      You: playerStats?.unique_pokedex_entries || 0,
+      Global: communityAverages?.unique_pokedex_entries || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.unique_pokedex_entries : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.unique_pokedex_entries : 0,
     },
     Distance: {
-      You: profile.distance_walked || 0,
-      Global: communityAverages.distance_walked,
+      You: playerStats?.distance_walked || 0,
+      Global: communityAverages?.distance_walked || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.distance_walked : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.distance_walked : 0,
     }
@@ -446,7 +580,12 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
     // For premium users: show all 4 series with dominant filtering
     if (isPremiumUser) {
       return Object.entries(filterConfig).map(([key, config]) => {
-        // If no filter is active or hovered, show all 4 series with normal opacity
+        // Skip rendering "You" polygon if player has no data
+        if (key === 'you' && !playerHasData) {
+          return null
+        }
+        
+        // If no filter is active or hovered, show all series with normal opacity
         if (effectiveFilter === null) {
           const strokeWidth = config.key === "Global" ? 3 : 1.5
           const fillOpacity = config.key === "Global" ? 0.1 : 
@@ -524,7 +663,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
             />
           )
         }
-      })
+      }).filter(Boolean)
     }
     
     // For free trial users: show only "You" and "Global" (community logic)
@@ -532,6 +671,11 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
       if (effectiveFilter === null) {
         // Show both "You" and "Global" with normal styling
         return ['you', 'global'].map((key) => {
+          // Skip rendering "You" polygon if player has no data
+          if (key === 'you' && !playerHasData) {
+            return null
+          }
+          
           const config = filterConfig[key as keyof typeof filterConfig]
           if (!config) return null
           
@@ -561,6 +705,11 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
       } else {
         // Show both but highlight selected one
         return ['you', 'global'].map((key) => {
+          // Skip rendering "You" polygon if player has no data
+          if (key === 'you' && !playerHasData) {
+            return null
+          }
+          
           const config = filterConfig[key as keyof typeof filterConfig]
           if (!config) return null
           
@@ -814,7 +963,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true }: Perfo
         )}
       </div>
 
-      <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} onHoverChange={setHoveredFilter} profile={profile} isMobile={isMobile} />
+      <FilterButtons activeFilter={activeFilter} onFilterChange={setActiveFilter} onHoverChange={setHoveredFilter} profile={profile} isMobile={isMobile} playerHasData={playerHasData} />
     </div>
     </>
   )

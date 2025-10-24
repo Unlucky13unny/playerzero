@@ -56,7 +56,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const [timePeriod, setTimePeriod] = useState<"weekly" | "monthly" | "alltime">("monthly")
 
-  const [sortBy, setSortBy] = useState<"xp" | "catches" | "distance" | "pokestops">("xp")
+  const [sortBy, setSortBy] = useState<"xp" | "catches" | "distance" | "pokestops" | "dex">("xp")
 
   const [lockedExpanded, setLockedExpanded] = useState(false)
 
@@ -65,7 +65,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const [showLiveLimitDropdown, setShowLiveLimitDropdown] = useState(false)
   const [showWebLiveLimitDropdown, setShowWebLiveLimitDropdown] = useState(false)
 
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([])
+  const [liveLeaderboardData, setLiveLeaderboardData] = useState<LeaderboardEntry[]>([])
+  const [lockedLeaderboardData, setLockedLeaderboardData] = useState<LeaderboardEntry[]>([])
 
   const [loading, setLoading] = useState(false)
 
@@ -130,6 +131,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     { id: "pokestops" as const, label: "Pokestops Visited" },
 
+    { id: "dex" as const, label: "Unique Pokédex" },
+
   ]
 
 
@@ -172,7 +175,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     if (user) {
 
-      loadLeaderboardData()
+      loadLiveLeaderboardData()
+      loadLockedLeaderboardData()
 
     }
 
@@ -234,7 +238,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  const loadLeaderboardData = async () => {
+  const loadLiveLeaderboardData = async () => {
 
     if (!user) return
 
@@ -262,11 +266,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-      console.log('Loading leaderboard with params:', params)
+      console.log('Loading LIVE leaderboard with params:', params)
 
-      const result = await dashboardService.getLeaderboard(params)
+      const result = await dashboardService.getLiveLeaderboard(params)
 
-      console.log(`Leaderboard result for ${timePeriod}:`, {
+      console.log(`LIVE Leaderboard result for ${timePeriod}:`, {
         dataLength: result.data?.length || 0,
         hasError: !!result.error,
         errorMessage: result.error ? (typeof result.error === 'string' ? result.error : (result.error as any).message || 'Unknown error') : null
@@ -276,7 +280,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       if (result.error) {
 
-        throw new Error(typeof result.error === 'string' ? result.error : (result.error as any).message || 'Failed to load leaderboard')
+        throw new Error(typeof result.error === 'string' ? result.error : (result.error as any).message || 'Failed to load live leaderboard')
 
       }
 
@@ -344,23 +348,136 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       }
 
-      console.log('Leaderboard data loaded and filtered:', filteredData)
+      console.log('LIVE Leaderboard data loaded and filtered:', filteredData)
 
-      setLeaderboardData(filteredData)
+      setLiveLeaderboardData(filteredData)
 
     } catch (err) {
 
-      console.error('Error loading leaderboard:', err)
+      console.error('Error loading live leaderboard:', err)
 
-      setError(err instanceof Error ? err.message : 'Failed to load leaderboard')
-
-      // Don't clear existing data on error to prevent Live section from disappearing
-
-      // setLeaderboardData([])
+      setError(err instanceof Error ? err.message : 'Failed to load live leaderboard')
 
     } finally {
 
       setLoading(false)
+
+    }
+
+  }
+
+  
+  const loadLockedLeaderboardData = async () => {
+
+    if (!user) return
+
+    
+
+    // All-time has no locked results
+
+    if (timePeriod === 'alltime') {
+
+      setLockedLeaderboardData([])
+
+      return
+
+    }
+
+
+
+    try {
+
+      // Locked loading doesn't block UI, just load in background
+
+
+
+      const params = {
+
+        // @ts-ignore - timePeriod can be 'alltime' at runtime
+        period: timePeriod === 'alltime' ? 'all-time' as const : timePeriod,
+
+        sortBy,
+
+        view: activeTab === 'trainers' ? 'all' as const : activeTab,
+
+        filterValue: selectedTeamFilter || selectedCountryFilter || undefined
+
+      }
+
+
+
+      console.log('Loading LOCKED leaderboard with params:', params)
+
+      const result = await dashboardService.getLockedLeaderboard(params)
+
+      console.log(`LOCKED Leaderboard result for ${timePeriod}:`, {
+        dataLength: result.data?.length || 0,
+        hasError: !!result.error
+      })
+
+
+
+      if (result.error) {
+
+        throw new Error(typeof result.error === 'string' ? result.error : (result.error as any).message || 'Failed to load locked leaderboard')
+
+      }
+
+
+
+      let filteredData = result.data || []
+
+
+
+      // Apply client-side filtering if needed
+
+      if (selectedTeamFilter && selectedTeamFilter !== 'all') {
+
+        filteredData = filteredData.filter(entry => 
+
+          entry.team_color && entry.team_color.toLowerCase() === selectedTeamFilter.toLowerCase()
+
+        )
+
+      }
+
+
+
+      if (selectedCountryFilter && selectedCountryFilter !== 'all') {
+
+        filteredData = filteredData.filter(entry => 
+
+          entry.country && entry.country.toLowerCase() === selectedCountryFilter.toLowerCase()
+
+        )
+
+      }
+
+
+
+      // Apply trainer filtering if needed
+
+      if (selectedTrainerFilter && selectedTrainerFilter !== 'all') {
+
+        filteredData = filteredData.filter(entry => 
+
+          entry.trainer_name && entry.trainer_name.toLowerCase() === selectedTrainerFilter.toLowerCase()
+
+        )
+
+      }
+
+      console.log('LOCKED Leaderboard data loaded and filtered:', filteredData)
+
+      setLockedLeaderboardData(filteredData)
+
+    } catch (err) {
+
+      console.error('Error loading locked leaderboard:', err)
+
+      // Don't set error here as it's not critical
+
+      setLockedLeaderboardData([])
 
     }
 
@@ -604,7 +721,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const handleSortSelect = (option: {id: string, label: string}) => {
 
-    setSortBy(option.id as "xp" | "catches" | "distance" | "pokestops")
+    setSortBy(option.id as "xp" | "catches" | "distance" | "pokestops" | "dex")
 
     setShowProxyDropdown(false)
 
@@ -2034,6 +2151,19 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
         return formatNumber(entry.pokestops_visited || entry.pokestops_delta || 0)
 
+      case 'dex':
+        const dexValue = entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+        // Debug logging for dex values
+        if (sortBy === 'dex' && dexValue === 0) {
+          console.log('🔍 Dex value is 0 for entry:', {
+            trainer: entry.trainer_name,
+            unique_pokedex_entries: entry.unique_pokedex_entries,
+            dex_delta: (entry as any).dex_delta,
+            entry: entry
+          })
+        }
+        return formatNumber(dexValue)
+
       default:
 
         return '0'
@@ -2056,6 +2186,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       case 'pokestops': return 'Stops'
 
+      case 'dex': return 'Dex'
+
       default: return 'Points'
 
     }
@@ -2064,9 +2196,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-  // Process leaderboard data for display - sort by stats value first
+  // Process LIVE leaderboard data for display - sort by stats value first
 
-  const sortedData = [...leaderboardData].sort((a, b) => {
+  const liveSortedData = [...liveLeaderboardData].sort((a, b) => {
     const getNumericValue = (entry: LeaderboardEntry) => {
       switch (sortBy) {
         case 'xp':
@@ -2077,6 +2209,35 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           return entry.distance_walked || entry.distance_delta || 0
         case 'pokestops':
           return entry.pokestops_visited || entry.pokestops_delta || 0
+        case 'dex':
+          return entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+        default:
+          return 0
+      }
+    }
+    
+    const aValue = getNumericValue(a)
+    const bValue = getNumericValue(b)
+    
+    // Sort in descending order (highest values first)
+    return bValue - aValue
+  })
+
+  // Process LOCKED leaderboard data for display - sort by stats value first
+
+  const lockedSortedData = [...lockedLeaderboardData].sort((a, b) => {
+    const getNumericValue = (entry: LeaderboardEntry) => {
+      switch (sortBy) {
+        case 'xp':
+          return entry.total_xp || entry.xp_delta || 0
+        case 'catches':
+          return entry.pokemon_caught || entry.catches_delta || 0
+        case 'distance':
+          return entry.distance_walked || entry.distance_delta || 0
+        case 'pokestops':
+          return entry.pokestops_visited || entry.pokestops_delta || 0
+        case 'dex':
+          return entry.unique_pokedex_entries || (entry as any).dex_delta || 0
         default:
           return 0
       }
@@ -2093,7 +2254,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   const shouldAggregateByCountry = activeTab === 'country' && (!selectedCountryFilter || selectedCountryFilter === 'all')
   const shouldAggregateByTeam = activeTab === 'team' && (!selectedTeamFilter || selectedTeamFilter === 'all')
 
-  let processedData: Array<{
+  // ============================================
+  // PROCESS LIVE DATA
+  // ============================================
+  let liveProcessedData: Array<{
     rank: number;
     name: string;
     countryName: string | null;
@@ -2108,35 +2272,34 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   }>
 
   if (shouldAggregateByCountry) {
-    // Aggregate data by country
+    // Aggregate LIVE data by country
     const countryAggregates = new Map()
     
-    sortedData.forEach(entry => {
-      // Normalize country name to handle variations in case/spacing
+    liveSortedData.forEach(entry => {
       const countryName = (entry.country || 'Unknown').trim()
       const normalizedCountryName = countryName.toLowerCase()
       
       if (!countryAggregates.has(normalizedCountryName)) {
         countryAggregates.set(normalizedCountryName, {
-          country: countryName, // Use original case for display
+          country: countryName,
           totalXp: 0,
           totalCatches: 0,
           totalDistance: 0,
           totalStops: 0,
+          totalDex: 0,
           trainerCount: 0
         })
       }
       
       const aggregate = countryAggregates.get(normalizedCountryName)
-      aggregate.totalXp += entry.total_xp || 0
-      aggregate.totalCatches += entry.pokemon_caught || 0
-      aggregate.totalDistance += entry.distance_walked || 0
-      aggregate.totalStops += entry.pokestops_visited || 0
+      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
+      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
+      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
+      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
+      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
       aggregate.trainerCount += 1
     })
 
-    // Convert to array and sort by selected stat
-    console.log('Country aggregation results:', Array.from(countryAggregates.values()).map(c => ({ country: c.country, trainerCount: c.trainerCount, totalXp: c.totalXp })))
     const aggregatedData = Array.from(countryAggregates.values()).sort((a, b) => {
       let aValue, bValue
       switch (sortBy) {
@@ -2144,12 +2307,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
         case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
         case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        case 'dex': aValue = a.totalDex; bValue = b.totalDex; break
         default: aValue = a.totalXp; bValue = b.totalXp
       }
       return bValue - aValue
     })
 
-    processedData = aggregatedData.map((aggregate, index) => ({
+    liveProcessedData = aggregatedData.map((aggregate, index) => ({
       rank: index + 1,
       name: aggregate.country,
       countryName: aggregate.country,
@@ -2162,45 +2326,45 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           case 'catches': return aggregate.totalCatches
           case 'distance': return aggregate.totalDistance
           case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
           default: return aggregate.totalXp
         }
       })(),
-    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
-      profileId: null, // No individual profile for aggregated data
+      medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: null,
       isAggregated: true,
       aggregateType: 'country'
     }))
 
   } else if (shouldAggregateByTeam) {
-    // Aggregate data by team
+    // Aggregate LIVE data by team
     const teamAggregates = new Map()
     
-    sortedData.forEach(entry => {
-      // Normalize team name to handle variations in case/spacing
+    liveSortedData.forEach(entry => {
       const teamName = (entry.team_color || 'Unknown').trim()
       const normalizedTeamName = teamName.toLowerCase()
       
       if (!teamAggregates.has(normalizedTeamName)) {
         teamAggregates.set(normalizedTeamName, {
-          team: teamName, // Use original case for display
+          team: teamName,
           totalXp: 0,
           totalCatches: 0,
           totalDistance: 0,
           totalStops: 0,
+          totalDex: 0,
           trainerCount: 0
         })
       }
       
       const aggregate = teamAggregates.get(normalizedTeamName)
-      aggregate.totalXp += entry.total_xp || 0
-      aggregate.totalCatches += entry.pokemon_caught || 0
-      aggregate.totalDistance += entry.distance_walked || 0
-      aggregate.totalStops += entry.pokestops_visited || 0
+      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
+      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
+      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
+      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
+      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
       aggregate.trainerCount += 1
     })
 
-    // Convert to array and sort by selected stat
-    console.log('Team aggregation results:', Array.from(teamAggregates.values()).map(t => ({ team: t.team, trainerCount: t.trainerCount, totalXp: t.totalXp })))
     const aggregatedData = Array.from(teamAggregates.values()).sort((a, b) => {
       let aValue, bValue
       switch (sortBy) {
@@ -2208,12 +2372,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
         case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
         case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        case 'dex': aValue = a.totalDex; bValue = b.totalDex; break
         default: aValue = a.totalXp; bValue = b.totalXp
       }
       return bValue - aValue
     })
 
-    processedData = aggregatedData.map((aggregate, index) => ({
+    liveProcessedData = aggregatedData.map((aggregate, index) => ({
       rank: index + 1,
       name: aggregate.team.charAt(0).toUpperCase() + aggregate.team.slice(1),
       countryName: null,
@@ -2226,6 +2391,188 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           case 'catches': return aggregate.totalCatches
           case 'distance': return aggregate.totalDistance
           case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
+        }
+      })(),
+      medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: null,
+      isAggregated: true,
+      aggregateType: 'team'
+    }))
+
+  } else {
+    // Normal individual trainer data for LIVE
+    liveProcessedData = liveSortedData.map((entry, index) => {
+      const isCurrentUser = currentUserProfileId && entry.profile_id === currentUserProfileId
+      if (isCurrentUser) {
+        console.log('✅ Found current user in LIVE leaderboard:', {
+          rank: index + 1,
+          name: entry.trainer_name,
+          profileId: entry.profile_id,
+          currentUserProfileId: currentUserProfileId
+        })
+      }
+      return {
+        rank: index + 1,
+        name: entry.trainer_name,
+        countryName: entry.country,
+        countryFlag: getCountryFlagUrl(entry.country),
+        team: getTeamColor(entry.team_color),
+        teamColor: entry.team_color,
+        statValue: getStatValue(entry),
+        medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+        profileId: entry.profile_id,
+        isAggregated: false,
+        isCurrentUser: isCurrentUser
+      }
+    })
+  }
+
+  // ============================================
+  // PROCESS LOCKED DATA
+  // ============================================
+  let lockedProcessedData: Array<{
+    rank: number;
+    name: string;
+    countryName: string | null;
+    countryFlag: string | null;
+    team: string | null;
+    teamColor: string | null;
+    statValue: number | string;
+    medal: string | null;
+    profileId: string | null;
+    isAggregated?: boolean;
+    aggregateType?: string;
+  }>
+
+  if (shouldAggregateByCountry) {
+    // Aggregate LOCKED data by country
+    const countryAggregates = new Map()
+    
+    lockedSortedData.forEach(entry => {
+      // Normalize country name to handle variations in case/spacing
+      const countryName = (entry.country || 'Unknown').trim()
+      const normalizedCountryName = countryName.toLowerCase()
+      
+      if (!countryAggregates.has(normalizedCountryName)) {
+        countryAggregates.set(normalizedCountryName, {
+          country: countryName, // Use original case for display
+          totalXp: 0,
+          totalCatches: 0,
+          totalDistance: 0,
+          totalStops: 0,
+          totalDex: 0,
+          trainerCount: 0
+        })
+      }
+      
+      const aggregate = countryAggregates.get(normalizedCountryName)
+      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
+      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
+      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
+      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
+      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+      aggregate.trainerCount += 1
+    })
+
+    // Convert to array and sort by selected stat
+    console.log('LOCKED Country aggregation results:', Array.from(countryAggregates.values()).map(c => ({ country: c.country, trainerCount: c.trainerCount, totalXp: c.totalXp })))
+    const aggregatedData = Array.from(countryAggregates.values()).sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case 'xp': aValue = a.totalXp; bValue = b.totalXp; break
+        case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
+        case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
+        case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        case 'dex': aValue = a.totalDex; bValue = b.totalDex; break
+        default: aValue = a.totalXp; bValue = b.totalXp
+      }
+      return bValue - aValue
+    })
+
+    lockedProcessedData = aggregatedData.map((aggregate, index) => ({
+      rank: index + 1,
+      name: aggregate.country,
+      countryName: aggregate.country,
+      countryFlag: getCountryFlagUrl(aggregate.country),
+      team: null,
+      teamColor: null,
+      statValue: (() => {
+        switch (sortBy) {
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
+        }
+      })(),
+    medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+      profileId: null, // No individual profile for aggregated data
+      isAggregated: true,
+      aggregateType: 'country'
+    }))
+
+  } else if (shouldAggregateByTeam) {
+    // Aggregate LOCKED data by team
+    const teamAggregates = new Map()
+    
+    lockedSortedData.forEach(entry => {
+      // Normalize team name to handle variations in case/spacing
+      const teamName = (entry.team_color || 'Unknown').trim()
+      const normalizedTeamName = teamName.toLowerCase()
+      
+      if (!teamAggregates.has(normalizedTeamName)) {
+        teamAggregates.set(normalizedTeamName, {
+          team: teamName, // Use original case for display
+          totalXp: 0,
+          totalCatches: 0,
+          totalDistance: 0,
+          totalStops: 0,
+          totalDex: 0,
+          trainerCount: 0
+        })
+      }
+      
+      const aggregate = teamAggregates.get(normalizedTeamName)
+      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
+      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
+      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
+      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
+      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+      aggregate.trainerCount += 1
+    })
+
+    // Convert to array and sort by selected stat
+    console.log('LOCKED Team aggregation results:', Array.from(teamAggregates.values()).map(t => ({ team: t.team, trainerCount: t.trainerCount, totalXp: t.totalXp })))
+    const aggregatedData = Array.from(teamAggregates.values()).sort((a, b) => {
+      let aValue, bValue
+      switch (sortBy) {
+        case 'xp': aValue = a.totalXp; bValue = b.totalXp; break
+        case 'catches': aValue = a.totalCatches; bValue = b.totalCatches; break
+        case 'distance': aValue = a.totalDistance; bValue = b.totalDistance; break
+        case 'pokestops': aValue = a.totalStops; bValue = b.totalStops; break
+        case 'dex': aValue = a.totalDex; bValue = b.totalDex; break
+        default: aValue = a.totalXp; bValue = b.totalXp
+      }
+      return bValue - aValue
+    })
+
+    lockedProcessedData = aggregatedData.map((aggregate, index) => ({
+      rank: index + 1,
+      name: aggregate.team.charAt(0).toUpperCase() + aggregate.team.slice(1),
+      countryName: null,
+      countryFlag: null,
+      team: getTeamColor(aggregate.team),
+      teamColor: aggregate.team,
+      statValue: (() => {
+        switch (sortBy) {
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
           default: return aggregate.totalXp
         }
       })(),
@@ -2236,12 +2583,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     }))
 
   } else {
-    // Normal individual trainer data
-    processedData = sortedData.map((entry, index) => {
+    // Normal individual trainer data for LOCKED
+    lockedProcessedData = lockedSortedData.map((entry, index) => {
       const isCurrentUser = currentUserProfileId && entry.profile_id === currentUserProfileId
-      // Debug logging
       if (isCurrentUser) {
-        console.log('✅ Found current user in leaderboard:', {
+        console.log('✅ Found current user in LOCKED leaderboard:', {
           rank: index + 1,
           name: entry.trainer_name,
           profileId: entry.profile_id,
@@ -2249,29 +2595,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         })
       }
       return {
-      rank: index + 1,
-      name: entry.trainer_name,
-      countryName: entry.country,
-      countryFlag: getCountryFlagUrl(entry.country),
-      team: getTeamColor(entry.team_color),
-      teamColor: entry.team_color,
-      statValue: getStatValue(entry),
-      medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
-      profileId: entry.profile_id,
+        rank: index + 1,
+        name: entry.trainer_name,
+        countryName: entry.country,
+        countryFlag: getCountryFlagUrl(entry.country),
+        team: getTeamColor(entry.team_color),
+        teamColor: entry.team_color,
+        statValue: getStatValue(entry),
+        medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
+        profileId: entry.profile_id,
         isAggregated: false,
         isCurrentUser: isCurrentUser
       }
     })
-    
-    // Debug: Log if we found any current user
-    const currentUserInData = processedData.find((p: any) => p.isCurrentUser)
-    console.log('🔍 Current user check:', {
-      currentUserProfileId: currentUserProfileId,
-      foundInData: !!currentUserInData,
-      userRank: currentUserInData?.rank,
-      userName: currentUserInData?.name
-    })
   }
+
+  // For backward compatibility, default processedData to liveProcessedData
+  const processedData = liveProcessedData
 
 
 
@@ -2312,14 +2652,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       timePeriod,
       liveLimit: `${liveLimit} ${typeof liveLimit === 'number' ? `(Top ${liveLimit})` : '(All)'}`,
       activeTab,
-      totalEntries: processedData.length
+      totalEntries: liveProcessedData.length
     })
     
     // Show all results if viewing all-time or "all" limit
     if (timePeriod === 'alltime' || liveLimit === 'all') {
       console.log('➡️ Showing all results (alltime or "all" limit)')
       // Ensure no entries have isSeparatedUser flag when showing all
-      return processedData.map((entry: any) => ({
+      return liveProcessedData.map((entry: any) => ({
         ...entry,
         isSeparatedUser: false
       }))
@@ -2327,7 +2667,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     
     // Get top N entries based on selected limit
     // Important: Create clean entries without isSeparatedUser flag
-    const topEntries = processedData.slice(0, liveLimit).map((entry: any) => ({
+    const topEntries = liveProcessedData.slice(0, liveLimit).map((entry: any) => ({
       ...entry,
       isSeparatedUser: false  // Ensure no entry has this flag initially
     }))
@@ -2342,7 +2682,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     }
     
     // Find current user's entry in the full dataset
-    const currentUserEntry = processedData.find((player: any) => player.isCurrentUser)
+    const currentUserEntry = liveProcessedData.find((player: any) => player.isCurrentUser)
     console.log('👤 Current user search:', {
       found: !!currentUserEntry,
       rank: currentUserEntry?.rank,
@@ -2419,7 +2759,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   // Debug logging for Live section
 
-  console.log('Data processing - isMobile:', isMobile, 'leaderboardData length:', leaderboardData.length, 'processedData length:', processedData.length, 'liveResults length:', liveResults.length)
+  console.log('Data processing - isMobile:', isMobile, 'liveLeaderboardData length:', liveLeaderboardData.length, 'liveProcessedData length:', liveProcessedData.length, 'liveResults length:', liveResults.length)
 
   // Debug: Show what's in liveResults
   console.log('📋 liveResults details:', liveResults.map((p: any) => ({
@@ -2987,14 +3327,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           flexGrow: 0,
         }}>
           {/* Always show top 3 results */}
-          {processedData.slice(0, 3).map((player, index) => 
+          {lockedProcessedData.slice(0, 3).map((player, index) => 
             renderWebLockedPlayerCard(player, index)
           )}
 
           {/* Additional results (positions 4-10) shown only when expanded */}
           {lockedExpanded && (
             <>
-              {processedData.slice(3, 10).map((player, index) => 
+              {lockedProcessedData.slice(3, 10).map((player, index) => 
                 renderWebLockedPlayerCard(player, index + 3)
               )}
             </>
@@ -3616,6 +3956,23 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 flexGrow: 0,
               }}>
                 {player.statValue}
+              </span>
+              {/* Stat Label */}
+              <span style={{
+                width: '100px',
+                height: '12px',
+                fontFamily: 'Poppins',
+                fontStyle: 'normal',
+                fontWeight: 400,
+                fontSize: '8px',
+                lineHeight: '12px',
+                color: '#666666',
+                textAlign: 'right',
+                flex: 'none',
+                order: 1,
+                flexGrow: 0,
+              }}>
+                {getStatLabel()}
               </span>
             </div>
           </div>
@@ -5399,7 +5756,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           <button 
 
-            onClick={loadLeaderboardData}
+            onClick={() => { loadLiveLeaderboardData(); loadLockedLeaderboardData(); }}
 
             className="mt-2 text-red-600 hover:text-red-800 underline"
 
@@ -6484,7 +6841,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
           <button 
 
-            onClick={loadLeaderboardData}
+            onClick={() => { loadLiveLeaderboardData(); loadLockedLeaderboardData(); }}
 
             className="mt-2 text-red-600 hover:text-red-800 underline"
 
@@ -7029,7 +7386,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           }}>
 
           {/* Always show top 3 results */}
-          {processedData.slice(0, 3).map((player, index) => {
+          {lockedProcessedData.slice(0, 3).map((player, index) => {
             const isCurrentUser = (player as any).isCurrentUser
             return (
 
@@ -7327,7 +7684,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           {/* Additional results (positions 4-10) shown only when expanded */}
           {lockedExpanded && (
             <>
-              {processedData.slice(3, 10).map((player, index) => {
+              {lockedProcessedData.slice(3, 10).map((player, index) => {
                 const isCurrentUser = (player as any).isCurrentUser
                 return (
                 <div
@@ -7497,7 +7854,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       lineHeight: '15px',
                       color: '#666666',
                     }}>
-                      {sortBy === 'xp' ? 'XP' : sortBy === 'catches' ? 'Catches' : sortBy === 'distance' ? 'km' : 'Pokestops'}
+                      {getStatLabel()}
                     </span>
                   </div>
                 </div>

@@ -350,14 +350,13 @@ CREATE INDEX idx_stat_verification_screenshots_user_id ON stat_verification_scre
 CREATE INDEX idx_stat_verification_screenshots_entry_date ON stat_verification_screenshots(entry_date);
 CREATE INDEX idx_stat_verification_screenshots_stat_entry_id ON stat_verification_screenshots(stat_entry_id);
 
--- Function to get the start of current week (Monday 00:00 UTC)
+-- Function to get the start of current week (Sunday 00:00 UTC)
 CREATE OR REPLACE FUNCTION get_current_week_start()
 RETURNS DATE AS $$
 BEGIN
-  -- Get current date and subtract days to get to Monday
+  -- Returns Sunday 00:00 UTC (DOW 0=Sunday)
   -- DOW: 0=Sunday, 1=Monday, 2=Tuesday, etc.
-  -- We want: if today is Monday(1), subtract 0; if Sunday(0), subtract 6
-  RETURN CURRENT_DATE - ((EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + 6) % 7);
+  RETURN CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INTEGER;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -369,7 +368,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Function to get the last completed week period (Monday to Sunday)
+-- Function to get the last completed week period (Sunday to Saturday)
 CREATE OR REPLACE FUNCTION get_last_completed_week()
 RETURNS TABLE(period_start DATE, period_end DATE) AS $$
 BEGIN
@@ -392,6 +391,7 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Updated weekly leaderboard view for current period
+-- NOTE: This uses get_week_uploads function - see migration 004 for full implementation
 CREATE OR REPLACE VIEW current_weekly_leaderboard AS
 SELECT 
   p.id as profile_id,
@@ -403,10 +403,12 @@ SELECT
   COALESCE(current_stats.pokemon_caught - week_start_stats.pokemon_caught, 0) as catches_delta,
   COALESCE(current_stats.distance_walked - week_start_stats.distance_walked, 0) as distance_delta,
   COALESCE(current_stats.pokestops_visited - week_start_stats.pokestops_visited, 0) as pokestops_delta,
+  COALESCE(current_stats.unique_pokedex_entries - week_start_stats.unique_pokedex_entries, 0) as dex_delta,
   p.total_xp,
   p.pokemon_caught,
   p.distance_walked,
   p.pokestops_visited,
+  p.unique_pokedex_entries,
   COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
 FROM profiles p
 LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
@@ -424,6 +426,7 @@ WHERE p.is_paid_user = true
 ORDER BY xp_delta DESC NULLS LAST;
 
 -- Updated monthly leaderboard view for current period
+-- NOTE: This uses get_month_uploads function - see migration 004 for full implementation
 CREATE OR REPLACE VIEW current_monthly_leaderboard AS
 SELECT 
   p.id as profile_id,
@@ -435,10 +438,12 @@ SELECT
   COALESCE(current_stats.pokemon_caught - month_start_stats.pokemon_caught, 0) as catches_delta,
   COALESCE(current_stats.distance_walked - month_start_stats.distance_walked, 0) as distance_delta,
   COALESCE(current_stats.pokestops_visited - month_start_stats.pokestops_visited, 0) as pokestops_delta,
+  COALESCE(current_stats.unique_pokedex_entries - month_start_stats.unique_pokedex_entries, 0) as dex_delta,
   p.total_xp,
   p.pokemon_caught,
   p.distance_walked,
   p.pokestops_visited,
+  p.unique_pokedex_entries,
   COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
 FROM profiles p
 LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
@@ -510,6 +515,7 @@ CREATE VIEW monthly_leaderboard AS SELECT * FROM current_monthly_leaderboard;
 -- Views for leaderboards and analytics (PAID USERS ONLY)
 CREATE OR REPLACE VIEW all_time_leaderboard AS
 SELECT 
+  p.id as profile_id,
   p.trainer_name,
   p.country,
   p.team_color,
@@ -518,11 +524,13 @@ SELECT
   p.pokemon_caught,
   p.distance_walked,
   p.pokestops_visited,
+  p.unique_pokedex_entries,
   p.updated_at as last_update
 FROM profiles p
 WHERE p.is_paid_user = true
   AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
   AND p.role = 'user'
+  AND COALESCE(p.is_blocked, false) = false
 ORDER BY p.total_xp DESC; 
 
 -- Function to complete a period and record the top 3 winners
