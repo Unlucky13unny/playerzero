@@ -96,7 +96,7 @@ export const ReportModal = ({
 
             {error && (
               <div className="report-error-message">
-                {error}
+                {error}                         
               </div>
             )}
           </div>

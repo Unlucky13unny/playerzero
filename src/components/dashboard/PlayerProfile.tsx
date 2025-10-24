@@ -1592,6 +1592,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                         profile={profile} 
                         isPaidUser={userType === "upgraded"} 
                         showHeader={false}
+                        timePeriod={timePeriod}
                       />
                     </div>
                     </div>
@@ -1764,6 +1765,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                     profile={profile} 
                     isPaidUser={userType === "upgraded"} 
                     showHeader={false}
+                    timePeriod={timePeriod}
                   />
                   </div>
                 </div>
