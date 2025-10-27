@@ -17,7 +17,7 @@ export const ContactHelp = () => {
           <div className="community-section">
             <div className="community-icons">
               <a 
-                href="https://discord.gg/playerzero" 
+                href="https://discord.gg/9dAeR84Ugv" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 className="community-icon discord-icon"
@@ -28,7 +28,7 @@ export const ContactHelp = () => {
                 </svg>
               </a>
               <a 
-                href="https://reddit.com/r/playerzero" 
+                href="https://www.reddit.com/r/plyrZERO_HQ/" 
                 target="_blank"
                 rel="noopener noreferrer"
                 className="community-icon reddit-icon"

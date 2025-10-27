@@ -1443,7 +1443,7 @@ export const UpdateStats = () => {
                 }}
               >
                 <span style={{
-                  fontFamily: 'Inter',
+                  fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
                   fontSize: '12px',

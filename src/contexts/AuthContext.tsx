@@ -89,11 +89,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     })
 
     if (signUpError) {
+      // Check for common Supabase Auth error codes
+      if (signUpError.message?.toLowerCase().includes('already registered') || 
+          signUpError.message?.toLowerCase().includes('already been registered') ||
+          signUpError.status === 422) {
+        return { error: { message: 'Email already registered', code: 'email_exists' } }
+      }
       return { error: signUpError }
+    }
+
+    // Check if user already exists (Supabase sometimes returns success for existing users)
+    if (signUpData.user && !signUpData.user.identities?.length) {
+      return { error: { message: 'Email already registered', code: 'email_exists' } }
     }
 
     // If username is provided and signup succeeded, create the profile
     if (username && signUpData.user) {
+      // Check if profile already exists
+      const { data: existingProfile } = await supabaseAdmin
+        .from('profiles')
+        .select('user_id')
+        .eq('user_id', signUpData.user.id)
+        .maybeSingle()
+
+      if (existingProfile) {
+        await supabase.auth.signOut()
+        return { error: { message: 'Email already registered', code: 'email_exists' } }
+      }
+
       const { error: profileError } = await supabaseAdmin
         .from('profiles')
         .insert([
@@ -108,9 +131,22 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         ])
 
       if (profileError) {
+        console.error('Profile creation error:', profileError)
+        
+        // Handle specific database errors with user-friendly messages
+        if (profileError.code === '23503') {
+          // Foreign key constraint violation - user doesn't exist
+          await supabase.auth.signOut()
+          return { error: { message: 'Email already registered', code: 'email_exists' } }
+        } else if (profileError.code === '23505') {
+          // Unique constraint violation
+          await supabase.auth.signOut()
+          return { error: { message: 'Username already taken', code: '23505' } }
+        }
+        
         // If profile creation fails, sign out the user
         await supabase.auth.signOut()
-        return { error: profileError }
+        return { error: { message: 'Failed to create profile. Please try again.', code: 'profile_error' } }
       }
     }
 

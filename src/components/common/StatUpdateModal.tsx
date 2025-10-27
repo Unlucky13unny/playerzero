@@ -315,14 +315,14 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               flexDirection: 'column',
               justifyContent: 'center',
               alignItems: 'flex-start',
-              padding: '0px 8px',
+              padding: '8px',
               gap: '8px',
               
               width: '310px',
-              height: '208px',
+              minHeight: hasDecreasingStats ? '208px' : 'auto',
               
-              background: 'rgba(220, 38, 39, 0.05)',
-              border: '1px solid #DC2627',
+              background: hasDecreasingStats ? 'rgba(220, 38, 39, 0.05)' : 'rgba(43, 196, 156, 0.05)',
+              border: hasDecreasingStats ? '1px solid #DC2627' : '1px solid #2BC49C',
               borderRadius: '8px',
               
               flex: 'none',
@@ -358,8 +358,8 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                   width: '40px',
                   height: '40px',
                   
-                  background: 'rgba(220, 38, 39, 0.05)',
-                  border: '1px solid #DC2627',
+                  background: hasDecreasingStats ? 'rgba(220, 38, 39, 0.05)' : 'rgba(43, 196, 156, 0.05)',
+                  border: hasDecreasingStats ? '1px solid #DC2627' : '1px solid #2BC49C',
                   borderRadius: '4px',
                   
                   flex: 'none',
@@ -410,7 +410,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                     fontSize: '12px',
                     lineHeight: '18px',
                     
-                    color: '#DC2627',
+                    color: hasDecreasingStats ? '#DC2627' : '#2BC49C',
                     
                     flex: 'none',
                     order: 0,
