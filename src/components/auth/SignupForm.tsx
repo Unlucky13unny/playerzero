@@ -66,8 +66,17 @@ export const SignupForm = () => {
       const { error: signUpError } = await signUp(email, password, metadata, username)
       
       if (signUpError) {
-        if (signUpError.code === '23505') {
-          setError({ message: 'Username already taken' })
+        // Handle different error codes with user-friendly messages
+        if (signUpError.code === 'email_exists') {
+          setError({ message: 'Email already registered. Please use a different email or try logging in.' })
+        } else if (signUpError.code === '23505') {
+          setError({ message: 'Username already taken. Please choose a different username.' })
+        } else if (signUpError.code === 'profile_error') {
+          setError({ message: 'Failed to create profile. Please try again or contact support.' })
+        } else if (signUpError.message?.toLowerCase().includes('already registered')) {
+          setError({ message: 'Email already registered. Please use a different email or try logging in.' })
+        } else if (signUpError.message?.toLowerCase().includes('foreign key constraint')) {
+          setError({ message: 'Email already registered. Please use a different email or try logging in.' })
         } else {
           setError({ message: signUpError.message })
         }
