@@ -2,6 +2,7 @@ import { PlayerHeader } from "../layout/PlayerHeader"
 import { ProfileInfo } from "../profile/ProfileInfo"
 import { GrindStats } from "./GrindStats"
 import { ShareablesHub } from "../shareables/ShareablesHub"
+import { VerificationSection } from "../shareables/VerificationSection"
 import { MobileFooter } from "../layout/MobileFooter"
 import { PerformanceRadarChart } from "./RadarChart"
 import { ExportCardModal } from "./ExportCardModal"
@@ -14,21 +15,6 @@ import { supabase } from '../../supabaseClient'
 import { dashboardService } from '../../services/dashboardService'
 
 // Social platform definitions matching ProfileInfo
-const getSocialPlatformsConfig = () => [
-  { id: 'instagram', name: 'Instagram' },
-  { id: 'facebook', name: 'Facebook' },
-  { id: 'snapchat', name: 'Snapchat' },
-  { id: 'twitter', name: 'Twitter' },
-  { id: 'tiktok', name: 'TikTok' },
-  { id: 'youtube', name: 'YouTube' },
-  { id: 'twitch', name: 'Twitch' },
-  { id: 'github', name: 'GitHub' },
-  { id: 'reddit', name: 'Reddit' },
-  { id: 'discord', name: 'Discord' },
-  { id: 'telegram', name: 'Telegram' },
-  { id: 'whatsapp', name: 'WhatsApp' },
-  { id: 'vimeo', name: 'Vimeo' },
-]
 
 interface PlayerProfileProps {
   viewMode: "public" | "private" | "team" | "own"
@@ -46,10 +32,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   const [timePeriod, setTimePeriod] = useState<'weekly' | 'monthly' | 'alltime'>('weekly')
   const [filteredStats, setFilteredStats] = useState<any>(null)
   const [showExportModal, setShowExportModal] = useState(false)
-  const [verificationScreenshots, setVerificationScreenshots] = useState<any[]>([])
-  const [screenshotsLoading, setScreenshotsLoading] = useState(false)
-  const [showScreenshots, setShowScreenshots] = useState(false)
-  const [showAllSocial, setShowAllSocial] = useState(false)
   const showMobileFooter = isMobile
 
   // Calculate header props - these are used in the conditional render
@@ -90,8 +72,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   }
 
   const calculateFilteredStats = useCallback(async () => {
-    console.log('calculateFilteredStats called with:', { timePeriod, userId: user?.id, hasProfile: !!profile })
-    if (!user?.id || !profile) {
+    // Use profile.user_id for external profiles, fallback to current user for own profile
+    const targetUserId = profile?.user_id || user?.id
+    console.log('calculateFilteredStats called with:', { timePeriod, targetUserId, hasProfile: !!profile })
+    if (!targetUserId || !profile) {
       console.log('Early return: missing user or profile')
       return
     }
@@ -102,7 +86,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
       switch (timePeriod) {
         case 'weekly':
           try {
-            statsResult = await dashboardService.calculateCurrentWeekGrindStats(user.id)
+            statsResult = await dashboardService.calculateCurrentWeekGrindStats(targetUserId)
             console.log('Week stats loaded:', statsResult)
             // Weekly stats should show zeros if no data for current week - NO FALLBACK
           } catch (weeklyError) {
@@ -125,7 +109,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
           break
         case 'monthly':
           try {
-            statsResult = await dashboardService.calculateCurrentMonthGrindStats(user.id)
+            statsResult = await dashboardService.calculateCurrentMonthGrindStats(targetUserId)
             console.log('Month stats loaded:', statsResult)
             // Monthly stats should show zeros if no data for current month - NO FALLBACK
           } catch (monthlyError) {
@@ -202,7 +186,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         })
       }
     }
-  }, [user?.id, profile, timePeriod])
+  }, [user?.id, profile?.user_id, profile, timePeriod])
 
   useEffect(() => {
     console.log('useEffect triggered with:', { hasProfile: !!profile, hasUser: !!user?.id, timePeriod })
@@ -212,7 +196,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
     } else {
       console.log('Skipping calculateFilteredStats: missing profile or user')
     }
-  }, [profile, timePeriod, user?.id])
+  }, [profile, timePeriod, user?.id, profile?.user_id])
 
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)
@@ -247,71 +231,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
     return 0
   }
 
-  // Load verification screenshots for public mode
-  const loadVerificationScreenshots = async () => {
-    if (!profile?.user_id) return
-    setScreenshotsLoading(true)
-
-    try {
-      const screenshots = await dashboardService.getVerificationScreenshots(profile.user_id, 7)
-      setVerificationScreenshots(screenshots)
-    } catch (err: any) {
-      console.error('Error loading verification screenshots:', err)
-    } finally {
-      setScreenshotsLoading(false)
-    }
-  }
-
-  // Get social media links
-  const getSocialLink = (platform: string, value: string): string | undefined => {
-    if (!value) return undefined
-    
-    switch (platform) {
-      case 'instagram':
-        return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
-      case 'tiktok':
-        return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
-      case 'twitter':
-        return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
-      case 'youtube':
-        return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
-      case 'twitch':
-        return `https://twitch.tv/${value}`
-      case 'reddit':
-        return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
-      case 'facebook':
-        return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
-      case 'snapchat':
-        return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
-      case 'github':
-        return `https://github.com/${value}`
-      case 'discord':
-        return value
-      case 'telegram':
-        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
-      case 'whatsapp':
-        return `https://wa.me/${value}`
-      case 'vimeo':
-        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
-      default:
-        return value
-    }
-  }
-
-  // Get connected social platforms
-  const getConnectedPlatforms = () => {
-    if (!profile) return [];
-    const allPlatforms = getSocialPlatformsConfig();
-    return allPlatforms.filter(platform => {
-      const value = profile[platform.id as keyof typeof profile];
-      return value && typeof value === 'string' && value.trim() !== '';
-    });
-  };
-
-  const connectedPlatforms = getConnectedPlatforms();
-  const visiblePlatforms = connectedPlatforms.slice(0, 4);
-  const remainingPlatforms = connectedPlatforms.slice(4);
-  const hasMorePlatforms = remainingPlatforms.length > 0;
 
   if (loading) {
     return (
@@ -937,9 +856,16 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                   </div>
                 </div>
 
+                {/* ShareablesHub/VerificationSection - Conditional based on viewMode */}
+                {viewMode === "own" ? (
                 <div style={{ position: 'relative', minHeight: '300px' }}>
                   <ShareablesHub />
                 </div>
+                ) : (
+                  <div style={{ position: 'relative', minHeight: '65px' }}>
+                    <VerificationSection profileUserId={profile?.user_id} />
+                  </div>
+                )}
               </div>
             )}
 
@@ -1652,7 +1578,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                   )}
                   </div>
 
-                  {/* Frame 599 - ShareablesHub Container */}
+                  {/* Frame 599 - ShareablesHub/VerificationSection Container */}
+                  {viewMode === "own" ? (
                   <div style={{
                     /* Frame 599 */
                     display: 'flex',
@@ -1672,6 +1599,27 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
                   }}>
                     <ShareablesHub />
                   </div>
+                  ) : (
+                    <div style={{
+                      /* Frame 599 */
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                      padding: '0px',
+                      gap: '16px',
+                      width: '348px',
+                      height: '65px',
+                      marginTop: '-16px',
+                      
+                      /* Inside auto layout */
+                      flex: 'none',
+                      order: 4,
+                      flexGrow: 0
+                    }}>
+                      <VerificationSection profileUserId={profile?.user_id} />
+                    </div>
+                  )}
 
 
                 </div>
@@ -1816,195 +1764,7 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
           </div>
         </div>
 
-        {/* Social Links Section - Only show in public mode */}
-        {viewMode === "public" && connectedPlatforms.length > 0 && (
-          <>
-            <div className="section-header">
-              <h2>Social Links</h2>
-            </div>
-            <div className="social-links-container">
-              {profile?.is_paid_user ? (
-                <div style={{ 
-                  display: 'flex', 
-                  gap: '12px', 
-                  padding: '20px',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                }}>
-                  {/* Show first 4 connected platforms */}
-                  {visiblePlatforms.map((platform) => (
-                    <a
-                      key={platform.id}
-                      href={getSocialLink(platform.id, profile[platform.id as keyof typeof profile] as string)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity"
-                      title={`Visit on ${platform.name}`}
-                    >
-                      <img 
-                        src={`/images/${platform.id}.svg`} 
-                        alt={platform.name} 
-                        style={{ width: '44px', height: '44px' }} 
-                      />
-                    </a>
-                  ))}
-                  
-                  {/* +N Button if there are more than 4 connected platforms */}
-                  {hasMorePlatforms && (
-                    <div
-                      onClick={() => setShowAllSocial(true)}
-                      style={{
-                        width: '44px',
-                        height: '44px',
-                        background: '#000000',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                      }}
-                      className="hover:opacity-80 transition-opacity"
-                      title="View more social accounts"
-                    >
-                      <span style={{
-                        fontFamily: 'Poppins',
-                        fontWeight: 600,
-                        fontSize: '14px',
-                        color: '#FFFFFF',
-                      }}>
-                        +{remainingPlatforms.length}
-                      </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <p className="private-notice">This user's social links are private</p>
-              )}
-            </div>
-
-            {/* Verification Screenshots */}
-            <div className="verification-screenshots-section">
-              <div className="screenshots-section-header">
-                <div className="screenshots-title-group">
-                  <div className="screenshots-icon">📸</div>
-                  <div>
-                    <h2>Verification Screenshots</h2>
-                    <p className="screenshots-subtitle">
-                      View stat update verification history
-                      {!screenshotsLoading && verificationScreenshots.length > 0 && (
-                        <span className="screenshot-count"> • {verificationScreenshots.length} screenshot{verificationScreenshots.length !== 1 ? 's' : ''}</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <button 
-                  className={`toggle-screenshots-button ${showScreenshots ? 'active' : ''}`}
-                  onClick={() => {
-                    if (!showScreenshots && verificationScreenshots.length === 0 && profile) {
-                      loadVerificationScreenshots()
-                    }
-                    setShowScreenshots(!showScreenshots)
-                  }}
-                >
-                  <span className="toggle-icon">
-                    {showScreenshots ? '👁️‍🗨️' : '👁️'}
-                  </span>
-                  <span className="toggle-text">
-                    {showScreenshots ? 'Hide' : 'View'}
-                  </span>
-                  <span className="toggle-arrow">
-                    {showScreenshots ? '▲' : '▼'}
-                  </span>
-                </button>
-              </div>
-              
-              <div className={`screenshots-content ${showScreenshots ? 'expanded' : 'collapsed'}`}>
-                {showScreenshots && (
-                  <>
-                    {screenshotsLoading ? (
-                      <div className="screenshots-loading-state" style={{ filter: 'blur(4px)', opacity: 0.6, pointerEvents: 'none' }}>
-                        <h3>Loading Screenshots</h3>
-                        <p>Fetching verification history...</p>
-                      </div>
-                    ) : verificationScreenshots.length > 0 ? (
-                      <div className="screenshots-grid">
-                        {verificationScreenshots.map((screenshot, index) => (
-                          <div key={screenshot.id} className="screenshot-card screenshot-protected">
-                            <div className="screenshot-card-header">
-                              <div className="screenshot-date-badge">
-                                <span className="date-icon">📅</span>
-                                <span className="date-text">
-                                  {new Date(screenshot.entry_date).toLocaleDateString('en-US', {
-                                    month: 'short',
-                                    day: 'numeric',
-                                    year: 'numeric'
-                                  })}
-                                </span>
-                              </div>
-                              <div className="screenshot-index">#{verificationScreenshots.length - index}</div>
-                            </div>
-                            
-                            <div className="screenshot-image-container">
-                              <img 
-                                src={screenshot.screenshot_url} 
-                                alt={`Stats verification for ${screenshot.entry_date}`}
-                                className="verification-screenshot"
-                                onContextMenu={(e) => e.preventDefault()}
-                                onDragStart={(e) => e.preventDefault()}
-                                style={{ userSelect: 'none', pointerEvents: 'none' }}
-                              />
-                              <div className="screenshot-overlay">
-                                <div className="protection-notice">
-                                  <span className="shield-icon">🛡️</span>
-                                  <span>Screenshot Protected</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="screenshot-stats-footer">
-                              <div className="stat-badges">
-                                <div className="stat-badge xp-badge">
-                                  <span className="stat-icon">⚡</span>
-                                  <span className="stat-label">XP</span>
-                                  <span className="stat-value">{screenshot.stat_entries.total_xp?.toLocaleString()}</span>
-                                </div>
-                                <div className="stat-badge caught-badge">
-                                  <span className="stat-icon">🔴</span>
-                                  <span className="stat-label">Caught</span>
-                                  <span className="stat-value">{screenshot.stat_entries.pokemon_caught?.toLocaleString()}</span>
-                                </div>
-                                <div className="stat-badge distance-badge">
-                                  <span className="stat-icon">👣</span>
-                                  <span className="stat-label">Distance</span>
-                                  <span className="stat-value">{screenshot.stat_entries.distance_walked?.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km</span>
-                                </div>
-                                <div className="stat-badge stops-badge">
-                                  <span className="stat-icon">🔵</span>
-                                  <span className="stat-label">Stops</span>
-                                  <span className="stat-value">{screenshot.stat_entries.pokestops_visited?.toLocaleString()}</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="no-screenshots-state">
-                        <div className="empty-state-icon">📷</div>
-                        <h3>No Verification Screenshots</h3>
-                        <p>This trainer hasn't uploaded any stat verification screenshots yet.</p>
-                        <div className="empty-state-hint">
-                          <span className="hint-icon">💡</span>
-                          <span>Screenshots are required when updating stats to maintain leaderboard integrity</span>
-                        </div>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-          </>
-        )}
+        {/* Social Links Section and Verification Screenshots - Removed for public profiles */}
       </main>
 
       {showMobileFooter && <MobileFooter currentPage="profile" />}
@@ -2017,105 +1777,6 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         isPaidUser={userType === "upgraded"}
       />
 
-      {/* Modal for all social accounts - Matching SocialConnectModal design */}
-      {showAllSocial && profile && (
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0, 0, 0, 0.5)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-          }}
-          onClick={() => setShowAllSocial(false)}
-        >
-          <div
-            style={{
-              backgroundColor: '#FFFFFF',
-              borderRadius: '12px',
-              width: '351px',
-              height: 'auto',
-              maxHeight: '90vh',
-              overflow: 'auto',
-              position: 'relative',
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowAllSocial(false)}
-              style={{
-                position: 'absolute',
-                width: '24px',
-                height: '24px',
-                right: '13px',
-                top: '13px',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                padding: 0,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              className="hover:opacity-70 transition-opacity"
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-
-            {/* Social Accounts Grid - Matching SocialConnectModal */}
-            <div
-              style={{
-                padding: '60px 16px 24px 16px',
-                width: '100%',
-              }}
-            >
-              <div
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(3, 1fr)',
-                  gap: '28.25px 31.33px',
-                  width: '100%',
-                  justifyItems: 'center',
-                }}
-              >
-                {connectedPlatforms.map((platform) => (
-                  <a
-                    key={platform.id}
-                    href={getSocialLink(platform.id, profile[platform.id as keyof typeof profile] as string)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      textDecoration: 'none',
-                    }}
-                    className="hover:opacity-80 transition-opacity"
-                    title={`Visit on ${platform.name}`}
-                  >
-                    <img 
-                      src={`/images/${platform.id}.svg`} 
-                      alt={platform.name} 
-                      style={{ 
-                        width: '44px', 
-                        height: '44px',
-                      }} 
-                    />
-                  </a>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

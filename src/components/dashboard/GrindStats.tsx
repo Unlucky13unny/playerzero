@@ -18,6 +18,7 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
   // Load all-time stats from backend when component mounts or profile changes
   useEffect(() => {
     let isMounted = true;
+    // Prioritize profile.user_id for external profiles, fallback to current user
     const targetUserId = profile?.user_id || user?.id
     
     if (targetUserId) {
@@ -66,7 +67,21 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
 
   const formatDistance = (distance: number | null | undefined) => {
     if (!distance || distance === 0) return '0.0'
-    return distance.toFixed(1)
+    
+    // Use K, M, B suffixes like other core stats
+    const absVal = Math.abs(distance)
+    const sign = distance < 0 ? '-' : ''
+    
+    if (absVal >= 1_000_000_000) {
+      return sign + (absVal / 1_000_000_000).toFixed(1) + 'B'
+    }
+    if (absVal >= 1_000_000) {
+      return sign + (absVal / 1_000_000).toFixed(1) + 'M'
+    }
+    if (absVal >= 1_000) {
+      return sign + (absVal / 1_000).toFixed(1) + 'K'
+    }
+    return sign + absVal.toFixed(1)
   }
 
   const getStatValue = (statType: 'distance_walked' | 'pokemon_caught' | 'pokestops_visited' | 'total_xp') => {
@@ -262,8 +277,9 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
             flexGrow: 0
           }}>
             <div style={{
-              /* 4.6 */
-              width: '38px',
+              /* Distance Value */
+              width: 'auto',
+              minWidth: '50px',
               height: '32px',
               fontFamily: 'Poppins',
               fontStyle: 'normal',
@@ -274,7 +290,11 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
               /* Inside auto layout */
               flex: 'none',
               order: 0,
-              flexGrow: 0
+              flexGrow: 0,
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
               {formatDistance(getStatValue('distance_walked'))}
             </div>
@@ -511,8 +531,9 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
             }}
           >
             <div style={{
-              /* Stat Value - 4.6 */
-              width: '57px',
+              /* Stat Value - Distance */
+              width: 'auto',
+              minWidth: '120px',
               height: '32px',
               fontFamily: 'Poppins',
               fontStyle: 'normal',
@@ -525,6 +546,9 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
               order: 0,
               flexGrow: 0,
               textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
               {formatDistance(getStatValue('distance_walked'))}
             </div>
