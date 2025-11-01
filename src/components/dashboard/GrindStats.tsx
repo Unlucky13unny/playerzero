@@ -596,7 +596,8 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
           >
             <div style={{
               /* Stat Value - 52.1 */
-              width: '67px',
+              width: 'auto',
+              minWidth: '67px',
               height: '32px',
               fontFamily: 'Poppins',
               fontStyle: 'normal',
@@ -609,6 +610,9 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
               order: 0,
               flexGrow: 0,
               textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
             }}>
               {formatNumber(getStatValue('pokemon_caught'))}
             </div>

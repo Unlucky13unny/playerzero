@@ -31,6 +31,8 @@ export const UpdateStats = () => {
 
   useEffect(() => {
     loadProfile()
+    // Auto-trigger the "Choose upload method" button when page loads
+    handleOpenUploadModal()
   }, [])
 
   const loadProfile = async () => {
@@ -140,8 +142,10 @@ export const UpdateStats = () => {
     setHasExtractedStats(false)
     
     if (file) {
+      // Auto-select "Extract stats" when image is uploaded
+      setUploadMode('extract')
       console.log('📁 Image selected:', file.name, 'Size:', file.size, 'bytes')
-      console.log('✅ Preview ready. Choose extraction method from toggle buttons.')
+      console.log('✅ Preview ready. Extract stats auto-selected.')
     }
   }
 
@@ -1249,6 +1253,47 @@ export const UpdateStats = () => {
             </button>
           </div>
         </div>
+        
+        {/* Footer - Manual inline */}
+        <div style={{
+          width: '100%',
+          minHeight: '80px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#FFFFFF',
+          borderTop: '1px solid #EBEFF2',
+          padding: '20px',
+          gap: '4px',
+          marginBottom: '-120px',
+          order: 999,
+          flex: 'none',
+          alignSelf: 'stretch',
+        }}>
+          <span style={{
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 400,
+            fontSize: '14px',
+            lineHeight: '18px',
+            color: '#666666',
+            textAlign: 'center',
+          }}>
+            © 2025 PlayerZero. All rights reserved.
+          </span>
+          <span style={{
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 400,
+            fontSize: '12px',
+            lineHeight: '18px',
+            color: '#999999',
+            textAlign: 'center',
+          }}>
+            Powering the next generation of Pokemon GO trainers
+          </span>
+        </div>
       </div>
       
       {/* Stat Update Confirmation Modal */}
@@ -1323,8 +1368,9 @@ export const UpdateStats = () => {
                 // Auto layout
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'flex-start',
-                padding: '4px 5px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
                 gap: '4px',
                 
                 // Positioning - Exact Figma specs
@@ -1509,12 +1555,8 @@ export const UpdateStats = () => {
                       gap: '8px',
                       width: '289px',
                       height: '481px',
-                      border: '2px dashed #E2E6EA',
+                      border: '2px solid #DC2627',
                       borderRadius: '24px',
-                      flex: 'none',
-                      order: 0,
-                      alignSelf: 'stretch',
-                      flexGrow: 1,
                     }}
                   >
                     {/* "Selected image" label - Exact CSS */}
@@ -1664,12 +1706,8 @@ export const UpdateStats = () => {
                       gap: '8px',
                       width: '289px',
                       height: '481px',
-                      border: '2px dashed #E2E6EA',
+                      border: '2px solid #DC2627',
                       borderRadius: '24px',
-                      flex: 'none',
-                      order: 0,
-                      alignSelf: 'stretch',
-                      flexGrow: 1,
                     }}
                   >
                     {/* "Selected image" label - Exact CSS */}
@@ -1824,16 +1862,10 @@ export const UpdateStats = () => {
                       width: isMobile ? '289px' : '336px',
                       height: isMobile ? '481px' : '560px',
                       
-                      // Style - Grey 03 dashed border
-                      border: '2px dashed #E2E6EA',
+                      // Style - Red border for uploaded image
+                      border: '2px solid #DC2627',
                       borderRadius: '24px',
                       background: '#FFFFFF',
-                      
-                      // Inside auto layout
-                      flex: 'none',
-                      order: 0,
-                      alignSelf: 'stretch',
-                      flexGrow: 1,
                     }}
                   >
                     {/* "Selected image" label - Figma specs */}
@@ -1988,8 +2020,7 @@ export const UpdateStats = () => {
                       whiteSpace: 'pre-line',
                     }}
                   >
-                    upload a screenshot.
-
+                    Upload a screenshot of your Trainer Profile.
                   </p>
                 </div>
               )}
@@ -2684,7 +2715,7 @@ export const UpdateStats = () => {
                     position: 'absolute',
                     width: '100%',
                     height: '54px',
-                    left: 'calc(50% - 330px/2)',
+                    left: '0',
                     top: '0px',
                     
                     fontFamily: 'Poppins',
@@ -2792,3 +2823,4 @@ export const UpdateStats = () => {
     </div>
   )
 }
+

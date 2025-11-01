@@ -7,6 +7,7 @@ import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
 import { VerificationScreenshotsModal } from '../shareables/VerificationScreenshotsModal'
+import { Footer } from '../common/Footer'
 
 // Social platform definitions matching ProfileInfo
 const getSocialPlatformsConfig = () => [
@@ -230,6 +231,11 @@ export const PublicProfile = () => {
     if (profile?.trainer_code) {
       navigator.clipboard.writeText(profile.trainer_code.replace(/\s/g, ''))
     }
+  }
+
+  const copyDiscordHandle = (handle: string) => {
+    navigator.clipboard.writeText(handle)
+    alert('Discord handle copied to clipboard!')
   }
 
   if (loading) {
@@ -512,6 +518,22 @@ export const PublicProfile = () => {
             {SOCIAL_MEDIA.map(platform => {
               const value = profile[platform.key as keyof typeof profile];
               if (value && value !== '' && typeof value === 'string') {
+                // Special handling for Discord - copy instead of link
+                if (platform.key === 'discord') {
+                  return (
+                    <div
+                      key={platform.key}
+                      onClick={() => copyDiscordHandle(value)}
+                      className="social-link"
+                      style={{ cursor: 'pointer' }}
+                      title="Click to copy Discord handle"
+                    >
+                      <SocialIcon platform={platform.key} size={24} color="currentColor" />
+                      <span>{value}</span>
+                    </div>
+                  );
+                }
+                
                 return (
                   <a 
                     key={platform.key}
@@ -786,6 +808,9 @@ export const PublicProfile = () => {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <Footer />
     </div>
   )
 } 

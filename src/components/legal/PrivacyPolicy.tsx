@@ -120,7 +120,7 @@ export const PrivacyPolicy = () => {
           {/* Footer */}
           <div className="legal-footer">
             <span className="legal-footer-copyright">
-              © 2024 PlayerZero. All rights reserved.
+              © 2025 PlayerZero. All rights reserved.
             </span>
             <span className="legal-footer-tagline">
               Powering the next generation of Pokemon GO trainers

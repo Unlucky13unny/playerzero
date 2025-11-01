@@ -545,6 +545,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     try {
 
+      // Banned countries list
+      const BANNED_COUNTRIES = ['Iran', 'China', 'Russia', 'Belarus', 'North Korea']
+
       // Fetch unique countries from the database
 
       const { data, error } = await supabase
@@ -563,9 +566,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
       
 
-      // Process countries data
+      // Process countries data and filter out banned countries
 
       const uniqueCountries = Array.from(new Set(data?.map(p => p.country) || []))
+        .filter(country => !BANNED_COUNTRIES.includes(country))
 
       const countriesData = await Promise.all(
 
@@ -5730,7 +5734,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             }}>
 
-              © 2024 PlayerZero. All rights reserved.
+              © 2025 PlayerZero. All rights reserved.
 
             </span>
 

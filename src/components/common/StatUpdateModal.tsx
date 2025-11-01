@@ -109,10 +109,11 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
             padding: '0px',
             gap: '17px',
             
-            width: isMobile ? '310px' : '360px',
-            maxWidth: '100%',
+            width: '100%',
+            maxWidth: isMobile ? '310px' : '360px',
             marginTop: '20px',
             marginBottom: '20px',
+            margin: '20px auto',
           }}>
             {/* Title: Stat correction review */}
               <div style={{
@@ -184,11 +185,11 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                       display: 'flex',
                     flexDirection: 'row',
                       alignItems: 'center',
+                      justifyContent: 'center',
                     padding: '0px',
                       gap: '8px',
                     
                     width: '100%',
-                    maxWidth: '310px',
                     height: '36px',
                     
                     flex: 'none',
@@ -318,8 +319,10 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               padding: '8px',
               gap: '8px',
               
-              width: '310px',
+              width: '100%',
+              maxWidth: '310px',
               minHeight: hasDecreasingStats ? '208px' : 'auto',
+              margin: '0 auto',
               
               background: hasDecreasingStats ? 'rgba(220, 38, 39, 0.05)' : 'rgba(43, 196, 156, 0.05)',
               border: hasDecreasingStats ? '1px solid #DC2627' : '1px solid #2BC49C',
@@ -327,7 +330,7 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
               
               flex: 'none',
               order: 2,
-              alignSelf: 'stretch',
+              alignSelf: 'center',
               flexGrow: 0,
             }}>
               {/* Frame 598 */}
@@ -338,7 +341,8 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                 padding: '0px',
                 gap: '16px',
                 
-                width: '286px',
+                width: '100%',
+                maxWidth: '286px',
                 height: '54px',
                 
                 flex: 'none',
@@ -391,12 +395,10 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
                   padding: '0px',
                   gap: '2px',
                   
-                  width: '230px',
+                  flex: 1,
                   height: '54px',
                   
-                  flex: 'none',
                   order: 1,
-                  flexGrow: 0,
                 }}>
                   {/* One or more stats are lower than your previous values. This is allowed for correcting mistakes. */}
                   <p style={{
@@ -514,11 +516,14 @@ export const StatUpdateModal: React.FC<StatUpdateModalProps> = ({
             display: 'flex',
               flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: 'center',
               padding: '0px',
               gap: '8px',
               
-              width: '190px',
+              width: '100%',
+              maxWidth: '190px',
               height: '38px',
+              margin: '0 auto',
               
               flex: 'none',
               order: 3,

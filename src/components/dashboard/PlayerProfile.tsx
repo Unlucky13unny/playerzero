@@ -4,6 +4,7 @@ import { GrindStats } from "./GrindStats"
 import { ShareablesHub } from "../shareables/ShareablesHub"
 import { VerificationSection } from "../shareables/VerificationSection"
 import { MobileFooter } from "../layout/MobileFooter"
+import { Footer } from "../common/Footer"
 import { PerformanceRadarChart } from "./RadarChart"
 import { ExportCardModal } from "./ExportCardModal"
 import { Crown } from "../icons/Crown"
@@ -1776,6 +1777,9 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         profile={profile}
         isPaidUser={userType === "upgraded"}
       />
+
+      {/* Footer */}
+      <Footer />
 
     </div>
   )
