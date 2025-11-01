@@ -142,22 +142,26 @@ export const dashboardService = {
       throw error
     }
 
+    // Filter out banned countries
+    const BANNED_COUNTRIES = ['Iran', 'China', 'Russia', 'Belarus', 'North Korea']
+    let filteredData = (data || []).filter((entry: any) => !BANNED_COUNTRIES.includes(entry.country))
+
     // Debug: Check if unique_pokedex_entries is present in data
-    if (params.sortBy === 'dex' && data && data.length > 0) {
+    if (params.sortBy === 'dex' && filteredData && filteredData.length > 0) {
       console.log('🔍 Dex data check:', {
         period: params.period,
         viewName: query,
         sampleEntry: {
-          trainer: data[0]?.trainer_name,
-          unique_pokedex_entries: data[0]?.unique_pokedex_entries,
-          dex_delta: data[0]?.dex_delta,
-          allFields: Object.keys(data[0] || {})
+          trainer: filteredData[0]?.trainer_name,
+          unique_pokedex_entries: filteredData[0]?.unique_pokedex_entries,
+          dex_delta: filteredData[0]?.dex_delta,
+          allFields: Object.keys(filteredData[0] || {})
         }
       })
     }
 
     // Sort the data
-    if (data && data.length > 0) {
+    if (filteredData && filteredData.length > 0) {
       const sortField = params.period === 'all-time' 
         ? (params.sortBy === 'xp' ? 'total_xp' : 
            params.sortBy === 'catches' ? 'pokemon_caught' : 
@@ -168,10 +172,10 @@ export const dashboardService = {
            params.sortBy === 'distance' ? 'distance_delta' : 
            params.sortBy === 'dex' ? 'dex_delta' : 'pokestops_delta')
       
-      data.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
+      filteredData.sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
     }
 
-    return { data: data as LeaderboardEntry[], error: null }
+    return { data: filteredData as LeaderboardEntry[], error: null }
   },
 
   // Get LOCKED leaderboard data (previous period winners)
@@ -210,15 +214,24 @@ export const dashboardService = {
       return { data: [], error: null }
     }
 
+    // Filter out banned countries
+    const BANNED_COUNTRIES = ['Iran', 'China', 'Russia', 'Belarus', 'North Korea']
+    const filteredData = data.filter((entry: any) => !BANNED_COUNTRIES.includes(entry.country))
+
+    if (filteredData.length === 0) {
+      console.log(`No data found in ${viewName} after filtering banned countries`)
+      return { data: [], error: null }
+    }
+
     // Debug: Check if dex_delta is present in locked data
-    if (params.sortBy === 'dex' && data && data.length > 0) {
+    if (params.sortBy === 'dex' && filteredData && filteredData.length > 0) {
       console.log('🔍 Locked Dex data check:', {
         period: params.period,
         viewName: viewName,
         sampleEntry: {
-          trainer: data[0]?.trainer_name,
-          dex_delta: data[0]?.dex_delta,
-          allFields: Object.keys(data[0] || {})
+          trainer: filteredData[0]?.trainer_name,
+          dex_delta: filteredData[0]?.dex_delta,
+          allFields: Object.keys(filteredData[0] || {})
         }
       })
     }
@@ -229,7 +242,7 @@ export const dashboardService = {
                      params.sortBy === 'distance' ? 'distance_delta' : 
                      params.sortBy === 'dex' ? 'dex_delta' : 'pokestops_delta'
     
-    const sortedData = [...data].sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
+    const sortedData = [...filteredData].sort((a: any, b: any) => (b[sortField] || 0) - (a[sortField] || 0))
 
     // Convert to LeaderboardEntry format
     const formattedData = sortedData.map((entry: any) => ({
@@ -292,6 +305,10 @@ export const dashboardService = {
 
       // Apply filters and sorting
       let filteredData = data || []
+
+      // Filter out banned countries
+      const BANNED_COUNTRIES = ['Iran', 'China', 'Russia', 'Belarus', 'North Korea']
+      filteredData = filteredData.filter((entry: any) => !BANNED_COUNTRIES.includes(entry.country))
 
       if (params.view === 'country' && params.filterValue) {
         filteredData = filteredData.filter((entry: any) => entry.country === params.filterValue)
@@ -1417,6 +1434,24 @@ export const dashboardService = {
       throw error
     }
 
+    // Get latest Dex totals for all users (Dex is cumulative, not delta-based)
+    const { data: dexTotals, error: dexError } = await supabase
+      .from('profiles')
+      .select('id, unique_pokedex_entries')
+      .limit(1000)
+
+    if (dexError) {
+      console.error('Dex totals error:', dexError)
+    }
+
+    // Create a map of profile_id -> dex_total for quick lookup
+    const dexMap = new Map<string, number>()
+    if (dexTotals) {
+      dexTotals.forEach((profile: any) => {
+        dexMap.set(profile.id, profile.unique_pokedex_entries || 0)
+      })
+    }
+
     if (!data || data.length === 0) {
       // Return empty structure
       return {
@@ -1453,7 +1488,8 @@ export const dashboardService = {
       const catches = entry.catches_delta || 0
       const distance = entry.distance_delta || 0
       const stops = entry.pokestops_delta || 0
-      const dex = entry.dex_delta || 0
+      // For Dex, use the total from profiles (cumulative), not delta
+      const dex = dexMap.get(entry.profile_id) || 0
 
       // Check if this is the player
       if (entry.profile_id === profileId) {
@@ -1462,7 +1498,7 @@ export const dashboardService = {
           pokemon_caught: catches,
           distance_walked: distance,
           pokestops_visited: stops,
-          unique_pokedex_entries: dex
+          unique_pokedex_entries: dex // Use total Dex
         }
       }
 
@@ -1471,7 +1507,7 @@ export const dashboardService = {
       globalSum.catches += catches
       globalSum.distance += distance
       globalSum.stops += stops
-      globalSum.dex += dex
+      globalSum.dex += dex // Sum totals for averaging
 
       // Country aggregation
       if (entry.country === country) {
@@ -1479,7 +1515,7 @@ export const dashboardService = {
         countrySum.catches += catches
         countrySum.distance += distance
         countrySum.stops += stops
-        countrySum.dex += dex
+        countrySum.dex += dex // Sum totals for averaging
         countrySum.count++
       }
 
@@ -1489,7 +1525,7 @@ export const dashboardService = {
         teamSum.catches += catches
         teamSum.distance += distance
         teamSum.stops += stops
-        teamSum.dex += dex
+        teamSum.dex += dex // Sum totals for averaging
         teamSum.count++
       }
 
@@ -1499,7 +1535,7 @@ export const dashboardService = {
         pokemon_caught: catches,
         distance_walked: distance,
         pokestops_visited: stops,
-        unique_pokedex_entries: dex
+        unique_pokedex_entries: dex // Use total Dex
       })
 
       // For bounds calculation
@@ -1507,7 +1543,7 @@ export const dashboardService = {
       catchesValues.push(catches)
       distanceValues.push(distance)
       stopsValues.push(stops)
-      dexValues.push(dex)
+      dexValues.push(dex) // Use total Dex for bounds
     })
 
     const totalCount = data.length

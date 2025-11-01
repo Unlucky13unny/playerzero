@@ -155,24 +155,6 @@ const countryFlags: CountryFlags = {
     flagUrl: 'https://flagcdn.com/w40/in.png',
     code: 'IN'
   },
-  'china': {
-    name: 'China',
-    nativeName: '中国',
-    flagUrl: 'https://flagcdn.com/w40/cn.png',
-    code: 'CN'
-  },
-  'russia': {
-    name: 'Russia',
-    nativeName: 'Россия',
-    flagUrl: 'https://flagcdn.com/w40/ru.png',
-    code: 'RU'
-  },
-  'россия': {
-    name: 'Russia',
-    nativeName: 'Россия',
-    flagUrl: 'https://flagcdn.com/w40/ru.png',
-    code: 'RU'
-  },
   'south korea': {
     name: 'South Korea',
     nativeName: '대한민국',
@@ -184,12 +166,6 @@ const countryFlags: CountryFlags = {
     nativeName: '대한민국',
     flagUrl: 'https://flagcdn.com/w40/kr.png',
     code: 'KR'
-  },
-  'north korea': {
-    name: 'North Korea',
-    nativeName: '조선민주주의인민공화국',
-    flagUrl: 'https://flagcdn.com/w40/kp.png',
-    code: 'KP'
   },
   'netherlands': {
     name: 'Netherlands',

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom'
+import { Footer } from './common/Footer'
 
 export const ContactHelp = () => {
   return (
-    <div className="help-center-container">
+    <div className="help-center-container" style={{ paddingBottom: '100px' }}>
 
       {/* Title */}
       <div className="help-title">
@@ -59,6 +60,9 @@ export const ContactHelp = () => {
           <Link to="/privacy-policy" className="footer-link">Privacy Policy</Link>
         </div>
       </div>
+      
+      {/* Footer */}
+      <Footer fixed={true} />
     </div>
   )
 } 

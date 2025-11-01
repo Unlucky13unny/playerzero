@@ -1,6 +1,7 @@
 import { UserSearch } from '../common/UserSearch';
 import { Layout } from '../layout/Layout';
 import { MobileFooter } from '../layout/MobileFooter';
+import { Footer } from '../common/Footer';
 import { useMobile } from '../../hooks/useMobile';
 import './SearchPage.css';
 
@@ -23,6 +24,7 @@ export const SearchPage = () => {
           margin: "0 auto",
           marginTop: isMobile ? "8px" : "20px",
           padding: isMobile ? "0 16px" : "0px",
+          paddingBottom: "100px",
           boxSizing: "border-box",
         }}
       >
@@ -75,6 +77,9 @@ export const SearchPage = () => {
       
       {/* Mobile Footer */}
       {isMobile && <MobileFooter currentPage="search" />}
+      
+      {/* Footer */}
+      <Footer fixed={true} />
     </Layout>
   );
 }; 
