@@ -1,10 +1,13 @@
 import { Link } from 'react-router-dom'
+import { useMobile } from '../../hooks/useMobile'
 import logoSvg from "/images/logo.svg"
 
 export const SignupSuccess = () => {
+  const isMobile = useMobile()
+  
   return (
     <div className="split-layout" style={{ overflow: 'hidden' }}>
-      <div className="split-layout-left" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+      <div className="split-layout-left" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', width: isMobile ? '100%' : '50%' }}>
         <div className="auth-container" style={{ maxWidth: '400px', padding: '2rem 1.5rem' }}>
           <div style={{ marginTop: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
             <img src={logoSvg} alt="PlayerZERO" style={{ width: '181px', height: '35px' }} />
@@ -49,12 +52,14 @@ export const SignupSuccess = () => {
         </div>
       </div>
       
-      <div className="split-layout-right" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div className="welcome-message" style={{ maxWidth: '600px', padding: '2rem' }}>
-          <h1 style={{ fontSize: '3.5rem', fontWeight: 700, lineHeight: '1.2', marginBottom: '1rem', color: '#000000' }}>Welcome to PlayerZERO!</h1>
-          <p style={{ fontSize: '1.15rem', color: '#6B7280', lineHeight: '1.7', marginTop: '1.5rem' }}>Get ready to connect with the Pokémon GO community and showcase your trainer achievements.</p>
+      {!isMobile && (
+        <div className="split-layout-right" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="welcome-message" style={{ maxWidth: '600px', padding: '2rem' }}>
+            <h1 style={{ fontSize: '3.5rem', fontWeight: 700, lineHeight: '1.2', marginBottom: '1rem', color: '#000000' }}>Welcome to PlayerZERO!</h1>
+            <p style={{ fontSize: '1.15rem', color: '#6B7280', lineHeight: '1.7', marginTop: '1.5rem' }}>Get ready to connect with the Pokémon GO community and showcase your trainer achievements.</p>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 } 
