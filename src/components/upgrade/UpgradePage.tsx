@@ -336,7 +336,7 @@ export const UpgradePage = () => {
             width: '100%',
           }}>
             What You Get with Premium
-          </div>
+                  </div>
                   
           {/* Frame 735 - Features List */}
           <div style={{
@@ -462,7 +462,7 @@ export const UpgradePage = () => {
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>All Future Features Included</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – every update released during your subscription year is yours automatically.</span>
-              </div>
+                  </div>
                 </div>
 
             {/* Feature 5 */}
@@ -532,16 +532,17 @@ export const UpgradePage = () => {
               color: '#FFFFFF',
             }}>
               {loading ? 'Processing...' : 'UPGRADE NOW'}
-            </div>
+          </div>
           </button>
-        </div>
+          </div>
 
         {/* Frame 741 - Stripe & SSL Badges */}
         <div style={{
           display: 'flex',
           flexDirection: 'row',
           justifyContent: 'center',
-          alignItems: 'flex-start',
+          width: 'auto',
+          alignItems: 'center',
           padding: '0px',
           gap: '8px',
         }}>

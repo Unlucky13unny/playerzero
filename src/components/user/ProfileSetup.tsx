@@ -169,6 +169,13 @@ export const ProfileSetup = () => {
     fetchMaxEntries();
   }, []);
 
+  // Auto-trigger upload modal when stats section (step 2) opens
+  useEffect(() => {
+    if (currentStep === 2) {
+      handleOpenUploadModal()
+    }
+  }, [currentStep])
+
   // Set email from user
   // Email is stored in auth.users table, not in profiles table
   // So we don't need to add it to profileData
@@ -398,6 +405,9 @@ export const ProfileSetup = () => {
     setHasExtractedStats(false)
     
     if (file) {
+      // Auto-select "Extract stats" when image is uploaded
+      setUploadMode('extract')
+      
       // Create image preview
       const reader = new FileReader()
       reader.onloadend = () => {
@@ -406,7 +416,7 @@ export const ProfileSetup = () => {
       reader.readAsDataURL(file)
       
       console.log('📁 Image selected:', file.name, 'Size:', file.size, 'bytes')
-      console.log('✅ Preview ready. Choose extraction method from toggle buttons.')
+      console.log('✅ Preview ready. Extract stats auto-selected.')
     } else {
       setImagePreview(null)
     }
@@ -1279,8 +1289,9 @@ export const ProfileSetup = () => {
                 // Auto layout
                 display: 'flex',
                 flexDirection: 'row',
-                alignItems: 'flex-start',
-                padding: '4px 5px',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
                 gap: '4px',
                 
                 // Positioning - Exact Figma specs
@@ -1465,12 +1476,8 @@ export const ProfileSetup = () => {
                       gap: '8px',
                       width: '289px',
                       height: '481px',
-                      border: '2px dashed #E2E6EA',
+                      border: '2px solid #DC2627',
                       borderRadius: '24px',
-                      flex: 'none',
-                      order: 0,
-                      alignSelf: 'stretch',
-                      flexGrow: 1,
                     }}
                   >
                     {/* "Selected image" label - Exact CSS */}
@@ -1620,12 +1627,8 @@ export const ProfileSetup = () => {
                       gap: '8px',
                       width: '289px',
                       height: '481px',
-                      border: '2px dashed #E2E6EA',
+                      border: '2px solid #DC2627',
                       borderRadius: '24px',
-                      flex: 'none',
-                      order: 0,
-                      alignSelf: 'stretch',
-                      flexGrow: 1,
                     }}
                   >
                     {/* "Selected image" label - Exact CSS */}
@@ -1780,16 +1783,10 @@ export const ProfileSetup = () => {
                     width: isMobile ? '289px' : '336px',
                     height: isMobile ? '481px' : '560px',
                     
-                    // Style - Grey 03 dashed border
-                    border: '2px dashed #E2E6EA',
+                      // Style - Red border for uploaded image
+                      border: '2px solid #DC2627',
                     borderRadius: '24px',
                     background: '#FFFFFF',
-                    
-                    // Inside auto layout
-                    flex: 'none',
-                    order: 0,
-                    alignSelf: 'stretch',
-                    flexGrow: 1,
                   }}
                 >
                   {/* "Selected image" label - Figma specs */}
@@ -1944,7 +1941,7 @@ export const ProfileSetup = () => {
                       whiteSpace: 'pre-line',
                     }}
                   >
-                    Click to upload a screenshot
+                    Upload a screenshot of your Trainer Profile.
                   </p>
                 </div>
               )}

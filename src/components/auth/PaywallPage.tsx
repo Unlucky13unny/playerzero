@@ -4,7 +4,6 @@ import { loadStripe } from '@stripe/stripe-js'
 import { supabase } from '../../supabaseClient'
 import { useMobile } from '../../hooks/useMobile'
 import logoSvg from "/images/logo.svg"
-import stripeLogo from "/images/stripe-logo.svg"
 
 // Initialize Stripe
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY)
@@ -122,36 +121,27 @@ export const PaywallPage = () => {
               }}
             />
 
-            {/* Frame 742 - Heading - EXACT FIGMA SPECS */}
+            {/* Frame 742 - Heading */}
             <div style={{
-              // Auto layout
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               padding: '0px',
-              
-              width: '299px',
-              height: '90px',
-              
-              // Inside auto layout
+              width: '100%',
               flex: 'none',
               order: 1,
               flexGrow: 0,
             }}>
               {/* Unlock your Grind */}
               <div style={{
-                width: '288px',
-                height: '48px',
-                
+                width: '100%',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
-                fontSize: '30px',
-                lineHeight: '48px',
-                
+                fontSize: isMobile ? '24px' : '30px',
+                lineHeight: isMobile ? '32px' : '48px',
+                textAlign: 'center',
                 color: '#000000',
-                
-                // Inside auto layout
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
@@ -161,18 +151,14 @@ export const PaywallPage = () => {
               
               {/* Track. Compete. Flex. */}
               <div style={{
-                width: '299px',
-                height: '42px',
-                
+                width: '100%',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 500,
-                fontSize: '26px',
-                lineHeight: '42px',
-                
+                fontSize: isMobile ? '20px' : '26px',
+                lineHeight: isMobile ? '28px' : '42px',
+                textAlign: 'center',
                 color: '#000000',
-                
-                // Inside auto layout
                 flex: 'none',
                 order: 1,
                 flexGrow: 0,
@@ -186,9 +172,9 @@ export const PaywallPage = () => {
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
-              padding: '24px 16px',
+              padding: isMobile ? '20px 12px' : '24px 16px',
               gap: '10px',
-              width: isMobile ? '353px' : '400px',
+              width: '100%',
               background: '#FFFFFF',
               boxShadow: '0px 4px 4px rgba(0, 0, 0, 0.25)',
               borderRadius: '12px',
@@ -204,7 +190,7 @@ export const PaywallPage = () => {
                 alignItems: 'center',
                 padding: '0px',
                 gap: '8px',
-                width: isMobile ? '321px' : '368px',
+                width: '100%',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
@@ -214,8 +200,8 @@ export const PaywallPage = () => {
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 600,
-                  fontSize: '26px',
-                  lineHeight: '42px',
+                  fontSize: isMobile ? '20px' : '26px',
+                  lineHeight: isMobile ? '28px' : '42px',
                   textAlign: 'center',
                   textTransform: 'uppercase',
                   color: '#DC2627',
@@ -231,8 +217,8 @@ export const PaywallPage = () => {
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 400,
-                  fontSize: '18px',
-                  lineHeight: '27px',
+                  fontSize: isMobile ? '16px' : '18px',
+                  lineHeight: isMobile ? '24px' : '27px',
                   textAlign: 'center',
                   color: '#000000',
                   flex: 'none',
@@ -243,12 +229,12 @@ export const PaywallPage = () => {
                   Get PlayerZERO Premium for only $5.99 your first year.
                 </div>
                 <div style={{
-                  width: isMobile ? '312px' : '100%',
+                  width: '100%',
                   fontFamily: 'Poppins',
                   fontStyle: 'normal',
                   fontWeight: 400,
-                  fontSize: '12px',
-                  lineHeight: '21px',
+                  fontSize: isMobile ? '11px' : '12px',
+                  lineHeight: isMobile ? '16px' : '21px',
                   color: '#636874',
                   flex: 'none',
                   order: 2,
@@ -260,276 +246,175 @@ export const PaywallPage = () => {
           </div>
             </div>
 
-            {/* Frame 735 - Features List - EXACT FIGMA SPECS */}
+            {/* Frame 735 - Features List */}
             <div style={{
-              // Auto layout
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'flex-start',
               padding: '0px',
-              gap: '16px',
-              
-              width: '292px',
-              height: '367px',
-              
-              // Inside auto layout
+              gap: isMobile ? '12px' : '16px',
+              width: '100%',
               flex: 'none',
               order: 3,
               flexGrow: 0,
             }}>
-              {/* Frame 730 - Feature 1 */}
+              {/* Feature 1 */}
               <div style={{
-                // Auto layout
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'flex-start',
                 padding: '0px',
                 gap: '8px',
-                
-                width: '299px',
-                height: '57px',
-                
-                // Inside auto layout
+                width: '100%',
                 flex: 'none',
                 order: 0,
                 flexGrow: 0,
               }}>
-                {/* CheckFat */}
-                <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
-              width: '24px',
-              height: '24px',
-              flex: 'none', 
-              order: 0, 
-              flexGrow: 0 
-            }}>
-              <path d="M23.3075 6.39732L21.0575 4.18857C20.7763 3.90833 20.3955 3.75098 19.9986 3.75098C19.6016 3.75098 19.2208 3.90833 18.9397 4.18857L10.25 12.7714L6.81028 9.43388C6.52854 9.15455 6.14761 8.99822 5.75088 8.9991C5.35414 8.99998 4.97391 9.15799 4.69341 9.43857L2.44341 11.6886C2.1626 11.9698 2.00488 12.351 2.00488 12.7484C2.00488 13.1458 2.1626 13.527 2.44341 13.8083L9.15778 20.5583C9.29707 20.6976 9.46245 20.8081 9.64446 20.8835C9.82647 20.9589 10.0216 20.9977 10.2186 20.9977C10.4156 20.9977 10.6107 20.9589 10.7927 20.8835C10.9747 20.8081 11.1401 20.6976 11.2793 20.5583L23.3122 8.52263C23.4517 8.38296 23.5624 8.2171 23.6377 8.03458C23.713 7.85206 23.7516 7.65646 23.7512 7.459C23.7507 7.26154 23.7113 7.06611 23.6352 6.88392C23.559 6.70173 23.4477 6.53637 23.3075 6.39732ZM10.2143 19.4998L3.49997 12.7498L5.74997 10.4998C5.7527 10.5021 5.75521 10.5046 5.75747 10.5073L9.72778 14.3595C9.86794 14.4966 10.0562 14.5734 10.2523 14.5734C10.4484 14.5734 10.6367 14.4966 10.7768 14.3595L20.0056 5.24982L22.25 7.46232L10.2143 19.4998Z" fill="#DC2627"/>
+                <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
+                  minWidth: '22px',
+                  height: '18px',
+                  marginTop: '3px',
+                }}>
+                  <path d="M21.3026 2.64634L19.0526 0.437589C18.7714 0.157356 18.3906 0 17.9937 0C17.5967 0 17.2159 0.157356 16.9348 0.437589L8.24509 9.0204L4.8054 5.6829C4.52366 5.40358 4.14273 5.24724 3.74599 5.24812C3.34926 5.249 2.96903 5.40702 2.68852 5.68759L0.438524 7.93759C0.157719 8.21883 0 8.60001 0 8.99743C0 9.39486 0.157719 9.77604 0.438524 10.0573L7.1529 16.8073C7.29219 16.9466 7.45757 17.0571 7.63958 17.1325C7.82159 17.2079 8.01667 17.2467 8.21368 17.2467C8.41069 17.2467 8.60577 17.2079 8.78778 17.1325C8.9698 17.0571 9.13517 16.9466 9.27446 16.8073L21.3073 4.77165C21.4469 4.63198 21.5575 4.46613 21.6328 4.2836C21.7082 4.10108 21.7467 3.90548 21.7463 3.70802C21.7458 3.51056 21.7064 3.31513 21.6303 3.13294C21.5541 2.95075 21.4428 2.78539 21.3026 2.64634ZM8.20946 15.7488L1.49509 8.99884L3.74509 6.74884C3.74782 6.7511 3.75033 6.75361 3.75259 6.75634L7.7229 10.6085C7.86305 10.7457 8.05134 10.8225 8.24743 10.8225C8.44352 10.8225 8.63181 10.7457 8.77196 10.6085L18.0007 1.49884L20.2451 3.71134L8.20946 15.7488Z" fill="#DC2627"/>
             </svg>
             
-            {/* Text */}
             <div style={{
-              width: '267px',
-              height: '57px',
-              
               fontFamily: 'Poppins',
               fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '16px',
-              lineHeight: '19px',
-              
-              color: '#848282',
-              
-              // Inside auto layout
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
-            }}>
-              <strong style={{ color: '#000000' }}>Increased Stat Uploads</strong><br/>
-              Upload multiple times per day to track your grind in real time.
+                  fontSize: isMobile ? '14px' : '16px',
+                  lineHeight: isMobile ? '18px' : '19px',
+                  flex: 1,
+                }}>
+                  <span style={{ fontWeight: 600, color: '#000000' }}>Increased Stat Uploads</span>
+                  <span style={{ fontWeight: 400, color: '#636874' }}><br/>Upload multiple times per day to track your grind in real time.</span>
                 </div>
               </div>
 
-              {/* Frame 731 - Feature 2 */}
+              {/* Feature 2 */}
               <div style={{
-                // Auto layout
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'flex-start',
                 padding: '0px',
                 gap: '8px',
-                
-                width: '307px',
-                height: '60px',
-                
-                // Inside auto layout
+                width: '100%',
                 flex: 'none',
                 order: 1,
                 flexGrow: 0,
               }}>
-                {/* CheckFat */}
-                <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
-              width: '24px',
-              height: '24px',
-              flex: 'none', 
-              order: 0, 
-              flexGrow: 0 
-            }}>
-              <path d="M23.3075 6.39732L21.0575 4.18857C20.7763 3.90833 20.3955 3.75098 19.9986 3.75098C19.6016 3.75098 19.2208 3.90833 18.9397 4.18857L10.25 12.7714L6.81028 9.43388C6.52854 9.15455 6.14761 8.99822 5.75088 8.9991C5.35414 8.99998 4.97391 9.15799 4.69341 9.43857L2.44341 11.6886C2.1626 11.9698 2.00488 12.351 2.00488 12.7484C2.00488 13.1458 2.1626 13.527 2.44341 13.8083L9.15778 20.5583C9.29707 20.6976 9.46245 20.8081 9.64446 20.8835C9.82647 20.9589 10.0216 20.9977 10.2186 20.9977C10.4156 20.9977 10.6107 20.9589 10.7927 20.8835C10.9747 20.8081 11.1401 20.6976 11.2793 20.5583L23.3122 8.52263C23.4517 8.38296 23.5624 8.2171 23.6377 8.03458C23.713 7.85206 23.7516 7.65646 23.7512 7.459C23.7507 7.26154 23.7113 7.06611 23.6352 6.88392C23.559 6.70173 23.4477 6.53637 23.3075 6.39732ZM10.2143 19.4998L3.49997 12.7498L5.74997 10.4998C5.7527 10.5021 5.75521 10.5046 5.75747 10.5073L9.72778 14.3595C9.86794 14.4966 10.0562 14.5734 10.2523 14.5734C10.4484 14.5734 10.6367 14.4966 10.7768 14.3595L20.0056 5.24982L22.25 7.46232L10.2143 19.4998Z" fill="#DC2627"/>
+                <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
+                  minWidth: '22px',
+                  height: '18px',
+                  marginTop: '3px',
+                }}>
+                  <path d="M21.3026 2.64634L19.0526 0.437589C18.7714 0.157356 18.3906 0 17.9937 0C17.5967 0 17.2159 0.157356 16.9348 0.437589L8.24509 9.0204L4.8054 5.6829C4.52366 5.40358 4.14273 5.24724 3.74599 5.24812C3.34926 5.249 2.96903 5.40702 2.68852 5.68759L0.438524 7.93759C0.157719 8.21883 0 8.60001 0 8.99743C0 9.39486 0.157719 9.77604 0.438524 10.0573L7.1529 16.8073C7.29219 16.9466 7.45757 17.0571 7.63958 17.1325C7.82159 17.2079 8.01667 17.2467 8.21368 17.2467C8.41069 17.2467 8.60577 17.2079 8.78778 17.1325C8.9698 17.0571 9.13517 16.9466 9.27446 16.8073L21.3073 4.77165C21.4469 4.63198 21.5575 4.46613 21.6328 4.2836C21.7082 4.10108 21.7467 3.90548 21.7463 3.70802C21.7458 3.51056 21.7064 3.31513 21.6303 3.13294C21.5541 2.95075 21.4428 2.78539 21.3026 2.64634ZM8.20946 15.7488L1.49509 8.99884L3.74509 6.74884C3.74782 6.7511 3.75033 6.75361 3.75259 6.75634L7.7229 10.6085C7.86305 10.7457 8.05134 10.8225 8.24743 10.8225C8.44352 10.8225 8.63181 10.7457 8.77196 10.6085L18.0007 1.49884L20.2451 3.71134L8.20946 15.7488Z" fill="#DC2627"/>
             </svg>
             
-            {/* Text */}
             <div style={{
-              width: '275px',
-              height: '60px',
-              
               fontFamily: 'Poppins',
               fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '16px',
-              lineHeight: '19px',
-              
-              color: '#848282',
-              
-              // Inside auto layout
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
-            }}>
-              <strong style={{ color: '#000000' }}>Leaderboard Recognition</strong><br/>
-              Appear in rankings and climb against real trainers.
+                  fontSize: isMobile ? '14px' : '16px',
+                  lineHeight: isMobile ? '18px' : '19px',
+                  flex: 1,
+                }}>
+                  <span style={{ fontWeight: 600, color: '#000000' }}>Leaderboard Recognition</span>
+                  <span style={{ fontWeight: 400, color: '#636874' }}><br/>Appear in rankings and climb against real trainers.</span>
             </div>
           </div>
 
-          {/* Frame 732 - Feature 3 */}
+          {/* Feature 3 */}
           <div style={{
-            // Auto layout
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'flex-start',
             padding: '0px',
             gap: '8px',
-            
-            width: '297px',
-            height: '57px',
-            
-            // Inside auto layout
+            width: '100%',
             flex: 'none',
             order: 2,
             flexGrow: 0,
           }}>
-            {/* CheckFat */}
-            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
-              width: '24px',
-              height: '24px',
-              flex: 'none', 
-              order: 0, 
-              flexGrow: 0 
+            <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
+              minWidth: '22px',
+              height: '18px',
+              marginTop: '3px',
             }}>
-              <path d="M23.3075 6.39732L21.0575 4.18857C20.7763 3.90833 20.3955 3.75098 19.9986 3.75098C19.6016 3.75098 19.2208 3.90833 18.9397 4.18857L10.25 12.7714L6.81028 9.43388C6.52854 9.15455 6.14761 8.99822 5.75088 8.9991C5.35414 8.99998 4.97391 9.15799 4.69341 9.43857L2.44341 11.6886C2.1626 11.9698 2.00488 12.351 2.00488 12.7484C2.00488 13.1458 2.1626 13.527 2.44341 13.8083L9.15778 20.5583C9.29707 20.6976 9.46245 20.8081 9.64446 20.8835C9.82647 20.9589 10.0216 20.9977 10.2186 20.9977C10.4156 20.9977 10.6107 20.9589 10.7927 20.8835C10.9747 20.8081 11.1401 20.6976 11.2793 20.5583L23.3122 8.52263C23.4517 8.38296 23.5624 8.2171 23.6377 8.03458C23.713 7.85206 23.7516 7.65646 23.7512 7.459C23.7507 7.26154 23.7113 7.06611 23.6352 6.88392C23.559 6.70173 23.4477 6.53637 23.3075 6.39732ZM10.2143 19.4998L3.49997 12.7498L5.74997 10.4998C5.7527 10.5021 5.75521 10.5046 5.75747 10.5073L9.72778 14.3595C9.86794 14.4966 10.0562 14.5734 10.2523 14.5734C10.4484 14.5734 10.6367 14.4966 10.7768 14.3595L20.0056 5.24982L22.25 7.46232L10.2143 19.4998Z" fill="#DC2627"/>
+              <path d="M21.3026 2.64634L19.0526 0.437589C18.7714 0.157356 18.3906 0 17.9937 0C17.5967 0 17.2159 0.157356 16.9348 0.437589L8.24509 9.0204L4.8054 5.6829C4.52366 5.40358 4.14273 5.24724 3.74599 5.24812C3.34926 5.249 2.96903 5.40702 2.68852 5.68759L0.438524 7.93759C0.157719 8.21883 0 8.60001 0 8.99743C0 9.39486 0.157719 9.77604 0.438524 10.0573L7.1529 16.8073C7.29219 16.9466 7.45757 17.0571 7.63958 17.1325C7.82159 17.2079 8.01667 17.2467 8.21368 17.2467C8.41069 17.2467 8.60577 17.2079 8.78778 17.1325C8.9698 17.0571 9.13517 16.9466 9.27446 16.8073L21.3073 4.77165C21.4469 4.63198 21.5575 4.46613 21.6328 4.2836C21.7082 4.10108 21.7467 3.90548 21.7463 3.70802C21.7458 3.51056 21.7064 3.31513 21.6303 3.13294C21.5541 2.95075 21.4428 2.78539 21.3026 2.64634ZM8.20946 15.7488L1.49509 8.99884L3.74509 6.74884C3.74782 6.7511 3.75033 6.75361 3.75259 6.75634L7.7229 10.6085C7.86305 10.7457 8.05134 10.8225 8.24743 10.8225C8.44352 10.8225 8.63181 10.7457 8.77196 10.6085L18.0007 1.49884L20.2451 3.71134L8.20946 15.7488Z" fill="#DC2627"/>
             </svg>
             
-            {/* Text */}
             <div style={{
-              width: '265px',
-              height: '57px',
-              
               fontFamily: 'Poppins',
               fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '16px',
-              lineHeight: '19px',
-              
-              color: '#848282',
-              
-              // Inside auto layout
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
+              fontSize: isMobile ? '14px' : '16px',
+              lineHeight: isMobile ? '18px' : '19px',
+              flex: 1,
             }}>
-              <strong style={{ color: '#000000' }}>Full Profile Access</strong><br/>
-              View and compare stats across the community.
+              <span style={{ fontWeight: 600, color: '#000000' }}>Full Profile Access</span>
+              <span style={{ fontWeight: 400, color: '#636874' }}><br/>View and compare stats across the community.</span>
             </div>
             </div>
 
-          {/* Frame 734 - Feature 4 */}
+          {/* Feature 4 */}
           <div style={{
-            // Auto layout
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'flex-start',
             padding: '0px',
             gap: '8px',
-            
-            width: '292px',
-            height: '72px',
-            
-            // Inside auto layout
+            width: '100%',
             flex: 'none',
             order: 3,
-            alignSelf: 'stretch',
             flexGrow: 0,
           }}>
-            {/* CheckFat */}
-            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
-              width: '24px',
-              height: '24px',
-              flex: 'none', 
-              order: 0, 
-              flexGrow: 0 
+            <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
+              minWidth: '22px',
+              height: '18px',
+              marginTop: '3px',
             }}>
-              <path d="M23.3075 6.39732L21.0575 4.18857C20.7763 3.90833 20.3955 3.75098 19.9986 3.75098C19.6016 3.75098 19.2208 3.90833 18.9397 4.18857L10.25 12.7714L6.81028 9.43388C6.52854 9.15455 6.14761 8.99822 5.75088 8.9991C5.35414 8.99998 4.97391 9.15799 4.69341 9.43857L2.44341 11.6886C2.1626 11.9698 2.00488 12.351 2.00488 12.7484C2.00488 13.1458 2.1626 13.527 2.44341 13.8083L9.15778 20.5583C9.29707 20.6976 9.46245 20.8081 9.64446 20.8835C9.82647 20.9589 10.0216 20.9977 10.2186 20.9977C10.4156 20.9977 10.6107 20.9589 10.7927 20.8835C10.9747 20.8081 11.1401 20.6976 11.2793 20.5583L23.3122 8.52263C23.4517 8.38296 23.5624 8.2171 23.6377 8.03458C23.713 7.85206 23.7516 7.65646 23.7512 7.459C23.7507 7.26154 23.7113 7.06611 23.6352 6.88392C23.559 6.70173 23.4477 6.53637 23.3075 6.39732ZM10.2143 19.4998L3.49997 12.7498L5.74997 10.4998C5.7527 10.5021 5.75521 10.5046 5.75747 10.5073L9.72778 14.3595C9.86794 14.4966 10.0562 14.5734 10.2523 14.5734C10.4484 14.5734 10.6367 14.4966 10.7768 14.3595L20.0056 5.24982L22.25 7.46232L10.2143 19.4998Z" fill="#DC2627"/>
+              <path d="M21.3026 2.64634L19.0526 0.437589C18.7714 0.157356 18.3906 0 17.9937 0C17.5967 0 17.2159 0.157356 16.9348 0.437589L8.24509 9.0204L4.8054 5.6829C4.52366 5.40358 4.14273 5.24724 3.74599 5.24812C3.34926 5.249 2.96903 5.40702 2.68852 5.68759L0.438524 7.93759C0.157719 8.21883 0 8.60001 0 8.99743C0 9.39486 0.157719 9.77604 0.438524 10.0573L7.1529 16.8073C7.29219 16.9466 7.45757 17.0571 7.63958 17.1325C7.82159 17.2079 8.01667 17.2467 8.21368 17.2467C8.41069 17.2467 8.60577 17.2079 8.78778 17.1325C8.9698 17.0571 9.13517 16.9466 9.27446 16.8073L21.3073 4.77165C21.4469 4.63198 21.5575 4.46613 21.6328 4.2836C21.7082 4.10108 21.7467 3.90548 21.7463 3.70802C21.7458 3.51056 21.7064 3.31513 21.6303 3.13294C21.5541 2.95075 21.4428 2.78539 21.3026 2.64634ZM8.20946 15.7488L1.49509 8.99884L3.74509 6.74884C3.74782 6.7511 3.75033 6.75361 3.75259 6.75634L7.7229 10.6085C7.86305 10.7457 8.05134 10.8225 8.24743 10.8225C8.44352 10.8225 8.63181 10.7457 8.77196 10.6085L18.0007 1.49884L20.2451 3.71134L8.20946 15.7488Z" fill="#DC2627"/>
             </svg>
             
-            {/* Text */}
             <div style={{
-              width: '259px',
-              height: '72px',
-              
               fontFamily: 'Poppins',
               fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '16px',
-              lineHeight: '19px',
-              
-              color: '#848282',
-              
-              // Inside auto layout
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
+              fontSize: isMobile ? '14px' : '16px',
+              lineHeight: isMobile ? '18px' : '19px',
+              flex: 1,
             }}>
-              <strong style={{ color: '#000000' }}>All Future Features Included</strong><br/>
-              Every update released during your subscription year is yours automatically.
+              <span style={{ fontWeight: 600, color: '#000000' }}>All Future Features Included</span>
+              <span style={{ fontWeight: 400, color: '#636874' }}><br/>Every update released during your subscription year is yours automatically.</span>
             </div>
           </div>
 
-          {/* Frame 733 - Feature 5 */}
+          {/* Feature 5 */}
           <div style={{
-            // Auto layout
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'flex-start',
             padding: '0px',
             gap: '8px',
-            
-            width: '294px',
-            height: '57px',
-            
-            // Inside auto layout
+            width: '100%',
             flex: 'none',
             order: 4,
             flexGrow: 0,
           }}>
-            {/* CheckFat */}
-            <svg width="25" height="24" viewBox="0 0 25 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
-              width: '24px',
-              height: '24px',
-              flex: 'none', 
-              order: 0, 
-              flexGrow: 0 
+            <svg width="22" height="18" viewBox="0 0 22 18" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ 
+              minWidth: '22px',
+              height: '18px',
+              marginTop: '3px',
             }}>
-              <path d="M23.3075 6.39732L21.0575 4.18857C20.7763 3.90833 20.3955 3.75098 19.9986 3.75098C19.6016 3.75098 19.2208 3.90833 18.9397 4.18857L10.25 12.7714L6.81028 9.43388C6.52854 9.15455 6.14761 8.99822 5.75088 8.9991C5.35414 8.99998 4.97391 9.15799 4.69341 9.43857L2.44341 11.6886C2.1626 11.9698 2.00488 12.351 2.00488 12.7484C2.00488 13.1458 2.1626 13.527 2.44341 13.8083L9.15778 20.5583C9.29707 20.6976 9.46245 20.8081 9.64446 20.8835C9.82647 20.9589 10.0216 20.9977 10.2186 20.9977C10.4156 20.9977 10.6107 20.9589 10.7927 20.8835C10.9747 20.8081 11.1401 20.6976 11.2793 20.5583L23.3122 8.52263C23.4517 8.38296 23.5624 8.2171 23.6377 8.03458C23.713 7.85206 23.7516 7.65646 23.7512 7.459C23.7507 7.26154 23.7113 7.06611 23.6352 6.88392C23.559 6.70173 23.4477 6.53637 23.3075 6.39732ZM10.2143 19.4998L3.49997 12.7498L5.74997 10.4998C5.7527 10.5021 5.75521 10.5046 5.75747 10.5073L9.72778 14.3595C9.86794 14.4966 10.0562 14.5734 10.2523 14.5734C10.4484 14.5734 10.6367 14.4966 10.7768 14.3595L20.0056 5.24982L22.25 7.46232L10.2143 19.4998Z" fill="#DC2627"/>
+              <path d="M21.3026 2.64634L19.0526 0.437589C18.7714 0.157356 18.3906 0 17.9937 0C17.5967 0 17.2159 0.157356 16.9348 0.437589L8.24509 9.0204L4.8054 5.6829C4.52366 5.40358 4.14273 5.24724 3.74599 5.24812C3.34926 5.249 2.96903 5.40702 2.68852 5.68759L0.438524 7.93759C0.157719 8.21883 0 8.60001 0 8.99743C0 9.39486 0.157719 9.77604 0.438524 10.0573L7.1529 16.8073C7.29219 16.9466 7.45757 17.0571 7.63958 17.1325C7.82159 17.2079 8.01667 17.2467 8.21368 17.2467C8.41069 17.2467 8.60577 17.2079 8.78778 17.1325C8.9698 17.0571 9.13517 16.9466 9.27446 16.8073L21.3073 4.77165C21.4469 4.63198 21.5575 4.46613 21.6328 4.2836C21.7082 4.10108 21.7467 3.90548 21.7463 3.70802C21.7458 3.51056 21.7064 3.31513 21.6303 3.13294C21.5541 2.95075 21.4428 2.78539 21.3026 2.64634ZM8.20946 15.7488L1.49509 8.99884L3.74509 6.74884C3.74782 6.7511 3.75033 6.75361 3.75259 6.75634L7.7229 10.6085C7.86305 10.7457 8.05134 10.8225 8.24743 10.8225C8.44352 10.8225 8.63181 10.7457 8.77196 10.6085L18.0007 1.49884L20.2451 3.71134L8.20946 15.7488Z" fill="#DC2627"/>
             </svg>
             
-            {/* Text */}
             <div style={{
-              width: '262px',
-              height: '57px',
-              
               fontFamily: 'Poppins',
               fontStyle: 'normal',
-              fontWeight: 600,
-              fontSize: '16px',
-              lineHeight: '19px',
-              
-              color: '#848282',
-              
-              // Inside auto layout
-              flex: 'none',
-              order: 1,
-              flexGrow: 0,
+              fontSize: isMobile ? '14px' : '16px',
+              lineHeight: isMobile ? '18px' : '19px',
+              flex: 1,
             }}>
-              <strong style={{ color: '#000000' }}>Trainer Code & Socials</strong><br/>
-              Share yours and connect directly with others.
+              <span style={{ fontWeight: 600, color: '#000000' }}>Trainer Code & Socials</span>
+              <span style={{ fontWeight: 400, color: '#636874' }}><br/>Share yours and connect directly with others.</span>
                 </div>
               </div>
             </div>
@@ -541,7 +426,7 @@ export const PaywallPage = () => {
               alignItems: 'center',
               padding: '0px',
               gap: '8px',
-              width: isMobile ? '355px' : '400px',
+              width: '100%',
               flex: 'none',
               order: 4,
               flexGrow: 0,
@@ -642,29 +527,39 @@ export const PaywallPage = () => {
                 display: 'flex',
                 flexDirection: 'row',
                 justifyContent: 'center',
-                alignItems: 'flex-start',
+                alignItems: 'center',
                 padding: '0px',
                 gap: '8px',
-                width: '157px',
+                width: '100%',
                 height: '32px',
                 flex: 'none',
                 order: 2,
                 flexGrow: 0,
               }}>
-                {/* Stripe Logo */}
+                {/* Stripe */}
                 <div style={{
                   display: 'flex',
                   flexDirection: 'row',
                   justifyContent: 'center',
                   alignItems: 'center',
                   padding: '0px 10px',
+                  isolation: 'isolate',
                   width: '69px',
                   height: '32px',
                   flex: 'none',
                   order: 0,
                   flexGrow: 0,
                 }}>
-                  <img src={stripeLogo} alt="Stripe" style={{ width: '100%', height: 'auto' }} />
+                  <span style={{
+                    fontFamily: 'system-ui, -apple-system, sans-serif',
+                    fontStyle: 'normal',
+                    fontWeight: 900,
+                    fontSize: '16px',
+                    lineHeight: '20px',
+                    color: '#000000',
+                  }}>
+                    stripe
+                  </span>
           </div>
 
                 {/* SSL Badge */}
@@ -674,7 +569,7 @@ export const PaywallPage = () => {
                   alignItems: 'center',
                   padding: '4px 8px',
                   gap: '4px',
-                  width: '80px',
+                  width: 'auto',
                   height: '30px',
                   background: '#F3F4F6',
                   borderRadius: '4px',
@@ -689,6 +584,7 @@ export const PaywallPage = () => {
                   <div style={{
                     fontFamily: 'Poppins',
                     fontStyle: 'normal',
+                    width: 'auto',
                     fontWeight: 600,
                     fontSize: '8px',
                     lineHeight: '12px',
