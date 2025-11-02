@@ -2212,9 +2212,7 @@ export const ProfileSetup = () => {
         onClose={() => setShowPrivacyUpgradeModal(false)}
         title="Premium Feature"
         message="Sharing your Trainer Code and Socials is a premium feature. Upgrade to unlock."
-        confirmText="Upgrade Now"
-        cancelText="Cancel"
-        onConfirm={() => navigate('/upgrade')}
+        confirmText="Okay"
       />
 
       {/* OCR Error Modal */}
