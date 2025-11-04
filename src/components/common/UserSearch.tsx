@@ -160,9 +160,8 @@ export const UserSearch = () => {
 
       <div className="search-results-section">
         {loading ? (
-          <div className="search-loading">
-            <div className="loading-spinner"></div>
-            <span>Searching trainers...</span>
+          <div className="search-loading" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+            <span style={{ fontSize: '14px', color: '#636874', fontWeight: 500 }}>Loading trainer data...</span>
           </div>
         ) : results.length > 0 ? (
           <div className="search-results-list">

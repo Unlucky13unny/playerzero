@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { profileService, type ProfileData, type ProfileWithMetadata } from '../../services/profileService'
 import { dashboardService } from '../../services/dashboardService'
 import { useMobile } from '../../hooks/useMobile'
+import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { MobileFooter } from '../layout/MobileFooter'
 import { Upload, X } from 'lucide-react'
 import { StatUpdateModal } from '../common/StatUpdateModal'
@@ -19,6 +20,7 @@ export const UpdateStats = () => {
   const [editData, setEditData] = useState<ProfileData | null>(null)
   const navigate = useNavigate()
   const isMobile = useMobile()
+  const trialStatus = useTrialStatus()
   
   // Screenshot state (same as StatUpdater)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
@@ -102,6 +104,7 @@ export const UpdateStats = () => {
   const handleConfirmExtractMode = async () => {
     setExtractModeConfirmed(true)
     setShowUploadModal(false)
+    setShowFreezeOverlay(true) // Freeze screen during processing
     if (selectedFile) {
       await processOCR(selectedFile)
     }
@@ -153,6 +156,7 @@ export const UpdateStats = () => {
     console.log('🚀 Starting OCR processing for file:', file.name, 'Size:', file.size, 'bytes')
     
     setIsProcessingOCR(true)
+    setShowFreezeOverlay(true) // Ensure freeze overlay is shown
     setOcrProgress(0)
     setOcrMessage('🔍 Analyzing screenshot...')
 
@@ -208,6 +212,7 @@ export const UpdateStats = () => {
       // Show review modal after a brief delay
       setTimeout(() => {
         console.log(`✅ Extracted ${statsCount} stat(s) with ${Math.round(result.confidence)}% confidence`)
+        setShowFreezeOverlay(false) // Unfreeze when modal opens
         setShowReviewModal(true)
       }, 500)
 
@@ -215,6 +220,7 @@ export const UpdateStats = () => {
       console.error('❌ OCR Error:', err)
       console.error('Error details:', err.message || err)
       setOcrMessage(`❌ Failed to extract stats: ${err.message || 'Unknown error'}. Please enter values manually.`)
+      setShowFreezeOverlay(false) // Unfreeze on error
     } finally {
       setIsProcessingOCR(false)
       setOcrProgress(100)
@@ -242,7 +248,10 @@ export const UpdateStats = () => {
   const [showReminderModal, setShowReminderModal] = useState(false)
   // OCR Error modal state
   const [showOCRErrorModal, setShowOCRErrorModal] = useState(false)
-
+  
+  // Freeze overlay state - prevents interaction during OCR
+  const [showFreezeOverlay, setShowFreezeOverlay] = useState(false)
+  
   // Update image preview when file is selected
   useEffect(() => {
     if (selectedFile) {
@@ -419,15 +428,8 @@ export const UpdateStats = () => {
 
   if (loading && !profile) {
     return (
-      <div className="profile-container">
-        <div className="profile-card">
-          <div className="profile-content">
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
-              <p>Loading profile...</p>
-            </div>
-          </div>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
+        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading your stats...</p>
       </div>
     )
   }
@@ -449,6 +451,151 @@ export const UpdateStats = () => {
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // TRIAL RESTRICTION: Block stats updates for expired trial users
+  if (!trialStatus.isPaidUser && !trialStatus.isInTrial) {
+    return (
+      <div style={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        minHeight: '100vh', 
+        width: '100%',
+        padding: isMobile ? '20px' : '40px',
+        backgroundColor: '#ffffff'
+      }}>
+        <div style={{
+          maxWidth: '500px',
+          width: '100%',
+          textAlign: 'center',
+          padding: isMobile ? '32px 24px' : '48px',
+          backgroundColor: '#ffffff',
+          borderRadius: '12px',
+          boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
+          border: '1px solid #E5E7EB'
+        }}>
+          {/* Lock Icon */}
+          <div style={{
+            fontSize: '64px',
+            marginBottom: '24px',
+            opacity: 0.8
+          }}>
+            🔒
+          </div>
+          
+          {/* Title */}
+          <h2 style={{
+            fontSize: isMobile ? '24px' : '28px',
+            fontWeight: '700',
+            color: '#000000',
+            marginBottom: '16px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            Private Mode Ended
+          </h2>
+          
+          {/* Description */}
+          <p style={{
+            fontSize: isMobile ? '15px' : '16px',
+            color: '#636874',
+            lineHeight: '1.6',
+            marginBottom: '32px',
+            fontFamily: 'Poppins, sans-serif'
+          }}>
+            Your 7-day trial has expired. To continue updating your stats and tracking your grind, upgrade for just $5.99.
+          </p>
+          
+          {/* Features List */}
+          <div style={{
+            textAlign: 'left',
+            marginBottom: '32px',
+            padding: '20px',
+            backgroundColor: '#F9FAFB',
+            borderRadius: '8px'
+          }}>
+            <p style={{
+              fontSize: '14px',
+              fontWeight: '600',
+              color: '#000000',
+              marginBottom: '12px',
+              fontFamily: 'Poppins, sans-serif'
+            }}>
+              Unlock with upgrade:
+            </p>
+            <ul style={{
+              listStyle: 'none',
+              padding: 0,
+              margin: 0
+            }}>
+              {['Daily stat updates', 'Leaderboard placement', 'Generate unlimited cards', 'View other profiles', 'Make trainer code public'].map((feature, index) => (
+                <li key={index} style={{
+                  fontSize: '14px',
+                  color: '#636874',
+                  marginBottom: '8px',
+                  paddingLeft: '24px',
+                  position: 'relative',
+                  fontFamily: 'Poppins, sans-serif'
+                }}>
+                  <span style={{
+                    position: 'absolute',
+                    left: 0,
+                    color: '#2ECC40'
+                  }}>✓</span>
+                  {feature}
+                </li>
+              ))}
+            </ul>
+          </div>
+          
+          {/* Upgrade Button */}
+          <button
+            onClick={() => navigate('/upgrade')}
+            style={{
+              width: '100%',
+              padding: '14px 24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              color: '#FFFFFF',
+              backgroundColor: '#DC2627',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              transition: 'background-color 0.2s ease',
+              fontFamily: 'Poppins, sans-serif',
+              marginBottom: '12px'
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = '#B91C1C'
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = '#DC2627'
+            }}
+          >
+            Upgrade Now
+          </button>
+          
+          {/* Back to Profile Link */}
+          <button
+            onClick={() => navigate('/UserProfile')}
+            style={{
+              width: '100%',
+              padding: '12px 24px',
+              fontSize: '14px',
+              fontWeight: '500',
+              color: '#636874',
+              backgroundColor: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontFamily: 'Poppins, sans-serif',
+              textDecoration: 'underline'
+            }}
+          >
+            Back to Profile
+          </button>
         </div>
       </div>
     )
@@ -2814,6 +2961,47 @@ export const UpdateStats = () => {
                 </button>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Freeze Overlay - Prevents interaction during OCR processing */}
+      {showFreezeOverlay && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.7)',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+        }}>
+          <div style={{
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 600,
+            fontSize: '18px',
+            lineHeight: '27px',
+            color: '#FFFFFF',
+            textAlign: 'center',
+            marginBottom: '12px',
+          }}>
+            Extracting stats...
+          </div>
+          <div style={{
+            fontFamily: 'Poppins',
+            fontStyle: 'normal',
+            fontWeight: 400,
+            fontSize: '14px',
+            lineHeight: '21px',
+            color: '#E5E7EB',
+            textAlign: 'center',
+          }}>
+            Please wait while we analyze your screenshot
           </div>
         </div>
       )}

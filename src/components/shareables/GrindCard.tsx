@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom'
-import { useRef, useState, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import html2canvas from 'html2canvas'
 import type { ProfileWithMetadata } from '../../services/profileService'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
@@ -16,17 +16,15 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   const trialStatus = useTrialStatus()
   const cardRef = useRef<HTMLDivElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
 
   const handleUpgradeClick = () => {
     navigate('/upgrade')
   }
 
-  // Auto-download when component mounts
-  useEffect(() => {
-    let isMounted = true
-
-    const downloadCard = async () => {
-      if (!cardRef.current || !profile) return
+  // Handle share/download button click
+  const handleShareClick = async () => {
+    if (!cardRef.current || !profile || isDownloading) return
 
       try {
         setIsDownloading(true)
@@ -47,9 +45,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         })
 
         // Wait for the card to render properly
-        await new Promise(resolve => setTimeout(resolve, 500))
+        await new Promise(resolve => setTimeout(resolve, 300))
 
-        if (!isMounted || !cardRef.current) return
+        if (!cardRef.current) return
 
         // Sanitize CSS to remove unsupported color functions
         const sanitizeCSS = () => {
@@ -78,9 +76,15 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         
         sanitizeCSS()
 
+        // Calculate scale to ensure download is always high quality
+        // Target download size: 800×1200 (2x for retina/social media quality)
+        const currentWidth = isMobile ? 224 : 400
+        const targetDownloadWidth = 800  // Always download at high resolution
+        const downloadScale = targetDownloadWidth / currentWidth  // 2x for desktop, ~3.57x for mobile
+        
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: 1, // Download at 400×600 for perfect text rendering
+          scale: downloadScale, // Download at consistent high resolution (800×1200)
           useCORS: true,
           allowTaint: true,
           logging: false,
@@ -90,41 +94,26 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           windowHeight: window.innerHeight
         })
 
-        if (!isMounted) return
-
         // Create download link
         const link = document.createElement('a')
         link.download = `playerzero-${profile.trainer_name}-grind-card.png`
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
 
-        // Close after download
+      // Show success message
+      setDownloadSuccess(true)
+      
+      // Auto-close after showing success
         setTimeout(() => {
-          if (isMounted) {
             onClose()
-          }
-        }, 300)
+      }, 1500)
       } catch (error) {
         console.error('Download failed:', error)
-        if (isMounted) {
           alert('Failed to download card. Please try again.')
-          onClose()
-        }
       } finally {
-        if (isMounted) {
           setIsDownloading(false)
         }
       }
-    }
-
-    if (profile && isPaidUser) {
-      downloadCard()
-    }
-
-    return () => {
-      isMounted = false
-    }
-  }, [profile, isPaidUser, onClose])
 
   if (!profile) return null
 
@@ -171,7 +160,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   const pokestopsPerDay = Math.round(((profile.pokestops_visited || 0) / daysSinceStart) * 100) / 100
 
   // Detect mobile view
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 480
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
 
   return (
     <div 
@@ -181,32 +170,28 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         left: 0,
         right: 0,
         bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+        backgroundColor: 'rgba(0, 0, 0, 0.85)',
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 1000,
-        gap: '20px'
+        gap: '24px',
+        padding: '20px'
+      }}
+      onClick={(e) => {
+        // Close when clicking backdrop
+        if (e.target === e.currentTarget && !isDownloading) {
+          onClose()
+        }
       }}
     >
-      {/* Loading message */}
-      <div style={{
-        color: '#FFFFFF',
-        fontFamily: 'Poppins, sans-serif',
-        fontSize: '18px',
-        fontWeight: '600',
-        textAlign: 'center'
-      }}>
-        {isDownloading ? 'Generating your card...' : 'Preparing download...'}
-      </div>
 
       <div 
         ref={cardRef}
-        className="card-template all-time-card web-card" 
         style={{ 
           backgroundImage: 'url(/images/grind.png)',
-          backgroundSize: 'cover',
+          backgroundSize: '100% 100%',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
           position: 'relative',
@@ -215,7 +200,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           margin: 0,
           padding: 0,
           border: 'none',
-          borderRadius: isMobile ? '12px' : '20px',
+          borderRadius: isMobile ? '12px' : '30px',
           overflow: 'hidden',
           fontFamily: 'Poppins, sans-serif'
         }}
@@ -223,13 +208,13 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         {/* Trainer Name - Top Left */}
         <div style={{ 
           position: 'absolute',
-          top: isMobile ? '18px' : '45px',
-          left: isMobile ? '12px' : '20px',
-          fontFamily: 'Poppins, sans-serif',
+          top: isMobile ? '27px' : '41px',
+          left: isMobile ? '17px' : '30px',
+          fontFamily: 'Poppins',
           fontStyle: 'normal',
           fontWeight: '700',
-          fontSize: isMobile ? '11px' : '20px',
-          lineHeight: isMobile ? '16px' : '30px',
+          fontSize: isMobile ? '12px' : '20px',
+          lineHeight: isMobile ? '17px' : '30px',
           color: '#FFFFFF',
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
           letterSpacing: '0.5px',
@@ -241,8 +226,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         {/* Start Date - Top Right */}
         <div style={{ 
           position: 'absolute',
-          top: isMobile ? '18px' : '45px',
-          right: isMobile ? '12px' : '20px',
+          top: isMobile ? '27px' : '38px',
+          right: isMobile ? '17px' : '35px',
           textAlign: 'right',
           zIndex: 10
         }}>
@@ -266,23 +251,24 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           flexDirection: 'column',
           alignItems: 'flex-start',
           padding: '0px',
-          width: isMobile ? '200px' : '360px',
-          left: isMobile ? '12px' : '20px',
-          top: isMobile ? '225px' : '330px'
+          width: isMobile ? '202px' : '360px',
+          left: isMobile ? '11px' : '20px',
+          top: isMobile ? '190px' : '300px'
         }}>
           {/* ALL TIME Header */}
             <div style={{ 
-            fontFamily: 'Poppins, sans-serif',
+            fontFamily: 'Poppins',
             fontStyle: 'normal',
             fontWeight: '700',
             fontSize: isMobile ? '11px' : '20px',
-            lineHeight: isMobile ? '16px' : '30px',
+            lineHeight: isMobile ? '17px' : '30px',
             color: '#DC2627',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
             flex: 'none',
             order: 0,
             flexGrow: 0,
-            marginBottom: isMobile ? '4px' : '8px',
+            marginBottom: isMobile ? '2px' : '10px',
+            marginLeft: isMobile ? '6px' : '14px',
             textAlign: 'left'
           }}>
             ALL TIME
@@ -294,7 +280,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             flexDirection: 'column',
             alignItems: 'flex-start',
             padding: '0px',
-            gap: isMobile ? '3px' : '6px',
+            gap: isMobile ? '2px' : '2px',
+            marginLeft: isMobile ? '6px' : '10px',
             width: '100%',
             flex: 'none',
             order: 1,
@@ -375,6 +362,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 background: 'rgba(219, 22, 27, 0.5)',
                 border: '1px solid #DC2627',
                 borderRadius: isMobile ? '8px' : '15px',
+                marginRight: isMobile ? '10px' : '15px',
                 flex: 'none',
                 order: 1,
                 flexGrow: 0
@@ -406,6 +394,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
               padding: '0px',
               width: '100%',
               height: isMobile ? '16px' : '28px',
+              
               flex: 'none',
               order: 1,
               alignSelf: 'stretch',
@@ -470,6 +459,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 height: isMobile ? '14px' : '24px',
                 background: 'rgba(219, 22, 27, 0.5)',
                 border: '1px solid #DC2627',
+                marginRight: isMobile ? '10px' : '15px',
                 borderRadius: isMobile ? '8px' : '15px',
                 flex: 'none',
                 order: 1,
@@ -560,6 +550,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 flexDirection: 'row',
                 justifyContent: 'center',
                 alignItems: 'center',
+                marginRight: isMobile ? '10px' : '15px',
                 padding: isMobile ? '0px 5px' : '0px 10px',
                 gap: isMobile ? '3px' : '6px',
                 width: isMobile ? '50px' : '88px',
@@ -599,10 +590,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           justifyContent: 'space-between',
           alignItems: 'center',
           padding: '0px',
-          width: isMobile ? '200px' : '360px',
-          height: isMobile ? '30px' : '52px',
-          left: isMobile ? '12px' : '20px',
-          top: isMobile ? '307px' : '476px'
+          width: isMobile ? '202px' : '360px',
+          height: isMobile ? '29px' : '52px',
+          left: isMobile ? '15px' : '30px',
+          top: isMobile ? '270px' : '440px'
         }}>
           {/* Frame 747 - Label and Value (Column Layout) */}
           <div style={{
@@ -658,7 +649,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             justifyContent: 'center',
             alignItems: 'center',
             padding: isMobile ? '0px 6px' : '0px 12px',
-            gap: isMobile ? '3px' : '6px',
+            gap: isMobile ? '3px' : '0px',
+            marginRight: isMobile ? '6px' : '15px',
             width: isMobile ? '56px' : '100px',
             height: isMobile ? '16px' : '28px',
             background: 'rgba(219, 22, 27, 0.5)',
@@ -672,6 +664,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
               fontFamily: 'Poppins, sans-serif',
               fontStyle: 'normal',
               fontWeight: '500',
+              marginRight: isMobile ? '0px' : '20px',
               fontSize: isMobile ? '6px' : '11px',
               lineHeight: isMobile ? '9px' : '16px',
               textAlign: 'center',
@@ -689,7 +682,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         {/* PlayerZERO Logo */}
         <div style={{ 
           position: 'absolute',
-          bottom: isMobile ? '6px' : '12px',
+          bottom: isMobile ? '7px' : '12px',
           right: isMobile ? '12px' : '20px',
           fontFamily: 'Poppins, sans-serif',
           fontStyle: 'normal',
@@ -703,6 +696,127 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
          
         </div>
       </div>
+
+      {/* Action Buttons Container */}
+      <div style={{
+        display: 'flex',
+        flexDirection: 'row',
+        gap: '12px',
+        alignItems: 'center',
+        justifyContent: 'center'
+      }}>
+        {/* Close Button */}
+        <button
+          onClick={onClose}
+          disabled={isDownloading}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '12px 24px',
+            gap: '8px',
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            borderRadius: '8px',
+            fontFamily: 'Poppins, sans-serif',
+            fontWeight: '600',
+            fontSize: '14px',
+            color: '#FFFFFF',
+            cursor: isDownloading ? 'not-allowed' : 'pointer',
+            opacity: isDownloading ? 0.5 : 1,
+            transition: 'all 0.2s ease',
+            minWidth: '100px'
+          }}
+          onMouseEnter={(e) => {
+            if (!isDownloading) {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
+              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
+            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
+          }}
+        >
+          Close
+        </button>
+
+        {/* Share Button */}
+        <button
+          onClick={handleShareClick}
+          disabled={isDownloading || downloadSuccess}
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: '12px 32px',
+            gap: '8px',
+            background: downloadSuccess ? '#10B981' : '#DC2627',
+            border: 'none',
+            borderRadius: '8px',
+            fontFamily: 'Poppins, sans-serif',
+            fontWeight: '600',
+            fontSize: '14px',
+            color: '#FFFFFF',
+            cursor: (isDownloading || downloadSuccess) ? 'not-allowed' : 'pointer',
+            opacity: (isDownloading || downloadSuccess) ? 0.8 : 1,
+            transition: 'all 0.2s ease',
+            minWidth: '140px',
+            boxShadow: '0 4px 12px rgba(220, 38, 39, 0.3)'
+          }}
+          onMouseEnter={(e) => {
+            if (!isDownloading && !downloadSuccess) {
+              e.currentTarget.style.background = '#B91C1C'
+              e.currentTarget.style.transform = 'translateY(-2px)'
+              e.currentTarget.style.boxShadow = '0 6px 16px rgba(220, 38, 39, 0.4)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            if (!downloadSuccess) {
+              e.currentTarget.style.background = '#DC2627'
+              e.currentTarget.style.transform = 'translateY(0)'
+              e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 39, 0.3)'
+            }
+          }}
+        >
+          {isDownloading ? (
+            <>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                border: '2px solid rgba(255, 255, 255, 0.3)',
+                borderTopColor: '#FFFFFF',
+                borderRadius: '50%',
+                animation: 'spin 0.8s linear infinite'
+              }} />
+              Generating...
+            </>
+          ) : downloadSuccess ? (
+            <>
+              ✓ Downloaded
+            </>
+          ) : (
+            <>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M7 10L12 15L17 10" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 15V3" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              Share
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Spinner animation */}
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   )
 }

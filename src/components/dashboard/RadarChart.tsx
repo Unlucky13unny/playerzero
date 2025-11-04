@@ -470,7 +470,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true, timePer
         Global: normalizeStats(communityAverages.pokestops_visited, 'pokestops_visited'),
       },
       {
-        metric: "Dex (Total)",
+        metric: "Dex",
         You: playerHasData ? normalizeStats(playerStats.unique_pokedex_entries || 0, 'unique_pokedex_entries') : 0,
         Country: isPremiumUser && countryAverages ? normalizeStats(countryAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
         Team: isPremiumUser && teamAverages ? normalizeStats(teamAverages.unique_pokedex_entries, 'unique_pokedex_entries') : 0,
@@ -546,7 +546,7 @@ export const PerformanceRadarChart = memo(({ profile, showHeader = true, timePer
       Country: isPremiumUser && countryAverages ? countryAverages.pokestops_visited : 0,
       Team: isPremiumUser && teamAverages ? teamAverages.pokestops_visited : 0,
     },
-    "Dex (Total)": {
+    Dex: {
       You: playerStats?.unique_pokedex_entries || 0,
       Global: communityAverages?.unique_pokedex_entries || 0,
       Country: isPremiumUser && countryAverages ? countryAverages.unique_pokedex_entries : 0,

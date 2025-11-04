@@ -1650,7 +1650,9 @@ export const dashboardService = {
       }
 
       // Check if user has already updated today (enforce once-per-day limit)
-      const today = new Date().toISOString().split('T')[0];
+      // Use local date instead of UTC to match user's timezone
+      const now = new Date();
+      const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
       const { data: existingTodayEntry } = await supabase
         .from('stat_entries')
         .select('id')

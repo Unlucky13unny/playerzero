@@ -240,8 +240,8 @@ export const PublicProfile = () => {
 
   if (loading) {
     return (
-      <div className="user-home-container">
-        <div className="loading-spinner"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
+        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading trainer profile...</p>
       </div>
     )
   }
@@ -442,9 +442,18 @@ export const PublicProfile = () => {
               </div>
               <div className="verification-badge">
                 <button 
-                  className="verification-left hover:opacity-80 transition-opacity cursor-pointer"
-                  onClick={() => setShowVerificationModal(true)}
-                  title="View verification screenshots"
+                  className="verification-left hover:opacity-80 transition-opacity"
+                  onClick={() => {
+                    // Only allow opening if the profile owner is a paid user
+                    if (profile?.is_paid_user) {
+                      setShowVerificationModal(true)
+                    }
+                  }}
+                  title={profile?.is_paid_user ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+                  style={{ 
+                    cursor: profile?.is_paid_user ? 'pointer' : 'not-allowed',
+                    opacity: profile?.is_paid_user ? 1 : 0.6
+                  }}
                 >
                   <span className="verification-icon">✅</span>
                   <div>
@@ -618,10 +627,9 @@ export const PublicProfile = () => {
           {showScreenshots && (
             <>
               {screenshotsLoading ? (
-                <div className="screenshots-loading-state">
-                  <div className="loading-spinner-large"></div>
-                  <h3>Loading Screenshots</h3>
-                  <p>Fetching verification history...</p>
+                <div className="screenshots-loading-state" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem' }}>
+                  <h3 style={{ fontSize: '18px', color: '#000000', marginBottom: '0.5rem' }}>Loading Screenshots</h3>
+                  <p style={{ fontSize: '14px', color: '#636874' }}>Fetching verification history...</p>
                 </div>
               ) : verificationScreenshots.length > 0 ? (
                 <div className="screenshots-grid">

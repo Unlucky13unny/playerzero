@@ -108,11 +108,11 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 50
+          zIndex: 1100
         }}>
         {/* Frame 735 - Main Container */}
         <div style={{
@@ -356,11 +356,11 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
           left: 0,
           right: 0,
           bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
+          backgroundColor: 'rgba(0, 0, 0, 0.8)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 60,
+          zIndex: 1200,
           padding: '20px',
           overflowY: 'auto'
         }}>
@@ -807,3 +807,6 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
     </>
   )
 }
+
+
+

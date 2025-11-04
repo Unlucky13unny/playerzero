@@ -50,7 +50,7 @@ export const ContactHelp = () => {
         <div className="contact-section">
           <p className="contact-label">Need more help?</p>
           <p className="contact-text">
-            Contact us on <a href="mailto:support@playerzero.com" className="contact-link">support@playerzero.com</a>
+            Contact us on <a href="mailto:support@plyrzero.com" className="contact-link">support@plyrzero.com</a>
           </p>
         </div>
 
