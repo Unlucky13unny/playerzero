@@ -412,15 +412,8 @@ export const UserProfile = () => {
 
   if (loading && !profile) {
     return (
-      <div className="profile-container">
-        <div className="profile-card">
-          <div className="profile-content">
-            <div style={{ textAlign: 'center', padding: '2rem' }}>
-              <div className="loading-spinner" style={{ margin: '0 auto 1rem' }}></div>
-              <p>Loading profile...</p>
-            </div>
-          </div>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
+        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading your profile...</p>
       </div>
     )
   }
@@ -1505,9 +1498,7 @@ export const UserProfile = () => {
         onClose={() => setShowPrivacyUpgradeModal(false)}
         title="Premium Feature"
         message="Sharing your Trainer Code and Socials is a premium feature. Upgrade to unlock."
-        confirmText="Upgrade Now"
-        cancelText="Cancel"
-        onConfirm={() => navigate('/upgrade')}
+        confirmText="Okay"
       />
     </div>
   )

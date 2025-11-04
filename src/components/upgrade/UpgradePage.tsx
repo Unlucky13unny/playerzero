@@ -73,7 +73,12 @@ export const UpgradePage = () => {
   }
 
   const handleContinueTrial = () => {
-    navigate('/dashboard')
+    // If trial has ended (0 days), don't navigate - user should upgrade
+    if (trialStatus.daysRemaining === 0) {
+      return
+    }
+    // If trial is active (1-7 days), navigate to UserProfile
+    navigate('/UserProfile')
   }
 
   return (
@@ -600,7 +605,7 @@ export const UpgradePage = () => {
         </div>
         </div>
 
-        {/* Continue trial link */}
+        {/* Continue trial link / Trial ended message */}
         <button
           onClick={handleContinueTrial}
           style={{
@@ -608,17 +613,22 @@ export const UpgradePage = () => {
             border: 'none',
             fontFamily: 'Poppins',
             fontStyle: 'normal',
-            fontWeight: 400,
+            fontWeight: trialStatus.daysRemaining === 0 ? 600 : 400,
             fontSize: '12px',
             lineHeight: '18px',
             textAlign: 'center',
-            color: '#636874',
-            cursor: 'pointer',
+            color: trialStatus.daysRemaining === 0 ? '#DC2627' : '#636874',
+            cursor: trialStatus.daysRemaining === 0 ? 'default' : 'pointer',
             textDecoration: 'none',
             padding: '4px',
+            opacity: trialStatus.daysRemaining === 0 ? 0.9 : 1,
           }}
+          disabled={trialStatus.daysRemaining === 0}
         >
-          Continue my free trial for next {trialStatus.daysRemaining} days
+          {trialStatus.daysRemaining === 0 
+            ? 'Free trial ended - Upgrade your account' 
+            : `Continue my free trial for next ${trialStatus.daysRemaining} day${trialStatus.daysRemaining === 1 ? '' : 's'}`
+          }
         </button>
       </div>
     </div>

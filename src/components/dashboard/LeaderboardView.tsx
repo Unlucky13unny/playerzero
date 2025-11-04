@@ -838,6 +838,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
   const handleExport = async () => {
     try {
+      // TRIAL RESTRICTION: Weekly and Monthly exports are ONLY for paid users
+      if ((timePeriod === 'weekly' || timePeriod === 'monthly') && !trialStatus.isPaidUser) {
+        // Redirect to upgrade page
+        navigate('/upgrade')
+        return
+      }
+
       setExporting(true)
 
       // Get the actual period dates from database
@@ -2655,7 +2662,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
   }
 
   // For backward compatibility, default processedData to liveProcessedData
-  const processedData = liveProcessedData
+  // IMPORTANT: For weekly/monthly exports with locked data, use lockedProcessedData
+  // This ensures export cards show the correct completed period data, not current live data
+  const processedData = (timePeriod !== 'alltime' && lockedLeaderboardData.length > 0) 
+    ? lockedProcessedData 
+    : liveProcessedData
 
 
 
@@ -5776,20 +5787,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-      {/* Loading and Error States */}
-
-      {loading && (
-
-        <div className="text-center py-8">
-
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
-
-          <p className="text-gray-600">Loading leaderboard data...</p>
-
-        </div>
-
-      )}
-
+      
 
 
       {error && (
@@ -6866,8 +6864,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       {loading && (
 
         <div className="text-center py-8">
-
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500 mx-auto mb-4"></div>
 
           <p className="text-gray-600">Loading leaderboard data...</p>
 

@@ -8,47 +8,56 @@ export const SignupSuccess = () => {
   return (
     <div className="split-layout" style={{ overflow: 'hidden' }}>
       <div className="split-layout-left" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', width: isMobile ? '100%' : '50%' }}>
-        <div className="auth-container" style={{ maxWidth: '400px', padding: '2rem 1.5rem' }}>
-          <div style={{ marginTop: '1rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'center' }}>
+        <div className="auth-container" style={{ maxWidth: '380px', padding: '1rem 1.5rem' }}>
+          <div style={{ marginTop: '2rem', marginBottom: '1rem', display: 'flex', justifyContent: 'center' }}>
             <img src={logoSvg} alt="PlayerZERO" style={{ width: '181px', height: '35px' }} />
           </div>
           
-          <div className="auth-header" style={{ marginBottom: '0.75rem' }}>
-            <h1 style={{ color: '#000000', fontSize: '1.75rem', fontWeight: 700, margin: 0, textAlign: 'center' }}>Sign Up Successful!</h1>
+          <div className="auth-header" style={{ marginBottom: '0.5rem' }}>
+            <h1 style={{ color: '#000000', fontSize: '1.6rem', fontWeight: 700, margin: 0, textAlign: 'center' }}>Sign Up Successful!</h1>
           </div>
           
-          <div className="success-message" style={{ color: '#2ECC40', fontSize: '0.95rem', marginBottom: '1.25rem', textAlign: 'center', fontWeight: 500 }}>
+          <div className="success-message" style={{ color: '#2ECC40', fontSize: '0.9rem', marginBottom: '0.75rem', textAlign: 'center', fontWeight: 500 }}>
             Your account has been created successfully.
           </div>
           
-          <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
             <div style={{ 
-              width: '3.5rem', 
-              height: '3.5rem', 
-              margin: '1rem auto 1rem', 
+              width: '3rem', 
+              height: '3rem', 
+              margin: '0.75rem auto 0.75rem', 
               borderRadius: '50%', 
               backgroundColor: 'rgba(48, 209, 88, 0.1)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center'
             }}>
-              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M5 13L9 17L19 7" stroke="#30d158" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
             </div>
             
-            <p style={{ fontSize: '0.95rem', color: '#000000', marginBottom: '1rem', lineHeight: '1.5', fontWeight: 500 }}>
+            <p style={{ fontSize: '0.9rem', color: '#000000', marginBottom: '0.75rem', lineHeight: '1.4', fontWeight: 500 }}>
               Please check your email to confirm your account.
             </p>
             
-            <p style={{ fontSize: '0.85rem', color: '#636874', marginBottom: '0.5rem', lineHeight: '1.5', padding: '0 0.5rem' }}>
+            <p style={{ fontSize: '0.8rem', color: '#636874', marginBottom: '0.75rem', lineHeight: '1.4', padding: '0 0.25rem' }}>
               Once confirmed, you'll be guided through setting up your Pokémon GO profile with your trainer stats, team color, and more!
             </p>
           </div>
           
-          <Link to="/login" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', textDecoration: 'none', backgroundColor: '#DC2627', color: '#FFFFFF', padding: '0.7rem 1.5rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.95rem', width: '100%' }}>
+          <Link to="/login" className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', textDecoration: 'none', backgroundColor: '#DC2627', color: '#FFFFFF', padding: '0.65rem 1.5rem', borderRadius: '8px', fontWeight: 600, fontSize: '0.9rem', width: '100%' }}>
             Go to Login
           </Link>
+          
+          <div style={{ marginTop: '1rem', marginBottom: '1rem', textAlign: 'center' }}>
+            <p style={{ fontSize: '0.8rem', color: '#636874', marginBottom: '0.35rem' }}>
+              Need help?
+            </p>
+            <a href="mailto:support@plyrzero.com" style={{ fontSize: '0.85rem', color: '#DC2627', textDecoration: 'none', fontWeight: 500 }}>
+              support@plyrzero.com
+            </a>
+          </div>
         </div>
       </div>
       

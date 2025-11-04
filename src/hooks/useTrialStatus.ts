@@ -204,7 +204,7 @@ export const useTrialStatus = (): PrivateModeStatus => {
       isPaidUser: false,
       canGenerateAllTimeCard: isInTrial, // Can generate cards during private mode
       canShareGrindCard: isInTrial, // Can share cards during private mode
-      canViewWeeklyMonthlyCards: isInTrial, // Can view their own stats during private mode
+      canViewWeeklyMonthlyCards: false, // BLOCKED: Weekly/monthly cards require paid subscription
       canAppearOnLeaderboard: false, // Never appear on leaderboard (even during private mode)
       canViewLeaderboard: true, // Can always browse leaderboard
       canClickIntoProfiles: false, // Can't view other profiles' details

@@ -184,9 +184,8 @@ export const QuickProfileView = ({
       margin: '0 auto'
     }}>
       {loading ? (
-        <div className="quick-profile-loading" style={{ textAlign: 'center', color: 'black' }}>
-          <div className="loading-spinner"></div>
-          <p>Loading profile...</p>
+        <div className="quick-profile-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', color: 'black' }}>
+          <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500 }}>Loading trainer profile...</p>
         </div>
       ) : error ? (
         <div className="quick-profile-error" style={{ textAlign: 'center', color: 'black' }}>

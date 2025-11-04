@@ -132,6 +132,9 @@ export const ProfileSetup = () => {
   const [showReminderModal, setShowReminderModal] = useState(false)
   // OCR Error modal state
   const [showOCRErrorModal, setShowOCRErrorModal] = useState(false)
+  
+  // Freeze overlay state - prevents interaction during OCR
+  const [showFreezeOverlay, setShowFreezeOverlay] = useState(false)
 
   // Check if user already has a profile when component mounts
   useEffect(() => {
@@ -339,15 +342,6 @@ export const ProfileSetup = () => {
     if (!manualModeConfirmed) {
       setUploadMode(null)
     }
-    // Immediately trigger file upload if no file selected yet
-    if (!profileScreenshot) {
-      setTimeout(() => {
-        const fileInput = document.getElementById('profile-screenshot-upload') as HTMLInputElement
-        if (fileInput) {
-          fileInput.click()
-        }
-      }, 100)
-    }
   }
 
   // NEW: Handle manual entry mode selection
@@ -374,6 +368,7 @@ export const ProfileSetup = () => {
   const handleConfirmExtractMode = async () => {
     setExtractModeConfirmed(true)
     setShowUploadModal(false)
+    setShowFreezeOverlay(true) // Freeze screen during processing
     if (profileScreenshot) {
       await processOCR(profileScreenshot)
     }
@@ -426,6 +421,7 @@ export const ProfileSetup = () => {
     console.log('🚀 Starting OCR processing for file:', file.name, 'Size:', file.size, 'bytes')
     
     setIsProcessingOCR(true)
+    setShowFreezeOverlay(true) // Ensure freeze overlay is shown
     setOcrProgress(0)
     setOcrMessage('🔍 Analyzing screenshot...')
 
@@ -509,6 +505,7 @@ export const ProfileSetup = () => {
       // Store extracted stats and show review modal
       setExtractedStatsData(extractedData)
       setIsProcessingOCR(false)
+      setShowFreezeOverlay(false) // Unfreeze when modal opens
       setShowReviewModal(true)
 
       // Log confidence to console
@@ -518,6 +515,7 @@ export const ProfileSetup = () => {
       console.error('❌ OCR Error:', err)
       console.error('Error details:', err.message || err)
       setOcrMessage(`❌ Failed to extract stats: ${err.message || 'Unknown error'}. Please enter values manually.`)
+      setShowFreezeOverlay(false) // Unfreeze on error
     } finally {
       setIsProcessingOCR(false)
       setOcrProgress(100)
@@ -1180,16 +1178,8 @@ export const ProfileSetup = () => {
   // Show loading while checking if profile already exists
   if (checkingProfile) {
     return (
-      <div className="profile-setup-wrapper">
-            <div className="loading-container">
-          <div className="loading-spinner">
-            <svg className="spinner" viewBox="0 0 24 24">
-              <circle className="spinner-circle" cx="12" cy="12" r="10" stroke="currentColor" fill="none" strokeWidth="4" />
-              <path className="spinner-path" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-            </svg>
-          </div>
-          <p>Checking profile status...</p>
-        </div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
+        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Checking profile status...</p>
       </div>
     )
   }
@@ -2240,6 +2230,47 @@ export const ProfileSetup = () => {
         </div>
       </div>
     </div>
+    
+    {/* Freeze Overlay - Prevents interaction during OCR processing */}
+    {showFreezeOverlay && (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 10000,
+      }}>
+        <div style={{
+          fontFamily: 'Poppins',
+          fontStyle: 'normal',
+          fontWeight: 600,
+          fontSize: '18px',
+          lineHeight: '27px',
+          color: '#FFFFFF',
+          textAlign: 'center',
+          marginBottom: '12px',
+        }}>
+          Extracting stats...
+        </div>
+        <div style={{
+          fontFamily: 'Poppins',
+          fontStyle: 'normal',
+          fontWeight: 400,
+          fontSize: '14px',
+          lineHeight: '21px',
+          color: '#E5E7EB',
+          textAlign: 'center',
+        }}>
+          Please wait while we analyze your screenshot
+        </div>
+      </div>
+    )}
     </>
   )
 }

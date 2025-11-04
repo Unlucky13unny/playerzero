@@ -454,19 +454,8 @@ export function PlyrZeroProfileStandalone({
       </div>
 
       {loading ? (
-        <div style={styles.loadingContainer}>
-          <div 
-            style={{ 
-              width: "40px", 
-              height: "40px", 
-              border: "4px solid #f3f4f6", 
-              borderTop: "4px solid #dc2626", 
-              borderRadius: "50%", 
-              marginBottom: "16px"
-            }}
-            className="loading-spinner"
-          ></div>
-          <p>Loading profile...</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', width: '100%' }}>
+          <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading trainer profile...</p>
         </div>
       ) : error ? (
         <div style={styles.errorContainer}>

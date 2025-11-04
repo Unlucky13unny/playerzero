@@ -152,11 +152,26 @@ export const Layout = ({ children }: LayoutProps) => {
                     </Link>
                     
                     <Link
-                      to="/update-stats"
-                      onClick={() => setFeaturesDropdownOpen(false)}
+                      to={trialStatus.isPaidUser || trialStatus.isInTrial ? "/update-stats" : "/upgrade"}
+                      onClick={(e) => {
+                        setFeaturesDropdownOpen(false)
+                        if (!trialStatus.isPaidUser && !trialStatus.isInTrial) {
+                          e.preventDefault()
+                          navigate('/upgrade')
+                        }
+                      }}
                       className="layout-menu-item"
+                      style={{
+                        opacity: (!trialStatus.isPaidUser && !trialStatus.isInTrial) ? 0.6 : 1,
+                        cursor: (!trialStatus.isPaidUser && !trialStatus.isInTrial) ? 'not-allowed' : 'pointer',
+                        position: 'relative'
+                      }}
+                      title={(!trialStatus.isPaidUser && !trialStatus.isInTrial) ? "Upgrade to unlock stats updates" : "Update Stats"}
                     >
                       Update Stats
+                      {!trialStatus.isPaidUser && !trialStatus.isInTrial && (
+                        <span style={{ marginLeft: '8px', fontSize: '16px' }}>🔒</span>
+                      )}
                     </Link>
                     
                     
@@ -463,11 +478,26 @@ export const Layout = ({ children }: LayoutProps) => {
                       </Link>
                       
                       <Link
-                        to="/update-stats"
-                        onClick={() => setFeaturesDropdownOpen(false)}
+                        to={trialStatus.isPaidUser || trialStatus.isInTrial ? "/update-stats" : "/upgrade"}
+                        onClick={(e) => {
+                          setFeaturesDropdownOpen(false)
+                          if (!trialStatus.isPaidUser && !trialStatus.isInTrial) {
+                            e.preventDefault()
+                            navigate('/upgrade')
+                          }
+                        }}
                         className="layout-menu-item"
+                        style={{
+                          opacity: (!trialStatus.isPaidUser && !trialStatus.isInTrial) ? 0.6 : 1,
+                          cursor: (!trialStatus.isPaidUser && !trialStatus.isInTrial) ? 'not-allowed' : 'pointer',
+                          position: 'relative'
+                        }}
+                        title={(!trialStatus.isPaidUser && !trialStatus.isInTrial) ? "Upgrade to unlock stats updates" : "Update Stats"}
                       >
                         Update Stats
+                        {!trialStatus.isPaidUser && !trialStatus.isInTrial && (
+                          <span style={{ marginLeft: '8px', fontSize: '16px' }}>🔒</span>
+                        )}
                       </Link>
                       
                       

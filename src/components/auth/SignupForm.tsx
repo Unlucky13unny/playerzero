@@ -120,7 +120,7 @@ export const SignupForm = () => {
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase())} // Convert to lowercase
                 className="form-input"
-                placeholder="Enter your username"
+                placeholder="Choose a unique PlayerZERO username"
                 required
                 autoFocus
                 minLength={3}

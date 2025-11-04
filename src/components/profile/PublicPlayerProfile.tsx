@@ -36,8 +36,8 @@ export const PublicPlayerProfile = () => {
 
   if (loading) {
     return (
-      <div className="user-home-container">
-        <div className="loading-spinner"></div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
+        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading trainer profile...</p>
       </div>
     )
   }
