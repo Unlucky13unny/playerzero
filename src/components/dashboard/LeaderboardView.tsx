@@ -18,6 +18,8 @@ import { supabase } from "../../supabaseClient"
 
 import { getCountryFlag } from "../../utils/countryFlags"
 
+import { CountryFlag } from "../common/CountryFlag"
+
 import { PlyrZeroProfileStandalone } from "../profile/PlyrZeroProfileStandalone"
 
 import { useTrialStatus } from "../../hooks/useTrialStatus"
@@ -130,8 +132,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     { id: "distance" as const, label: "Distance Walked" },
 
     { id: "pokestops" as const, label: "Pokestops Visited" },
-
-    { id: "dex" as const, label: "Unique Pokédex" },
 
   ]
 
@@ -1938,7 +1938,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       .trim() // Final trim
   }
 
-  const getCountryFlagUrl = (countryName: string) => {
+  const getCountryFlagUrl = (countryName: string | null | undefined): string | null => {
+    // Return null if no country name provided
+    if (!countryName || typeof countryName !== 'string' || !countryName.trim()) {
+      return null
+    }
+
     // Enhanced country mapping with more variations and common misspellings
     const countryToCode: { [key: string]: string } = {
       // United States variations
@@ -3928,25 +3933,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     flexGrow: 0,
                   }}>
                     {/* Country Flag - Hidden for team aggregation */}
-                    {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
-                    <img 
-                        src={player.countryFlag || ''}
-                      alt={`Flag of ${player.countryName}`}
-                      style={{
-                        width: '16px',
-                        height: '12px',
-                        objectFit: 'cover',
-                        borderRadius: '2px',
-                        border: '1px solid #e0e0e0'
-                      }}
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = 'none';
-                        const fallback = document.createElement('span');
-                        fallback.textContent = '🌍';
-                        fallback.style.cssText = 'font-size: 12px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
-                        target.parentNode?.insertBefore(fallback, target);
-                      }}
+                    {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                    <CountryFlag 
+                      countryName={player.countryName}
+                      width={16}
+                      height={12}
                     />
                     )}
 
@@ -4322,43 +4313,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
-                  {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
-                  <img 
-
-                      src={player.countryFlag || ''}
-
-                    alt={`Flag of ${player.countryName}`}
-
-                    style={{
-
-                      width: '20px',
-
-                      height: '15px',
-
-                      objectFit: 'cover',
-
-                      borderRadius: '2px',
-
-                      border: '1px solid #e0e0e0'
-
-                    }}
-
-                    onError={(e) => {
-
-                      const target = e.target as HTMLImageElement;
-
-                      target.style.display = 'none';
-
-                      const fallback = document.createElement('span');
-
-                      fallback.textContent = '🌍';
-
-                      fallback.style.cssText = 'font-size: 16px; line-height: 15px; display: flex; align-items: center; justify-content: center;';
-
-                      target.parentNode?.insertBefore(fallback, target);
-
-                    }}
-
+                  {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                  <CountryFlag 
+                    countryName={player.countryName}
+                    width={20}
+                    height={15}
                   />
                   )}
 
@@ -7568,43 +7527,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     }}>
 
-                      <img 
-
-                        src={player.countryFlag || ''}
-
-                        alt={`Flag of ${player.countryName}`}
-
-                        style={{
-
-                          width: '18px',
-
-                          height: '13px',
-
-                          objectFit: 'cover',
-
-                          borderRadius: '2px',
-
-                          border: '1px solid #e0e0e0'
-
-                        }}
-
-                        onError={(e) => {
-
-                          const target = e.target as HTMLImageElement;
-
-                          target.style.display = 'none';
-
-                          const fallback = document.createElement('span');
-
-                          fallback.textContent = '🌍';
-
-                          fallback.style.cssText = 'font-size: 14px; line-height: 13px; display: flex; align-items: center; justify-content: center;';
-
-                          target.parentNode?.insertBefore(fallback, target);
-
-                        }}
-
+                      {player.countryName && (
+                      <CountryFlag 
+                        countryName={player.countryName}
+                        width={18}
+                        height={13}
                       />
+                      )}
 
                       
 
@@ -7819,25 +7748,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         alignItems: 'center',
                         gap: '6px',
                       }}>
-                        {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
-                        <img 
-                            src={player.countryFlag || ''}
-                          alt={`Flag of ${player.countryName}`}
-                          style={{
-                            width: '16px',
-                            height: '12px',
-                            objectFit: 'cover',
-                            borderRadius: '2px',
-                            border: '1px solid #e0e0e0'
-                          }}
-                          onError={(e) => {
-                            const target = e.target as HTMLImageElement;
-                            target.style.display = 'none';
-                            const fallback = document.createElement('span');
-                            fallback.textContent = '🌍';
-                            fallback.style.cssText = 'font-size: 14px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
-                            target.parentNode?.insertBefore(fallback, target);
-                          }}
+                        {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                        <CountryFlag 
+                          countryName={player.countryName}
+                          width={16}
+                          height={12}
                         />
                         )}
 
@@ -8287,43 +8202,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                      }}>
 
-                       {!(player.isAggregated && player.aggregateType === 'team') && player.countryFlag && (
-                       <img 
-
-                           src={player.countryFlag || ''}
-
-                         alt={`Flag of ${player.countryName}`}
-
-                         style={{
-
-                           width: '16px',
-
-                           height: '12px',
-
-                           objectFit: 'cover',
-
-                           borderRadius: '2px',
-
-                           border: '1px solid #e0e0e0'
-
-                         }}
-
-                         onError={(e) => {
-
-                           const target = e.target as HTMLImageElement;
-
-                           target.style.display = 'none';
-
-                           const fallback = document.createElement('span');
-
-                           fallback.textContent = '🌍';
-
-                           fallback.style.cssText = 'font-size: 14px; line-height: 12px; display: flex; align-items: center; justify-content: center;';
-
-                           target.parentNode?.insertBefore(fallback, target);
-
-                         }}
-
+                       {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                       <CountryFlag 
+                         countryName={player.countryName}
+                         width={16}
+                         height={12}
                        />
                        )}
 

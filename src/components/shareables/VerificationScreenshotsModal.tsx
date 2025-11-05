@@ -4,6 +4,7 @@ import { dashboardService } from '../../services/dashboardService'
 import { ReportModal } from '../moderation/ReportModal'
 import { reportService } from '../../services/reportService'
 import { useTrialStatus } from '../../hooks/useTrialStatus'
+import { LoadingInline } from '../common/Loading'
 
 interface VerificationScreenshotsModalProps {
   isOpen: boolean
@@ -183,28 +184,7 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
             flexGrow: 0
           }}>
           {loading ? (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                width: '100%',
-                height: '100%'
-              }}>
-                <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '50%',
-                  border: '2px solid #f0f0f0',
-                  borderTopColor: '#2BC49C',
-                  animation: 'spin 1s linear infinite'
-                }}></div>
-                <span style={{
-                  marginLeft: '12px',
-                  fontFamily: 'Poppins',
-                  fontSize: '12px',
-                  color: '#848282'
-                }}>Loading screenshots...</span>
-            </div>
+              <LoadingInline message="Loading screenshots..." fontSize="14px" />
           ) : error ? (
               <div style={{
                 textAlign: 'center',
@@ -716,11 +696,6 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
       )}
 
       <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-
         /* Mobile Responsive Styles */
         @media (max-width: 768px) {
           /* On mobile, center everything */

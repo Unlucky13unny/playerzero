@@ -109,8 +109,7 @@ export const StatEntries = () => {
     return (
       <div className="admin-user-management">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading stat entries...</p>
+          <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '20px' }}>Loading stat entries...</p>
         </div>
       </div>
     )

@@ -21,8 +21,7 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
         color: 'white'
       }}>
         <div style={{ textAlign: 'center' }}>
-          <div className="loading-spinner" style={{ marginBottom: '1rem' }}></div>
-          <p>Verifying admin access...</p>
+          <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', padding: '20px' }}>Verifying admin access...</p>
         </div>
       </div>
     )

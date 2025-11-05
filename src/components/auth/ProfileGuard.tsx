@@ -52,8 +52,7 @@ export const ProfileGuard = ({ children }: ProfileGuardProps) => {
   if (loading || profileChecking) {
     return (
       <div className="loading-container">
-        <div className="loading-spinner"></div>
-        <p>Loading...</p>
+        <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '20px' }}>Loading your Profile...</p>
       </div>
     )
   }

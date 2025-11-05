@@ -50,10 +50,36 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           img.src = backgroundImage
         })
 
-        // Wait for the card to render properly
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Wait for fonts to load and card to render properly
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready
+        }
+        await new Promise(resolve => setTimeout(resolve, 500))
 
         if (!cardRef.current) return
+
+        // Ensure all img elements in card have CORS enabled BEFORE capture
+        const cardImages = cardRef.current.querySelectorAll('img')
+        cardImages.forEach((img: any) => {
+          img.crossOrigin = 'anonymous'
+        })
+
+        // Wait for all images in the card to load
+        const imageLoadPromises = Array.from(cardImages).map((img: any) => {
+          return new Promise<void>((resolve) => {
+            if (img.complete) {
+              // Image already loaded
+              resolve()
+            } else {
+              img.onload = () => resolve()
+              img.onerror = () => resolve() // Continue even if image fails
+            }
+          })
+        })
+        await Promise.all(imageLoadPromises)
+
+        // Additional wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 300))
 
         // Sanitize CSS to remove unsupported color functions
         const sanitizeCSS = () => {
@@ -82,22 +108,72 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         
         sanitizeCSS()
 
-        // Calculate scale to ensure download is always high quality
-        // Target download size: 800×1200 (2x for retina/social media quality)
-        const currentWidth = isMobile ? 224 : 400
-        const targetDownloadWidth = 800  // Always download at high resolution
-        const downloadScale = targetDownloadWidth / currentWidth  // 2x for desktop, ~3.57x for mobile
+        // Adjust trainer name and date positioning for mobile download
+        const adjustHeaderPositioning = () => {
+          if (!cardRef.current) return
+          const trainerName = cardRef.current.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+          const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+          
+          if (trainerName) {
+            trainerName.style.transform = 'translateY(-5px)'
+            trainerName.style.marginLeft = '4px'
+          }
+          if (startDate) {
+            startDate.style.transform = 'translateY(-5px)'
+            startDate.style.marginRight = '3px'
+          }
+          
+          // Increase border-radius by 2px for mobile download only
+          if (isMobile) {
+            cardRef.current.style.borderRadius = '18px'  // 16px + 2px
+          }
+        }
+
+        // Adjust XP positioning for download export
+        // Logic: html2canvas renders at 2x scale, which can shift text positioning
+        // We compensate by adjusting bottom and left to match the visual appearance
+        const adjustXPPositioning = () => {
+          if (!cardRef.current) return
+          const xpElement = cardRef.current.querySelector('[data-download-adjust="true"]') as HTMLElement
+          if (xpElement) {
+            // Desktop: moved 13px down (17% of original 75px), 5px right
+            // Mobile: apply similar percentage-based shift
+            // Mobile original: bottom 52px, left 11px
+            // Mobile adjustment: +9px down (17% of 52px ≈ 9px), +2px right (18% of 11px ≈ 2px)
+            xpElement.style.bottom = isMobile ? '61px' : '95px'
+            xpElement.style.left = isMobile ? '13px' : '33px'
+          }
+        }
         
+        adjustHeaderPositioning()
+        adjustXPPositioning()
+
+        // Pixel-perfect export configuration with image support
+        const devicePixelRatio = window.devicePixelRatio || 1
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: downloadScale, // Download at consistent high resolution (800×1200)
+          scale: Math.min(devicePixelRatio, 2), // Use device pixel ratio but cap at 2
           useCORS: true,
           allowTaint: true,
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: window.innerWidth,
-          windowHeight: window.innerHeight
+          windowWidth: window.innerWidth || 1920,
+          windowHeight: window.innerHeight || 1080,
+          imageTimeout: 30000, // Extended timeout for reliable image loading
+          proxy: undefined, // Don't use proxy
+          foreignObjectRendering: false,
+          onclone: (clonedDocument) => {
+            // Set crossOrigin on all images in the cloned document
+            const clonedImages = clonedDocument.querySelectorAll('img')
+            clonedImages.forEach((img: any) => {
+              img.crossOrigin = 'anonymous'
+              // Ensure image sources are accessible
+              if (img.src && !img.src.startsWith('http') && !img.src.startsWith('data')) {
+                img.src = img.src // Refresh the source
+              }
+            })
+          }
         })
 
         // Create download link
@@ -105,6 +181,30 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         link.download = `playerzero-${profile.trainer_name}-summit-card.png`
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
+
+        // Restore original header positioning
+        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+        
+        if (trainerName) {
+          trainerName.style.transform = 'translateY(0)'
+        }
+        if (startDate) {
+          startDate.style.transform = 'translateY(0)'
+          startDate.style.marginRight = '0px'
+        }
+        
+        // Restore original border-radius
+        if (cardRef.current && isMobile) {
+          cardRef.current.style.borderRadius = '16px'  // Restore to original
+        }
+
+        // Restore original XP positioning
+        const xpElement = cardRef.current?.querySelector('[data-download-adjust="true"]') as HTMLElement
+        if (xpElement) {
+          xpElement.style.bottom = isMobile ? '52px' : '75px'
+          xpElement.style.left = isMobile ? '11px' : '28px'
+        }
 
       // Show success message
       setDownloadSuccess(true)
@@ -116,6 +216,29 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       } catch (error) {
         console.error('Download failed:', error)
           alert('Failed to download card. Please try again.')
+        // Restore header positioning even on error
+        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+        
+        if (trainerName) {
+          trainerName.style.transform = 'translateY(0)'
+        }
+        if (startDate) {
+          startDate.style.transform = 'translateY(0)'
+          startDate.style.marginRight = '0px'
+        }
+        
+        // Restore original border-radius on error
+        if (cardRef.current && isMobile) {
+          cardRef.current.style.borderRadius = '16px'  // Restore to original
+        }
+        
+        // Restore positioning even on error
+        const xpElement = cardRef.current?.querySelector('[data-download-adjust="true"]') as HTMLElement
+        if (xpElement) {
+          xpElement.style.bottom = isMobile ? '52px' : '75px'
+          xpElement.style.left = isMobile ? '11px' : '28px'
+        }
       } finally {
           setIsDownloading(false)
         }
@@ -195,10 +318,6 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       <div 
         ref={cardRef}
         style={{ 
-          backgroundImage: `url(${hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'})`,
-          backgroundSize: '100% 100%',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
           position: 'relative',
           width: isMobile ? '224px' : '400px',
           height: isMobile ? '336px' : '600px',
@@ -206,14 +325,31 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           padding: 0,
           border: 'none',
           overflow: 'hidden',
-          borderRadius: isMobile ? '12px' : '28px',
+          borderRadius: isMobile ? '16px' : '28px',
           fontFamily: 'Poppins, sans-serif'
         }}
       >
+        {/* Background Image as actual img tag for better quality */}
+        <img
+          src={hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'}
+          alt="Card Background"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            zIndex: 1
+          }}
+        />
         {/* Trainer Name - Top Left */}
-        <div style={{ 
+        <div 
+          data-download-adjust-trainer="true"
+          style={{ 
           position: 'absolute',
-          top: isMobile ? '27px' : '41px',
+          top: isMobile ? '27px' : '37px',
           left: isMobile ? '11px' : '27px',
           fontFamily: 'Poppins, sans-serif',
           fontStyle: 'normal',
@@ -224,16 +360,19 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
           flex: 'none',
           order: 0,
-          flexGrow: 0
+          flexGrow: 0,
+          zIndex: 2
         }}>
           {profile.trainer_name}
         </div>
         
         {/* Start Date - Top Right */}
-        <div style={{ 
+        <div 
+          data-download-adjust-date="true"
+          style={{ 
           position: 'absolute',
-          top: isMobile ? '27px' : '40px',
-          right: isMobile ? '12px' : '37px',
+          top: isMobile ? '29px' : '39px',
+          right: isMobile ? '17px' : '39px',
           fontFamily: 'Poppins, sans-serif',
           fontStyle: 'normal',
           fontWeight: '500',
@@ -244,7 +383,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           textShadow: '1px 1px 3px rgba(248, 17, 17, 0.8)',
           flex: 'none',
           order: 1,
-          flexGrow: 0
+          flexGrow: 0,
+          zIndex: 2
         }}>
           {startDate}
         </div>
@@ -264,29 +404,33 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
             flex: 'none',
             order: 0,
-            flexGrow: 0
+            flexGrow: 0,
+            zIndex: 2
           }}>
             {summitDate}
           </div>
         )}
 
-        {/* XP Remaining - Bottom */}
-        <div style={{ 
-          position: 'absolute',
-          bottom: isMobile ? '52px' : '75px',
-          left: isMobile ? '11px' : '28px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '700',
-          fontSize: isMobile ? '22px' : '40px',
-          lineHeight: isMobile ? '26px' : '36px',
-          color: '#DC2627',
-          textShadow: '2px 2px 4px rgba(241, 12, 12, 0.8)',
-          flex: 'none',
-          order: 0,
-          flexGrow: 0
-        }}>
-          {xpRemaining.toLocaleString()} XP
+        {/* XP Display - Bottom (shows remaining XP for summit, total XP for achieved) */}
+        <div 
+          data-download-adjust="true"
+          style={{ 
+            position: 'absolute',
+            bottom: isMobile ? '52px' : '75px',
+            left: isMobile ? '11px' : '28px',
+            fontFamily: 'Poppins, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: '700',
+            fontSize: isMobile ? '22px' : '40px',
+            lineHeight: isMobile ? '26px' : '36px',
+            color: '#DC2627',
+            textShadow: '2px 2px 4px rgba(241, 12, 12, 0.8)',
+            flex: 'none',
+            order: 0,
+            flexGrow: 0,
+            zIndex: 2
+          }}>
+          {hasAchievedLevel80 ? currentXP.toLocaleString() : xpRemaining.toLocaleString()}
         </div>
 
         {/* PlayerZERO Logo - Bottom Right */}
@@ -303,7 +447,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
           flex: 'none',
           order: 0,
-          flexGrow: 0
+          flexGrow: 0,
+          zIndex: 2
         }}>
         </div>
       </div>
@@ -394,14 +539,6 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         >
           {isDownloading ? (
             <>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderTopColor: '#FFFFFF',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite'
-              }} />
               Generating...
             </>
           ) : downloadSuccess ? (
@@ -420,14 +557,6 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           )}
         </button>
       </div>
-
-      {/* Spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }

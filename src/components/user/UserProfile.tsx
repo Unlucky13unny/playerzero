@@ -132,12 +132,20 @@ export const UserProfile = () => {
         
         setEditData(prev => ({ ...prev!, [field]: limitedValue }))
       } 
-      // Special handling for trainer_level to enforce 1-80 range
+      // Special handling for trainer_level to allow editing while enforcing 1-80 range
       else if (field === 'trainer_level') {
-        const numValue = parseInt(value) || 1;
-        // Cap between 1 and 80
-        const cappedValue = Math.max(1, Math.min(80, numValue));
-        setEditData(prev => ({ ...prev!, [field]: cappedValue }))
+        // Allow empty string for deletion, or store the raw value for typing
+        if (value === '' || value === null || value === undefined) {
+          setEditData(prev => ({ ...prev!, [field]: '' as any }))
+        } else {
+          const numValue = parseInt(value);
+          // Only validate if it's a valid number
+          if (!isNaN(numValue)) {
+            // Cap between 1 and 80
+            const cappedValue = Math.max(1, Math.min(80, numValue));
+            setEditData(prev => ({ ...prev!, [field]: cappedValue }))
+          }
+        }
       } 
       else {
         setEditData(prev => ({ ...prev!, [field]: value }))
@@ -219,6 +227,15 @@ export const UserProfile = () => {
 
     try {
       let updatedData = { ...editData };
+      
+      // Ensure trainer_level has a valid value (default to 1 if empty)
+      const levelValue = Number(updatedData.trainer_level);
+      if (!updatedData.trainer_level || isNaN(levelValue) || levelValue < 1) {
+        updatedData.trainer_level = 1;
+      } else {
+        // Ensure it's within valid range (1-80)
+        updatedData.trainer_level = Math.max(1, Math.min(80, levelValue));
+      }
 
       // Check if trainer name or country is being changed
       const isNameChanged = profile.trainer_name !== editData.trainer_name;
@@ -410,10 +427,11 @@ export const UserProfile = () => {
     }
   };
 
+  // Show consistent loading for both initial load and saving operations
   if (loading && !profile) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
-        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading your profile...</p>
+        <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '0 20px' }}>Loading your Profile...</p>
       </div>
     )
   }
@@ -440,6 +458,37 @@ export const UserProfile = () => {
     )
   }
 
+  // Professional loading overlay during save operations
+  const renderSavingOverlay = () => {
+    if (!saving) return null;
+    
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 9999
+      }}>
+        <p style={{
+          fontSize: '18px',
+          color: '#DC2627',
+          fontWeight: 600,
+          fontFamily: 'Poppins, sans-serif',
+          textAlign: 'center',
+          padding: '0 20px'
+        }}>
+          Saving your Profile...
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div 
       className="profile-settings-container"
@@ -449,6 +498,8 @@ export const UserProfile = () => {
         justifyContent: isMobile ? "flex-start" : "center", // Top align on mobile
       }}
     >
+      {renderSavingOverlay()}
+      
       <WelcomeModal 
         isOpen={showWelcomeModal}
         onContinue={() => setShowWelcomeModal(false)}
@@ -670,8 +721,9 @@ export const UserProfile = () => {
                 type="number"
                 min="1"
                 max="80"
-                value={editData?.trainer_level || 1}
-                onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
+                value={(editData?.trainer_level as any) === '' ? '' : (editData?.trainer_level || '')}
+                onChange={(e) => handleInputChange('trainer_level', e.target.value)}
+                placeholder="Enter level (1-80)"
                 style={{
                   display: "flex",
                   flexDirection: "row",
@@ -1313,11 +1365,10 @@ export const UserProfile = () => {
                 fontSize: isMobile ? "14px" : "16px",
                 lineHeight: isMobile ? "21px" : "24px",
                 color: "#FFFFFF",
-                cursor: "pointer",
-                opacity: saving ? 0.7 : 1,
+                cursor: saving ? "not-allowed" : "pointer",
               }}
             >
-              {saving ? 'Saving...' : 'Save'}
+              Save
             </button>
             <button
               type="button"

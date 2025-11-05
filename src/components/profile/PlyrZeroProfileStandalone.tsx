@@ -119,14 +119,10 @@ export function PlyrZeroProfileStandalone({
     return teamInfo?.team || 'Unknown Team';
   };
 
-  const formatXP = (xp: number | undefined | null): string => {
-    if (!xp) return '0';
-    if (xp >= 1000000) {
-      return `${(xp / 1000000).toFixed(2)}M`;
-    } else if (xp >= 1000) {
-      return `${(xp / 1000).toFixed(1)}K`;
-    }
-    return xp.toString();
+  // Format large numbers with full values (e.g., 1000 instead of 1K)
+  const formatNumber = (num: number | undefined | null): string => {
+    if (!num) return '0';
+    return Math.floor(num).toLocaleString();
   };
 
   // Utility function to generate social media links
@@ -300,26 +296,27 @@ export function PlyrZeroProfileStandalone({
       gap: "10px",
     },
     statCard: {
-      padding: "6px 10px",
+      padding: "10px 12px",
       backgroundColor: "#f9fafb",
       border: "1px solid #e5e7eb",
       borderRadius: "8px",
       display: "flex",
       flexDirection: "column" as const,
-      alignItems: "center",
-      justifyContent: "center",
-      textAlign: "center" as const,
+      alignItems: "flex-start",
+      justifyContent: "flex-start",
+      textAlign: "left" as const,
     },
     statValue: {
       fontSize: "18px",
-      fontWeight: "bold",
+      fontWeight: "600",
       color: "black",
       lineHeight: "1.2",
       marginBottom: "3px",
+      letterSpacing: "-0.5px",
     },
     statLabel: {
       fontSize: "12px",
-      color: "#6b7280",
+      color: "#9ca3af",
       fontWeight: "400",
     },
     buttonContainer: {
@@ -455,7 +452,7 @@ export function PlyrZeroProfileStandalone({
 
       {loading ? (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '400px', width: '100%' }}>
-          <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Loading trainer profile...</p>
+          <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '0 20px' }}>Loading your Profile...</p>
         </div>
       ) : error ? (
         <div style={styles.errorContainer}>
@@ -510,7 +507,7 @@ export function PlyrZeroProfileStandalone({
               <div style={styles.userInfoItem}>
                 <span style={styles.label}>Country:</span>
                 <div style={styles.countryValue}>
-                  {profileData.country && <CountryFlag countryName={profileData.country} size={20} />}
+                  {profileData.country && <CountryFlag countryName={profileData.country} width={20} height={15} />}
                   <span>{profileData.country}</span>
                 </div>
               </div>
@@ -521,28 +518,28 @@ export function PlyrZeroProfileStandalone({
           <div style={styles.statsContainer}>
             <div style={styles.statCard}>
               <div style={styles.statValue}>
-                {profileData.distance_walked.toFixed(1)} km
+                {formatNumber(profileData.distance_walked)} km
               </div>
               <div style={styles.statLabel}>Distance Walked</div>
             </div>
             
             <div style={styles.statCard}>
               <div style={styles.statValue}>
-                {profileData.pokemon_caught.toLocaleString()}
+                {formatNumber(profileData.pokemon_caught)}
               </div>
               <div style={styles.statLabel}>Pokémon Caught</div>
             </div>
             
             <div style={styles.statCard}>
               <div style={styles.statValue}>
-                {profileData.pokestops_visited.toLocaleString()}
+                {formatNumber(profileData.pokestops_visited)}
               </div>
               <div style={styles.statLabel}>Pokéstops Visited</div>
             </div>
             
             <div style={styles.statCard}>
               <div style={styles.statValue}>
-                {formatXP(profileData.total_xp)}
+                {formatNumber(profileData.total_xp)}
               </div>
               <div style={styles.statLabel}>Total XP</div>
             </div>
@@ -566,19 +563,6 @@ export function PlyrZeroProfileStandalone({
           </div>
         </>
       ) : null}
-      
-      {/* CSS Animation for loading spinner */}
-      <style dangerouslySetInnerHTML={{
-        __html: `
-          .loading-spinner {
-            animation: spin 1s linear infinite;
-          }
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `
-      }} />
 
       {/* Modal for all social accounts - Matching SocialConnectModal design */}
       {showAllSocial && profileData && (

@@ -44,10 +44,36 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           img.src = '/images/grind.png'
         })
 
-        // Wait for the card to render properly
-        await new Promise(resolve => setTimeout(resolve, 300))
+        // Wait for fonts to load and card to render properly
+        if (document.fonts && document.fonts.ready) {
+          await document.fonts.ready
+        }
+        await new Promise(resolve => setTimeout(resolve, 500))
 
         if (!cardRef.current) return
+
+        // Ensure all img elements in card have CORS enabled BEFORE capture
+        const cardImages = cardRef.current.querySelectorAll('img')
+        cardImages.forEach((img: any) => {
+          img.crossOrigin = 'anonymous'
+        })
+
+        // Wait for all images in the card to load
+        const imageLoadPromises = Array.from(cardImages).map((img: any) => {
+          return new Promise<void>((resolve) => {
+            if (img.complete) {
+              // Image already loaded
+              resolve()
+            } else {
+              img.onload = () => resolve()
+              img.onerror = () => resolve() // Continue even if image fails
+            }
+          })
+        })
+        await Promise.all(imageLoadPromises)
+
+        // Additional wait for rendering
+        await new Promise(resolve => setTimeout(resolve, 300))
 
         // Sanitize CSS to remove unsupported color functions
         const sanitizeCSS = () => {
@@ -76,22 +102,71 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         
         sanitizeCSS()
 
-        // Calculate scale to ensure download is always high quality
-        // Target download size: 800×1200 (2x for retina/social media quality)
-        const currentWidth = isMobile ? 224 : 400
-        const targetDownloadWidth = 800  // Always download at high resolution
-        const downloadScale = targetDownloadWidth / currentWidth  // 2x for desktop, ~3.57x for mobile
+        // Adjust trainer name and date positioning for mobile download
+        const adjustHeaderPositioning = () => {
+          if (!cardRef.current) return
+          const trainerName = cardRef.current.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+          const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+          
+          if (trainerName) {
+            trainerName.style.transform = 'translateY(-5px)'
+            trainerName.style.marginLeft = '4px'
+          }
+          if (startDate) {
+            startDate.style.transform = 'translateY(-5px)'
+            startDate.style.marginRight = '3px'
+          }
+          
+          // Increase border-radius by 2px for mobile download only
+          if (isMobile) {
+            cardRef.current.style.borderRadius = '18px'  // 16px + 2px
+          }
+        }
+
+        // Adjust daily badge positioning for download export
+        // Logic: html2canvas renders at 2x scale, which can shift text positioning
+        // We use transform to vertically center the text for better reliability
+        const adjustDailyBadgePositioning = () => {
+          if (!cardRef.current) return
+          const dailyBadges = cardRef.current.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
+          dailyBadges.forEach((element: HTMLElement) => {
+            element.style.display = 'flex'
+            element.style.alignItems = 'center'
+            element.style.justifyContent = 'center'
+            element.style.position = 'relative'
+            element.style.transform = 'translateY(-6px)'
+          })
+        }
         
+        adjustHeaderPositioning()
+        adjustDailyBadgePositioning()
+
+        // Pixel-perfect export configuration with image support
+        const devicePixelRatio = window.devicePixelRatio || 1
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: downloadScale, // Download at consistent high resolution (800×1200)
+          scale: Math.min(devicePixelRatio, 2), // Use device pixel ratio but cap at 2
           useCORS: true,
           allowTaint: true,
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: window.innerWidth,
-          windowHeight: window.innerHeight
+          windowWidth: window.innerWidth || 1920,
+          windowHeight: window.innerHeight || 1080,
+          imageTimeout: 30000, // Extended timeout for reliable image loading
+          proxy: undefined, // Don't use proxy
+          foreignObjectRendering: false,
+          onclone: (clonedDocument) => {
+            // Set crossOrigin on all images in the cloned document
+            const clonedImages = clonedDocument.querySelectorAll('img')
+            clonedImages.forEach((img: any) => {
+              img.crossOrigin = 'anonymous'
+              // Ensure image sources are accessible
+              if (img.src && !img.src.startsWith('http') && !img.src.startsWith('data')) {
+                img.src = img.src // Refresh the source
+              }
+            })
+          }
         })
 
         // Create download link
@@ -99,6 +174,29 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         link.download = `playerzero-${profile.trainer_name}-grind-card.png`
         link.href = canvas.toDataURL('image/png', 1.0)
         link.click()
+
+        // Restore original header positioning
+        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+        
+        if (trainerName) {
+          trainerName.style.transform = 'translateY(0)'
+        }
+        if (startDate) {
+          startDate.style.transform = 'translateY(0)'
+          startDate.style.marginRight = '0px'
+        }
+        
+        // Restore original border-radius
+        if (cardRef.current && isMobile) {
+          cardRef.current.style.borderRadius = '16px'  // Restore to original
+        }
+
+        // Restore original daily badge positioning
+        const dailyBadges = cardRef.current?.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
+        dailyBadges.forEach((element: HTMLElement) => {
+          element.style.transform = 'translateY(0)'
+        })
 
       // Show success message
       setDownloadSuccess(true)
@@ -110,6 +208,28 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
       } catch (error) {
         console.error('Download failed:', error)
           alert('Failed to download card. Please try again.')
+        // Restore header positioning even on error
+        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
+        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
+        
+        if (trainerName) {
+          trainerName.style.transform = 'translateY(0)'
+        }
+        if (startDate) {
+          startDate.style.transform = 'translateY(0)'
+          startDate.style.marginRight = '0px'
+        }
+        
+        // Restore original border-radius on error
+        if (cardRef.current && isMobile) {
+          cardRef.current.style.borderRadius = '16px'  // Restore to original
+        }
+        
+        // Restore positioning even on error
+        const dailyBadges = cardRef.current?.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
+        dailyBadges.forEach((element: HTMLElement) => {
+          element.style.transform = 'translateY(0)'
+        })
       } finally {
           setIsDownloading(false)
         }
@@ -190,25 +310,38 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
       <div 
         ref={cardRef}
         style={{ 
-          backgroundImage: 'url(/images/grind.png)',
-          backgroundSize: '100% 100%',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
           position: 'relative',
           width: isMobile ? '224px' : '400px',
           height: isMobile ? '336px' : '600px',
           margin: 0,
           padding: 0,
           border: 'none',
-          borderRadius: isMobile ? '12px' : '30px',
+          borderRadius: isMobile ? '16px' : '30px',
           overflow: 'hidden',
           fontFamily: 'Poppins, sans-serif'
         }}
       >
+        {/* Background Image as actual img tag for better quality */}
+        <img
+          src="/images/grind.png"
+          alt="Card Background"
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'center',
+            zIndex: 1
+          }}
+        />
         {/* Trainer Name - Top Left */}
-        <div style={{ 
+        <div 
+          data-download-adjust-trainer="true"
+          style={{ 
           position: 'absolute',
-          top: isMobile ? '27px' : '41px',
+          top: isMobile ? '27px' : '37px',
           left: isMobile ? '17px' : '30px',
           fontFamily: 'Poppins',
           fontStyle: 'normal',
@@ -218,18 +351,20 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           color: '#FFFFFF',
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
           letterSpacing: '0.5px',
-          zIndex: 10
+          zIndex: 2
         }}>
           {profile.trainer_name}
         </div>
         
         {/* Start Date - Top Right */}
-        <div style={{ 
+        <div 
+          data-download-adjust-date="true"
+          style={{ 
           position: 'absolute',
-          top: isMobile ? '27px' : '38px',
-          right: isMobile ? '17px' : '35px',
+          top: isMobile ? '29px' : '41px',
+          right: isMobile ? '17px' : '37px',
           textAlign: 'right',
-          zIndex: 10
+          zIndex: 2
         }}>
           <div style={{ 
             fontFamily: 'Poppins, sans-serif',
@@ -253,7 +388,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           padding: '0px',
           width: isMobile ? '202px' : '360px',
           left: isMobile ? '11px' : '20px',
-          top: isMobile ? '190px' : '300px'
+          top: isMobile ? '190px' : '300px',
+          zIndex: 2
         }}>
           {/* ALL TIME Header */}
             <div style={{ 
@@ -280,7 +416,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             flexDirection: 'column',
             alignItems: 'flex-start',
             padding: '0px',
-            gap: isMobile ? '2px' : '2px',
+            gap: isMobile ? '2px' : '4px',
             marginLeft: isMobile ? '6px' : '10px',
             width: '100%',
             flex: 'none',
@@ -358,7 +494,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 padding: isMobile ? '0px 5px' : '0px 10px',
                 gap: isMobile ? '3px' : '6px',
                 width: isMobile ? '50px' : '88px',
-                height: isMobile ? '14px' : '24px',
+                height: isMobile ? '16px' : '28px',
                 background: 'rgba(219, 22, 27, 0.5)',
                 border: '1px solid #DC2627',
                 borderRadius: isMobile ? '8px' : '15px',
@@ -367,7 +503,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 order: 1,
                 flexGrow: 0
               }}>
-                <div style={{
+                <div 
+                  data-download-adjust-daily="true"
+                  style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontStyle: 'normal',
                   fontWeight: '500',
@@ -375,9 +513,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                   lineHeight: isMobile ? '9px' : '15px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  flex: 'none',
+                  flex: 1,
                   order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   {pokemonPerDay} daily
@@ -456,7 +593,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 padding: isMobile ? '0px 5px' : '0px 10px',
                 gap: isMobile ? '3px' : '6px',
                 width: isMobile ? '50px' : '88px',
-                height: isMobile ? '14px' : '24px',
+                height: isMobile ? '16px' : '28px',
                 background: 'rgba(219, 22, 27, 0.5)',
                 border: '1px solid #DC2627',
                 marginRight: isMobile ? '10px' : '15px',
@@ -465,7 +602,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 order: 1,
                 flexGrow: 0
               }}>
-                <div style={{
+                <div 
+                  data-download-adjust-daily="true"
+                  style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontStyle: 'normal',
                   fontWeight: '500',
@@ -473,9 +612,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                   lineHeight: isMobile ? '9px' : '15px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  flex: 'none',
+                  flex: 1,
                   order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   {distancePerDay} daily
@@ -527,7 +665,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                   Pokéstops Visited
                 </div>
                 {/* Value */}
-            <div style={{ 
+                <div style={{
                   fontFamily: 'Poppins, sans-serif',
                   fontStyle: 'normal',
                   fontWeight: '600',
@@ -542,7 +680,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 }}>
                   {(profile.pokestops_visited || 0).toLocaleString()}
                 </div>
-          </div>
+              </div>
               {/* Daily Badge */}
               <div style={{
                 boxSizing: 'border-box',
@@ -554,7 +692,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 padding: isMobile ? '0px 5px' : '0px 10px',
                 gap: isMobile ? '3px' : '6px',
                 width: isMobile ? '50px' : '88px',
-                height: isMobile ? '14px' : '24px',
+                height: isMobile ? '16px' : '28px',
                 background: 'rgba(219, 22, 27, 0.5)',
                 border: '1px solid #DC2627',
                 borderRadius: isMobile ? '8px' : '15px',
@@ -562,7 +700,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                 order: 1,
                 flexGrow: 0
               }}>
-            <div style={{ 
+            <div 
+              data-download-adjust-daily="true"
+              style={{ 
                   fontFamily: 'Poppins, sans-serif',
                   fontStyle: 'normal',
                   fontWeight: '500',
@@ -570,9 +710,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
                   lineHeight: isMobile ? '9px' : '15px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  flex: 'none',
+                  flex: 1,
                   order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   {pokestopsPerDay} daily
@@ -593,7 +732,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           width: isMobile ? '202px' : '360px',
           height: isMobile ? '29px' : '52px',
           left: isMobile ? '15px' : '30px',
-          top: isMobile ? '270px' : '440px'
+          top: isMobile ? '270px' : '440px',
+          zIndex: 2
         }}>
           {/* Frame 747 - Label and Value (Column Layout) */}
           <div style={{
@@ -660,18 +800,18 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             order: 1,
             flexGrow: 0
         }}>
-          <div style={{ 
+          <div 
+            data-download-adjust-daily="true"
+            style={{ 
               fontFamily: 'Poppins, sans-serif',
               fontStyle: 'normal',
               fontWeight: '500',
-              marginRight: isMobile ? '0px' : '20px',
               fontSize: isMobile ? '6px' : '11px',
               lineHeight: isMobile ? '9px' : '16px',
               textAlign: 'center',
               color: '#FFFFFF',
-              flex: 'none',
+              flex: 1,
               order: 0,
-              flexGrow: 0,
               whiteSpace: 'nowrap'
             }}>
               {formattedDailyXP} daily
@@ -691,7 +831,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           lineHeight: isMobile ? '12px' : '21px',
           color: '#FFFFFF',
           textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-          letterSpacing: '0.8px'
+          letterSpacing: '0.8px',
+          zIndex: 2
         }}>
          
         </div>
@@ -783,14 +924,6 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         >
           {isDownloading ? (
             <>
-              <div style={{
-                width: '16px',
-                height: '16px',
-                border: '2px solid rgba(255, 255, 255, 0.3)',
-                borderTopColor: '#FFFFFF',
-                borderRadius: '50%',
-                animation: 'spin 0.8s linear infinite'
-              }} />
               Generating...
             </>
           ) : downloadSuccess ? (
@@ -809,14 +942,6 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           )}
         </button>
       </div>
-
-      {/* Spinner animation */}
-      <style>{`
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   )
 }
