@@ -5,6 +5,7 @@ import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { StatCalculators } from './StatCalculators'
 import { StatUpdater } from './StatUpdater'
+import { Loading } from '../common/Loading'
 
 type DashboardTab = 'calculators' | 'update'
 
@@ -70,10 +71,7 @@ export const Dashboard = () => {
   const renderTabContent = () => {
     if (loading) {
       return (
-        <div className="dashboard-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading your dashboard...</p>
-        </div>
+        <Loading message="Loading your Dashboard..." />
       )
     }
 
@@ -110,10 +108,7 @@ export const Dashboard = () => {
   if (loading) {
     return (
       <div className="dashboard-container">
-        <div className="dashboard-loading">
-          <div className="loading-spinner"></div>
-          <p>Loading dashboard...</p>
-        </div>
+        <Loading message="Loading your Dashboard..." fullScreen={true} backgroundColor="#ffffff" />
       </div>
     )
   }

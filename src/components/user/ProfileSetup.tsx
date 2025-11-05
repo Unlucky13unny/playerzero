@@ -194,12 +194,20 @@ export const ProfileSetup = () => {
       
       setProfileData(prev => ({ ...prev, [field]: limitedValue }))
     } 
-    // Special handling for trainer_level to enforce 1-80 range
+    // Special handling for trainer_level to allow editing while enforcing 1-80 range
     else if (field === 'trainer_level') {
-      const numValue = parseInt(value) || 1;
-      // Cap between 1 and 80
-      const cappedValue = Math.max(1, Math.min(80, numValue));
-      setProfileData(prev => ({ ...prev, [field]: cappedValue }))
+      // Allow empty string for deletion, or store the raw value for typing
+      if (value === '' || value === null || value === undefined) {
+        setProfileData(prev => ({ ...prev, [field]: '' as any }))
+      } else {
+        const numValue = parseInt(value);
+        // Only validate if it's a valid number
+        if (!isNaN(numValue)) {
+          // Cap between 1 and 80
+          const cappedValue = Math.max(1, Math.min(80, numValue));
+          setProfileData(prev => ({ ...prev, [field]: cappedValue }))
+        }
+      }
     } 
     else {
       setProfileData(prev => ({ ...prev, [field]: value }))
@@ -598,6 +606,15 @@ export const ProfileSetup = () => {
     setError(null)
     
     try {
+      // Ensure trainer_level has a valid value (default to 1 if empty)
+      const levelValue = Number(profileData.trainer_level);
+      const validatedProfileData = {
+        ...profileData,
+        trainer_level: (!profileData.trainer_level || isNaN(levelValue) || levelValue < 1) 
+          ? 1 
+          : Math.max(1, Math.min(80, levelValue))
+      };
+      
       let screenshotUrl = ''
       
       // Upload screenshot if provided
@@ -613,7 +630,7 @@ export const ProfileSetup = () => {
       
       // Update existing profile (created during signup)
       const profileToSubmit = {
-        ...profileData,
+        ...validatedProfileData,
         profile_screenshot_url: screenshotUrl,
         is_profile_setup: true
       }
@@ -673,10 +690,10 @@ export const ProfileSetup = () => {
           type="number"
           min="1"
           max="80"
-          value={profileData.trainer_level}
-          onChange={(e) => handleInputChange('trainer_level', parseInt(e.target.value))}
+          value={(profileData.trainer_level as any) === '' ? '' : (profileData.trainer_level || '')}
+          onChange={(e) => handleInputChange('trainer_level', e.target.value)}
           className="form-input"
-          placeholder="80"
+          placeholder="Enter level (1-80)"
         />
       </div>
 
@@ -1179,7 +1196,7 @@ export const ProfileSetup = () => {
   if (checkingProfile) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', width: '100%' }}>
-        <p style={{ fontSize: '16px', color: '#636874', fontWeight: 500, textAlign: 'center' }}>Checking profile status...</p>
+        <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '0 20px' }}>Loading your Profile...</p>
       </div>
     )
   }

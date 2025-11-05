@@ -299,7 +299,15 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
   if (!currentStats) {
     return (
       <div className="stat-updater-container">
-        <div className="loading-message">Loading your profile...</div>
+        <p style={{
+          color: '#DC2627',
+          fontSize: '18px',
+          fontWeight: '600',
+          fontFamily: 'Poppins, sans-serif',
+          textAlign: 'center',
+          margin: '40px 0',
+          padding: '0 20px'
+        }}>Loading your Profile...</p>
       </div>
     );
   }
@@ -489,7 +497,6 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
             >
               {saving ? (
                 <>
-                  <div className="loading-spinner"></div>
                   Saving...
                 </>
               ) : (

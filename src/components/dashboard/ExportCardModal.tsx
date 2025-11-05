@@ -888,7 +888,6 @@ export const ExportCardModal = ({ isOpen, onClose, profile, isPaidUser }: Export
             <FaDownload />
             {exporting ? (
               <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <div className="loading-spinner" style={{ width: '1rem', height: '1rem' }}></div>
                 Generating...
               </span>
             ) : (

@@ -5,14 +5,21 @@ import type { CountryInfo } from '../../utils/countryFlags';
 interface CountryFlagProps {
   countryName: string;
   size?: number;
+  width?: number;
+  height?: number;
   className?: string;
 }
 
 export const CountryFlag: React.FC<CountryFlagProps> = ({ 
   countryName, 
-  size = 40, 
+  size = 40,
+  width,
+  height,
   className = '' 
 }) => {
+  // Use custom width/height if provided, otherwise calculate from size
+  const flagWidth = width ?? size;
+  const flagHeight = height ?? (size * 0.6);
   const [countryInfo, setCountryInfo] = useState<CountryInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,10 +44,10 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       <div 
         className={`country-flag-loading ${className}`}
         style={{ 
-          width: size, 
-          height: size * 0.6, 
+          width: flagWidth, 
+          height: flagHeight, 
           backgroundColor: 'var(--gray-dark)',
-          borderRadius: '4px',
+          borderRadius: '0px',
           display: 'inline-block'
         }}
       />
@@ -52,14 +59,14 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       <div 
         className={`country-flag-fallback ${className}`}
         style={{ 
-          width: size, 
-          height: size * 0.6, 
+          width: flagWidth, 
+          height: flagHeight, 
           backgroundColor: 'var(--gray-dark)',
-          borderRadius: '4px',
+          borderRadius: '0px',
           display: 'inline-block',
-          fontSize: size * 0.3,
+          fontSize: flagWidth * 0.3,
           textAlign: 'center',
-          lineHeight: `${size * 0.6}px`,
+          lineHeight: `${flagHeight}px`,
           color: 'var(--white-muted)'
         }}
       >
@@ -75,10 +82,10 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
       title={`${countryInfo.name} (${countryInfo.nativeName})`}
       className={`country-flag ${className}`}
       style={{
-        width: size,
-        height: size * 0.6,
+        width: flagWidth,
+        height: flagHeight,
         objectFit: 'cover',
-        borderRadius: '4px',
+        borderRadius: '0px',
         border: '1px solid var(--gray-dark)',
         boxShadow: '0 2px 4px rgba(0, 0, 0, 0.2)'
       }}
@@ -89,14 +96,14 @@ export const CountryFlag: React.FC<CountryFlagProps> = ({
         const fallback = document.createElement('div');
         fallback.textContent = '🌍';
         fallback.style.cssText = `
-          width: ${size}px;
-          height: ${size * 0.6}px;
+          width: ${flagWidth}px;
+          height: ${flagHeight}px;
           background-color: var(--gray-dark);
-          border-radius: 4px;
+          border-radius: 0px;
           display: inline-flex;
           align-items: center;
           justify-content: center;
-          font-size: ${size * 0.3}px;
+          font-size: ${flagWidth * 0.3}px;
           color: var(--white-muted);
           border: 1px solid var(--gray-dark);
         `;

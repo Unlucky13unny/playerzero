@@ -694,23 +694,7 @@ h1, h2, h3, h4, h5, h6 {
   margin-right: -0.25rem;
 }
 
-/* Loading Spinner */
-.loading-spinner {
-  width: 1.25rem;
-  height: 1.25rem;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-right: 0.75rem;
-  margin-left: -0.25rem;
-}
-
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Loading spinner removed - using standardized Loading component */
 
 /* Step Content */
 .step-content {
@@ -2860,16 +2844,7 @@ h1, h2, h3, h4, h5, h6 {
   gap: 16px;
 }
 
-.loading-spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid rgba(220, 38, 127, 0.3);
-  border-top: 3px solid #dc267f;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin: 0 auto;
-  display: block;
-}
+/* Loading spinner removed - using standardized Loading component */
 
 .leaderboard-error {
   background: rgba(239, 68, 68, 0.1);

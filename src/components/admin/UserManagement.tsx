@@ -102,8 +102,7 @@ export const UserManagement = () => {
     return (
       <div className="admin-user-management">
         <div className="loading-container">
-          <div className="loading-spinner"></div>
-          <p>Loading user data...</p>
+          <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '20px' }}>Loading user data...</p>
         </div>
       </div>
     )

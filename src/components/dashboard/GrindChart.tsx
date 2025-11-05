@@ -88,9 +88,8 @@ export const GrindChart = ({ className = '', userId }: GrindChartProps) => {
   if (loading) {
     return (
       <div className={`grind-chart-container ${className}`}>
-        <div className="grind-chart-header">
-          <h3>Grind Progress</h3>
-          <div className="loading-spinner"></div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', width: '100%' }}>
+          <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '0 20px', margin: 0 }}>Loading your Profile...</p>
         </div>
       </div>
     )

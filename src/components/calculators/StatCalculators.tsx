@@ -193,7 +193,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
               >
                 {loading ? (
                   <>
-                    <div className="loading-spinner"></div>
                     <span>Analyzing Progress...</span>
                   </>
                 ) : (
@@ -296,7 +295,6 @@ export const StatCalculators = ({ initialCalculator = 'grind' }: StatCalculators
               >
                 {loading ? (
                   <>
-                    <div className="loading-spinner"></div>
                     <span>Analyzing Progress...</span>
                   </>
                 ) : (

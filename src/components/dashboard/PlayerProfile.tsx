@@ -257,21 +257,15 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
             zIndex: 10
           }}
         >
-          <div           style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            textAlign: isMobile ? 'left' : 'center',
-            gap: '16px'
-          }}>
-            <p style={{
-              color: '#6B7280',
-              fontSize: '18px',
-              fontWeight: '500',
-              margin: '0'
-            }}>Loading your profile...</p>
-          </div>
+          <p style={{
+            color: '#DC2627',
+            fontSize: '18px',
+            fontWeight: '600',
+            fontFamily: 'Poppins, sans-serif',
+            textAlign: 'center',
+            margin: '0',
+            padding: '0 20px'
+          }}>Loading your Profile...</p>
         </main>
         {showMobileFooter && <MobileFooter currentPage="profile" />}
       </div>
