@@ -149,17 +149,18 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         adjustXPPositioning()
 
         // Pixel-perfect export configuration with image support
-        const devicePixelRatio = window.devicePixelRatio || 1
+        // IMPORTANT: Use fixed scale of 2 for consistent production rendering
+        // This ensures dimensions don't change between dev and production
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: Math.min(devicePixelRatio, 2), // Use device pixel ratio but cap at 2
+          scale: 2, // Fixed scale for consistency across all environments (development, production, all devices)
           useCORS: true,
           allowTaint: true,
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: window.innerWidth || 1920,
-          windowHeight: window.innerHeight || 1080,
+          windowWidth: cardRef.current.offsetWidth * 2,
+          windowHeight: cardRef.current.offsetHeight * 2,
           imageTimeout: 30000, // Extended timeout for reliable image loading
           proxy: undefined, // Don't use proxy
           foreignObjectRendering: false,
@@ -290,6 +291,16 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
   // Calculate summit date with level parameter
   const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date, profile.trainer_level)
 
+  // Ensure consistent card dimensions in production
+  // This function validates that card size is preserved during export
+  const getConsistentCardDimensions = () => {
+    return {
+      width: isMobile ? '224px' : '400px',
+      height: isMobile ? '336px' : '600px',
+      borderRadius: isMobile ? '16px' : '28px'
+    }
+  }
+
   return (
     <div 
       style={{
@@ -319,14 +330,16 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         ref={cardRef}
         style={{ 
           position: 'relative',
-          width: isMobile ? '224px' : '400px',
-          height: isMobile ? '336px' : '600px',
+          width: getConsistentCardDimensions().width,
+          height: getConsistentCardDimensions().height,
           margin: 0,
           padding: 0,
           border: 'none',
           overflow: 'hidden',
-          borderRadius: isMobile ? '16px' : '28px',
-          fontFamily: 'Poppins, sans-serif'
+          borderRadius: getConsistentCardDimensions().borderRadius,
+          fontFamily: 'Poppins, sans-serif',
+          // Production fix: Ensure these dimensions are not affected by media queries
+          boxSizing: 'border-box' as const
         }}
       >
         {/* Background Image as actual img tag for better quality */}

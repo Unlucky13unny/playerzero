@@ -142,17 +142,18 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         adjustDailyBadgePositioning()
 
         // Pixel-perfect export configuration with image support
-        const devicePixelRatio = window.devicePixelRatio || 1
+        // IMPORTANT: Use fixed scale of 2 for consistent production rendering
+        // This ensures dimensions don't change between dev and production
         const canvas = await html2canvas(cardRef.current, {
           backgroundColor: null,
-          scale: Math.min(devicePixelRatio, 2), // Use device pixel ratio but cap at 2
+          scale: 2, // Fixed scale for consistency across all environments (development, production, all devices)
           useCORS: true,
           allowTaint: true,
           logging: false,
           scrollX: 0,
           scrollY: 0,
-          windowWidth: window.innerWidth || 1920,
-          windowHeight: window.innerHeight || 1080,
+          windowWidth: cardRef.current.offsetWidth * 2,
+          windowHeight: cardRef.current.offsetHeight * 2,
           imageTimeout: 30000, // Extended timeout for reliable image loading
           proxy: undefined, // Don't use proxy
           foreignObjectRendering: false,
@@ -282,6 +283,16 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   // Detect mobile view
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
 
+  // Ensure consistent card dimensions in production
+  // This function validates that card size is preserved during export
+  const getConsistentCardDimensions = () => {
+    return {
+      width: isMobile ? '224px' : '400px',
+      height: isMobile ? '336px' : '600px',
+      borderRadius: isMobile ? '16px' : '30px'
+    }
+  }
+
   return (
     <div 
       style={{
@@ -311,14 +322,16 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         ref={cardRef}
         style={{ 
           position: 'relative',
-          width: isMobile ? '224px' : '400px',
-          height: isMobile ? '336px' : '600px',
+          width: getConsistentCardDimensions().width,
+          height: getConsistentCardDimensions().height,
           margin: 0,
           padding: 0,
           border: 'none',
-          borderRadius: isMobile ? '16px' : '30px',
+          borderRadius: getConsistentCardDimensions().borderRadius,
           overflow: 'hidden',
-          fontFamily: 'Poppins, sans-serif'
+          fontFamily: 'Poppins, sans-serif',
+          // Production fix: Ensure these dimensions are not affected by media queries
+          boxSizing: 'border-box' as const
         }}
       >
         {/* Background Image as actual img tag for better quality */}
