@@ -109,12 +109,14 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
           
           if (trainerName) {
-            trainerName.style.transform = 'translateY(-5px)'
-            trainerName.style.marginLeft = '4px'
+            // At 2x scale: adjust text rendering by small amount to center properly
+            trainerName.style.transform = 'translateY(-2px)'
+            trainerName.style.letterSpacing = '0.3px' // Tighten letter spacing slightly
+            trainerName.style.fontWeight = '700' // Ensure weight is applied
           }
           if (startDate) {
-            startDate.style.transform = 'translateY(-5px)'
-            startDate.style.marginRight = '3px'
+            startDate.style.transform = 'translateY(-1px)'
+            startDate.style.fontWeight = '700'
           }
           
           // Increase border-radius by 2px for mobile download only
@@ -137,9 +139,20 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             element.style.transform = 'translateY(-6px)'
           })
         }
+
+        // Adjust Total XP section positioning for 2x scale rendering
+        const adjustTotalXPPositioning = () => {
+          if (!cardRef.current) return
+          const xpSection = cardRef.current.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
+          if (xpSection) {
+            // At 2x scale, apply slight vertical shift for proper alignment
+            xpSection.style.transform = 'translateY(-3px)'
+          }
+        }
         
         adjustHeaderPositioning()
         adjustDailyBadgePositioning()
+        adjustTotalXPPositioning()
 
         // Pixel-perfect export configuration with image support
         // IMPORTANT: Use fixed scale of 2 for consistent production rendering
@@ -182,10 +195,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         
         if (trainerName) {
           trainerName.style.transform = 'translateY(0)'
+          trainerName.style.letterSpacing = '0.5px' // Restore original
         }
         if (startDate) {
           startDate.style.transform = 'translateY(0)'
-          startDate.style.marginRight = '0px'
         }
         
         // Restore original border-radius
@@ -198,6 +211,12 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         dailyBadges.forEach((element: HTMLElement) => {
           element.style.transform = 'translateY(0)'
         })
+
+        // Restore original Total XP positioning
+        const xpSection = cardRef.current?.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
+        if (xpSection) {
+          xpSection.style.transform = 'translateY(0)'
+        }
 
       // Show success message
       setDownloadSuccess(true)
@@ -215,10 +234,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         
         if (trainerName) {
           trainerName.style.transform = 'translateY(0)'
+          trainerName.style.letterSpacing = '0.5px'
         }
         if (startDate) {
           startDate.style.transform = 'translateY(0)'
-          startDate.style.marginRight = '0px'
         }
         
         // Restore original border-radius on error
@@ -231,6 +250,12 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         dailyBadges.forEach((element: HTMLElement) => {
           element.style.transform = 'translateY(0)'
         })
+
+        // Restore Total XP positioning on error
+        const xpSection = cardRef.current?.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
+        if (xpSection) {
+          xpSection.style.transform = 'translateY(0)'
+        }
       } finally {
           setIsDownloading(false)
         }
@@ -735,7 +760,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         </div>
 
         {/* Total XP Section - Frame 750 (Bottom Row) */}
-        <div style={{ 
+        <div 
+          data-download-adjust-xp="true"
+          style={{ 
           position: 'absolute',
           display: 'flex',
           flexDirection: 'row',

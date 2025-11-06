@@ -115,12 +115,13 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
           
           if (trainerName) {
-            trainerName.style.transform = 'translateY(-5px)'
-            trainerName.style.marginLeft = '4px'
+            // At 2x scale: adjust text rendering by small amount to center properly
+            trainerName.style.transform = 'translateY(-2px)'
+            trainerName.style.fontWeight = '700' // Ensure weight is applied
           }
           if (startDate) {
-            startDate.style.transform = 'translateY(-5px)'
-            startDate.style.marginRight = '3px'
+            startDate.style.transform = 'translateY(-1px)'
+            startDate.style.fontWeight = '500'
           }
           
           // Increase border-radius by 2px for mobile download only
