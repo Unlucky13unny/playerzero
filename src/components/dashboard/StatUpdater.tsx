@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { dashboardService } from '../../services/dashboardService'
+import { dashboardService, type DailyUploadStatus } from '../../services/dashboardService'
 import { profileService, type ProfileWithMetadata } from '../../services/profileService'
 import { adminService } from '../../services/adminService'
 import { supabase } from '../../supabaseClient'
@@ -23,8 +23,7 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000)
-  const [lastUpdateDate, setLastUpdateDate] = useState<string | null>(null)
-  const [hasUpdatedToday, setHasUpdatedToday] = useState(false)
+  const [uploadStatus, setUploadStatus] = useState<DailyUploadStatus | null>(null)
   const [nextUpdateTime, setNextUpdateTime] = useState<string | null>(null)
   const [verificationScreenshot, setVerificationScreenshot] = useState<File | null>(null)
 
@@ -32,13 +31,13 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
     loadStats()
     loadMaxPokedexEntries()
     checkLastUpdate()
+    loadUploadStatus()
   }, [])
 
   const checkLastUpdate = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) {
-        setHasUpdatedToday(false)
         return
       }
 
@@ -53,9 +52,6 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
 
       // If we have any entries for today, use the latest one
       if (entries && entries.length > 0) {
-        setHasUpdatedToday(true)
-        setLastUpdateDate(new Date(entries[0].created_at).toLocaleTimeString())
-        
         // Calculate next update time (next UTC midnight)
         const now = new Date()
         const nextUpdateUTC = new Date(Date.UTC(
@@ -80,15 +76,10 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
         
         setNextUpdateTime(nextUpdateLocal)
       } else {
-        setHasUpdatedToday(false)
-        setLastUpdateDate(null)
         setNextUpdateTime(null)
       }
     } catch (err) {
       console.error('Error checking last update:', err)
-      // On error, allow updates to be safe
-      setHasUpdatedToday(false)
-      setLastUpdateDate(null)
       setNextUpdateTime(null)
     }
   }
@@ -151,6 +142,17 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
     const { value, error } = await adminService.getMaxPokedexEntries()
     if (!error) {
       setMaxPokedexEntries(value)
+    }
+  }
+
+  const loadUploadStatus = async () => {
+    try {
+      const { data, error } = await dashboardService.getDailyUploadStatus()
+      if (!error && data) {
+        setUploadStatus(data)
+      }
+    } catch (err) {
+      console.error('Failed to load upload status:', err)
     }
   }
 
@@ -235,6 +237,7 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
       if (response.success) {
         setSuccess('Stats updated successfully! Redirecting to your profile...')
         await loadStats()
+        await loadUploadStatus() // Refresh upload status after successful update
         setUpdates({})
         setVerificationScreenshot(null)
         
@@ -261,7 +264,8 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
     return num.toLocaleString();
   };
 
-  if (hasUpdatedToday) {
+  // Show upload limit status if user has reached their daily limit
+  if (uploadStatus && !uploadStatus.canUpload) {
     return (
       <div className="stat-updater">
         <div className="status-card">
@@ -269,8 +273,12 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
             <div className="status-header">
               <div className="status-icon">⏳</div>
               <div className="status-title">
-                <h3>Daily Update Complete</h3>
-                <p>You have already updated your stats today. Next update available tomorrow.</p>
+                <h3>Daily Upload Limit Reached</h3>
+                <p>
+                  You have used all {uploadStatus.dailyLimit} of your daily uploads 
+                  ({uploadStatus.userType} user). 
+                  {!uploadStatus.isPaidUser && ' Upgrade to premium for 4 uploads per day!'}
+                </p>
               </div>
             </div>
             
@@ -278,17 +286,26 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
               <div className="timeline-item">
                 <div className="timeline-icon completed">✓</div>
                 <div className="timeline-info">
-                  <span className="timeline-label">Last Update</span>
-                  <span className="timeline-value">{lastUpdateDate}</span>
+                  <span className="timeline-label">Uploads Used Today</span>
+                  <span className="timeline-value">{uploadStatus.uploadsUsed}/{uploadStatus.dailyLimit}</span>
                 </div>
               </div>
               <div className="timeline-item">
                 <div className="timeline-icon pending">⌛</div>
                 <div className="timeline-info">
-                  <span className="timeline-label">Next Update Available</span>
-                  <span className="timeline-value highlight">{nextUpdateTime}</span>
+                  <span className="timeline-label">Next Upload Available</span>
+                  <span className="timeline-value highlight">{nextUpdateTime || 'Tomorrow'}</span>
                 </div>
               </div>
+              {!uploadStatus.isPaidUser && (
+                <div className="timeline-item">
+                  <div className="timeline-icon upgrade">⭐</div>
+                  <div className="timeline-info">
+                    <span className="timeline-label">Upgrade for More</span>
+                    <span className="timeline-value highlight">4 uploads/day with Premium</span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -320,6 +337,22 @@ export const StatUpdater = ({ onStatsUpdated }: { onStatsUpdated: (profile: Prof
             <h3>📊 Update Your Stats</h3>
             <p>Keep your progress up to date • Last entry: {new Date(currentStats.updated_at || '').toLocaleDateString()}</p>
           </div>
+          {uploadStatus && (
+            <div className="upload-counter">
+              <div className="counter-info">
+                <span className="counter-label">Daily Uploads</span>
+                <span className="counter-value">
+                  {uploadStatus.uploadsUsed}/{uploadStatus.dailyLimit}
+                </span>
+              </div>
+              <div className="counter-type">
+                {uploadStatus.isPaidUser ? '⭐ Premium' : '🆓 Trial'}
+                {!uploadStatus.isPaidUser && (
+                  <span className="upgrade-hint"> • Upgrade for 4/day!</span>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

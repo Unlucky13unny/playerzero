@@ -8169,6 +8169,63 @@ body {
   margin-bottom: 2rem;
 }
 
+.stat-updater-header .header-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.upload-counter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--gray-700);
+  border-radius: 12px;
+  min-width: 200px;
+}
+
+.counter-info {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.counter-label {
+  font-size: 0.875rem;
+  color: var(--white-muted);
+  font-weight: 500;
+}
+
+.counter-value {
+  font-size: 1.25rem;
+  color: var(--white-pure);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--blue-400), var(--purple-400));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.counter-type {
+  font-size: 0.75rem;
+  color: var(--white-muted);
+  text-align: center;
+}
+
+.upgrade-hint {
+  color: var(--blue-400);
+  font-weight: 500;
+}
+
+.timeline-icon.upgrade {
+  background: linear-gradient(135deg, var(--blue-500), var(--purple-500));
+  color: var(--white-pure);
+}
+
 .stat-updater-form {
   background: var(--black-card);
   border: 1px solid var(--gray-darker);

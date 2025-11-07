@@ -26,6 +26,7 @@ export const StatUpdater = () => {
   const [maxPokedexEntries, setMaxPokedexEntries] = useState(1000)
   const [lastUpdateDate, setLastUpdateDate] = useState<string | null>(null)
   const [hasUpdatedToday, setHasUpdatedToday] = useState(false)
+  // const [uploadStatus, setUploadStatus] = useState<DailyUploadStatus | null>(null)
   const [nextUpdateTime, setNextUpdateTime] = useState<string | null>(null)
   const [verificationScreenshot, setVerificationScreenshot] = useState<File | null>(null)
 
@@ -33,6 +34,7 @@ export const StatUpdater = () => {
     loadStats()
     loadMaxPokedexEntries()
     checkLastUpdate()
+    // loadUploadStatus()
   }, [])
 
   const checkLastUpdate = async () => {
@@ -154,6 +156,17 @@ export const StatUpdater = () => {
       setMaxPokedexEntries(value)
     }
   }
+
+  // const loadUploadStatus = async () => {
+  //   try {
+  //     const { data, error } = await dashboardService.getDailyUploadStatus()
+  //     if (!error && data) {
+  //       setUploadStatus(data)
+  //     }
+  //   } catch (err) {
+  //     console.error('Failed to load upload status:', err)
+  //   }
+  // }
 
   const handleInputChange = (field: keyof Stats, value: string) => {
     // Allow empty values

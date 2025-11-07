@@ -1053,7 +1053,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       const statTypeY = dateRangeY + 60
       ctx.fillStyle = '#000000'
       ctx.font = '900 40px Poppins'
-      ctx.fillText(getStatLabel().toUpperCase(), 958/2, statTypeY)
+      ctx.fillText(getExportStatLabel().toUpperCase(), 958/2, statTypeY)
       
       
       // Top 3 medal cards section (831.6x323.63) - positioned relative to stat type
@@ -2220,6 +2220,27 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       case 'distance': return 'Km'
 
       case 'pokestops': return 'Stops'
+
+      case 'dex': return 'Dex'
+
+      default: return 'Points'
+
+    }
+
+  }
+
+  // Function for export cards with full descriptive labels
+  const getExportStatLabel = () => {
+
+    switch (sortBy) {
+
+      case 'xp': return 'Total XP'
+
+      case 'catches': return 'Pokémon Caught'
+
+      case 'distance': return 'Distance Walked'
+
+      case 'pokestops': return 'Pokéstops Visited'
 
       case 'dex': return 'Dex'
 
@@ -3981,14 +4002,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               alignItems: 'flex-end',
               padding: '0px',
               gap: '4px',
-              width: '100px',
+              minWidth: '120px',
               height: '33px',
               flex: 'none',
               order: 1,
               flexGrow: 0,
             }}>
               <span style={{
-                width: '100px',
+                minWidth: '120px',
                 height: '21px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
@@ -4005,7 +4026,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               </span>
               {/* Stat Label */}
               <span style={{
-                width: '100px',
+                minWidth: '120px',
                 height: '12px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
@@ -4449,7 +4470,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             padding: '0px',
 
-            width: '65px',
+            minWidth: '85px',
 
             height: '33px',
 
@@ -4469,7 +4490,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               className="hover:scale-110 transition-transform duration-200 ease-in-out"
               style={{
 
-              width: '65px',
+              minWidth: '85px',
 
               height: '18px',
 
@@ -4509,7 +4530,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
             <span style={{
 
-              width: '65px',
+              minWidth: '85px',
 
               height: '15px',
 
