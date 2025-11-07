@@ -26,240 +26,215 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   const handleShareClick = async () => {
     if (!cardRef.current || !profile || isDownloading) return
 
-      try {
-        setIsDownloading(true)
+    try {
+      setIsDownloading(true)
 
-        // Preload the background image first
-        const img = new Image()
-        img.crossOrigin = 'anonymous'
-        await new Promise((resolve) => {
-          img.onload = () => {
-            console.log('Grind background image loaded')
-            resolve(true)
-          }
-          img.onerror = (error) => {
-            console.warn('Background image failed to load, continuing anyway:', error)
-            resolve(true) // Continue even if image fails
-          }
-          img.src = '/images/grind.png'
-        })
-
-        // Wait for fonts to load and card to render properly
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready
+      // Preload the background image first
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise((resolve) => {
+        img.onload = () => {
+          console.log('Grind background image loaded')
+          resolve(true)
         }
-        await new Promise(resolve => setTimeout(resolve, 500))
+        img.onerror = (error) => {
+          console.warn('Background image failed to load, continuing anyway:', error)
+          resolve(true) // Continue even if image fails to preload
+        }
+        // Set timeout to prevent infinite waiting
+        setTimeout(() => resolve(true), 5000)
+        img.src = '/images/grind.png'
+      })
 
-        if (!cardRef.current) return
+      // Wait for fonts to load - CRITICAL for consistent rendering
+      if (document.fonts && document.fonts.ready) {
+        await document.fonts.ready
+      }
+      
+      // Extended wait for proper font rendering
+      await new Promise(resolve => setTimeout(resolve, 800))
 
-        // Ensure all img elements in card have CORS enabled BEFORE capture
-        const cardImages = cardRef.current.querySelectorAll('img')
-        cardImages.forEach((img: any) => {
-          img.crossOrigin = 'anonymous'
+      if (!cardRef.current) return
+
+      // Ensure all img elements in card have CORS enabled BEFORE capture
+      const cardImages = cardRef.current.querySelectorAll('img')
+      cardImages.forEach((img: any) => {
+        img.crossOrigin = 'anonymous'
+      })
+
+      // Wait for all images in the card to load
+      const imageLoadPromises = Array.from(cardImages).map((img: any) => {
+        return new Promise<void>((resolve) => {
+          if (img.complete && img.naturalHeight !== 0) {
+            resolve()
+          } else {
+            img.onload = () => resolve()
+            img.onerror = () => resolve()
+          }
         })
+      })
+      await Promise.all(imageLoadPromises)
 
-        // Wait for all images in the card to load
-        const imageLoadPromises = Array.from(cardImages).map((img: any) => {
-          return new Promise<void>((resolve) => {
-            if (img.complete) {
-              // Image already loaded
-              resolve()
-            } else {
-              img.onload = () => resolve()
-              img.onerror = () => resolve() // Continue even if image fails
+      // Final rendering wait
+      await new Promise(resolve => setTimeout(resolve, 400))
+
+      if (!cardRef.current) return
+
+      // Use fixed dimensions that match the preview exactly
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+      const cardWidth = isMobile ? 224 : 400
+      const cardHeight = isMobile ? 336 : 600
+      const scale = 2 // Fixed 2x scale for consistent high quality
+
+      // Pixel-perfect export configuration
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: scale,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: cardWidth,
+        windowHeight: cardHeight,
+        width: cardWidth,
+        height: cardHeight,
+        imageTimeout: 30000,
+        proxy: undefined,
+        foreignObjectRendering: false,
+        removeContainer: true,
+        onclone: async (clonedDocument) => {
+          // Set crossOrigin on all images in the cloned document
+          const clonedImages = clonedDocument.querySelectorAll('img')
+          clonedImages.forEach((img: any) => {
+            img.crossOrigin = 'anonymous'
+            // Force reload if needed
+            if (img.src && !img.complete) {
+              const src = img.src
+              img.src = ''
+              img.src = src
             }
           })
-        })
-        await Promise.all(imageLoadPromises)
 
-        // Additional wait for rendering
-        await new Promise(resolve => setTimeout(resolve, 300))
+          // Replace OKLCH colors in CSS custom properties for canvas compatibility
+          const style = clonedDocument.createElement('style')
+          style.textContent = `
+            :root {
+              --background: rgb(255, 255, 255);
+              --foreground: rgb(37, 37, 37);
+              --card: rgb(255, 255, 255);
+              --card-foreground: rgb(37, 37, 37);
+              --popover: rgb(255, 255, 255);
+              --popover-foreground: rgb(37, 37, 37);
+              --primary: rgb(52, 52, 52);
+              --primary-foreground: rgb(251, 251, 251);
+              --secondary: rgb(247, 247, 247);
+              --secondary-foreground: rgb(52, 52, 52);
+              --muted: rgb(247, 247, 247);
+              --muted-foreground: rgb(142, 142, 142);
+              --accent: rgb(247, 247, 247);
+              --accent-foreground: rgb(52, 52, 52);
+              --destructive: rgb(220, 38, 39);
+              --destructive-foreground: rgb(220, 38, 39);
+              --border: rgb(235, 235, 235);
+              --input: rgb(235, 235, 235);
+              --ring: rgb(181, 181, 181);
+            }
+            .dark {
+              --background: rgb(37, 37, 37);
+              --foreground: rgb(251, 251, 251);
+              --card: rgb(37, 37, 37);
+              --card-foreground: rgb(251, 251, 251);
+              --popover: rgb(37, 37, 37);
+              --popover-foreground: rgb(251, 251, 251);
+              --primary: rgb(251, 251, 251);
+              --primary-foreground: rgb(52, 52, 52);
+              --secondary: rgb(69, 69, 69);
+              --secondary-foreground: rgb(251, 251, 251);
+              --muted: rgb(69, 69, 69);
+              --muted-foreground: rgb(181, 181, 181);
+              --accent: rgb(69, 69, 69);
+              --accent-foreground: rgb(251, 251, 251);
+              --destructive: rgb(185, 28, 28);
+              --destructive-foreground: rgb(239, 68, 68);
+              --border: rgb(69, 69, 69);
+              --input: rgb(69, 69, 69);
+              --ring: rgb(112, 112, 112);
+            }
+            `
+            clonedDocument.head.appendChild(style)
 
-        // Sanitize CSS to remove unsupported color functions
-        const sanitizeCSS = () => {
-          if (!cardRef.current) return
-          const allElements = cardRef.current.querySelectorAll('*')
-          allElements.forEach((element: any) => {
-            const computedStyle = window.getComputedStyle(element)
-            const style = element.style
-            
-            // Replace unsupported color functions with fallback colors
-            const colorProperties = ['color', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor']
-            
-            colorProperties.forEach(prop => {
-              const value = (computedStyle as any)[prop]
-              if (value && (value.includes('oklch') || value.includes('lch') || value.includes('lab') || value.includes('color-mix'))) {
-                // Use appropriate fallback based on property
-                if (prop === 'backgroundColor') {
-                  (style as any)[prop] = '#ffffff' // White background
-                } else {
-                  (style as any)[prop] = '#000000' // Black text/border
-                }
-              }
-            })
-          })
-        }
-        
-        sanitizeCSS()
+          // Add download-specific positioning styles for Grind Card
+          const downloadStyles = clonedDocument.createElement('style')
+          downloadStyles.textContent = `
+            /* Download-specific positioning for Grind Card */
+            .grind-card-download .trainer-name {
+              top: ${isMobile ? '20px' : '37px'} !important;
+              left: ${isMobile ? '17px' : '28px'} !important;
+              height: ${isMobile ? '20px' : '35px'} !important;
+              line-height: ${isMobile ? '17px' : '30px'} !important;
+              overflow: visible !important;
+              white-space: nowrap !important;
+            }
+            .grind-card-download .start-date {
+              top: ${isMobile ? '24px' : '40px'} !important;
+              right: ${isMobile ? '20px' : '39px'} !important;
+            }
+            .grind-card-download .stats-section {
+              top: ${isMobile ? '190px' : '335px'} !important;
+            }
+            .grind-card-download .total-xp-section {
+              top: ${isMobile ? '270px' : '475px'} !important;
+            }
+            /* Fix daily stats text positioning - move up by 2px */
+            .grind-card-download .daily-stats-text {
+              transform: translateY(-2px) !important;
+              display: flex !important;
+              align-items: center !important;
+              justify-content: center !important;
+            }
+          `
+          clonedDocument.head.appendChild(downloadStyles)
 
-        // Adjust trainer name and date positioning for mobile download
-        const adjustHeaderPositioning = () => {
-          if (!cardRef.current) return
-          const trainerName = cardRef.current.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-          const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-          
-          if (trainerName) {
-            // At 2x scale: adjust text rendering by small amount to center properly
-            trainerName.style.transform = 'translateY(-2px)'
-            trainerName.style.letterSpacing = '0.3px' // Tighten letter spacing slightly
-            trainerName.style.fontWeight = '700' // Ensure weight is applied
+          // Ensure the cloned card element has exact dimensions and download class
+          const clonedCardElement = clonedDocument.querySelector('[data-card-ref]') as HTMLElement
+          if (clonedCardElement) {
+            clonedCardElement.style.width = cardWidth + 'px'
+            clonedCardElement.style.height = cardHeight + 'px'
+            clonedCardElement.style.minWidth = cardWidth + 'px'
+            clonedCardElement.style.minHeight = cardHeight + 'px'
+            clonedCardElement.style.maxWidth = cardWidth + 'px'
+            clonedCardElement.style.maxHeight = cardHeight + 'px'
+            clonedCardElement.classList.add('grind-card-download')
           }
-          if (startDate) {
-            startDate.style.transform = 'translateY(-1px)'
-            startDate.style.fontWeight = '700'
-          }
-          
-          // Increase border-radius by 2px for mobile download only
-          if (isMobile) {
-            cardRef.current.style.borderRadius = '18px'  // 16px + 2px
+
+          // Ensure fonts are loaded in cloned document
+          if (clonedDocument.fonts && clonedDocument.fonts.ready) {
+            await clonedDocument.fonts.ready
           }
         }
+      })
 
-        // Adjust daily badge positioning for download export
-        // Logic: html2canvas renders at 2x scale, which can shift text positioning
-        // We use transform to vertically center the text for better reliability
-        const adjustDailyBadgePositioning = () => {
-          if (!cardRef.current) return
-          const dailyBadges = cardRef.current.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
-          dailyBadges.forEach((element: HTMLElement) => {
-            element.style.display = 'flex'
-            element.style.alignItems = 'center'
-            element.style.justifyContent = 'center'
-            element.style.position = 'relative'
-            element.style.transform = 'translateY(-6px)'
-          })
-        }
-
-        // Adjust Total XP section positioning for 2x scale rendering
-        const adjustTotalXPPositioning = () => {
-          if (!cardRef.current) return
-          const xpSection = cardRef.current.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
-          if (xpSection) {
-            // At 2x scale, apply slight vertical shift for proper alignment
-            xpSection.style.transform = 'translateY(-3px)'
-          }
-        }
-        
-        adjustHeaderPositioning()
-        adjustDailyBadgePositioning()
-        adjustTotalXPPositioning()
-
-        // Pixel-perfect export configuration with image support
-        // IMPORTANT: Use fixed scale of 2 for consistent production rendering
-        // This ensures dimensions don't change between dev and production
-        const canvas = await html2canvas(cardRef.current, {
-          backgroundColor: null,
-          scale: 2, // Fixed scale for consistency across all environments (development, production, all devices)
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: cardRef.current.offsetWidth * 2,
-          windowHeight: cardRef.current.offsetHeight * 2,
-          imageTimeout: 30000, // Extended timeout for reliable image loading
-          proxy: undefined, // Don't use proxy
-          foreignObjectRendering: false,
-          onclone: (clonedDocument) => {
-            // Set crossOrigin on all images in the cloned document
-            const clonedImages = clonedDocument.querySelectorAll('img')
-            clonedImages.forEach((img: any) => {
-              img.crossOrigin = 'anonymous'
-              // Ensure image sources are accessible
-              if (img.src && !img.src.startsWith('http') && !img.src.startsWith('data')) {
-                img.src = img.src // Refresh the source
-              }
-            })
-          }
-        })
-
-        // Create download link
-        const link = document.createElement('a')
-        link.download = `playerzero-${profile.trainer_name}-grind-card.png`
-        link.href = canvas.toDataURL('image/png', 1.0)
-        link.click()
-
-        // Restore original header positioning
-        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-        
-        if (trainerName) {
-          trainerName.style.transform = 'translateY(0)'
-          trainerName.style.letterSpacing = '0.5px' // Restore original
-        }
-        if (startDate) {
-          startDate.style.transform = 'translateY(0)'
-        }
-        
-        // Restore original border-radius
-        if (cardRef.current && isMobile) {
-          cardRef.current.style.borderRadius = '16px'  // Restore to original
-        }
-
-        // Restore original daily badge positioning
-        const dailyBadges = cardRef.current?.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
-        dailyBadges.forEach((element: HTMLElement) => {
-          element.style.transform = 'translateY(0)'
-        })
-
-        // Restore original Total XP positioning
-        const xpSection = cardRef.current?.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
-        if (xpSection) {
-          xpSection.style.transform = 'translateY(0)'
-        }
+      // Create download link
+      const link = document.createElement('a')
+      link.download = `playerzero-${profile.trainer_name}-grind-card.png`
+      link.href = canvas.toDataURL('image/png', 1.0)
+      link.click()
 
       // Show success message
       setDownloadSuccess(true)
       
       // Auto-close after showing success
-        setTimeout(() => {
-            onClose()
+      setTimeout(() => {
+        onClose()
       }, 1500)
-      } catch (error) {
-        console.error('Download failed:', error)
-          alert('Failed to download card. Please try again.')
-        // Restore header positioning even on error
-        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-        
-        if (trainerName) {
-          trainerName.style.transform = 'translateY(0)'
-          trainerName.style.letterSpacing = '0.5px'
-        }
-        if (startDate) {
-          startDate.style.transform = 'translateY(0)'
-        }
-        
-        // Restore original border-radius on error
-        if (cardRef.current && isMobile) {
-          cardRef.current.style.borderRadius = '16px'  // Restore to original
-        }
-        
-        // Restore positioning even on error
-        const dailyBadges = cardRef.current?.querySelectorAll('[data-download-adjust-daily="true"]') as NodeListOf<HTMLElement>
-        dailyBadges.forEach((element: HTMLElement) => {
-          element.style.transform = 'translateY(0)'
-        })
-
-        // Restore Total XP positioning on error
-        const xpSection = cardRef.current?.querySelector('[data-download-adjust-xp="true"]') as HTMLElement
-        if (xpSection) {
-          xpSection.style.transform = 'translateY(0)'
-        }
-      } finally {
-          setIsDownloading(false)
-        }
-      }
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Failed to download card. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   if (!profile) return null
 
@@ -282,15 +257,15 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
     ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-GB', { 
         day: 'numeric', 
         month: 'numeric', 
-    year: 'numeric' 
+        year: 'numeric' 
       }).replace(/\//g, '.')
     : new Date().toLocaleDateString('en-GB', { 
         day: 'numeric', 
         month: 'numeric', 
-    year: 'numeric' 
+        year: 'numeric' 
       }).replace(/\//g, '.')
 
-  // Calculate daily rates for all stats (preserve business logic)
+  // Calculate daily rates for all stats
   const currentXP = profile?.total_xp || 0
   const startDateObj = profile?.start_date ? new Date(profile.start_date) : new Date()
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)))
@@ -307,16 +282,6 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
 
   // Detect mobile view
   const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
-
-  // Ensure consistent card dimensions in production
-  // This function validates that card size is preserved during export
-  const getConsistentCardDimensions = () => {
-    return {
-      width: isMobile ? '224px' : '400px',
-      height: isMobile ? '336px' : '600px',
-      borderRadius: isMobile ? '16px' : '30px'
-    }
-  }
 
   return (
     <div 
@@ -336,33 +301,31 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         padding: '20px'
       }}
       onClick={(e) => {
-        // Close when clicking backdrop
         if (e.target === e.currentTarget && !isDownloading) {
           onClose()
         }
       }}
     >
-
       <div 
         ref={cardRef}
+        data-card-ref="grind-card"
         style={{ 
           position: 'relative',
-          width: getConsistentCardDimensions().width,
-          height: getConsistentCardDimensions().height,
+          width: isMobile ? '224px' : '400px',
+          height: isMobile ? '336px' : '600px',
           margin: 0,
           padding: 0,
           border: 'none',
-          borderRadius: getConsistentCardDimensions().borderRadius,
+          borderRadius: isMobile ? '16px' : '30px',
           overflow: 'hidden',
-          fontFamily: 'Poppins, sans-serif',
-          // Production fix: Ensure these dimensions are not affected by media queries
-          boxSizing: 'border-box' as const
+          fontFamily: "'Poppins', sans-serif"
         }}
       >
-        {/* Background Image as actual img tag for better quality */}
+        {/* Background Image */}
         <img
           src="/images/grind.png"
           alt="Card Background"
+          crossOrigin="anonymous"
           style={{
             position: 'absolute',
             top: 0,
@@ -371,84 +334,81 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             height: '100%',
             objectFit: 'cover',
             objectPosition: 'center',
-            zIndex: 1
+            zIndex: 1,
+            pointerEvents: 'none'
           }}
         />
+        
         {/* Trainer Name - Top Left */}
         <div 
-          data-download-adjust-trainer="true"
+          className="trainer-name"
           style={{ 
-          position: 'absolute',
-          top: isMobile ? '27px' : '37px',
-          left: isMobile ? '17px' : '30px',
-          fontFamily: 'Poppins',
-          fontStyle: 'normal',
-          fontWeight: '700',
-          fontSize: isMobile ? '12px' : '20px',
-          lineHeight: isMobile ? '17px' : '30px',
-          color: '#FFFFFF',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-          letterSpacing: '0.5px',
-          zIndex: 2
-        }}>
+            position: 'absolute',
+            top: isMobile ? '27px' : '33px',
+            left: isMobile ? '17px' : '30px',
+            fontFamily: "'Poppins', sans-serif",
+            fontStyle: 'normal',
+            fontWeight: 700,
+            fontSize: isMobile ? '12px' : '20px',
+            lineHeight: isMobile ? '17px' : '30px',
+            color: '#FFFFFF',
+            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+            letterSpacing: '0.5px',
+            zIndex: 2
+          }}>
           {profile.trainer_name}
         </div>
         
         {/* Start Date - Top Right */}
         <div 
-          data-download-adjust-date="true"
+          className="start-date"
           style={{ 
-          position: 'absolute',
-          top: isMobile ? '29px' : '41px',
-          right: isMobile ? '17px' : '37px',
-          textAlign: 'right',
-          zIndex: 2
-        }}>
-          <div style={{ 
-            fontFamily: 'Poppins, sans-serif',
+            position: 'absolute',
+            top: isMobile ? '29px' : '37px',
+            right: isMobile ? '17px' : '37px',
+            fontFamily: "'Poppins', sans-serif",
             fontStyle: 'normal',
-            fontWeight: '700',
+            fontWeight: 700,
             fontSize: isMobile ? '8px' : '14px',
             lineHeight: isMobile ? '12px' : '21px',
             color: '#DC2627',
-            textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)'
+            textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
+            textAlign: 'right',
+            zIndex: 2
           }}>
-            {startDate}
-          </div>
+          {startDate}
         </div>
 
-        {/* Stats Section - Frame 752 */}
-        <div style={{ 
-          position: 'absolute',
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'flex-start',
-          padding: '0px',
-          width: isMobile ? '202px' : '360px',
-          left: isMobile ? '11px' : '20px',
-          top: isMobile ? '190px' : '300px',
-          zIndex: 2
-        }}>
+        {/* Stats Section */}
+        <div 
+          className="stats-section"
+          style={{ 
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+            padding: '0px',
+            width: isMobile ? '202px' : '360px',
+            left: isMobile ? '11px' : '20px',
+            top: isMobile ? '190px' : '300px',
+            zIndex: 2
+          }}>
           {/* ALL TIME Header */}
-            <div style={{ 
-            fontFamily: 'Poppins',
+          <div style={{ 
+            fontFamily: "'Poppins', sans-serif",
             fontStyle: 'normal',
-            fontWeight: '700',
+            fontWeight: 700,
             fontSize: isMobile ? '11px' : '20px',
             lineHeight: isMobile ? '17px' : '30px',
             color: '#DC2627',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-            flex: 'none',
-            order: 0,
-            flexGrow: 0,
             marginBottom: isMobile ? '2px' : '10px',
-            marginLeft: isMobile ? '6px' : '14px',
-            textAlign: 'left'
+            marginLeft: isMobile ? '6px' : '14px'
           }}>
             ALL TIME
           </div>
 
-          {/* Frame 751 - Stats Container */}
+          {/* Stats Container */}
           <div style={{
             display: 'flex',
             flexDirection: 'column',
@@ -456,13 +416,9 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             padding: '0px',
             gap: isMobile ? '2px' : '4px',
             marginLeft: isMobile ? '6px' : '10px',
-            width: '100%',
-            flex: 'none',
-            order: 1,
-            alignSelf: 'stretch',
-            flexGrow: 0
+            width: '100%'
           }}>
-            {/* Frame 748 - Pokemon Caught Row */}
+            {/* Pokémon Caught Row */}
             <div style={{
               display: 'flex',
               flexDirection: 'row',
@@ -470,97 +426,76 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
               alignItems: 'center',
               padding: '0px',
               width: '100%',
-              height: isMobile ? '16px' : '28px',
-              flex: 'none',
-              order: 0,
-              alignSelf: 'stretch',
-              flexGrow: 0
+              height: isMobile ? '16px' : '28px'
             }}>
-              {/* Frame 747 - Label and Value */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '0px',
                 gap: isMobile ? '3px' : '6px',
-                height: isMobile ? '16px' : '28px',
-                flex: 'none',
-                order: 0,
-                flexGrow: 0
+                height: isMobile ? '16px' : '28px'
               }}>
-                {/* Pokémon Caught Label */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '500',
+                  fontWeight: 500,
                   fontSize: isMobile ? '6px' : '11px',
                   lineHeight: isMobile ? '9px' : '16px',
                   textAlign: 'center',
                   color: '#D1D1D1',
                   textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   Pokémon Caught
                 </div>
-                {/* Value */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: isMobile ? '8px' : '14px',
                   lineHeight: isMobile ? '12px' : '21px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 1,
-                  flexGrow: 0
+                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
                 }}>
                   {(profile.pokemon_caught || 0).toLocaleString()}
                 </div>
               </div>
-              {/* Daily Badge */}
-              <div style={{
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: isMobile ? '0px 5px' : '0px 10px',
-                gap: isMobile ? '3px' : '6px',
-                width: isMobile ? '50px' : '88px',
-                height: isMobile ? '16px' : '28px',
-                background: 'rgba(219, 22, 27, 0.5)',
-                border: '1px solid #DC2627',
-                borderRadius: isMobile ? '8px' : '15px',
-                marginRight: isMobile ? '10px' : '15px',
-                flex: 'none',
-                order: 1,
-                flexGrow: 0
-              }}>
-                <div 
-                  data-download-adjust-daily="true"
-                  style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontStyle: 'normal',
-                  fontWeight: '500',
-                  fontSize: isMobile ? '6px' : '10px',
-                  lineHeight: isMobile ? '9px' : '15px',
-                  textAlign: 'center',
-                  color: '#FFFFFF',
-                  flex: 1,
-                  order: 0,
-                  whiteSpace: 'nowrap'
+              <div 
+                className="daily-stats-container"
+                style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: isMobile ? '0px 5px' : '0px 10px',
+                  width: isMobile ? '50px' : '88px',
+                  height: isMobile ? '16px' : '28px',
+                  background: 'rgba(219, 22, 27, 0.5)',
+                  border: '1px solid #DC2627',
+                  borderRadius: isMobile ? '8px' : '15px',
+                  marginRight: isMobile ? '10px' : '15px'
                 }}>
+                <div 
+                  className="daily-stats-text"
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    fontSize: isMobile ? '6px' : '10px',
+                    lineHeight: isMobile ? '16px' : '28px',
+                    textAlign: 'center',
+                    color: '#FFFFFF',
+                    whiteSpace: 'nowrap'
+                  }}>
                   {pokemonPerDay} daily
                 </div>
               </div>
             </div>
 
-            {/* Frame 749 - Distance Walked Row */}
+            {/* Distance Walked Row */}
             <div style={{
               display: 'flex',
               flexDirection: 'row',
@@ -568,98 +503,76 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
               alignItems: 'center',
               padding: '0px',
               width: '100%',
-              height: isMobile ? '16px' : '28px',
-              
-              flex: 'none',
-              order: 1,
-              alignSelf: 'stretch',
-              flexGrow: 0
+              height: isMobile ? '16px' : '28px'
             }}>
-              {/* Frame 747 - Label and Value */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '0px',
                 gap: isMobile ? '3px' : '6px',
-                height: isMobile ? '16px' : '28px',
-                flex: 'none',
-                order: 0,
-                flexGrow: 0
+                height: isMobile ? '16px' : '28px'
               }}>
-                {/* Distance Walked Label */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '500',
+                  fontWeight: 500,
                   fontSize: isMobile ? '6px' : '11px',
                   lineHeight: isMobile ? '9px' : '16px',
                   textAlign: 'center',
                   color: '#D1D1D1',
                   textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   Distance Walked
                 </div>
-                {/* Value */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: isMobile ? '8px' : '14px',
                   lineHeight: isMobile ? '12px' : '21px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 1,
-                  flexGrow: 0
+                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
                 }}>
                   {(profile.distance_walked || 0).toLocaleString()}
                 </div>
               </div>
-              {/* Daily Badge */}
-              <div style={{
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                padding: isMobile ? '0px 5px' : '0px 10px',
-                gap: isMobile ? '3px' : '6px',
-                width: isMobile ? '50px' : '88px',
-                height: isMobile ? '16px' : '28px',
-                background: 'rgba(219, 22, 27, 0.5)',
-                border: '1px solid #DC2627',
-                marginRight: isMobile ? '10px' : '15px',
-                borderRadius: isMobile ? '8px' : '15px',
-                flex: 'none',
-                order: 1,
-                flexGrow: 0
-              }}>
-                <div 
-                  data-download-adjust-daily="true"
-                  style={{
-                  fontFamily: 'Poppins, sans-serif',
-                  fontStyle: 'normal',
-                  fontWeight: '500',
-                  fontSize: isMobile ? '6px' : '10px',
-                  lineHeight: isMobile ? '9px' : '15px',
-                  textAlign: 'center',
-                  color: '#FFFFFF',
-                  flex: 1,
-                  order: 0,
-                  whiteSpace: 'nowrap'
+              <div 
+                className="daily-stats-container"
+                style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  padding: isMobile ? '0px 5px' : '0px 10px',
+                  width: isMobile ? '50px' : '88px',
+                  height: isMobile ? '16px' : '28px',
+                  background: 'rgba(219, 22, 27, 0.5)',
+                  border: '1px solid #DC2627',
+                  marginRight: isMobile ? '10px' : '15px',
+                  borderRadius: isMobile ? '8px' : '15px'
                 }}>
+                <div 
+                  className="daily-stats-text"
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    fontSize: isMobile ? '6px' : '10px',
+                    lineHeight: isMobile ? '16px' : '28px',
+                    textAlign: 'center',
+                    color: '#FFFFFF',
+                    whiteSpace: 'nowrap'
+                  }}>
                   {distancePerDay} daily
                 </div>
               </div>
             </div>
 
-            {/* Frame 750 - Pokéstops Visited Row */}
+            {/* Pokéstops Visited Row */}
             <div style={{
               display: 'flex',
               flexDirection: 'row',
@@ -667,91 +580,70 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
               alignItems: 'center',
               padding: '0px',
               width: '100%',
-              height: isMobile ? '16px' : '28px',
-              flex: 'none',
-              order: 2,
-              alignSelf: 'stretch',
-              flexGrow: 0
+              height: isMobile ? '16px' : '28px'
             }}>
-              {/* Frame 747 - Label and Value */}
               <div style={{
                 display: 'flex',
                 flexDirection: 'row',
                 alignItems: 'center',
                 padding: '0px',
                 gap: isMobile ? '3px' : '6px',
-                height: isMobile ? '16px' : '28px',
-                flex: 'none',
-                order: 0,
-                flexGrow: 0
+                height: isMobile ? '16px' : '28px'
               }}>
-                {/* Pokéstops Visited Label */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '500',
+                  fontWeight: 500,
                   fontSize: isMobile ? '6px' : '11px',
                   lineHeight: isMobile ? '9px' : '16px',
                   textAlign: 'center',
                   color: '#D1D1D1',
                   textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 0,
-                  flexGrow: 0,
                   whiteSpace: 'nowrap'
                 }}>
                   Pokéstops Visited
                 </div>
-                {/* Value */}
                 <div style={{
-                  fontFamily: 'Poppins, sans-serif',
+                  fontFamily: "'Poppins', sans-serif",
                   fontStyle: 'normal',
-                  fontWeight: '600',
+                  fontWeight: 600,
                   fontSize: isMobile ? '8px' : '14px',
                   lineHeight: isMobile ? '12px' : '21px',
                   textAlign: 'center',
                   color: '#FFFFFF',
-                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-                  flex: 'none',
-                  order: 1,
-                  flexGrow: 0
+                  textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
                 }}>
                   {(profile.pokestops_visited || 0).toLocaleString()}
                 </div>
               </div>
-              {/* Daily Badge */}
-              <div style={{
-                boxSizing: 'border-box',
-                display: 'flex',
-                flexDirection: 'row',
-                justifyContent: 'center',
-                alignItems: 'center',
-                marginRight: isMobile ? '10px' : '15px',
-                padding: isMobile ? '0px 5px' : '0px 10px',
-                gap: isMobile ? '3px' : '6px',
-                width: isMobile ? '50px' : '88px',
-                height: isMobile ? '16px' : '28px',
-                background: 'rgba(219, 22, 27, 0.5)',
-                border: '1px solid #DC2627',
-                borderRadius: isMobile ? '8px' : '15px',
-                flex: 'none',
-                order: 1,
-                flexGrow: 0
-              }}>
-            <div 
-              data-download-adjust-daily="true"
-              style={{ 
-                  fontFamily: 'Poppins, sans-serif',
-                  fontStyle: 'normal',
-                  fontWeight: '500',
-                  fontSize: isMobile ? '6px' : '10px',
-                  lineHeight: isMobile ? '9px' : '15px',
-                  textAlign: 'center',
-                  color: '#FFFFFF',
-                  flex: 1,
-                  order: 0,
-                  whiteSpace: 'nowrap'
+              <div 
+                className="daily-stats-container"
+                style={{
+                  boxSizing: 'border-box',
+                  display: 'flex',
+                  flexDirection: 'row',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  marginRight: isMobile ? '10px' : '15px',
+                  padding: isMobile ? '0px 5px' : '0px 10px',
+                  width: isMobile ? '50px' : '88px',
+                  height: isMobile ? '16px' : '28px',
+                  background: 'rgba(219, 22, 27, 0.5)',
+                  border: '1px solid #DC2627',
+                  borderRadius: isMobile ? '8px' : '15px'
                 }}>
+                <div 
+                  className="daily-stats-text"
+                  style={{
+                    fontFamily: "'Poppins', sans-serif",
+                    fontStyle: 'normal',
+                    fontWeight: 500,
+                    fontSize: isMobile ? '6px' : '10px',
+                    lineHeight: isMobile ? '16px' : '28px',
+                    textAlign: 'center',
+                    color: '#FFFFFF',
+                    whiteSpace: 'nowrap'
+                  }}>
                   {pokestopsPerDay} daily
                 </div>
               </div>
@@ -759,126 +651,91 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           </div>
         </div>
 
-        {/* Total XP Section - Frame 750 (Bottom Row) */}
+        {/* Total XP Section */}
         <div 
-          data-download-adjust-xp="true"
+          className="total-xp-section"
           style={{ 
-          position: 'absolute',
-          display: 'flex',
-          flexDirection: 'row',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: '0px',
-          width: isMobile ? '202px' : '360px',
-          height: isMobile ? '29px' : '52px',
-          left: isMobile ? '15px' : '30px',
-          top: isMobile ? '270px' : '440px',
-          zIndex: 2
-        }}>
-          {/* Frame 747 - Label and Value (Column Layout) */}
+            position: 'absolute',
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '0px',
+            width: isMobile ? '202px' : '360px',
+            height: isMobile ? '29px' : '52px',
+            left: isMobile ? '15px' : '30px',
+            top: isMobile ? '270px' : '440px',
+            zIndex: 2
+          }}>
           <div style={{
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
             alignItems: 'flex-start',
-            padding: '0px',
-            flex: 'none',
-            order: 0,
-            flexGrow: 0
+            padding: '0px'
           }}>
-            {/* Total XP Label */}
             <div style={{
-              fontFamily: 'Poppins, sans-serif',
+              fontFamily: "'Poppins', sans-serif",
               fontStyle: 'normal',
-              fontWeight: '500',
+              fontWeight: 500,
               fontSize: isMobile ? '8px' : '14px',
               lineHeight: '110%',
               textAlign: 'left',
               color: '#FFFFFF',
               textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
-              flex: 'none',
-              order: 0,
-              flexGrow: 0,
               marginBottom: isMobile ? '2px' : '4px'
             }}>
               Total XP
             </div>
-            {/* Value */}
             <div style={{
-              fontFamily: 'Poppins, sans-serif',
+              fontFamily: "'Poppins', sans-serif",
               fontStyle: 'normal',
-              fontWeight: '600',
+              fontWeight: 600,
               fontSize: isMobile ? '18px' : '32px',
               lineHeight: '110%',
               textAlign: 'left',
               color: '#FFFFFF',
-              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-              flex: 'none',
-              order: 1,
-              flexGrow: 0
+              textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)'
             }}>
               {(profile.total_xp || 0).toLocaleString()}
             </div>
           </div>
 
-          {/* Daily Badge */}
-          <div style={{
-            boxSizing: 'border-box',
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'center',
-            alignItems: 'center',
-            padding: isMobile ? '0px 6px' : '0px 12px',
-            gap: isMobile ? '3px' : '0px',
-            marginRight: isMobile ? '6px' : '15px',
-            width: isMobile ? '56px' : '100px',
-            height: isMobile ? '16px' : '28px',
-            background: 'rgba(219, 22, 27, 0.5)',
-            border: '1px solid #DC2627',
-            borderRadius: isMobile ? '8px' : '15px',
-            flex: 'none',
-            order: 1,
-            flexGrow: 0
-        }}>
           <div 
-            data-download-adjust-daily="true"
-            style={{ 
-              fontFamily: 'Poppins, sans-serif',
-              fontStyle: 'normal',
-              fontWeight: '500',
-              fontSize: isMobile ? '6px' : '11px',
-              lineHeight: isMobile ? '9px' : '16px',
-              textAlign: 'center',
-              color: '#FFFFFF',
-              flex: 1,
-              order: 0,
-              whiteSpace: 'nowrap'
+            className="daily-stats-container"
+            style={{
+              boxSizing: 'border-box',
+              display: 'flex',
+              flexDirection: 'row',
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: isMobile ? '0px 6px' : '0px 12px',
+              marginRight: isMobile ? '6px' : '15px',
+              width: isMobile ? '56px' : '100px',
+              height: isMobile ? '16px' : '28px',
+              background: 'rgba(219, 22, 27, 0.5)',
+              border: '1px solid #DC2627',
+              borderRadius: isMobile ? '8px' : '15px'
             }}>
+            <div 
+              className="daily-stats-text"
+              style={{
+                fontFamily: "'Poppins', sans-serif",
+                fontStyle: 'normal',
+                fontWeight: 500,
+                fontSize: isMobile ? '6px' : '11px',
+                lineHeight: isMobile ? '16px' : '28px',
+                textAlign: 'center',
+                color: '#FFFFFF',
+                whiteSpace: 'nowrap'
+              }}>
               {formattedDailyXP} daily
             </div>
           </div>
         </div>
-        
-        {/* PlayerZERO Logo */}
-        <div style={{ 
-          position: 'absolute',
-          bottom: isMobile ? '7px' : '12px',
-          right: isMobile ? '12px' : '20px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '700',
-          fontSize: isMobile ? '8px' : '14px',
-          lineHeight: isMobile ? '12px' : '21px',
-          color: '#FFFFFF',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-          letterSpacing: '0.8px',
-          zIndex: 2
-        }}>
-         
-        </div>
       </div>
 
-      {/* Action Buttons Container */}
+      {/* Action Buttons */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
@@ -886,7 +743,6 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isDownloading}
@@ -900,8 +756,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             background: 'rgba(255, 255, 255, 0.1)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
-            fontFamily: 'Poppins, sans-serif',
-            fontWeight: '600',
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 600,
             fontSize: '14px',
             color: '#FFFFFF',
             cursor: isDownloading ? 'not-allowed' : 'pointer',
@@ -909,21 +765,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             transition: 'all 0.2s ease',
             minWidth: '100px'
           }}
-          onMouseEnter={(e) => {
-            if (!isDownloading) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-          }}
         >
           Close
         </button>
 
-        {/* Share Button */}
         <button
           onClick={handleShareClick}
           disabled={isDownloading || downloadSuccess}
@@ -937,8 +782,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             background: downloadSuccess ? '#10B981' : '#DC2627',
             border: 'none',
             borderRadius: '8px',
-            fontFamily: 'Poppins, sans-serif',
-            fontWeight: '600',
+            fontFamily: "'Poppins', sans-serif",
+            fontWeight: 600,
             fontSize: '14px',
             color: '#FFFFFF',
             cursor: (isDownloading || downloadSuccess) ? 'not-allowed' : 'pointer',
@@ -947,29 +792,11 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             minWidth: '140px',
             boxShadow: '0 4px 12px rgba(220, 38, 39, 0.3)'
           }}
-          onMouseEnter={(e) => {
-            if (!isDownloading && !downloadSuccess) {
-              e.currentTarget.style.background = '#B91C1C'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(220, 38, 39, 0.4)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!downloadSuccess) {
-              e.currentTarget.style.background = '#DC2627'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 39, 0.3)'
-            }
-          }}
         >
           {isDownloading ? (
-            <>
-              Generating...
-            </>
+            'Generating...'
           ) : downloadSuccess ? (
-            <>
-              ✓ Downloaded
-            </>
+            '✓ Downloaded'
           ) : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
