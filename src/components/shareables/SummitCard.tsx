@@ -27,222 +27,225 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
   const handleShareClick = async () => {
     if (!cardRef.current || !profile || isDownloading) return
 
-      try {
-        setIsDownloading(true)
+    try {
+      setIsDownloading(true)
 
-        // Determine which background image to use based on achievement status
-        // Gold card only when BOTH XP >= 203,353,000 AND level >= 80
-        const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
-        const backgroundImage = hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'
-        
-        // Preload the background image first
-        const img = new Image()
+      // Determine which background image to use
+      const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
+      const backgroundImage = hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'
+      
+      // Preload the background image first
+      const img = new Image()
+      img.crossOrigin = 'anonymous'
+      await new Promise((resolve) => {
+        img.onload = () => {
+          console.log('Summit background image loaded')
+          resolve(true)
+        }
+        img.onerror = (error) => {
+          console.warn('Background image failed to load, continuing anyway:', error)
+          resolve(true) // Continue even if image fails to preload
+        }
+        // Set timeout to prevent infinite waiting
+        setTimeout(() => resolve(true), 5000)
+        img.src = backgroundImage
+      })
+
+      // Wait for fonts to load - CRITICAL for consistent rendering
+      if (document.fonts && document.fonts.ready) {
+        try {
+          await Promise.race([
+            document.fonts.ready,
+            new Promise(resolve => setTimeout(resolve, 3000))
+          ])
+        } catch (e) {
+          console.warn('Font loading timeout, continuing...')
+        }
+      }
+      
+      // Extended wait for proper font rendering
+      await new Promise(resolve => setTimeout(resolve, 500))
+
+      if (!cardRef.current) return
+
+      // Ensure all img elements in card have CORS enabled BEFORE capture
+      const cardImages = cardRef.current.querySelectorAll('img')
+      cardImages.forEach((img: any) => {
         img.crossOrigin = 'anonymous'
-        await new Promise((resolve) => {
-          img.onload = () => {
-            console.log('Summit background image loaded')
-            resolve(true)
-          }
-          img.onerror = (error) => {
-            console.warn('Background image failed to load, continuing anyway:', error)
-            resolve(true) // Continue even if image fails
-          }
-          img.src = backgroundImage
-        })
+      })
 
-        // Wait for fonts to load and card to render properly
-        if (document.fonts && document.fonts.ready) {
-          await document.fonts.ready
-        }
-        await new Promise(resolve => setTimeout(resolve, 500))
-
-        if (!cardRef.current) return
-
-        // Ensure all img elements in card have CORS enabled BEFORE capture
-        const cardImages = cardRef.current.querySelectorAll('img')
-        cardImages.forEach((img: any) => {
-          img.crossOrigin = 'anonymous'
-        })
-
-        // Wait for all images in the card to load
-        const imageLoadPromises = Array.from(cardImages).map((img: any) => {
-          return new Promise<void>((resolve) => {
-            if (img.complete) {
-              // Image already loaded
+      // Wait for all images in the card to load
+      const imageLoadPromises = Array.from(cardImages).map((img: any) => {
+        return new Promise<void>((resolve) => {
+          if (img.complete && img.naturalHeight !== 0) {
+            resolve()
+          } else {
+            const timeout = setTimeout(() => resolve(), 3000)
+            img.onload = () => {
+              clearTimeout(timeout)
               resolve()
-            } else {
-              img.onload = () => resolve()
-              img.onerror = () => resolve() // Continue even if image fails
             }
-          })
+            img.onerror = () => {
+              clearTimeout(timeout)
+              resolve()
+            }
+          }
         })
-        await Promise.all(imageLoadPromises)
+      })
+      await Promise.all(imageLoadPromises)
 
-        // Additional wait for rendering
-        await new Promise(resolve => setTimeout(resolve, 300))
+      // Final rendering wait
+      await new Promise(resolve => setTimeout(resolve, 300))
 
-        // Sanitize CSS to remove unsupported color functions
-        const sanitizeCSS = () => {
-          if (!cardRef.current) return
-          const allElements = cardRef.current.querySelectorAll('*')
-          allElements.forEach((element: any) => {
-            const computedStyle = window.getComputedStyle(element)
-            const style = element.style
-            
-            // Replace unsupported color functions with fallback colors
-            const colorProperties = ['color', 'backgroundColor', 'borderColor', 'borderTopColor', 'borderRightColor', 'borderBottomColor', 'borderLeftColor']
-            
-            colorProperties.forEach(prop => {
-              const value = (computedStyle as any)[prop]
-              if (value && (value.includes('oklch') || value.includes('lch') || value.includes('lab') || value.includes('color-mix'))) {
-                // Use appropriate fallback based on property
-                if (prop === 'backgroundColor') {
-                  (style as any)[prop] = '#ffffff' // White background
-                } else {
-                  (style as any)[prop] = '#000000' // Black text/border
-                }
-              }
-            })
-          })
-        }
-        
-        sanitizeCSS()
+      if (!cardRef.current) return
 
-        // Adjust trainer name and date positioning for mobile download
-        const adjustHeaderPositioning = () => {
-          if (!cardRef.current) return
-          const trainerName = cardRef.current.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-          const startDate = cardRef.current.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-          
-          if (trainerName) {
-            trainerName.style.transform = 'translateY(-5px)'
-            trainerName.style.marginLeft = '4px'
-          }
-          if (startDate) {
-            startDate.style.transform = 'translateY(-5px)'
-            startDate.style.marginRight = '3px'
-          }
-          
-          // Increase border-radius by 2px for mobile download only
-          if (isMobile) {
-            cardRef.current.style.borderRadius = '18px'  // 16px + 2px
-          }
-        }
+      // Use fixed dimensions that match the preview exactly
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+      const cardWidth = isMobile ? 224 : 400
+      const cardHeight = isMobile ? 336 : 600
+      const scale = 2 // Fixed 2x scale for consistent high quality
 
-        // Adjust XP positioning for download export
-        // Logic: html2canvas renders at 2x scale, which can shift text positioning
-        // We compensate by adjusting bottom and left to match the visual appearance
-        const adjustXPPositioning = () => {
-          if (!cardRef.current) return
-          const xpElement = cardRef.current.querySelector('[data-download-adjust="true"]') as HTMLElement
-          if (xpElement) {
-            // Desktop: moved 13px down (17% of original 75px), 5px right
-            // Mobile: apply similar percentage-based shift
-            // Mobile original: bottom 52px, left 11px
-            // Mobile adjustment: +9px down (17% of 52px ≈ 9px), +2px right (18% of 11px ≈ 2px)
-            xpElement.style.bottom = isMobile ? '61px' : '95px'
-            xpElement.style.left = isMobile ? '13px' : '33px'
-          }
-        }
-        
-        adjustHeaderPositioning()
-        adjustXPPositioning()
-
-        // Pixel-perfect export configuration with image support
-        const devicePixelRatio = window.devicePixelRatio || 1
-        const canvas = await html2canvas(cardRef.current, {
-          backgroundColor: null,
-          scale: Math.min(devicePixelRatio, 2), // Use device pixel ratio but cap at 2
-          useCORS: true,
-          allowTaint: true,
-          logging: false,
-          scrollX: 0,
-          scrollY: 0,
-          windowWidth: window.innerWidth || 1920,
-          windowHeight: window.innerHeight || 1080,
-          imageTimeout: 30000, // Extended timeout for reliable image loading
-          proxy: undefined, // Don't use proxy
-          foreignObjectRendering: false,
-          onclone: (clonedDocument) => {
+      // Pixel-perfect export configuration with fixed dimensions
+      const canvas = await html2canvas(cardRef.current, {
+        backgroundColor: null,
+        scale: scale,
+        useCORS: true,
+        allowTaint: true,
+        logging: false,
+        scrollX: 0,
+        scrollY: 0,
+        windowWidth: cardWidth,
+        windowHeight: cardHeight,
+        width: cardWidth,
+        height: cardHeight,
+        imageTimeout: 15000,
+        proxy: undefined,
+        foreignObjectRendering: false,
+        removeContainer: true,
+        onclone: (clonedDocument) => {
+          try {
             // Set crossOrigin on all images in the cloned document
             const clonedImages = clonedDocument.querySelectorAll('img')
             clonedImages.forEach((img: any) => {
               img.crossOrigin = 'anonymous'
               // Ensure image sources are accessible
-              if (img.src && !img.src.startsWith('http') && !img.src.startsWith('data')) {
-                img.src = img.src // Refresh the source
+              if (img.src && !img.complete) {
+                const src = img.src
+                img.src = ''
+                img.src = src
               }
             })
+
+            // Replace OKLCH colors in CSS custom properties for canvas compatibility
+            const style = clonedDocument.createElement('style')
+            style.textContent = `
+              :root {
+                --background: rgb(255, 255, 255);
+                --foreground: rgb(37, 37, 37);
+                --card: rgb(255, 255, 255);
+                --card-foreground: rgb(37, 37, 37);
+                --popover: rgb(255, 255, 255);
+                --popover-foreground: rgb(37, 37, 37);
+                --primary: rgb(52, 52, 52);
+                --primary-foreground: rgb(251, 251, 251);
+                --secondary: rgb(247, 247, 247);
+                --secondary-foreground: rgb(52, 52, 52);
+                --muted: rgb(247, 247, 247);
+                --muted-foreground: rgb(142, 142, 142);
+                --accent: rgb(247, 247, 247);
+                --accent-foreground: rgb(52, 52, 52);
+                --destructive: rgb(220, 38, 39);
+                --destructive-foreground: rgb(220, 38, 39);
+                --border: rgb(235, 235, 235);
+                --input: rgb(235, 235, 235);
+                --ring: rgb(181, 181, 181);
+              }
+              .dark {
+                --background: rgb(37, 37, 37);
+                --foreground: rgb(251, 251, 251);
+                --card: rgb(37, 37, 37);
+                --card-foreground: rgb(251, 251, 251);
+                --popover: rgb(37, 37, 37);
+                --popover-foreground: rgb(251, 251, 251);
+                --primary: rgb(251, 251, 251);
+                --primary-foreground: rgb(52, 52, 52);
+                --secondary: rgb(69, 69, 69);
+                --secondary-foreground: rgb(251, 251, 251);
+                --muted: rgb(69, 69, 69);
+                --muted-foreground: rgb(181, 181, 181);
+                --accent: rgb(69, 69, 69);
+                --accent-foreground: rgb(251, 251, 251);
+                --destructive: rgb(185, 28, 28);
+                --destructive-foreground: rgb(239, 68, 68);
+                --border: rgb(69, 69, 69);
+                --input: rgb(69, 69, 69);
+                --ring: rgb(112, 112, 112);
+              }
+            `
+            clonedDocument.head.appendChild(style)
+
+            // Add download-specific positioning styles for Summit Card
+            const downloadStyles = clonedDocument.createElement('style')
+            downloadStyles.textContent = `
+              /* Download-specific positioning for Summit Card */
+              .summit-card-download .xp-display {
+                bottom: ${isMobile ? '60px' : '120px'} !important;
+                left: ${isMobile ? '20px' : '33px'} !important;
+              }
+              /* Decrease trainer name and date top position by 5px */
+              .summit-card-download .trainer-name {
+                top: ${isMobile ? '22px' : '40px'} !important;
+                left: ${isMobile ? '20px' : '27px'} !important;
+                height: ${isMobile ? '20px' : '35px'} !important;
+                line-height: ${isMobile ? '17px' : '30px'} !important;
+                overflow: visible !important;
+                white-space: nowrap !important;
+              }
+              .summit-card-download .start-date {
+                top: ${isMobile ? '24px' : '44px'} !important;
+                right: ${isMobile ? '22px' : '39px'} !important;
+                
+              }
+            `
+            clonedDocument.head.appendChild(downloadStyles)
+
+            // Ensure the cloned card element has exact dimensions and download class
+            const clonedCardElement = clonedDocument.querySelector('[data-card-ref]') as HTMLElement
+            if (clonedCardElement) {
+              clonedCardElement.style.width = cardWidth + 'px'
+              clonedCardElement.style.height = cardHeight + 'px'
+              clonedCardElement.style.minWidth = cardWidth + 'px'
+              clonedCardElement.style.minHeight = cardHeight + 'px'
+              clonedCardElement.style.maxWidth = cardWidth + 'px'
+              clonedCardElement.style.maxHeight = cardHeight + 'px'
+              clonedCardElement.classList.add('summit-card-download')
+            }
+          } catch (e) {
+            console.warn('Error in onclone:', e)
           }
-        })
+        }
+      })
 
-        // Create download link
-        const link = document.createElement('a')
-        link.download = `playerzero-${profile.trainer_name}-summit-card.png`
-        link.href = canvas.toDataURL('image/png', 1.0)
-        link.click()
-
-        // Restore original header positioning
-        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-        
-        if (trainerName) {
-          trainerName.style.transform = 'translateY(0)'
-        }
-        if (startDate) {
-          startDate.style.transform = 'translateY(0)'
-          startDate.style.marginRight = '0px'
-        }
-        
-        // Restore original border-radius
-        if (cardRef.current && isMobile) {
-          cardRef.current.style.borderRadius = '16px'  // Restore to original
-        }
-
-        // Restore original XP positioning
-        const xpElement = cardRef.current?.querySelector('[data-download-adjust="true"]') as HTMLElement
-        if (xpElement) {
-          xpElement.style.bottom = isMobile ? '52px' : '75px'
-          xpElement.style.left = isMobile ? '11px' : '28px'
-        }
+      // Create download link
+      const link = document.createElement('a')
+      link.download = `playerzero-${profile.trainer_name}-summit-card.png`
+      link.href = canvas.toDataURL('image/png', 1.0)
+      link.click()
 
       // Show success message
       setDownloadSuccess(true)
       
       // Auto-close after showing success
-        setTimeout(() => {
-            onClose()
+      setTimeout(() => {
+        onClose()
       }, 1500)
-      } catch (error) {
-        console.error('Download failed:', error)
-          alert('Failed to download card. Please try again.')
-        // Restore header positioning even on error
-        const trainerName = cardRef.current?.querySelector('[data-download-adjust-trainer="true"]') as HTMLElement
-        const startDate = cardRef.current?.querySelector('[data-download-adjust-date="true"]') as HTMLElement
-        
-        if (trainerName) {
-          trainerName.style.transform = 'translateY(0)'
-        }
-        if (startDate) {
-          startDate.style.transform = 'translateY(0)'
-          startDate.style.marginRight = '0px'
-        }
-        
-        // Restore original border-radius on error
-        if (cardRef.current && isMobile) {
-          cardRef.current.style.borderRadius = '16px'  // Restore to original
-        }
-        
-        // Restore positioning even on error
-        const xpElement = cardRef.current?.querySelector('[data-download-adjust="true"]') as HTMLElement
-        if (xpElement) {
-          xpElement.style.bottom = isMobile ? '52px' : '75px'
-          xpElement.style.left = isMobile ? '11px' : '28px'
-        }
-      } finally {
-          setIsDownloading(false)
-        }
-      }
+    } catch (error) {
+      console.error('Download failed:', error)
+      alert('Failed to download card. Please try again.')
+    } finally {
+      setIsDownloading(false)
+    }
+  }
 
   if (!profile) return null
 
@@ -264,8 +267,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
   // Check if mobile view
   const isMobile = window.innerWidth <= 768
 
-  // Check if user has achieved level 80 (203.353 million XP AND level 80)
-  // Gold card only when BOTH XP >= 203,353,000 AND level >= 80
+  // Check if user has achieved level 80
   const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
   
   // Level 80 XP goal
@@ -287,7 +289,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         year: 'numeric' 
       }).replace(/\//g, '.')
 
-  // Calculate summit date with level parameter
+  // Calculate summit date
   const summitDate = calculateSummitDate(profile.total_xp || 0, profile.average_daily_xp || 0, profile.start_date, profile.trainer_level)
 
   return (
@@ -308,15 +310,14 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         padding: '20px'
       }}
       onClick={(e) => {
-        // Close when clicking backdrop
         if (e.target === e.currentTarget && !isDownloading) {
           onClose()
         }
       }}
     >
-
       <div 
         ref={cardRef}
+        data-card-ref="summit-card"
         style={{ 
           position: 'relative',
           width: isMobile ? '224px' : '400px',
@@ -329,10 +330,11 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           fontFamily: 'Poppins, sans-serif'
         }}
       >
-        {/* Background Image as actual img tag for better quality */}
+        {/* Background Image */}
         <img
           src={hasAchievedLevel80 ? '/images/achieved.png' : '/images/summit.png'}
           alt="Card Background"
+          crossOrigin="anonymous"
           style={{
             position: 'absolute',
             top: 0,
@@ -341,51 +343,47 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             height: '100%',
             objectFit: 'cover',
             objectPosition: 'center',
-            zIndex: 1
+            zIndex: 1,
+            pointerEvents: 'none'
           }}
         />
+        
         {/* Trainer Name - Top Left */}
         <div 
-          data-download-adjust-trainer="true"
+          className="trainer-name"
           style={{ 
-          position: 'absolute',
-          top: isMobile ? '27px' : '37px',
-          left: isMobile ? '11px' : '27px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '700',
-          fontSize: isMobile ? '11px' : '20px',
-          lineHeight: isMobile ? '17px' : '30px',
-          color: '#FFFFFF',
-          textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-          zIndex: 2
-        }}>
+            position: 'absolute',
+            top: isMobile ? '27px' : '32px',
+            left: isMobile ? '11px' : '27px',
+            fontFamily: 'Poppins, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: 700,
+            fontSize: isMobile ? '11px' : '20px',
+            lineHeight: isMobile ? '17px' : '30px',
+            color: '#FFFFFF',
+            textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
+            zIndex: 2
+          }}>
           {profile.trainer_name}
         </div>
         
         {/* Start Date - Top Right */}
         <div 
-          data-download-adjust-date="true"
+          className="start-date"
           style={{ 
-          position: 'absolute',
-          top: isMobile ? '29px' : '39px',
-          right: isMobile ? '17px' : '39px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '500',
-          fontSize: isMobile ? '8px' : '14px',
-          lineHeight: isMobile ? '12px' : '21px',
-          textAlign: 'right',
-          color: '#DC2627',
-          textShadow: '1px 1px 3px rgba(248, 17, 17, 0.8)',
-          flex: 'none',
-          order: 1,
-          flexGrow: 0,
-          zIndex: 2
-        }}>
+            position: 'absolute',
+            top: isMobile ? '29px' : '35px',
+            right: isMobile ? '17px' : '39px',
+            fontFamily: 'Poppins, sans-serif',
+            fontStyle: 'normal',
+            fontWeight: 500,
+            fontSize: isMobile ? '8px' : '14px',
+            lineHeight: isMobile ? '12px' : '21px',
+            textAlign: 'right',
+            color: '#DC2627',
+            textShadow: '1px 1px 3px rgba(248, 17, 17, 0.8)',
+            zIndex: 2
+          }}>
           {startDate}
         </div>
 
@@ -397,63 +395,38 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             left: isMobile ? '18px' : '32px',
             fontFamily: 'Poppins, sans-serif',
             fontStyle: 'normal',
-            fontWeight: '700',
+            fontWeight: 700,
             fontSize: isMobile ? '16px' : '28px',
             lineHeight: isMobile ? '24px' : '42px',
             color: '#DC2627',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.5)',
-            flex: 'none',
-            order: 0,
-            flexGrow: 0,
             zIndex: 2
           }}>
             {summitDate}
           </div>
         )}
 
-        {/* XP Display - Bottom (shows remaining XP for summit, total XP for achieved) */}
+        {/* XP Display - Bottom */}
         <div 
-          data-download-adjust="true"
+          className="xp-display"
           style={{ 
             position: 'absolute',
             bottom: isMobile ? '52px' : '75px',
             left: isMobile ? '11px' : '28px',
             fontFamily: 'Poppins, sans-serif',
             fontStyle: 'normal',
-            fontWeight: '700',
+            fontWeight: 700,
             fontSize: isMobile ? '22px' : '40px',
             lineHeight: isMobile ? '26px' : '36px',
             color: '#DC2627',
             textShadow: '2px 2px 4px rgba(241, 12, 12, 0.8)',
-            flex: 'none',
-            order: 0,
-            flexGrow: 0,
             zIndex: 2
           }}>
-          {hasAchievedLevel80 ? currentXP.toLocaleString() : xpRemaining.toLocaleString()}
-        </div>
-
-        {/* PlayerZERO Logo - Bottom Right */}
-        <div style={{
-          position: 'absolute',
-          bottom: isMobile ? '6px' : '12px',
-          right: isMobile ? '12px' : '20px',
-          fontFamily: 'Poppins, sans-serif',
-          fontStyle: 'normal',
-          fontWeight: '500',
-          fontSize: isMobile ? '8px' : '14px',
-          lineHeight: isMobile ? '12px' : '21px',
-          color: '#FFFFFF',
-          textShadow: '1px 1px 3px rgba(0, 0, 0, 0.8)',
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-          zIndex: 2
-        }}>
+          {hasAchievedLevel80 ? currentXP.toLocaleString() : (xpRemaining === 0 ? '' : xpRemaining.toLocaleString())}
         </div>
       </div>
 
-      {/* Action Buttons Container */}
+      {/* Action Buttons */}
       <div style={{
         display: 'flex',
         flexDirection: 'row',
@@ -461,7 +434,6 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
         alignItems: 'center',
         justifyContent: 'center'
       }}>
-        {/* Close Button */}
         <button
           onClick={onClose}
           disabled={isDownloading}
@@ -476,7 +448,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             border: '1px solid rgba(255, 255, 255, 0.3)',
             borderRadius: '8px',
             fontFamily: 'Poppins, sans-serif',
-            fontWeight: '600',
+            fontWeight: 600,
             fontSize: '14px',
             color: '#FFFFFF',
             cursor: isDownloading ? 'not-allowed' : 'pointer',
@@ -484,21 +456,10 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             transition: 'all 0.2s ease',
             minWidth: '100px'
           }}
-          onMouseEnter={(e) => {
-            if (!isDownloading) {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)'
-              e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.5)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)'
-            e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.3)'
-          }}
         >
           Close
         </button>
 
-        {/* Share Button */}
         <button
           onClick={handleShareClick}
           disabled={isDownloading || downloadSuccess}
@@ -513,7 +474,7 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             border: 'none',
             borderRadius: '8px',
             fontFamily: 'Poppins, sans-serif',
-            fontWeight: '600',
+            fontWeight: 600,
             fontSize: '14px',
             color: '#FFFFFF',
             cursor: (isDownloading || downloadSuccess) ? 'not-allowed' : 'pointer',
@@ -522,29 +483,11 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             minWidth: '140px',
             boxShadow: '0 4px 12px rgba(220, 38, 39, 0.3)'
           }}
-          onMouseEnter={(e) => {
-            if (!isDownloading && !downloadSuccess) {
-              e.currentTarget.style.background = '#B91C1C'
-              e.currentTarget.style.transform = 'translateY(-2px)'
-              e.currentTarget.style.boxShadow = '0 6px 16px rgba(220, 38, 39, 0.4)'
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!downloadSuccess) {
-              e.currentTarget.style.background = '#DC2627'
-              e.currentTarget.style.transform = 'translateY(0)'
-              e.currentTarget.style.boxShadow = '0 4px 12px rgba(220, 38, 39, 0.3)'
-            }
-          }}
         >
           {isDownloading ? (
-            <>
-              Generating...
-            </>
+            'Generating...'
           ) : downloadSuccess ? (
-            <>
-              ✓ Downloaded
-            </>
+            '✓ Downloaded'
           ) : (
             <>
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
