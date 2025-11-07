@@ -1,5 +1,5 @@
 -- Migration 003: Update Weekly Leaderboard Logic
--- Changes: Week starts Sunday, 8-hour grace period on Saturday, minimum 2 uploads required
+-- Changes: Week starts Sunday, 4-hour grace period on Saturday, minimum 2 uploads required
 
 -- ============================================
 -- 1. Update week start: Monday → Sunday
@@ -34,9 +34,9 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION is_grace_period(upload_time TIMESTAMP WITH TIME ZONE)
 RETURNS BOOLEAN AS $$
 BEGIN
-  -- Saturday 16:00-23:59 UTC
+  -- Saturday 20:00-23:59 UTC (4-hour buffer)
   RETURN EXTRACT(DOW FROM upload_time)::INTEGER = 6 
-         AND EXTRACT(HOUR FROM upload_time)::INTEGER >= 16;
+         AND EXTRACT(HOUR FROM upload_time)::INTEGER >= 20;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -68,7 +68,7 @@ BEGIN
   FROM stat_entries se
   WHERE se.profile_id = p_profile_id
     AND (
-      -- Grace period: Saturday 16:00-23:59 UTC
+      -- Grace period: Saturday 20:00-23:59 UTC (4-hour buffer)
       (se.entry_date = prev_saturday AND is_grace_period(se.created_at))
       OR
       -- Regular week: Sunday-Saturday
@@ -699,7 +699,7 @@ $$ LANGUAGE plpgsql;
 -- 
 -- WEEKLY:
 -- ✓ Week starts Sunday (was Monday)
--- ✓ Saturday 16:00-23:59 UTC grace period (8 hours)
+-- ✓ Saturday 20:00-23:59 UTC grace period (4 hours)
 -- ✓ Minimum 2 uploads required
 -- 
 -- MONTHLY:

@@ -107,6 +107,14 @@ export interface StatBounds {
   unique_pokedex_entries: { min: number; max: number };
 }
 
+export interface DailyUploadStatus {
+  uploadsUsed: number;
+  dailyLimit: number;
+  canUpload: boolean;
+  isPaidUser: boolean;
+  userType: 'paid' | 'trial';
+}
+
 export const dashboardService = {
   // Get LIVE leaderboard data (current period)
   async getLiveLeaderboard(params: LeaderboardParams) {
@@ -1649,25 +1657,21 @@ export const dashboardService = {
         return { success: false, message: 'A verification screenshot is required to update stats' };
       }
 
-      // Check if user has already updated today (enforce once-per-day limit)
+      // Check daily upload limits based on user type
       // Use local date instead of UTC to match user's timezone
       const now = new Date();
       const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-      const { data: existingTodayEntry } = await supabase
+      
+      // Get all today's entries to count uploads
+      const { data: todayEntries } = await supabase
         .from('stat_entries')
         .select('id')
         .eq('user_id', user.id)
-        .eq('entry_date', today)
-        .single();
+        .eq('entry_date', today);
 
-      if (existingTodayEntry) {
-        return { 
-          success: false, 
-          message: 'You have already updated your stats today. Stats can only be updated once per day.' 
-        };
-      }
+      const uploadCount = todayEntries?.length || 0;
 
-      // Get current profile
+      // Get current profile to check user type and for validation
       const { data: currentProfile, error: profileError } = await supabase
         .from('profiles')
         .select('*')
@@ -1676,6 +1680,21 @@ export const dashboardService = {
 
       if (profileError || !currentProfile) {
         return { success: false, message: 'Profile not found' };
+      }
+
+      // Determine if user is paid (has active subscription)
+      const isPaidUser = currentProfile.is_paid_user && 
+        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date());
+      
+      // Set daily limits: 4 for paid users, 1 for trial users
+      const dailyLimit = isPaidUser ? 4 : 1;
+      const userType = isPaidUser ? 'paid' : 'trial';
+
+      if (uploadCount >= dailyLimit) {
+        return { 
+          success: false, 
+          message: `You have reached your daily upload limit (${uploadCount}/${dailyLimit} uploads used for ${userType} users). ${isPaidUser ? '' : 'Upgrade to premium for 4 uploads per day!'}`.trim()
+        };
       }
 
       // Get the most recent stat entry to use for validation
@@ -1989,6 +2008,62 @@ export const dashboardService = {
     }
 
     return data || []
+  },
+
+  // Get daily upload status for current user
+  async getDailyUploadStatus(): Promise<{ data: DailyUploadStatus | null; error: any }> {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        return { data: null, error: new Error('User not authenticated') };
+      }
+
+      // Use local date instead of UTC to match user's timezone
+      const now = new Date();
+      const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      
+      // Get all today's entries to count uploads
+      const { data: todayEntries } = await supabase
+        .from('stat_entries')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('entry_date', today);
+
+      const uploadsUsed = todayEntries?.length || 0;
+
+      // Get current profile to check user type
+      const { data: currentProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('is_paid_user, subscription_expires_at')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError || !currentProfile) {
+        return { data: null, error: profileError || new Error('Profile not found') };
+      }
+
+      // Determine if user is paid (has active subscription)
+      const isPaidUser = currentProfile.is_paid_user && 
+        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date());
+      
+      // Set daily limits: 4 for paid users, 1 for trial users
+      const dailyLimit = isPaidUser ? 4 : 1;
+      const userType = isPaidUser ? 'paid' : 'trial';
+      const canUpload = uploadsUsed < dailyLimit;
+
+      return {
+        data: {
+          uploadsUsed,
+          dailyLimit,
+          canUpload,
+          isPaidUser,
+          userType
+        },
+        error: null
+      };
+    } catch (error) {
+      return { data: null, error };
+    }
   }
 } 
 
