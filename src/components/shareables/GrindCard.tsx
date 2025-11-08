@@ -281,13 +281,12 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   const distancePerDay = Math.round(((profile.distance_walked || 0) / daysSinceStart) * 100) / 100
   const pokestopsPerDay = Math.round(((profile.pokestops_visited || 0) / daysSinceStart) * 100) / 100
 
-  // Detect mobile view - but consider if user wants desktop view on mobile
-  const actuallyMobile = typeof window !== 'undefined' && window.innerWidth <= 768
-  // For preview, use a more intelligent detection
-  // If viewport is mobile but card dimensions suggest desktop intent, use desktop layout
-  const cardElement = cardRef.current
-  const intendedDesktopView = cardElement && cardElement.offsetWidth > 350
-  const isMobile = actuallyMobile && !intendedDesktopView
+  // Detect mobile view - use simple, consistent detection for preview
+  // The card size is fixed (400px desktop, 224px mobile), so we can reliably detect based on viewport
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  
+  // Desktop positioning should be FIXED regardless of screen size
+  // The card is always 400x600px, so positioning should never change based on viewport
 
   return (
     <div 
@@ -319,12 +318,18 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           position: 'relative',
           width: isMobile ? '224px' : '400px',
           height: isMobile ? '336px' : '600px',
+          minWidth: isMobile ? '224px' : '400px',
+          minHeight: isMobile ? '336px' : '600px',
+          maxWidth: isMobile ? '224px' : '400px',
+          maxHeight: isMobile ? '336px' : '600px',
           margin: 0,
           padding: 0,
           border: 'none',
           borderRadius: isMobile ? '16px' : '30px',
           overflow: 'hidden',
-          fontFamily: "'Poppins', sans-serif"
+          fontFamily: "'Poppins', sans-serif",
+          flexShrink: 0,
+          flexGrow: 0
         }}
       >
         {/* Background Image */}
@@ -338,10 +343,11 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             left: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: 'fill',
             objectPosition: 'center',
             zIndex: 1,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            display: 'block'
           }}
         />
         
@@ -350,8 +356,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           className="trainer-name"
           style={{ 
             position: 'absolute',
-            top: isMobile ? '27px' : '33px',
-            left: isMobile ? '17px' : '30px',
+            top: isMobile ? '27px' : '47px',
+            left: isMobile ? '20px' : '30px',
             fontFamily: "'Poppins', sans-serif",
             fontStyle: 'normal',
             fontWeight: 700,
@@ -360,7 +366,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             color: '#FFFFFF',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
             letterSpacing: '0.5px',
-            zIndex: 2
+            zIndex: 2,
+            height: isMobile ? '20px' : '35px',
+            overflow: 'visible',
+            whiteSpace: 'nowrap'
           }}>
           {profile.trainer_name}
         </div>
@@ -370,8 +379,8 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           className="start-date"
           style={{ 
             position: 'absolute',
-            top: isMobile ? '29px' : '37px',
-            right: isMobile ? '17px' : '37px',
+            top: isMobile ? '29px' : '52px',
+            right: isMobile ? '20px' : '39px',
             fontFamily: "'Poppins', sans-serif",
             fontStyle: 'normal',
             fontWeight: 700,
@@ -396,7 +405,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             padding: '0px',
             width: isMobile ? '202px' : '360px',
             left: isMobile ? '11px' : '20px',
-            top: isMobile ? '190px' : '300px',
+            top: isMobile ? '190px' : '340px',
             zIndex: 2
           }}>
           {/* ALL TIME Header */}
@@ -670,7 +679,7 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
             width: isMobile ? '202px' : '360px',
             height: isMobile ? '29px' : '52px',
             left: isMobile ? '15px' : '30px',
-            top: isMobile ? '270px' : '440px',
+            top: isMobile ? '270px' : '490px',
             zIndex: 2
           }}>
           <div style={{
