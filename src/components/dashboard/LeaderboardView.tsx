@@ -4022,7 +4022,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 order: 0,
                 flexGrow: 0,
               }}>
-                {player.statValue}
+                {formatNumber(player.statValue)}
               </span>
               {/* Stat Label */}
               <span style={{
@@ -7618,7 +7618,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                   flexDirection: 'column',
 
-                  alignItems: 'flex-start',
+                  alignItems: 'flex-end',
 
                   gap: '2px',
 
@@ -7636,13 +7636,13 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     lineHeight: '18px',
 
-                    textAlign: 'center',
+                    textAlign: 'right',
 
                     color: '#000000',
 
                   }}>
 
-                    {player.statValue}
+                    {typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue}
 
                   </span>
 
@@ -7655,6 +7655,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     fontSize: '10px',
 
                     lineHeight: '15px',
+
+                    textAlign: 'right',
 
                     color: '#353535',
 
@@ -7818,9 +7820,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         fontWeight: 600,
                         fontSize: '12px',
                         lineHeight: '18px',
+                        textAlign: 'right',
                         color: '#000000',
                       }}>
-                      {player.statValue}
+                      {typeof player.statValue === 'number' ? formatNumber(player.statValue) : player.statValue}
                     </span>
 
                     <span style={{
@@ -7828,6 +7831,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       fontWeight: 400,
                       fontSize: '10px',
                       lineHeight: '15px',
+                      textAlign: 'right',
                       color: '#666666',
                     }}>
                       {getStatLabel()}
@@ -8315,7 +8319,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                    }}>
 
-                     {player.statValue}
+                     {formatNumber(player.statValue)}
 
                    </span>
 
