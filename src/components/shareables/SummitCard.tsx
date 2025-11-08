@@ -265,13 +265,12 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
     )
   }
 
-  // Check if mobile view - but consider if user wants desktop view on mobile
-  const actuallyMobile = window.innerWidth <= 768
-  // For preview, use a more intelligent detection
-  // If viewport is mobile but card dimensions suggest desktop intent, use desktop layout
-  const cardElement = cardRef.current
-  const intendedDesktopView = cardElement && cardElement.offsetWidth > 350
-  const isMobile = actuallyMobile && !intendedDesktopView
+  // Check if mobile view - use simple, consistent detection for preview
+  // The card size is fixed (400px desktop, 224px mobile), so we can reliably detect based on viewport
+  const isMobile = window.innerWidth <= 768
+  
+  // Desktop positioning should be FIXED regardless of screen size
+  // The card is always 400x600px, so positioning should never change based on viewport
 
   // Check if user has achieved level 80
   const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80
@@ -328,12 +327,18 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           position: 'relative',
           width: isMobile ? '224px' : '400px',
           height: isMobile ? '336px' : '600px',
+          minWidth: isMobile ? '224px' : '400px',
+          minHeight: isMobile ? '336px' : '600px',
+          maxWidth: isMobile ? '224px' : '400px',
+          maxHeight: isMobile ? '336px' : '600px',
           margin: 0,
           padding: 0,
           border: 'none',
           overflow: 'hidden',
           borderRadius: isMobile ? '16px' : '28px',
-          fontFamily: 'Poppins, sans-serif'
+          fontFamily: 'Poppins, sans-serif',
+          flexShrink: 0,
+          flexGrow: 0
         }}
       >
         {/* Background Image */}
@@ -347,10 +352,11 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             left: 0,
             width: '100%',
             height: '100%',
-            objectFit: 'cover',
+            objectFit: 'fill',
             objectPosition: 'center',
             zIndex: 1,
-            pointerEvents: 'none'
+            pointerEvents: 'none',
+            display: 'block'
           }}
         />
         
@@ -359,8 +365,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           className="trainer-name"
           style={{ 
             position: 'absolute',
-            top: isMobile ? '27px' : '32px',
-            left: isMobile ? '11px' : '27px',
+            top: isMobile ? '27px' : '47px',
+            left: isMobile ? '20px' : '30px',
             fontFamily: 'Poppins, sans-serif',
             fontStyle: 'normal',
             fontWeight: 700,
@@ -368,7 +374,10 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             lineHeight: isMobile ? '17px' : '30px',
             color: '#FFFFFF',
             textShadow: '2px 2px 4px rgba(0, 0, 0, 0.8)',
-            zIndex: 2
+            zIndex: 2,
+            height: isMobile ? '20px' : '35px',
+            overflow: 'visible',
+            whiteSpace: 'nowrap'
           }}>
           {profile.trainer_name}
         </div>
@@ -378,8 +387,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           className="start-date"
           style={{ 
             position: 'absolute',
-            top: isMobile ? '29px' : '35px',
-            right: isMobile ? '17px' : '39px',
+            top: isMobile ? '29px' : '50px',
+            right: isMobile ? '22px' : '39px',
             fontFamily: 'Poppins, sans-serif',
             fontStyle: 'normal',
             fontWeight: 500,
@@ -417,8 +426,8 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
           className="xp-display"
           style={{ 
             position: 'absolute',
-            bottom: isMobile ? '52px' : '75px',
-            left: isMobile ? '11px' : '28px',
+            bottom: isMobile ? '52px' : '90px',
+            left: isMobile ? '20px' : '33px',
             fontFamily: 'Poppins, sans-serif',
             fontStyle: 'normal',
             fontWeight: 700,
