@@ -100,9 +100,10 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
       if (!cardRef.current) return
 
       // Use fixed dimensions that match the preview exactly
-      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
-      const cardWidth = isMobile ? 224 : 400
-      const cardHeight = isMobile ? 336 : 600
+      // For download, always use actual viewport size regardless of preview mode
+      const isMobileDownload = typeof window !== 'undefined' && window.innerWidth <= 768
+      const cardWidth = isMobileDownload ? 224 : 400
+      const cardHeight = isMobileDownload ? 336 : 600
       const scale = 2 // Fixed 2x scale for consistent high quality
 
       // Pixel-perfect export configuration with fixed dimensions
@@ -189,21 +190,21 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
             downloadStyles.textContent = `
               /* Download-specific positioning for Summit Card */
               .summit-card-download .xp-display {
-                bottom: ${isMobile ? '60px' : '120px'} !important;
-                left: ${isMobile ? '20px' : '33px'} !important;
+                bottom: ${isMobileDownload ? '60px' : '120px'} !important;
+                left: ${isMobileDownload ? '20px' : '33px'} !important;
               }
               /* Decrease trainer name and date top position by 5px */
               .summit-card-download .trainer-name {
-                top: ${isMobile ? '22px' : '40px'} !important;
-                left: ${isMobile ? '20px' : '27px'} !important;
-                height: ${isMobile ? '20px' : '35px'} !important;
-                line-height: ${isMobile ? '17px' : '30px'} !important;
+                top: ${isMobileDownload ? '22px' : '40px'} !important;
+                left: ${isMobileDownload ? '20px' : '27px'} !important;
+                height: ${isMobileDownload ? '20px' : '35px'} !important;
+                line-height: ${isMobileDownload ? '17px' : '30px'} !important;
                 overflow: visible !important;
                 white-space: nowrap !important;
               }
               .summit-card-download .start-date {
-                top: ${isMobile ? '24px' : '44px'} !important;
-                right: ${isMobile ? '22px' : '39px'} !important;
+                top: ${isMobileDownload ? '24px' : '44px'} !important;
+                right: ${isMobileDownload ? '22px' : '39px'} !important;
                 
               }
             `
@@ -264,8 +265,13 @@ export const SummitCard = ({ profile, onClose, isPaidUser }: SummitCardProps) =>
     )
   }
 
-  // Check if mobile view
-  const isMobile = window.innerWidth <= 768
+  // Check if mobile view - but consider if user wants desktop view on mobile
+  const actuallyMobile = window.innerWidth <= 768
+  // For preview, use a more intelligent detection
+  // If viewport is mobile but card dimensions suggest desktop intent, use desktop layout
+  const cardElement = cardRef.current
+  const intendedDesktopView = cardElement && cardElement.offsetWidth > 350
+  const isMobile = actuallyMobile && !intendedDesktopView
 
   // Check if user has achieved level 80
   const hasAchievedLevel80 = (profile.total_xp || 0) >= 203_353_000 && (profile.trainer_level || 0) >= 80

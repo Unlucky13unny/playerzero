@@ -81,9 +81,10 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
       if (!cardRef.current) return
 
       // Use fixed dimensions that match the preview exactly
-      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
-      const cardWidth = isMobile ? 224 : 400
-      const cardHeight = isMobile ? 336 : 600
+      // For download, always use actual viewport size regardless of preview mode
+      const isMobileDownload = typeof window !== 'undefined' && window.innerWidth <= 768
+      const cardWidth = isMobileDownload ? 224 : 400
+      const cardHeight = isMobileDownload ? 336 : 600
       const scale = 2 // Fixed 2x scale for consistent high quality
 
       // Pixel-perfect export configuration
@@ -169,22 +170,22 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
           downloadStyles.textContent = `
             /* Download-specific positioning for Grind Card */
             .grind-card-download .trainer-name {
-              top: ${isMobile ? '20px' : '37px'} !important;
-              left: ${isMobile ? '17px' : '28px'} !important;
-              height: ${isMobile ? '20px' : '35px'} !important;
-              line-height: ${isMobile ? '17px' : '30px'} !important;
+              top: ${isMobileDownload ? '20px' : '37px'} !important;
+              left: ${isMobileDownload ? '17px' : '28px'} !important;
+              height: ${isMobileDownload ? '20px' : '35px'} !important;
+              line-height: ${isMobileDownload ? '17px' : '30px'} !important;
               overflow: visible !important;
               white-space: nowrap !important;
             }
             .grind-card-download .start-date {
-              top: ${isMobile ? '24px' : '40px'} !important;
-              right: ${isMobile ? '20px' : '39px'} !important;
+              top: ${isMobileDownload ? '24px' : '40px'} !important;
+              right: ${isMobileDownload ? '20px' : '39px'} !important;
             }
             .grind-card-download .stats-section {
-              top: ${isMobile ? '190px' : '335px'} !important;
+              top: ${isMobileDownload ? '190px' : '335px'} !important;
             }
             .grind-card-download .total-xp-section {
-              top: ${isMobile ? '270px' : '475px'} !important;
+              top: ${isMobileDownload ? '270px' : '475px'} !important;
             }
             /* Fix daily stats text positioning - move up by 2px */
             .grind-card-download .daily-stats-text {
@@ -280,8 +281,13 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
   const distancePerDay = Math.round(((profile.distance_walked || 0) / daysSinceStart) * 100) / 100
   const pokestopsPerDay = Math.round(((profile.pokestops_visited || 0) / daysSinceStart) * 100) / 100
 
-  // Detect mobile view
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  // Detect mobile view - but consider if user wants desktop view on mobile
+  const actuallyMobile = typeof window !== 'undefined' && window.innerWidth <= 768
+  // For preview, use a more intelligent detection
+  // If viewport is mobile but card dimensions suggest desktop intent, use desktop layout
+  const cardElement = cardRef.current
+  const intendedDesktopView = cardElement && cardElement.offsetWidth > 350
+  const isMobile = actuallyMobile && !intendedDesktopView
 
   return (
     <div 
