@@ -3909,6 +3909,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'flex-start',
+                justifyContent: (player.isAggregated && player.aggregateType === 'team') ? 'center' : 'flex-start',
                 padding: '0px',
                 gap: '4px',
                 width: '200px',
@@ -3940,7 +3941,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                   {player.name}
                 </span>
 
-                  {/* Country Flag and Team */}
+                  {/* Country Flag and Team - Hidden entirely for team aggregation */}
+                  {!(player.isAggregated && player.aggregateType === 'team') && (
                   <div style={{
                     display: 'flex',
                     flexDirection: 'row',
@@ -3954,7 +3956,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                     flexGrow: 0,
                   }}>
                     {/* Country Flag - Hidden for team aggregation */}
-                    {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                    {player.countryName && (
                     <CountryFlag 
                       countryName={player.countryName}
                       width={16}
@@ -3992,6 +3994,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       {player.team}
                     </span>
                   </div>
+                  )}
               </div>
             </div>
 
@@ -4031,7 +4034,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 400,
-                fontSize: '8px',
+                fontSize: '10px',
                 lineHeight: '12px',
                 color: '#666666',
                 textAlign: 'right',
@@ -4252,12 +4255,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
               <span 
                 style={{
                 width: '120px',
-                height: '18px',
+                height: '21px',
                 fontFamily: 'Poppins',
                 fontStyle: 'normal',
                 fontWeight: 600,
-                fontSize: '12px',
-                lineHeight: '18px',
+                fontSize: '14px',
+                lineHeight: '21px',
                 /* identical to box height */
                 textAlign: 'left',
                   color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
@@ -4278,8 +4281,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
 
 
-              {/* Frame 22 - Country and Team */}
-
+              {/* Frame 22 - Country and Team - Hidden entirely for team aggregation */}
+              {!(player.isAggregated && player.aggregateType === 'team') && (
               <div style={{
 
                 /* Frame 22 */
@@ -4334,7 +4337,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                 }}>
 
-                  {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                  {player.countryName && (
                   <CountryFlag 
                     countryName={player.countryName}
                     width={20}
@@ -4447,6 +4450,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                 </div>
 
               </div>
+              )}
 
             </div>
 
@@ -4492,7 +4496,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               minWidth: '85px',
 
-              height: '18px',
+              height: '21px',
 
               fontFamily: 'Poppins',
 
@@ -4500,9 +4504,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               fontWeight: 600,
 
-              fontSize: '12px',
+              fontSize: '14px',
 
-              lineHeight: '18px',
+              lineHeight: '21px',
 
               /* identical to box height */
 
@@ -4532,7 +4536,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               minWidth: '85px',
 
-              height: '15px',
+              height: '12px',
 
               fontFamily: 'Poppins',
 
@@ -4542,7 +4546,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
               fontSize: '10px',
 
-              lineHeight: '15px',
+              lineHeight: '12px',
 
               /* identical to box height */
 
@@ -7517,14 +7521,16 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     gap: '2px',
 
+                    justifyContent: (player.isAggregated && player.aggregateType === 'team') ? 'center' : 'flex-start',
+
                   }}>
 
                     <span 
                       style={{
                       fontFamily: 'Poppins',
                       fontWeight: 600,
-                      fontSize: '12px',
-                      lineHeight: '18px',
+                      fontSize: '14px',
+                      lineHeight: '21px',
                         color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
                         cursor: player.profileId ? 'pointer' : 'default',
                       }}
@@ -7536,8 +7542,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     
 
-                    {/* Country and Team */}
-
+                    {/* Country and Team - Hidden entirely for team aggregation */}
+                    {!(player.isAggregated && player.aggregateType === 'team') && (
                     <div style={{
 
                       display: 'flex',
@@ -7558,8 +7564,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                       
 
-                      {/* Team */}
-
+                      {/* Team - Hidden for aggregated countries */}
+                      {!(player.isAggregated && player.aggregateType === 'country') && (
                       <div style={{
 
                         display: 'flex',
@@ -7601,8 +7607,10 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         </span>
 
                       </div>
+                      )}
 
                     </div>
+                    )}
 
                   </div>
 
@@ -7632,9 +7640,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     fontWeight: 600,
 
-                    fontSize: '12px',
+                    fontSize: '14px',
 
-                    lineHeight: '18px',
+                    lineHeight: '21px',
 
                     textAlign: 'right',
 
@@ -7654,7 +7662,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                     fontSize: '10px',
 
-                    lineHeight: '15px',
+                    lineHeight: '12px',
 
                     textAlign: 'right',
 
@@ -7749,13 +7757,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       display: 'flex',
                       flexDirection: 'column',
                       gap: '2px',
+                      justifyContent: (player.isAggregated && player.aggregateType === 'team') ? 'center' : 'flex-start',
                     }}>
                       <span 
                         style={{
                         fontFamily: 'Poppins',
                         fontWeight: 600,
-                        fontSize: '12px',
-                        lineHeight: '18px',
+                        fontSize: '14px',
+                        lineHeight: '21px',
                           color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
                           cursor: player.profileId ? 'pointer' : 'default',
                         }}
@@ -7765,13 +7774,14 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         {player.name}
                       </span>
 
-                      {/* Country and Team */}
+                      {/* Country and Team - Hidden entirely for team aggregation */}
+                      {!(player.isAggregated && player.aggregateType === 'team') && (
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
                       }}>
-                        {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
+                        {player.countryName && (
                         <CountryFlag 
                           countryName={player.countryName}
                           width={16}
@@ -7779,7 +7789,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                         />
                         )}
 
-                        {/* Team */}
+                        {/* Team - Hidden for aggregated countries */}
+                        {!(player.isAggregated && player.aggregateType === 'country') && (
                         <div style={{
                           display: 'flex',
                           alignItems: 'center',
@@ -7802,7 +7813,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                             {player.team}
                           </span>
                         </div>
+                        )}
                       </div>
+                      )}
                     </div>
                   </div>
 
@@ -7818,8 +7831,8 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       style={{
                         fontFamily: 'Poppins',
                         fontWeight: 600,
-                        fontSize: '12px',
-                        lineHeight: '18px',
+                        fontSize: '14px',
+                        lineHeight: '21px',
                         textAlign: 'right',
                         color: '#000000',
                       }}>
@@ -7830,7 +7843,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                       fontFamily: 'Poppins',
                       fontWeight: 400,
                       fontSize: '10px',
-                      lineHeight: '15px',
+                      lineHeight: '12px',
                       textAlign: 'right',
                       color: '#666666',
                     }}>
@@ -8196,92 +8209,97 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                      gap: '2px',
 
+                     justifyContent: (player.isAggregated && player.aggregateType === 'team') ? 'center' : 'flex-start',
+
                    }}>
 
                      <span 
-                       style={{
-                       fontFamily: 'Poppins',
-                       fontWeight: 600,
-                       fontSize: '12px',
-                       lineHeight: '18px',
-                         color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
-                         cursor: 'pointer',
-                       }}
-                       onClick={(e) => handlePreviewClick(e, player.profileId)}
-                       title={trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)"}
-                     >
-                       {player.name}
-                     </span>
+                      style={{
+                      fontFamily: 'Poppins',
+                      fontWeight: 600,
+                      fontSize: '14px',
+                      lineHeight: '21px',
+                        color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
+                        cursor: 'pointer',
+                      }}
+                      onClick={(e) => handlePreviewClick(e, player.profileId)}
+                      title={trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)"}
+                    >
+                      {player.name}
+                    </span>
+
+                    
+
+                    {/* Country and Team - Hidden entirely for team aggregation */}
+                    {!(player.isAggregated && player.aggregateType === 'team') && (
+                    <div style={{
+
+                      display: 'flex',
+
+                      alignItems: 'center',
+
+                      gap: '6px',
+
+                    }}>
+
+                      {player.countryName && (
+                      <CountryFlag 
+                        countryName={player.countryName}
+                        width={16}
+                        height={12}
+                      />
+                      )}
 
                      
 
-                     {/* Country and Team */}
+                     {/* Team - Hidden for aggregated countries */}
 
+                     {!(player.isAggregated && player.aggregateType === 'country') && (
                      <div style={{
 
                        display: 'flex',
 
                        alignItems: 'center',
 
-                       gap: '6px',
+                       gap: '4px',
 
                      }}>
 
-                       {!(player.isAggregated && player.aggregateType === 'team') && player.countryName && (
-                       <CountryFlag 
-                         countryName={player.countryName}
-                         width={16}
-                         height={12}
-                       />
-                       )}
-
-                       
-
-                       {/* Team */}
-
                        <div style={{
 
-                         display: 'flex',
+                         width: '8px',
 
-                         alignItems: 'center',
+                         height: '8px',
 
-                         gap: '4px',
+                         background: teamColorHex,
+
+                         borderRadius: '50%',
+
+                       }} />
+
+                       <span style={{
+
+                         fontFamily: 'Poppins',
+
+                         fontWeight: 400,
+
+                         fontSize: '10px',
+
+                         lineHeight: '15px',
+
+                         color: teamColorHex,
 
                        }}>
 
-                         <div style={{
+                         {player.team}
 
-                           width: '8px',
-
-                           height: '8px',
-
-                           background: teamColorHex,
-
-                           borderRadius: '50%',
-
-                         }} />
-
-                         <span style={{
-
-                           fontFamily: 'Poppins',
-
-                           fontWeight: 400,
-
-                           fontSize: '10px',
-
-                           lineHeight: '15px',
-
-                           color: teamColorHex,
-
-                         }}>
-
-                           {player.team}
-
-                         </span>
-
-                       </div>
+                       </span>
 
                      </div>
+                     )}
+
+                    </div>
+                    )}
 
                    </div>
 
