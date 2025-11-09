@@ -760,6 +760,7 @@ export const ProfileSetup = () => {
           value={profileData.start_date}
           onChange={(e) => handleInputChange('start_date', e.target.value)}
           className="form-input"
+          min="2016-07-01" // Pokémon GO launch date
           max={new Date().toISOString().split('T')[0]} // Can't select future dates
           required
         />

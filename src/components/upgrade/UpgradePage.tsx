@@ -257,7 +257,7 @@ export const UpgradePage = () => {
                   textTransform: 'uppercase',
                   color: '#DC2627',
                 }}>
-                  {loading ? 'Processing...' : 'Unlock Full Access - $5.99'}
+                  {loading ? 'Processing...' : 'Unlock Full Access'}
             </div>
               </button>
           </div>
