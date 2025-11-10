@@ -377,6 +377,7 @@ export const UpgradePage = () => {
                 fontSize: isMobile ? '14px' : '16px',
                 lineHeight: isMobile ? '18px' : '19px',
                 flex: 1,
+                textAlign: 'left',
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>Increased Stat Uploads</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – upload multiple times per day to track your grind in real time.</span>
@@ -406,6 +407,7 @@ export const UpgradePage = () => {
                 fontSize: isMobile ? '14px' : '16px',
                 lineHeight: isMobile ? '18px' : '19px',
                 flex: 1,
+                textAlign: 'left',
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>Leaderboard Recognition</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – appear in rankings and climb against real trainers.</span>
@@ -435,6 +437,7 @@ export const UpgradePage = () => {
                 fontSize: isMobile ? '14px' : '16px',
                 lineHeight: isMobile ? '18px' : '19px',
                 flex: 1,
+                textAlign: 'left',
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>Full Profile Access</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – view and compare stats across the community.</span>
@@ -464,6 +467,7 @@ export const UpgradePage = () => {
                 fontSize: isMobile ? '14px' : '16px',
                 lineHeight: isMobile ? '18px' : '19px',
                 flex: 1,
+                textAlign: 'left',
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>All Future Features Included</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – every update released during your subscription year is yours automatically.</span>
@@ -493,6 +497,7 @@ export const UpgradePage = () => {
                 fontSize: isMobile ? '14px' : '16px',
                 lineHeight: isMobile ? '18px' : '19px',
                 flex: 1,
+                textAlign: 'left',
               }}>
                 <span style={{ fontWeight: 600, color: '#000000' }}>Trainer Code & Socials</span>
                 <span style={{ fontWeight: 400, color: '#636874' }}> – share yours and connect directly with others.</span>

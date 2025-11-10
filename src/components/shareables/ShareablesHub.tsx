@@ -1,9 +1,11 @@
 // Removed Share2 import as we're now using custom SVG button
 import { useState, useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { ExportCardModal } from "../dashboard/ExportCardModal"
 import { GrindCard } from "./GrindCard"
 import { SummitCard } from "./SummitCard"
 import { VerificationScreenshotsModal } from "./VerificationScreenshotsModal"
+import { ErrorModal } from "../common/ErrorModal"
 import { useAuth } from "../../contexts/AuthContext"
 import { useTrialStatus } from "../../hooks/useTrialStatus"
 import { supabase } from "../../supabaseClient"
@@ -15,10 +17,12 @@ export function ShareablesHub() {
   const [showGrindCard, setShowGrindCard] = useState(false)
   const [showSummitCard, setShowSummitCard] = useState(false)
   const [showVerificationModal, setShowVerificationModal] = useState(false)
+  const [showTrialExpiredModal, setShowTrialExpiredModal] = useState(false)
   const [profile, setProfile] = useState<any>(null)
   const [lastVerification, setLastVerification] = useState<any>(null)
   const { user } = useAuth()
   const trialStatus = useTrialStatus()
+  const navigate = useNavigate()
 
   useEffect(() => {
     loadProfile()
@@ -64,6 +68,11 @@ export function ShareablesHub() {
   }
 
   const handleExportClick = () => {
+    // Check if user is not paid AND trial has expired (0 days remaining)
+    if (!trialStatus.isPaidUser && trialStatus.daysRemaining === 0) {
+      setShowTrialExpiredModal(true)
+      return
+    }
     setShowOptionButtons(true)
   }
 
@@ -390,6 +399,17 @@ export function ShareablesHub() {
         onClose={() => setShowVerificationModal(false)}
         userId={user?.id || ''}
         userName={profile?.trainer_name}
+      />
+
+      {/* Trial Expired Modal */}
+      <ErrorModal
+        isOpen={showTrialExpiredModal}
+        onClose={() => setShowTrialExpiredModal(false)}
+        title="Premium Feature"
+        message="Sharing cards is a premium feature. Upgrade to unlock and flex your stats."
+        confirmText="Upgrade Now"
+        cancelText="Close"
+        onConfirm={() => navigate('/upgrade')}
       />
       
     </div>

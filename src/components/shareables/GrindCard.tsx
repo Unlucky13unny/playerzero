@@ -1,9 +1,6 @@
-import { useNavigate } from 'react-router-dom'
 import { useRef, useState } from 'react'
 import html2canvas from 'html2canvas'
 import type { ProfileWithMetadata } from '../../services/profileService'
-import { useTrialStatus } from '../../hooks/useTrialStatus'
-import { ErrorModal } from '../common/ErrorModal'
 
 interface GrindCardProps {
   profile: ProfileWithMetadata | null
@@ -11,16 +8,10 @@ interface GrindCardProps {
   isPaidUser: boolean
 }
 
-export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
-  const navigate = useNavigate()
-  const trialStatus = useTrialStatus()
+export const GrindCard = ({ profile, onClose }: GrindCardProps) => {
   const cardRef = useRef<HTMLDivElement>(null)
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadSuccess, setDownloadSuccess] = useState(false)
-
-  const handleUpgradeClick = () => {
-    navigate('/upgrade')
-  }
 
   // Handle share/download button click
   const handleShareClick = async () => {
@@ -239,30 +230,15 @@ export const GrindCard = ({ profile, onClose, isPaidUser }: GrindCardProps) => {
 
   if (!profile) return null
 
-  // Show error modal if user is not subscribed and not in trial
-  if (!isPaidUser && !trialStatus.isInTrial) {
-    return (
-      <ErrorModal
-        isOpen={true}
-        onClose={onClose}
-        title="Premium Feature"
-        message="Sharing cards is a premium feature. Upgrade to unlock and flex your stats."
-        confirmText="Upgrade Now"
-        cancelText="Close"
-        onConfirm={handleUpgradeClick}
-      />
-    )
-  }
-
   const startDate = profile.start_date 
-    ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-GB', { 
-        day: 'numeric', 
-        month: 'numeric', 
+    ? new Date(profile.start_date + 'T00:00:00').toLocaleDateString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
         year: 'numeric' 
       }).replace(/\//g, '.')
-    : new Date().toLocaleDateString('en-GB', { 
-        day: 'numeric', 
-        month: 'numeric', 
+    : new Date().toLocaleDateString('en-US', { 
+        month: '2-digit', 
+        day: '2-digit', 
         year: 'numeric' 
       }).replace(/\//g, '.')
 
