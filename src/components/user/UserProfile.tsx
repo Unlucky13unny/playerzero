@@ -157,13 +157,13 @@ export const UserProfile = () => {
   const handleTrainerCodePrivacyToggle = () => {
     if (!editData) return
     
-    // If user is trial and trying to set to public (false), show upgrade modal
-    if (!trialStatus.isPaidUser && !editData.trainer_code_private) {
+    // If user is trial user, block the toggle and show upgrade modal
+    if (!trialStatus.isPaidUser) {
       setShowPrivacyUpgradeModal(true)
       return
     }
     
-    // Otherwise, allow the toggle
+    // Otherwise, allow the toggle (paid users only)
     handleInputChange('trainer_code_private', !editData.trainer_code_private)
   }
 
@@ -171,13 +171,13 @@ export const UserProfile = () => {
   const handleSocialLinksPrivacyToggle = () => {
     if (!editData) return
     
-    // If user is trial and trying to set to public (false), show upgrade modal
-    if (!trialStatus.isPaidUser && !editData.social_links_private) {
+    // If user is trial user, block the toggle and show upgrade modal
+    if (!trialStatus.isPaidUser) {
       setShowPrivacyUpgradeModal(true)
       return
     }
     
-    // Otherwise, allow the toggle
+    // Otherwise, allow the toggle (paid users only)
     handleInputChange('social_links_private', !editData.social_links_private)
   }
 
