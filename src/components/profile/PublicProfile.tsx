@@ -177,36 +177,66 @@ export const PublicProfile = () => {
     }
   }
 
+  // Format display value for social media (what users see)
+  const getDisplayValue = (platform: string, value: string): string => {
+    if (!value) return value
+    
+    switch (platform) {
+      case 'bluesky': {
+        const username = value.replace('@', '')
+        // If the username doesn't contain a domain, append .bsky.social
+        return username.includes('.') ? username : `${username}.bsky.social`
+      }
+      case 'discord':
+        // Discord handles should have @ prefix
+        return value.startsWith('@') ? value : `@${value}`
+      default:
+        return value
+    }
+  }
+
   const getSocialLink = (platform: string, value: string): string | undefined => {
     if (!value) return undefined
     
+    // Special handling for Bluesky URLs - ensure .bsky.social is appended
+    if (platform === 'bluesky') {
+      // If it's already a full bsky.app URL
+      if (value.startsWith('https://bsky.app/profile/') || value.startsWith('http://bsky.app/profile/')) {
+        const urlParts = value.split('/profile/')
+        if (urlParts.length === 2) {
+          const username = urlParts[1].replace('@', '')
+          const handle = username.includes('.') ? username : `${username}.bsky.social`
+          return `https://bsky.app/profile/${handle}`
+        }
+      }
+      // If it's just a username
+      const username = value.replace('@', '')
+      const handle = username.includes('.') ? username : `${username}.bsky.social`
+      return `https://bsky.app/profile/${handle}`
+    }
+    
+    // If value is already a full URL, return it as is (for other platforms)
+    if (value.startsWith('http://') || value.startsWith('https://')) {
+      return value
+    }
+    
     switch (platform) {
-      case 'instagram':
-        return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
-      case 'tiktok':
-        return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
-      case 'twitter':
-        return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
-      case 'youtube':
-        return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
-      case 'twitch':
-        return `https://twitch.tv/${value}`
-      case 'reddit':
-        return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+      case 'x':
+        return `https://x.com/${value.replace('@', '')}`
       case 'facebook':
-        return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
-      case 'snapchat':
-        return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
-      case 'github':
-        return `https://github.com/${value}`
+        return `https://www.facebook.com/${value.replace('@', '')}`
       case 'discord':
-        return value
-      case 'telegram':
-        return value.startsWith('@') ? `https://t.me/${value.slice(1)}` : `https://t.me/${value}`
-      case 'whatsapp':
-        return `https://wa.me/${value}`
-      case 'vimeo':
-        return value.includes('vimeo.com') ? value : `https://vimeo.com/${value}`
+        return value // Discord doesn't have URLs
+      case 'instagram':
+        return `https://www.instagram.com/${value.replace('@', '')}`
+      case 'youtube':
+        return `https://www.youtube.com/@${value.replace('@', '')}`
+      case 'tiktok':
+        return `https://www.tiktok.com/@${value.replace('@', '')}`
+      case 'twitch':
+        return `https://www.twitch.tv/${value.replace('@', '')}`
+      case 'reddit':
+        return `https://www.reddit.com/user/${value.replace('@', '')}`
       default:
         return value
     }
@@ -233,9 +263,15 @@ export const PublicProfile = () => {
     }
   }
 
+  const [showCopyToast, setShowCopyToast] = useState(false)
+
   const copyDiscordHandle = (handle: string) => {
-    navigator.clipboard.writeText(handle)
-    alert('Discord handle copied to clipboard!')
+    const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`
+    navigator.clipboard.writeText(formattedHandle)
+    setShowCopyToast(true)
+    setTimeout(() => {
+      setShowCopyToast(false)
+    }, 2000)
   }
 
   if (loading) {
@@ -267,8 +303,35 @@ export const PublicProfile = () => {
   }
 
   return (
-    <div className="user-home-container">
-      
+    <div className="user-home-container" style={{ position: 'relative' }}>
+      {/* Copy Toast Notification */}
+      {showCopyToast && (
+        <div style={{
+          position: 'fixed',
+          top: '20px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#22c55e',
+          color: '#FFFFFF',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontFamily: 'Poppins',
+          fontSize: '14px',
+          fontWeight: 500,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          animation: 'slideDown 0.3s ease-out',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          whiteSpace: 'nowrap'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.667 5L7.50033 14.1667L3.33366 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Discord handle copied!
+        </div>
+      )}
 
       {/* Profile Card Container */}
       <div className="profile-card-container">
@@ -538,7 +601,7 @@ export const PublicProfile = () => {
                       title="Click to copy Discord handle"
                     >
                       <SocialIcon platform={platform.key} size={24} color="currentColor" />
-                      <span>{value}</span>
+                      <span>{getDisplayValue(platform.key, value)}</span>
                     </div>
                   );
                 }
@@ -552,7 +615,7 @@ export const PublicProfile = () => {
                     className="social-link"
                   >
                     <SocialIcon platform={platform.key} size={24} color="currentColor" />
-                    <span>{value}</span>
+                    <span>{getDisplayValue(platform.key, value)}</span>
                   </a>
                 );
               }
@@ -577,7 +640,7 @@ export const PublicProfile = () => {
                     title="Private"
                   >
                     <SocialIcon platform={platform.key} size={24} color="currentColor" />
-                    <span>{value}</span>
+                    <span>{getDisplayValue(platform.key, value)}</span>
                   </div>
                 );
               }

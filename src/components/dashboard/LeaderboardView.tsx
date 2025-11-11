@@ -1451,17 +1451,17 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         
         // Only show flag in trainers view or country view
         if (activeTab !== 'team') {
-          // Country section (Frame 22) - width: 86.72px, height: 18px
-          const countryFrameX = containerX
-          
-          // Country flag (Frame 651) - 24.58x16.39px with drop-shadow and border-radius
-          const flagImg = flagImages[index]
+        // Country section (Frame 22) - width: 86.72px, height: 18px
+        const countryFrameX = containerX
+        
+        // Country flag (Frame 651) - 24.58x16.39px with drop-shadow and border-radius
+        const flagImg = flagImages[index]
           let flagWidth = 24.58
-          const flagHeight = 16.39
+        const flagHeight = 16.39
           let flagX = countryFrameX
-          const flagY = infoRowY - flagHeight/2
-          
-          if (flagImg) {
+        const flagY = infoRowY - flagHeight/2
+        
+        if (flagImg) {
           // Add drop shadow: drop-shadow(0px 4.09656px 4.09656px rgba(0, 0, 0, 0.25))
           ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
           ctx.shadowBlur = 4.09656
@@ -1545,70 +1545,70 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           ctx.textBaseline = 'middle'
           ctx.fillText('?', flagX + flagWidth/2, flagY + flagHeight/2)
           
-            // Reset text alignment
-            ctx.textAlign = 'left'
-            ctx.textBaseline = 'middle'
-          }
-          
-          // Country text - gap: 6.14px, font: 500 12.2897px Poppins
-          ctx.fillStyle = '#FFFFFF'
-          ctx.font = '500 12.2897px Poppins'
+          // Reset text alignment
           ctx.textAlign = 'left'
           ctx.textBaseline = 'middle'
-          const countryText = player.countryName || 'Unknown'
+        }
+        
+        // Country text - gap: 6.14px, font: 500 12.2897px Poppins
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '500 12.2897px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const countryText = player.countryName || 'Unknown'
           flagX = countryFrameX
           flagWidth = 24.58
-          const countryTextX = flagX + flagWidth + 6.14
-          const countryTextY = infoRowY // Center vertically at infoRowY
-          ctx.fillText(countryText.length > 8 ? countryText.substring(0, 8) + '...' : countryText, countryTextX, countryTextY)
+        const countryTextX = flagX + flagWidth + 6.14
+        const countryTextY = infoRowY // Center vertically at infoRowY
+        ctx.fillText(countryText.length > 8 ? countryText.substring(0, 8) + '...' : countryText, countryTextX, countryTextY)
         }
         
         // Team section (Frame 584) - only show in trainers view
         if (activeTab === 'trainers') {
-          const teamFrameX = containerX + containerWidth - 88.53
-          
-          // Team circle (Ellipse 3) - 16.58x16.58px with border: 1.50494px solid #FFFFFF
-          const teamColorHex = player.team || '#FF0001' // Default to red as in CSS
-          const circleSize = 16.58
-          const circleX = teamFrameX + circleSize/2
-          const circleY = infoRowY
-          
-          // Add drop shadow for team section: drop-shadow(0px 6.01975px 6.01975px rgba(0, 0, 0, 0.25))
-          ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
-          ctx.shadowBlur = 6.01975
-          ctx.shadowOffsetX = 0
-          ctx.shadowOffsetY = 6.01975
-          
-          // Team circle fill
-          ctx.fillStyle = teamColorHex
-          ctx.beginPath()
-          ctx.arc(circleX, circleY, circleSize/2, 0, 2 * Math.PI)
-          ctx.fill()
-          
-          // Team circle border
-          ctx.strokeStyle = '#FFFFFF'
-          ctx.lineWidth = 1.50494
-          ctx.beginPath()
-          ctx.arc(circleX, circleY, (circleSize - 1.50494)/2, 0, 2 * Math.PI)
-          ctx.stroke()
-          
-          // Reset shadow
-          ctx.shadowColor = 'transparent'
-          ctx.shadowBlur = 0
-          ctx.shadowOffsetX = 0
-          ctx.shadowOffsetY = 0
-          
-          // Team text - gap: 9.95px, font: 400 12.2897px Poppins
-          ctx.fillStyle = '#FFFFFF'
-          ctx.font = '400 12.2897px Poppins'
-          ctx.textAlign = 'left'
-          ctx.textBaseline = 'middle'
-          const teamName = player.teamColor ? 
-            (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
-            'Red Team'
-          const teamTextX = circleX + circleSize/2 + 9.95
-          const teamTextY = infoRowY // Center vertically at infoRowY
-          ctx.fillText(teamName, teamTextX, teamTextY)
+        const teamFrameX = containerX + containerWidth - 88.53
+        
+        // Team circle (Ellipse 3) - 16.58x16.58px with border: 1.50494px solid #FFFFFF
+        const teamColorHex = player.team || '#FF0001' // Default to red as in CSS
+        const circleSize = 16.58
+        const circleX = teamFrameX + circleSize/2
+        const circleY = infoRowY
+        
+        // Add drop shadow for team section: drop-shadow(0px 6.01975px 6.01975px rgba(0, 0, 0, 0.25))
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.25)'
+        ctx.shadowBlur = 6.01975
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 6.01975
+        
+        // Team circle fill
+        ctx.fillStyle = teamColorHex
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleSize/2, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        // Team circle border
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 1.50494
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, (circleSize - 1.50494)/2, 0, 2 * Math.PI)
+        ctx.stroke()
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent'
+        ctx.shadowBlur = 0
+        ctx.shadowOffsetX = 0
+        ctx.shadowOffsetY = 0
+        
+        // Team text - gap: 9.95px, font: 400 12.2897px Poppins
+        ctx.fillStyle = '#FFFFFF'
+        ctx.font = '400 12.2897px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        const teamName = player.teamColor ? 
+          (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
+          'Red Team'
+        const teamTextX = circleX + circleSize/2 + 9.95
+        const teamTextY = infoRowY // Center vertically at infoRowY
+        ctx.fillText(teamName, teamTextX, teamTextY)
         }
         
         // Reset text alignment for other elements
@@ -1701,7 +1701,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           cardX = containerX + 29.9715 + 27.53 + 34.13 + 27.4739 // Start from left after rank
           ctx.fillText(name, cardX, rowY + 90.7/2) // Center vertically in the row
         } else {
-          ctx.fillText(name, cardX, rowY + 9.15796)
+        ctx.fillText(name, cardX, rowY + 9.15796)
         }
         
         // Team section - positioned in second row (gap: 3.87px from player name)
@@ -1709,49 +1709,49 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         
         // Only show team section in trainers view
         if (activeTab === 'trainers') {
-          // Team circle (18.99x18.99) with border: 4.16271px solid #FFFFFF
-          const teamColorHex = player.team || '#DC2627'
-          const circleRadius = 18.99 / 2
-          const circleX = cardX + circleRadius
-          const circleY = secondRowY + 28/2
-          
-          ctx.fillStyle = teamColorHex
-          ctx.beginPath()
-          ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI)
-          ctx.fill()
-          
-          ctx.strokeStyle = '#FFFFFF'
-          ctx.lineWidth = 4.16271
-          ctx.beginPath()
-          ctx.arc(circleX, circleY, circleRadius - 4.16271/2, 0, 2 * Math.PI)
-          ctx.stroke()
-          
-          // Team name (96x28) - font: 400 18.991px Poppins, gap: 11.39px
-          const teamName = player.teamColor ? 
-            (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
-            'Red Team'
-          ctx.fillStyle = '#000000'
-          ctx.font = '400 18.991px Poppins'
-          ctx.textAlign = 'left'
-          ctx.textBaseline = 'middle'
-          ctx.fillText(teamName, circleX + circleRadius + 11.39, circleY)
+        // Team circle (18.99x18.99) with border: 4.16271px solid #FFFFFF
+        const teamColorHex = player.team || '#DC2627'
+        const circleRadius = 18.99 / 2
+        const circleX = cardX + circleRadius
+        const circleY = secondRowY + 28/2
+        
+        ctx.fillStyle = teamColorHex
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleRadius, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 4.16271
+        ctx.beginPath()
+        ctx.arc(circleX, circleY, circleRadius - 4.16271/2, 0, 2 * Math.PI)
+        ctx.stroke()
+        
+        // Team name (96x28) - font: 400 18.991px Poppins, gap: 11.39px
+        const teamName = player.teamColor ? 
+          (player.teamColor.charAt(0).toUpperCase() + player.teamColor.slice(1) + ' Team') : 
+          'Red Team'
+        ctx.fillStyle = '#000000'
+        ctx.font = '400 18.991px Poppins'
+        ctx.textAlign = 'left'
+        ctx.textBaseline = 'middle'
+        ctx.fillText(teamName, circleX + circleRadius + 11.39, circleY)
         }
         
         // Country flag (34.83x23.22) - using real country data
         // Only show flag in trainers view or country view
         if (activeTab !== 'team') {
-          const flagImg = flagImages[index + 3] // Use original array index (index + 3 for positions 4-10)
-          if (flagImg) {
-            const flagWidth = 30
-            const flagHeight = 20
+        const flagImg = flagImages[index + 3] // Use original array index (index + 3 for positions 4-10)
+        if (flagImg) {
+          const flagWidth = 30
+          const flagHeight = 20
             // If country view, move flag to where team circle would be
             const flagX = activeTab === 'country' ? cardX : 340
             const flagY = activeTab === 'country' ? secondRowY + 28/2 - flagHeight/2 : rowY + 55
-            ctx.drawImage(flagImg, flagX, flagY, flagWidth, flagHeight)
-          } else {
-            // Fallback to text if flag image not available
-            ctx.fillStyle = '#000000'
-            ctx.font = '400 19px Poppins'
+          ctx.drawImage(flagImg, flagX, flagY, flagWidth, flagHeight)
+        } else {
+          // Fallback to text if flag image not available
+          ctx.fillStyle = '#000000'
+          ctx.font = '400 19px Poppins'
             const fallbackX = activeTab === 'country' ? cardX : 350
             const fallbackY = activeTab === 'country' ? secondRowY + 28/2 : rowY + 70
             ctx.fillText('🏳️', fallbackX, fallbackY)
@@ -1760,12 +1760,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         
         // Level - hide in country view or team view, and hide if level is '--'
         if (activeTab === 'trainers') {
-          ctx.fillStyle = '#000000'
-          ctx.font = '500 19px Poppins'
-          const playerLevel = player.profileId ? (playerLevels[player.profileId] || '--') : '--'
+        ctx.fillStyle = '#000000'
+        ctx.font = '500 19px Poppins'
+        const playerLevel = player.profileId ? (playerLevels[player.profileId] || '--') : '--'
           // Only show level if it's not '--'
           if (playerLevel !== '--') {
-            ctx.fillText(`lvl ${playerLevel}`, 400, rowY + 70)
+        ctx.fillText(`lvl ${playerLevel}`, 400, rowY + 70)
           }
         }
         
@@ -1852,40 +1852,40 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         // Team and country info - only show team in trainers view
         if (activeTab === 'trainers') {
           // Team circle - using real user team color
-          const userTeamColorHex = currentUser.team || '#DC2627'
-          ctx.fillStyle = userTeamColorHex
-          ctx.beginPath()
-          ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
-          ctx.fill()
-          
-          ctx.strokeStyle = '#FFFFFF'
-          ctx.lineWidth = 4
-          ctx.beginPath()
-          ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
-        ctx.stroke()
+        const userTeamColorHex = currentUser.team || '#DC2627'
+        ctx.fillStyle = userTeamColorHex
+        ctx.beginPath()
+        ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
+        ctx.fill()
+        
+        ctx.strokeStyle = '#FFFFFF'
+        ctx.lineWidth = 4
+        ctx.beginPath()
+        ctx.arc(180, userRowY + 65, 9, 0, 2 * Math.PI)
+      ctx.stroke()
 
           // Team name - using real user data
-          ctx.fillStyle = '#000000'
-          ctx.font = '400 19px Poppins'
-          const userTeamName = currentUser.teamColor ? 
-            (currentUser.teamColor.charAt(0).toUpperCase() + currentUser.teamColor.slice(1) + ' Team') : 
-            'Team'
-          ctx.fillText(userTeamName, 205, userRowY + 70)
+        ctx.fillStyle = '#000000'
+        ctx.font = '400 19px Poppins'
+        const userTeamName = currentUser.teamColor ? 
+          (currentUser.teamColor.charAt(0).toUpperCase() + currentUser.teamColor.slice(1) + ' Team') : 
+          'Team'
+        ctx.fillText(userTeamName, 205, userRowY + 70)
         }
         
         // User country flag - only show in trainers view or country view
         if (activeTab !== 'team') {
           // Position flag at team circle location if country view, otherwise at normal position
-          if (userFlagImage) {
-            const flagWidth = 30
-            const flagHeight = 20
+        if (userFlagImage) {
+          const flagWidth = 30
+          const flagHeight = 20
             const flagX = activeTab === 'country' ? 170 : 340
             const flagY = activeTab === 'country' ? userRowY + 55 : userRowY + 55
-            ctx.drawImage(userFlagImage, flagX, flagY, flagWidth, flagHeight)
-          } else {
-            // Fallback to emoji if flag image not available
-            ctx.fillStyle = '#000000'
-            ctx.font = '400 19px Poppins'
+          ctx.drawImage(userFlagImage, flagX, flagY, flagWidth, flagHeight)
+        } else {
+          // Fallback to emoji if flag image not available
+          ctx.fillStyle = '#000000'
+          ctx.font = '400 19px Poppins'
             const fallbackX = activeTab === 'country' ? 180 : 350
             ctx.fillText('🏳️', fallbackX, userRowY + 70)
           }
@@ -1893,11 +1893,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         
         // Level - only show in trainers view and if level is not '--'
         if (activeTab === 'trainers') {
-          ctx.font = '500 19px Poppins'
-          const userLevel = currentUser.profileId ? (playerLevels[currentUser.profileId] || '--') : '--'
+        ctx.font = '500 19px Poppins'
+        const userLevel = currentUser.profileId ? (playerLevels[currentUser.profileId] || '--') : '--'
           // Only show level if it's not '--'
           if (userLevel !== '--') {
-            ctx.fillText(`lvl ${userLevel}`, 400, userRowY + 70)
+        ctx.fillText(`lvl ${userLevel}`, 400, userRowY + 70)
           }
         }
         
@@ -3857,15 +3857,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           width: '812px',
           height: '68px',
           filter: 'drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25))',
-          borderRadius: '8px',
-          /* Inside auto layout */
-          flex: 'none',
-          order: 0,
-          flexGrow: 0,
-          ...(index === 0 && {
-            border: '4px solid #DC2627'
-          })
-        }}>
+        borderRadius: '8px',
+        /* Inside auto layout */
+        flex: 'none',
+        order: 0,
+        flexGrow: 0,
+        ...((player as any).isCurrentUser && {
+          border: '4px solid #DC2627'
+        })
+      }}>
           {/* Frame 578 - Player Card Content */}
           <div style={{
             /* Frame 578 */
@@ -8256,91 +8256,91 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                    }}>
 
                      <span 
-                      style={{
-                      fontFamily: 'Poppins',
-                      fontWeight: 600,
+                       style={{
+                       fontFamily: 'Poppins',
+                       fontWeight: 600,
                       fontSize: '14px',
                       lineHeight: '21px',
-                        color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
-                        cursor: 'pointer',
-                      }}
-                      onClick={(e) => handlePreviewClick(e, player.profileId)}
-                      title={trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)"}
-                    >
-                      {player.name}
-                    </span>
-
-                    
-
-                    {/* Country and Team - Hidden entirely for team aggregation */}
-                    {!(player.isAggregated && player.aggregateType === 'team') && (
-                    <div style={{
-
-                      display: 'flex',
-
-                      alignItems: 'center',
-
-                      gap: '6px',
-
-                    }}>
-
-                      {player.countryName && (
-                      <CountryFlag 
-                        countryName={player.countryName}
-                        width={16}
-                        height={12}
-                      />
-                      )}
+                         color: trialStatus.canClickIntoProfiles ? '#000000' : '#666666',
+                         cursor: 'pointer',
+                       }}
+                       onClick={(e) => handlePreviewClick(e, player.profileId)}
+                       title={trialStatus.canClickIntoProfiles ? "View profile preview" : "View profile preview (upgrade for full access)"}
+                     >
+                       {player.name}
+                     </span>
 
                      
 
-                     {/* Team - Hidden for aggregated countries */}
-
-                     {!(player.isAggregated && player.aggregateType === 'country') && (
+                    {/* Country and Team - Hidden entirely for team aggregation */}
+                    {!(player.isAggregated && player.aggregateType === 'team') && (
                      <div style={{
 
                        display: 'flex',
 
                        alignItems: 'center',
 
-                       gap: '4px',
+                       gap: '6px',
 
                      }}>
 
+                      {player.countryName && (
+                       <CountryFlag 
+                         countryName={player.countryName}
+                         width={16}
+                         height={12}
+                       />
+                       )}
+
+                       
+
+                     {/* Team - Hidden for aggregated countries */}
+
+                     {!(player.isAggregated && player.aggregateType === 'country') && (
                        <div style={{
 
-                         width: '8px',
+                         display: 'flex',
 
-                         height: '8px',
+                         alignItems: 'center',
 
-                         background: teamColorHex,
-
-                         borderRadius: '50%',
-
-                       }} />
-
-                       <span style={{
-
-                         fontFamily: 'Poppins',
-
-                         fontWeight: 400,
-
-                         fontSize: '10px',
-
-                         lineHeight: '15px',
-
-                         color: teamColorHex,
+                         gap: '4px',
 
                        }}>
 
-                         {player.team}
+                         <div style={{
 
-                       </span>
+                           width: '8px',
 
-                     </div>
+                           height: '8px',
+
+                           background: teamColorHex,
+
+                           borderRadius: '50%',
+
+                         }} />
+
+                         <span style={{
+
+                           fontFamily: 'Poppins',
+
+                           fontWeight: 400,
+
+                           fontSize: '10px',
+
+                           lineHeight: '15px',
+
+                           color: teamColorHex,
+
+                         }}>
+
+                           {player.team}
+
+                         </span>
+
+                       </div>
                      )}
 
-                    </div>
+                     </div>
                     )}
 
                    </div>
