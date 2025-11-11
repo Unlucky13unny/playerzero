@@ -67,6 +67,7 @@ export const QuickProfileView = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAllSocial, setShowAllSocial] = useState(false);
+  const [showCopyToast, setShowCopyToast] = useState(false);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
 
@@ -123,11 +124,37 @@ export const QuickProfileView = ({
     return xp.toString();
   };
 
+  const copyDiscordHandle = (handle: string) => {
+    const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`;
+    navigator.clipboard.writeText(formattedHandle);
+    setShowCopyToast(true);
+    setTimeout(() => {
+      setShowCopyToast(false);
+    }, 2000);
+  };
+
   // Utility function to generate social media links
   const getSocialLink = (platform: string, value: string): string | undefined => {
     if (!value) return undefined;
     
-    // If value is already a full URL, return it as is
+    // Special handling for Bluesky URLs - ensure .bsky.social is appended
+    if (platform === 'bluesky') {
+      // If it's already a full bsky.app URL
+      if (value.startsWith('https://bsky.app/profile/') || value.startsWith('http://bsky.app/profile/')) {
+        const urlParts = value.split('/profile/');
+        if (urlParts.length === 2) {
+          const username = urlParts[1].replace('@', '');
+          const handle = username.includes('.') ? username : `${username}.bsky.social`;
+          return `https://bsky.app/profile/${handle}`;
+        }
+      }
+      // If it's just a username
+      const username = value.replace('@', '');
+      const handle = username.includes('.') ? username : `${username}.bsky.social`;
+      return `https://bsky.app/profile/${handle}`;
+    }
+    
+    // If value is already a full URL, return it as is (for other platforms)
     if (value.startsWith('http://') || value.startsWith('https://')) {
       return value;
     }
@@ -135,12 +162,11 @@ export const QuickProfileView = ({
     switch (platform) {
       case 'x':
         return `https://x.com/${value.replace('@', '')}`;
-      case 'bluesky':
-        return `https://bsky.app/profile/${value.replace('@', '')}`;
       case 'facebook':
         return `https://www.facebook.com/${value.replace('@', '')}`;
       case 'discord':
-        return value; // Discord doesn't have URLs
+        // Discord handles should have @ prefix
+        return value.startsWith('@') ? value : `@${value}`;
       case 'instagram':
         return `https://www.instagram.com/${value.replace('@', '')}`;
       case 'youtube':
@@ -181,8 +207,37 @@ export const QuickProfileView = ({
       borderRadius: '12px',
       boxShadow: '0 4px 6px rgba(0, 0, 0, 0.1)',
       maxWidth: '400px',
-      margin: '0 auto'
+      margin: '0 auto',
+      position: 'relative'
     }}>
+      {/* Copy Toast Notification */}
+      {showCopyToast && (
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#22c55e',
+          color: '#FFFFFF',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontFamily: 'Poppins',
+          fontSize: '14px',
+          fontWeight: 500,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          animation: 'slideDown 0.3s ease-out',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          whiteSpace: 'nowrap'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.667 5L7.50033 14.1667L3.33366 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Discord handle copied!
+        </div>
+      )}
       {loading ? (
         <div className="quick-profile-loading" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', color: 'black' }}>
           <p style={{ fontSize: '18px', color: '#DC2627', fontWeight: 600, fontFamily: 'Poppins, sans-serif', textAlign: 'center', padding: '0 20px' }}>Loading your Profile...</p>
@@ -215,22 +270,41 @@ export const QuickProfileView = ({
                   alignItems: 'center',
                 }}>
                     {/* Show first 4 connected platforms */}
-                  {visiblePlatforms.map((platform) => (
-                    <a
-                      key={platform.id}
-                      href={getSocialLink(platform.id, profileData[platform.id as keyof QuickProfileData] as string)}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="hover:opacity-80 transition-opacity"
-                      title={`Visit on ${platform.name}`}
-                    >
-                      <img 
-                        src={`/images/${platform.id}.svg`} 
-                        alt={platform.name} 
-                        style={{ width: '26.59px', height: '26.59px' }} 
-                      />
-                    </a>
-                  ))}
+                  {visiblePlatforms.map((platform) => {
+                    const value = profileData[platform.id as keyof QuickProfileData] as string;
+                    const isDiscord = platform.id === 'discord';
+                    
+                    return isDiscord ? (
+                      <div
+                        key={platform.id}
+                        onClick={() => copyDiscordHandle(value)}
+                        className="hover:opacity-80 transition-opacity"
+                        style={{ cursor: 'pointer' }}
+                        title="Click to copy Discord handle"
+                      >
+                        <img 
+                          src={`/images/${platform.id}.svg`} 
+                          alt={platform.name} 
+                          style={{ width: '26.59px', height: '26.59px' }} 
+                        />
+                      </div>
+                    ) : (
+                      <a
+                        key={platform.id}
+                        href={getSocialLink(platform.id, value)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="hover:opacity-80 transition-opacity"
+                        title={`Visit on ${platform.name}`}
+                      >
+                        <img 
+                          src={`/images/${platform.id}.svg`} 
+                          alt={platform.name} 
+                          style={{ width: '26.59px', height: '26.59px' }} 
+                        />
+                      </a>
+                    );
+                  })}
                   
                   {/* +N Button if there are more than 4 connected platforms */}
                   {hasMorePlatforms && (

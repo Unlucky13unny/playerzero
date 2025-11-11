@@ -24,7 +24,24 @@ interface ProfileInfoProps {
 const getSocialLink = (platform: string, value: string): string | undefined => {
   if (!value) return undefined
   
-  // If value is already a full URL, return it as is
+  // Special handling for Bluesky URLs - ensure .bsky.social is appended
+  if (platform === 'bluesky') {
+    // If it's already a full bsky.app URL
+    if (value.startsWith('https://bsky.app/profile/') || value.startsWith('http://bsky.app/profile/')) {
+      const urlParts = value.split('/profile/')
+      if (urlParts.length === 2) {
+        const username = urlParts[1].replace('@', '')
+        const handle = username.includes('.') ? username : `${username}.bsky.social`
+        return `https://bsky.app/profile/${handle}`
+      }
+    }
+    // If it's just a username
+    const username = value.replace('@', '')
+    const handle = username.includes('.') ? username : `${username}.bsky.social`
+    return `https://bsky.app/profile/${handle}`
+  }
+  
+  // If value is already a full URL, return it as is (for other platforms)
   if (value.startsWith('http://') || value.startsWith('https://')) {
     return value
   }
@@ -32,12 +49,11 @@ const getSocialLink = (platform: string, value: string): string | undefined => {
   switch (platform) {
     case 'x':
       return `https://x.com/${value.replace('@', '')}`
-    case 'bluesky':
-      return `https://bsky.app/profile/${value.replace('@', '')}`
     case 'facebook':
       return `https://www.facebook.com/${value.replace('@', '')}`
     case 'discord':
-      return value // Discord doesn't have URLs
+      // Discord handles should have @ prefix
+      return value.startsWith('@') ? value : `@${value}`
     case 'instagram':
       return `https://www.instagram.com/${value.replace('@', '')}`
     case 'youtube':
@@ -69,6 +85,7 @@ const getSocialPlatforms = () => [
 export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
   const isMobile = useMobile()
   const [showAllSocial, setShowAllSocial] = useState(false)
+  const [showCopyToast, setShowCopyToast] = useState(false)
 
   // Get connected social platforms
   const getConnectedPlatforms = () => {
@@ -109,6 +126,15 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       return team?.color || '#666666'
     }
     return '#666666'
+  }
+
+  const copyDiscordHandle = (handle: string) => {
+    const formattedHandle = handle.startsWith('@') ? handle : `@${handle}`
+    navigator.clipboard.writeText(formattedHandle)
+    setShowCopyToast(true)
+    setTimeout(() => {
+      setShowCopyToast(false)
+    }, 2000)
   }
 
   const copyTrainerCode = () => {
@@ -181,8 +207,37 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
       order: 0,
       flexGrow: 0,
       background: '#FFFFFF',
-      borderRadius: '8px'
+      borderRadius: '8px',
+      position: 'relative'
     }}>
+      {/* Copy Toast Notification */}
+      {showCopyToast && (
+        <div style={{
+          position: 'absolute',
+          top: '16px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          backgroundColor: '#22c55e',
+          color: '#FFFFFF',
+          padding: '12px 24px',
+          borderRadius: '8px',
+          fontFamily: 'Poppins',
+          fontSize: '14px',
+          fontWeight: 500,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+          zIndex: 1000,
+          animation: 'slideDown 0.3s ease-out',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          whiteSpace: 'nowrap'
+        }}>
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.667 5L7.50033 14.1667L3.33366 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          Discord handle copied!
+        </div>
+      )}
       {/* Frame 25 - Main Profile Container */}
       <div style={{
         /* Frame 25 */
@@ -359,7 +414,9 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
               {/* Show first 4 connected platforms */}
               {visiblePlatforms.map((platform, index) => {
                 const isPrivate = profile?.social_links_private
-                const href = isPrivate ? undefined : getSocialLink(platform.id, profile?.[platform.id as keyof typeof profile] as string)
+                const value = profile?.[platform.id as keyof typeof profile] as string
+                const href = isPrivate ? undefined : getSocialLink(platform.id, value)
+                const isDiscord = platform.id === 'discord'
                 
                 return (
                   <div
@@ -375,7 +432,7 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
                       filter: isPrivate ? 'grayscale(100%)' : 'none',
                       cursor: isPrivate ? 'default' : 'pointer',
                     }}
-                    title={isPrivate ? 'Private' : `Visit on ${platform.name}`}
+                    title={isPrivate ? 'Private' : isDiscord ? 'Click to copy Discord handle' : `Visit on ${platform.name}`}
                   >
                     {isPrivate ? (
                       <img 
@@ -383,6 +440,18 @@ export function ProfileInfo({ viewMode, profile }: ProfileInfoProps) {
                         alt={platform.name} 
                         style={{ width: '26.59px', height: '26.59px' }} 
                       />
+                    ) : isDiscord ? (
+                      <div 
+                        onClick={() => copyDiscordHandle(value)}
+                        className="hover:opacity-80 transition-opacity"
+                        style={{ cursor: 'pointer' }}
+                      >
+                        <img 
+                          src={`/images/${platform.id}.svg`} 
+                          alt={platform.name} 
+                          style={{ width: '26.59px', height: '26.59px' }} 
+                        />
+                      </div>
                     ) : (
                       <a 
                         href={href} 

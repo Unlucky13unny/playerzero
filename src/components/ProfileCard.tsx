@@ -5,23 +5,46 @@ import { CountryFlag } from "./common/CountryFlag";
 const getSocialLink = (platform: string, value: string): string | undefined => {
   if (!value) return undefined
   
+  // Special handling for Bluesky URLs - ensure .bsky.social is appended
+  if (platform === 'bluesky') {
+    // If it's already a full bsky.app URL
+    if (value.startsWith('https://bsky.app/profile/') || value.startsWith('http://bsky.app/profile/')) {
+      const urlParts = value.split('/profile/')
+      if (urlParts.length === 2) {
+        const username = urlParts[1].replace('@', '')
+        const handle = username.includes('.') ? username : `${username}.bsky.social`
+        return `https://bsky.app/profile/${handle}`
+      }
+    }
+    // If it's just a username
+    const username = value.replace('@', '')
+    const handle = username.includes('.') ? username : `${username}.bsky.social`
+    return `https://bsky.app/profile/${handle}`
+  }
+  
+  // If value is already a full URL, return it as is (for other platforms)
+  if (value.startsWith('http://') || value.startsWith('https://')) {
+    return value
+  }
+  
   switch (platform) {
-    case 'instagram':
-      return value.startsWith('@') ? `https://instagram.com/${value.slice(1)}` : `https://instagram.com/${value}`
+    case 'x':
+      return `https://x.com/${value.replace('@', '')}`
     case 'facebook':
-      return value.includes('facebook.com') ? value : `https://facebook.com/${value}`
-    case 'snapchat':
-      return value.startsWith('@') ? `https://snapchat.com/add/${value.slice(1)}` : `https://snapchat.com/add/${value}`
-    case 'twitter':
-      return value.startsWith('@') ? `https://twitter.com/${value.slice(1)}` : `https://twitter.com/${value}`
-    case 'tiktok':
-      return value.startsWith('@') ? `https://tiktok.com/${value}` : `https://tiktok.com/@${value}`
+      return `https://www.facebook.com/${value.replace('@', '')}`
+    case 'discord':
+      // Discord handles should have @ prefix
+      return value.startsWith('@') ? value : `@${value}`
+    case 'instagram':
+      return `https://www.instagram.com/${value.replace('@', '')}`
     case 'youtube':
-      return value.includes('youtube.com') ? value : value.startsWith('@') ? `https://youtube.com/${value}` : `https://youtube.com/c/${value}`
+      return `https://www.youtube.com/@${value.replace('@', '')}`
+    case 'tiktok':
+      return `https://www.tiktok.com/@${value.replace('@', '')}`
     case 'twitch':
-      return `https://twitch.tv/${value}`
+      return `https://www.twitch.tv/${value.replace('@', '')}`
     case 'reddit':
-      return value.startsWith('u/') ? `https://reddit.com/${value}` : `https://reddit.com/u/${value}`
+      return `https://www.reddit.com/user/${value.replace('@', '')}`
     default:
       return value
   }

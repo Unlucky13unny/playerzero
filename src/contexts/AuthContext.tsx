@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import type { User, Session } from '@supabase/supabase-js'
-import { supabase, supabaseAdmin } from '../supabaseClient'
+import { supabase } from '../supabaseClient'
 
 type UserMetadata = {
   role?: 'free' | 'paid'
@@ -65,25 +65,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     // Get the current URL's origin (hostname including protocol)
     const currentOrigin = window.location.origin
 
-    // If username is provided, check if it's available first
-    if (username) {
-      const { data: existingUser } = await supabaseAdmin
-        .from('profiles')
-        .select('username')
-        .eq('username', username)
-        .maybeSingle()
-
-      if (existingUser) {
-        return { error: { message: 'Username already taken', code: '23505' } }
-      }
+    // Store username in metadata for later use during profile setup
+    const signupMetadata = {
+      ...metadata,
+      ...(username && { preferred_username: username })
     }
     
-    // Only proceed with signup if username is available or not provided
+    // Signup - profile will be created by database trigger when email is confirmed
     const { data: signUpData, error: signUpError } = await supabase.auth.signUp({ 
       email, 
       password,
       options: {
-        data: metadata,
+        data: signupMetadata,
         emailRedirectTo: `${currentOrigin}/signup-success`
       }
     })
@@ -103,53 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       return { error: { message: 'Email already registered', code: 'email_exists' } }
     }
 
-    // If username is provided and signup succeeded, create the profile
-    if (username && signUpData.user) {
-      // Check if profile already exists
-      const { data: existingProfile } = await supabaseAdmin
-        .from('profiles')
-        .select('user_id')
-        .eq('user_id', signUpData.user.id)
-        .maybeSingle()
-
-      if (existingProfile) {
-        await supabase.auth.signOut()
-        return { error: { message: 'Email already registered', code: 'email_exists' } }
-      }
-
-      const { error: profileError } = await supabaseAdmin
-        .from('profiles')
-        .insert([
-          { 
-            user_id: signUpData.user.id,
-            username: username,
-            trainer_name: 'PENDING',
-            trainer_code: 'PENDING',
-            trainer_level: 1,
-            is_profile_setup: false
-          }
-        ])
-
-      if (profileError) {
-        console.error('Profile creation error:', profileError)
-        
-        // Handle specific database errors with user-friendly messages
-        if (profileError.code === '23503') {
-          // Foreign key constraint violation - user doesn't exist
-          await supabase.auth.signOut()
-          return { error: { message: 'Email already registered', code: 'email_exists' } }
-        } else if (profileError.code === '23505') {
-          // Unique constraint violation
-          await supabase.auth.signOut()
-          return { error: { message: 'Username already taken', code: '23505' } }
-        }
-        
-        // If profile creation fails, sign out the user
-        await supabase.auth.signOut()
-        return { error: { message: 'Failed to create profile. Please try again.', code: 'profile_error' } }
-      }
-    }
-
+    // Signup successful - profile will be created automatically by trigger when email is confirmed
     return { error: null }
   }
 
