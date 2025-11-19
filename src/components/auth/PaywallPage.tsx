@@ -22,17 +22,18 @@ export const PaywallPage = () => {
   const handleUpgrade = async () => {
     setLoading(true)
     setError(null)
-    
+
     try {
       // Get current user
       const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !currentUser) {
         setError('Please log in to upgrade your account.')
+        setLoading(false)
         return
       }
 
-      // Create checkout session
+      // Create checkout session using Edge Function
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
         method: 'POST',
         headers: {
@@ -52,7 +53,7 @@ export const PaywallPage = () => {
       }
 
       const data = await res.json()
-      
+
       if (!data.sessionId) {
         throw new Error('No session ID returned from checkout creation')
       }
@@ -63,14 +64,14 @@ export const PaywallPage = () => {
         throw new Error('Stripe failed to load')
       }
 
-      const { error: stripeError } = await stripe.redirectToCheckout({ 
-        sessionId: data.sessionId 
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId
       })
 
       if (stripeError) {
         throw new Error(stripeError.message || 'Failed to redirect to checkout')
       }
-      
+
     } catch (err: any) {
       console.error('Upgrade error:', err)
       setError(err.message || 'An unexpected error occurred')

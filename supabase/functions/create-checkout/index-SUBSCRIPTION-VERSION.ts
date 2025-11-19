@@ -25,6 +25,8 @@ serve(async (req) => {
   try {
     const { priceId, email, userId } = await req.json();
 
+    console.log('Creating SUBSCRIPTION checkout session for:', { email, userId, priceId });
+
     // Validate required fields
     if (!priceId || !email || !userId) {
       return new Response(
@@ -36,10 +38,10 @@ serve(async (req) => {
       );
     }
 
-    // Create checkout session for recurring subscription
+    // Create checkout session for SUBSCRIPTION
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
-      mode: "subscription",
+      mode: "subscription", // ✅ SUBSCRIPTION MODE - Creates recurring subscription
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
       success_url: `${req.headers.get('origin') || 'http://localhost:5173'}/dashboard?upgrade=success`,
@@ -47,27 +49,30 @@ serve(async (req) => {
       metadata: {
         userId: userId,
       },
+      // Enable promo codes
       allow_promotion_codes: true,
+      
+      // Optional: Collect billing address
       billing_address_collection: 'auto',
+      
+      // Optional: Set up for future payments
+      payment_method_collection: 'always',
     });
 
+    console.log('✅ Subscription checkout session created:', session.id);
+
     return new Response(
-      JSON.stringify({ 
-        sessionId: session.id, 
-        url: session.url,
-        success: true
-      }),
+      JSON.stringify({ sessionId: session.id, url: session.url }),
       {
-        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       }
     );
   } catch (error) {
-    console.error('Error creating checkout session:', error.message);
+    console.error('❌ Error creating checkout session:', error);
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Internal server error',
-        type: error.type || 'unknown_error'
+        hint: 'Make sure you are using a RECURRING price ID from Stripe Dashboard'
       }),
       {
         status: 500,
@@ -76,3 +81,4 @@ serve(async (req) => {
     );
   }
 });
+
