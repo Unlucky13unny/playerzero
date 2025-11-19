@@ -51,6 +51,7 @@ export const useTrialStatus = (): PrivateModeStatus => {
   const checkPaidStatus = useCallback(async () => {
     try {
       setLoading(true)
+      // This checks both is_paid (new subscription model) and is_paid_user (legacy)
       const { isPaid } = await profileService.isPaidUser()
       setIsPaidUser(isPaid)
       

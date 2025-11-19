@@ -16,17 +16,18 @@ export const UpgradePage = () => {
 
   const handleUpgrade = async () => {
     setLoading(true)
-    
+
     try {
       // Get current user
       const { data: { user: currentUser }, error: userError } = await supabase.auth.getUser()
-      
+
       if (userError || !currentUser) {
         console.error('Please log in to upgrade your account.')
+        setLoading(false)
         return
       }
 
-      // Create checkout session
+      // Create checkout session using Edge Function
       const res = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout`, {
         method: 'POST',
         headers: {
@@ -34,7 +35,7 @@ export const UpgradePage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: import.meta.env.VITE_STRIPE_PRICE_ID, // from Stripe dashboard
+          priceId: import.meta.env.VITE_STRIPE_PRICE_ID,
           email: currentUser.email,
           userId: currentUser.id
         })
@@ -46,7 +47,7 @@ export const UpgradePage = () => {
       }
 
       const data = await res.json()
-      
+
       if (!data.sessionId) {
         throw new Error('No session ID returned from checkout creation')
       }
@@ -57,14 +58,14 @@ export const UpgradePage = () => {
         throw new Error('Stripe failed to load')
       }
 
-      const { error: stripeError } = await stripe.redirectToCheckout({ 
-        sessionId: data.sessionId 
+      const { error: stripeError } = await stripe.redirectToCheckout({
+        sessionId: data.sessionId
       })
 
       if (stripeError) {
         throw new Error(stripeError.message || 'Failed to redirect to checkout')
       }
-      
+
     } catch (err: any) {
       console.error('Upgrade error:', err)
     } finally {

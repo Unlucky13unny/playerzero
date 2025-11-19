@@ -320,7 +320,7 @@ export const profileService = {
 
       const { data, error } = await supabase
         .from('profiles')
-        .select('is_paid_user, subscription_expires_at')
+        .select('is_paid, is_paid_user, subscription_status, subscription_renewal_date')
         .eq('user_id', user.id)
         .single()
 
@@ -328,9 +328,9 @@ export const profileService = {
         return { isPaid: false, error }
       }
 
-      // Check if subscription is active
-      const isPaid = data.is_paid_user && 
-        (!data.subscription_expires_at || new Date(data.subscription_expires_at) > new Date())
+      // Primary check: use is_paid field (new subscription model)
+      // Fallback to is_paid_user for backward compatibility
+      const isPaid = data.is_paid ?? data.is_paid_user ?? false
 
       return { isPaid, error: null }
     } catch (error) {
