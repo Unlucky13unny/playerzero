@@ -7640,7 +7640,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                           lineHeight: '15px',
 
-                          color: getTeamColorHex(player.teamColor || player.team || ''),
+                          color: '#666666',
 
                         }}>
 
@@ -7850,7 +7850,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
                             fontWeight: 400,
                             fontSize: '10px',
                             lineHeight: '15px',
-                            color: '#DC2627',
+                            color: '#666666',
                           }}>
                             {player.team}
                           </span>
@@ -8329,7 +8329,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
                            lineHeight: '15px',
 
-                           color: teamColorHex,
+                           color: '#666666',
 
                          }}>
 
