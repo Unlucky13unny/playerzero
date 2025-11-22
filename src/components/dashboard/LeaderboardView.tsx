@@ -1954,7 +1954,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
 
     if (!distance) return '0.0'
 
-    return distance.toFixed(1)
+    return distance.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })
 
   }
 
