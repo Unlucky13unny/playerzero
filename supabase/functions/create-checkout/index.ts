@@ -42,7 +42,7 @@ serve(async (req) => {
       mode: "subscription",
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${req.headers.get('origin') || 'http://localhost:5173'}/dashboard?upgrade=success`,
+      success_url: `${req.headers.get('origin') || 'http://localhost:5173'}/UserProfile?upgrade=success`,
       cancel_url: `${req.headers.get('origin') || 'http://localhost:5173'}/upgrade?upgrade=cancelled`,
       metadata: {
         userId: userId,

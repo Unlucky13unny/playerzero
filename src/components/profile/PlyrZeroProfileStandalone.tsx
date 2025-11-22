@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { profileService } from '../../services/profileService';
 import { useTrialStatus } from '../../hooks/useTrialStatus';
+import { useMobile } from '../../hooks/useMobile';
 import { CountryFlag } from '../common/CountryFlag';
 
 // Import team colors from the shared constants
@@ -17,6 +18,31 @@ const TEAM_COLORS = [
   { value: 'purple', label: 'Purple', color: '#B10DC9', team: 'Purple Team' },
   { value: 'pink', label: 'Pink', color: '#F012BE', team: 'Pink Team' }
 ];
+
+// Country name abbreviations for mobile display
+const COUNTRY_ABBREVIATIONS: Record<string, string> = {
+  'United Arab Emirates': 'UAE',
+  'United States': 'USA',
+  'United Kingdom': 'UK',
+  'United States of America': 'USA',
+  'Saudi Arabia': 'Saudi',
+  'South Africa': 'S. Africa',
+  'New Zealand': 'NZ',
+  'Netherlands': 'NL',
+  'Switzerland': 'Swiss',
+  'Philippines': 'PH',
+  'South Korea': 'S. Korea',
+  'North Korea': 'N. Korea',
+  'Czech Republic': 'Czechia',
+  'Dominican Republic': 'Dom. Rep.',
+  'Bosnia and Herzegovina': 'Bosnia',
+  'Papua New Guinea': 'PNG',
+  'Trinidad and Tobago': 'Trinidad',
+  'Saint Kitts and Nevis': 'St. Kitts',
+  'Saint Vincent and the Grenadines': 'St. Vincent',
+  'Antigua and Barbuda': 'Antigua',
+  'Sao Tome and Principe': 'Sao Tome',
+};
 
 interface PlyrZeroProfileStandaloneProps {
   profileId: string;
@@ -75,6 +101,7 @@ export function PlyrZeroProfileStandalone({
   const [showCopyToast, setShowCopyToast] = useState(false);
   const navigate = useNavigate();
   const trialStatus = useTrialStatus();
+  const isMobile = useMobile();
 
   useEffect(() => {
     if (isOpen && profileId) {
@@ -113,11 +140,20 @@ export function PlyrZeroProfileStandalone({
     return teamInfo?.color || '#666666';
   };
 
-  // Helper function to get team display name
+  // Helper function to get team display name (without "Team" suffix for mobile)
   const getTeamName = (team: string | undefined | null): string => {
-    if (!team) return 'Unknown Team';
+    if (!team) return 'Unknown';
     const teamInfo = TEAM_COLORS.find(t => t.value.toLowerCase() === team.toLowerCase());
-    return teamInfo?.team || 'Unknown Team';
+    if (!teamInfo) return 'Unknown';
+    // Remove " Team" suffix to save space in mobile view
+    return teamInfo.team.replace(' Team', '');
+  };
+
+  // Helper function to get abbreviated country name for mobile display
+  const getCountryDisplayName = (country: string | undefined | null): string => {
+    if (!country) return '';
+    // Return abbreviation if available, otherwise return original name
+    return COUNTRY_ABBREVIATIONS[country] || country;
   };
 
   // Format large numbers with full values (e.g., 1000 instead of 1K)
@@ -212,7 +248,8 @@ export function PlyrZeroProfileStandalone({
 
   const styles = {
     container: {
-      maxWidth: "430px",
+      maxWidth: isMobile ? "480px" : "600px",
+      width: isMobile ? "90vw" : "420px",
       margin: "0",
       backgroundColor: "white",
       minHeight: "auto",
@@ -284,33 +321,45 @@ export function PlyrZeroProfileStandalone({
     },
     userInfoGrid: {
       display: "flex",
-      alignItems: "center",
+      alignItems: "flex-start",
       justifyContent: "space-between",
-      fontSize: "14px",
-      gap : "40px",
+      fontSize: "12px",
+      gap : "16px",
       marginTop : "20px",
     },
     userInfoItem: {
       display: "flex",
       flexDirection: "column" as const,
+      alignItems: "center",
+      flex: "1",
+      minWidth: "0",
     },
     label: {
       color: "#6b7280",
-      marginBottom: "2px",
+      marginBottom: "4px",
+      textAlign: "center" as const,
+      whiteSpace: "nowrap" as const,
+      fontSize: "11px",
     },
     value: {
       fontWeight: "500",
       color: "black",
+      textAlign: "center" as const,
+      fontSize: "13px",
     },
     teamValue: {
       fontWeight: "500",
+      textAlign: "center" as const,
+      fontSize: "12px",
     },
     countryValue: {
       display: "flex",
+      flexDirection: "column" as const,
       alignItems: "center",
       gap: "4px",
       fontWeight: "500",
       color: "black",
+      fontSize: "12px",
     },
     statsContainer: {
       padding: "0 16px",
@@ -546,22 +595,27 @@ export function PlyrZeroProfileStandalone({
           <div style={styles.userInfo}>
             <div style={styles.userInfoGrid}>
               <div style={styles.userInfoItem}>
-                <span style={styles.label}>Level:</span>
+                <span style={styles.label}>Level</span>
                 <div style={styles.value}>{profileData.trainer_level}</div>
               </div>
               <div style={styles.userInfoItem}>
-                <span style={styles.label}>Team:</span>
+                <span style={styles.label}>Team</span>
                 <div style={{
                   display: 'flex',
+                  flexDirection: 'row',
                   alignItems: 'center',
-                  gap: '6px'
+                  gap: '6px',
+                  justifyContent: 'center'
                 }}>
                   <div style={{
                     width: '12px',
                     height: '12px',
+                    minWidth: '12px',
+                    minHeight: '12px',
                     borderRadius: '50%',
                     backgroundColor: getTeamColor(profileData.team_color),
-                    border: '1px solid rgba(0, 0, 0, 0.1)'
+                    border: '1px solid rgba(0, 0, 0, 0.1)',
+                    flexShrink: 0
                   }}></div>
                   <span style={{
                     ...styles.teamValue,
@@ -572,10 +626,22 @@ export function PlyrZeroProfileStandalone({
                 </div>
               </div>
               <div style={styles.userInfoItem}>
-                <span style={styles.label}>Country:</span>
-                <div style={styles.countryValue}>
+                <span style={styles.label}>Country</span>
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  gap: '6px',
+                  justifyContent: 'center'
+                }}>
                   {profileData.country && <CountryFlag countryName={profileData.country} width={20} height={15} />}
-                  <span>{profileData.country}</span>
+                  <span style={{ 
+                    textAlign: 'center',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    color: 'black',
+                    whiteSpace: 'nowrap'
+                  }}>{getCountryDisplayName(profileData.country)}</span>
                 </div>
               </div>
             </div>
