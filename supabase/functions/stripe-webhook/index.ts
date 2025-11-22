@@ -2,9 +2,25 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.7";
 
-// Stripe configuration
-const stripeSecretKey = 'sk_test_51RElAXBD1MRm32wTTlUA852CUGX4TIWY1nqmY4D8rIWW5TnlmiXBY0zM8u5bck2ofWxVmTqKUk8uOSjLLmJdqgfn00c3PEtWd0';
-const webhookSecret = 'whsec_BmrSe6dpdrosKLmtEK3oRExV1G7zorxv';
+// Get environment variables
+const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+const webhookSecret = Deno.env.get('STRIPE_WEBHOOK_SECRET');
+const supabaseUrl = Deno.env.get('SUPABASE_URL');
+const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+
+// Validate required environment variables
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+}
+if (!webhookSecret) {
+  throw new Error('STRIPE_WEBHOOK_SECRET environment variable is not set');
+}
+if (!supabaseUrl) {
+  throw new Error('SUPABASE_URL environment variable is not set');
+}
+if (!supabaseServiceKey) {
+  throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is not set');
+}
 
 const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2024-11-20.acacia",
@@ -12,9 +28,6 @@ const stripe = new Stripe(stripeSecretKey, {
 });
 
 // Initialize Supabase client
-const supabaseUrl = 'https://smoqfhecjfslcqmebjrw.supabase.co';
-const supabaseServiceKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtb3FmaGVjamZzbGNxbWVianJ3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NDk0NjI5MywiZXhwIjoyMDYwNTIyMjkzfQ.zRyEp0f6q6SHSrDBmr9IjG1VXcftSpbjen5dqwM9UW4';
-
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
