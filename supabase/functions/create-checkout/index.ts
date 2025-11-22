@@ -1,8 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from "https://esm.sh/stripe@14.21.0?target=deno";
 
-// Stripe secret key
-const stripeSecretKey = 'sk_test_51RElAXBD1MRm32wTTlUA852CUGX4TIWY1nqmY4D8rIWW5TnlmiXBY0zM8u5bck2ofWxVmTqKUk8uOSjLLmJdqgfn00c3PEtWd0';
+// Get Stripe secret key from environment variable
+const stripeSecretKey = Deno.env.get('STRIPE_SECRET_KEY');
+
+if (!stripeSecretKey) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is not set');
+}
 
 const stripe = new Stripe(stripeSecretKey, {
   apiVersion: "2024-11-20.acacia",
@@ -42,8 +46,8 @@ serve(async (req) => {
       mode: "subscription",
       customer_email: email,
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${req.headers.get('origin') || 'http://localhost:5173'}/UserProfile?upgrade=success`,
-      cancel_url: `${req.headers.get('origin') || 'http://localhost:5173'}/upgrade?upgrade=cancelled`,
+      success_url: `${req.headers.get('origin') || 'https://plyrzero.com'}/UserProfile?upgrade=success`,
+      cancel_url: `${req.headers.get('origin') || 'https://plyrzero.com'}/upgrade?upgrade=cancelled`,
       metadata: {
         userId: userId,
       },

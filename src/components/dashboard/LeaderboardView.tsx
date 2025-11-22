@@ -1629,11 +1629,6 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
         ctx.font = '600 13px Poppins'
         ctx.textAlign = 'center'
         ctx.fillText(statValue, medalX + medalWidth/2, cardY + config.height - 25)
-        
-        // Stat label (45x17)
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.72)'
-        ctx.font = '400 11px Poppins'
-        ctx.fillText(getStatLabel(), medalX + medalWidth/2, cardY + config.height - 10)
       }
       
       // Positions 4-10 list - using exact CSS specifications
