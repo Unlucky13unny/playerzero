@@ -277,7 +277,7 @@ export const ReportedScreenshots = () => {
               <div className="screenshot-info">
                 <h4>{screenshot.trainer_name}</h4>
                 <p className="upload-date">
-                  Entry Date: {new Date(screenshot.entry_date).toLocaleDateString()}
+                  Entry Date: {new Date(screenshot.entry_date + 'T12:00:00Z').toLocaleDateString()}
                 </p>
                 <p className="upload-date">
                   Last Report: {new Date(screenshot.last_report_date).toLocaleDateString()}

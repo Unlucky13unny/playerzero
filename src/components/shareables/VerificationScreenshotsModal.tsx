@@ -51,7 +51,8 @@ export function VerificationScreenshotsModal({ isOpen, onClose, userId }: Verifi
   }
 
   const formatUploadDate = (dateString: string) => {
-    const date = new Date(dateString)
+    // Add T12:00:00Z to prevent timezone shifting for date-only strings
+    const date = new Date(dateString.includes('T') ? dateString : dateString + 'T12:00:00Z')
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',

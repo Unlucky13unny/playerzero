@@ -95,7 +95,7 @@ export const StatEntries = () => {
   }
 
   const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString()
+    return new Date(dateStr + 'T12:00:00Z').toLocaleDateString()
   }
 
   const formatDateTime = (dateStr: string) => {

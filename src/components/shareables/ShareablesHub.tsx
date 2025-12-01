@@ -199,7 +199,7 @@ export function ShareablesHub() {
                 color: '#2BC49C'
               }}>
                 {lastVerification 
-                  ? `Uploaded ${new Date(lastVerification.entry_date).toLocaleDateString('en-US', { 
+                  ? `Uploaded ${new Date(lastVerification.entry_date + 'T12:00:00Z').toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric', 
                       year: 'numeric' 

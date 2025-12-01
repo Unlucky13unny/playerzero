@@ -7,7 +7,6 @@ import { useTrialStatus } from '../../hooks/useTrialStatus'
 import { SocialIcon, SOCIAL_MEDIA } from '../common/SocialIcons'
 import { CountryFlag } from '../common/CountryFlag'
 import { VerificationScreenshotsModal } from '../shareables/VerificationScreenshotsModal'
-import { Footer } from '../common/Footer'
 
 // Social platform definitions matching ProfileInfo
 const getSocialPlatformsConfig = () => [
@@ -702,7 +701,7 @@ export const PublicProfile = () => {
                         <div className="screenshot-date-badge">
                           <span className="date-icon">📅</span>
                           <span className="date-text">
-                            {new Date(screenshot.entry_date).toLocaleDateString('en-US', {
+                            {new Date(screenshot.entry_date + 'T12:00:00Z').toLocaleDateString('en-US', {
                               month: 'short',
                               day: 'numeric',
                               year: 'numeric'
@@ -879,9 +878,6 @@ export const PublicProfile = () => {
           </div>
         </div>
       )}
-
-      {/* Footer */}
-      <Footer />
     </div>
   )
 } 

@@ -35,12 +35,12 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
     try {
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('is_paid_user')
         .eq('user_id', targetUserId)
         .single()
       
       if (!error && data) {
-        setTargetUserIsPaid(data.role === 'paid')
+        setTargetUserIsPaid(data.is_paid_user === true)
       } else {
         setTargetUserIsPaid(false)
       }
@@ -158,7 +158,7 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
                 color: '#2BC49C'
               }}>
                 {lastVerification 
-                  ? `Uploaded ${new Date(lastVerification.entry_date).toLocaleDateString('en-US', { 
+                  ? `Uploaded ${new Date(lastVerification.entry_date + 'T12:00:00Z').toLocaleDateString('en-US', { 
                       month: 'short', 
                       day: 'numeric', 
                       year: 'numeric' 
