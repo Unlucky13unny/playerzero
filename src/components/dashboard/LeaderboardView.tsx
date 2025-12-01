@@ -2191,31 +2191,31 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     switch (sortBy) {
       case 'xp':
         if (isDeltaPeriod) {
-          return formatNumber(entry.xp_delta || entry.total_xp || 0)
+          return formatNumber(Math.max(0, entry.xp_delta || entry.total_xp || 0))
         }
-        return formatNumber(entry.total_xp || entry.xp_delta || 0)
+        return formatNumber(Math.max(0, entry.total_xp || entry.xp_delta || 0))
 
       case 'catches':
         if (isDeltaPeriod) {
-          return formatNumber(entry.catches_delta || entry.pokemon_caught || 0)
+          return formatNumber(Math.max(0, entry.catches_delta || entry.pokemon_caught || 0))
         }
-        return formatNumber(entry.pokemon_caught || entry.catches_delta || 0)
+        return formatNumber(Math.max(0, entry.pokemon_caught || entry.catches_delta || 0))
 
       case 'distance':
         if (isDeltaPeriod) {
-          return formatDistance(entry.distance_delta || entry.distance_walked || 0)
+          return formatDistance(Math.max(0, entry.distance_delta || entry.distance_walked || 0))
         }
-        return formatDistance(entry.distance_walked || entry.distance_delta || 0)
+        return formatDistance(Math.max(0, entry.distance_walked || entry.distance_delta || 0))
 
       case 'pokestops':
         if (isDeltaPeriod) {
-          return formatNumber(entry.pokestops_delta || entry.pokestops_visited || 0)
+          return formatNumber(Math.max(0, entry.pokestops_delta || entry.pokestops_visited || 0))
         }
-        return formatNumber(entry.pokestops_visited || entry.pokestops_delta || 0)
+        return formatNumber(Math.max(0, entry.pokestops_visited || entry.pokestops_delta || 0))
 
       case 'dex':
         if (isDeltaPeriod) {
-          const dexValue = (entry as any).dex_delta || entry.unique_pokedex_entries || 0
+          const dexValue = Math.max(0, (entry as any).dex_delta || entry.unique_pokedex_entries || 0)
           // Debug logging for dex values
           if (sortBy === 'dex' && dexValue === 0) {
             console.log('🔍 Dex value is 0 for entry:', {
@@ -2227,7 +2227,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           }
           return formatNumber(dexValue)
         }
-        const dexValue = entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+        const dexValue = Math.max(0, entry.unique_pokedex_entries || (entry as any).dex_delta || 0)
         // Debug logging for dex values
         if (sortBy === 'dex' && dexValue === 0) {
           console.log('🔍 Dex value is 0 for entry:', {
@@ -2434,12 +2434,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: null,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return aggregate.totalXp
-          case 'catches': return aggregate.totalCatches
-          case 'distance': return aggregate.totalDistance
-          case 'pokestops': return aggregate.totalStops
-          case 'dex': return aggregate.totalDex
-          default: return aggregate.totalXp
+          case 'xp': return Math.max(0, aggregate.totalXp)
+          case 'catches': return Math.max(0, aggregate.totalCatches)
+          case 'distance': return Math.max(0, aggregate.totalDistance)
+          case 'pokestops': return Math.max(0, aggregate.totalStops)
+          case 'dex': return Math.max(0, aggregate.totalDex)
+          default: return Math.max(0, aggregate.totalXp)
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2501,12 +2501,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: aggregate.team,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return aggregate.totalXp
-          case 'catches': return aggregate.totalCatches
-          case 'distance': return aggregate.totalDistance
-          case 'pokestops': return aggregate.totalStops
-          case 'dex': return aggregate.totalDex
-          default: return aggregate.totalXp
+          case 'xp': return Math.max(0, aggregate.totalXp)
+          case 'catches': return Math.max(0, aggregate.totalCatches)
+          case 'distance': return Math.max(0, aggregate.totalDistance)
+          case 'pokestops': return Math.max(0, aggregate.totalStops)
+          case 'dex': return Math.max(0, aggregate.totalDex)
+          default: return Math.max(0, aggregate.totalXp)
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2614,12 +2614,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: null,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return aggregate.totalXp
-          case 'catches': return aggregate.totalCatches
-          case 'distance': return aggregate.totalDistance
-          case 'pokestops': return aggregate.totalStops
-          case 'dex': return aggregate.totalDex
-          default: return aggregate.totalXp
+          case 'xp': return Math.max(0, aggregate.totalXp)
+          case 'catches': return Math.max(0, aggregate.totalCatches)
+          case 'distance': return Math.max(0, aggregate.totalDistance)
+          case 'pokestops': return Math.max(0, aggregate.totalStops)
+          case 'dex': return Math.max(0, aggregate.totalDex)
+          default: return Math.max(0, aggregate.totalXp)
         }
       })(),
     medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2682,12 +2682,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: aggregate.team,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return aggregate.totalXp
-          case 'catches': return aggregate.totalCatches
-          case 'distance': return aggregate.totalDistance
-          case 'pokestops': return aggregate.totalStops
-          case 'dex': return aggregate.totalDex
-          default: return aggregate.totalXp
+          case 'xp': return Math.max(0, aggregate.totalXp)
+          case 'catches': return Math.max(0, aggregate.totalCatches)
+          case 'distance': return Math.max(0, aggregate.totalDistance)
+          case 'pokestops': return Math.max(0, aggregate.totalStops)
+          case 'dex': return Math.max(0, aggregate.totalDex)
+          default: return Math.max(0, aggregate.totalXp)
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,

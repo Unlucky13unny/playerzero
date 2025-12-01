@@ -293,7 +293,7 @@ export const ScreenshotModeration = () => {
                 
                 {screenshot.type === 'verification' && screenshot.entry_date && (
                   <p className="entry-date">
-                    Entry Date: {new Date(screenshot.entry_date).toLocaleDateString()}
+                    Entry Date: {new Date(screenshot.entry_date + 'T12:00:00Z').toLocaleDateString()}
                   </p>
                 )}
                 

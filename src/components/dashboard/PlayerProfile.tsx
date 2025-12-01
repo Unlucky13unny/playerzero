@@ -1772,8 +1772,8 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         isPaidUser={userType === "upgraded"}
       />
 
-      {/* Footer */}
-      <Footer />
+      {/* Footer - Don't show on public profiles */}
+      {viewMode !== "public" && <Footer />}
 
     </div>
   )
