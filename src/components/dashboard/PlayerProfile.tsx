@@ -13,7 +13,6 @@ import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../../supabaseClient'
-import { dashboardService } from '../../services/dashboardService'
 
 // Social platform definitions matching ProfileInfo
 
@@ -73,93 +72,65 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
   }
 
   const calculateFilteredStats = useCallback(async () => {
-    // Use profile.user_id for external profiles, fallback to current user for own profile
-    const targetUserId = profile?.user_id || user?.id
-    console.log('calculateFilteredStats called with:', { timePeriod, targetUserId, hasProfile: !!profile })
-    if (!targetUserId || !profile) {
-      console.log('Early return: missing user or profile')
+    console.log('calculateFilteredStats called with:', { timePeriod, profileId: profile?.id, hasProfile: !!profile })
+    if (!profile?.id) {
+      console.log('Early return: missing profile')
       return
     }
 
     try {
-      let statsResult
-
-      switch (timePeriod) {
-        case 'weekly':
-          try {
-            statsResult = await dashboardService.calculateCurrentWeekGrindStats(targetUserId)
-            console.log('Week stats loaded:', statsResult)
-            // Weekly stats should show zeros if no data for current week - NO FALLBACK
-          } catch (weeklyError) {
-            console.warn('Week stats calculation failed:', weeklyError)
-            // Return zeros on error for weekly (don't use all-time data)
-            statsResult = {
-              totalXP: 0,
-              pokemonCaught: 0,
-              distanceWalked: 0,
-              pokestopsVisited: 0,
-              uniquePokedexEntries: 0,
-              xpPerDay: 0,
-              catchesPerDay: 0,
-              distancePerDay: 0,
-              stopsPerDay: 0,
-              startDate: '',
-              endDate: ''
-            }
-          }
-          break
-        case 'monthly':
-          try {
-            statsResult = await dashboardService.calculateCurrentMonthGrindStats(targetUserId)
-            console.log('Month stats loaded:', statsResult)
-            // Monthly stats should show zeros if no data for current month - NO FALLBACK
-          } catch (monthlyError) {
-            console.warn('Month stats calculation failed:', monthlyError)
-            // Return zeros on error for monthly (don't use all-time data)
-            statsResult = {
-              totalXP: 0,
-              pokemonCaught: 0,
-              distanceWalked: 0,
-              pokestopsVisited: 0,
-              uniquePokedexEntries: 0,
-              xpPerDay: 0,
-              catchesPerDay: 0,
-              distancePerDay: 0,
-              stopsPerDay: 0,
-              startDate: '',
-              endDate: ''
-            }
-          }
-          break
-        case 'alltime':
-        default:
-          // For all-time, use profile data directly
-          console.log('Setting all-time stats from profile:', {
-            distance_walked: profile.distance_walked || 0,
-            pokemon_caught: profile.pokemon_caught || 0,
-            pokestops_visited: profile.pokestops_visited || 0,
-            total_xp: profile.total_xp || 0
-          })
-          setFilteredStats({
-            distance_walked: profile.distance_walked || 0,
-            pokemon_caught: profile.pokemon_caught || 0,
-            pokestops_visited: profile.pokestops_visited || 0,
-            total_xp: profile.total_xp || 0
-          })
-          return
+      if (timePeriod === 'alltime') {
+        // For all-time, use profile data directly
+        console.log('Setting all-time stats from profile:', {
+          distance_walked: profile.distance_walked ?? 0,
+          pokemon_caught: profile.pokemon_caught ?? 0,
+          pokestops_visited: profile.pokestops_visited ?? 0,
+          total_xp: profile.total_xp ?? 0
+        })
+        setFilteredStats({
+          distance_walked: profile.distance_walked ?? 0,
+          pokemon_caught: profile.pokemon_caught ?? 0,
+          pokestops_visited: profile.pokestops_visited ?? 0,
+          total_xp: profile.total_xp ?? 0
+        })
+        return
       }
 
-      if (statsResult) {
-        console.log('Successfully calculated stats for', timePeriod, ':', statsResult)
+      // For weekly/monthly: Query the SAME database views as the Leaderboard Live section
+      const viewName = timePeriod === 'weekly' ? 'current_weekly_leaderboard' : 'current_monthly_leaderboard'
+      
+      console.log(`Querying ${viewName} for profile_id:`, profile.id)
+      
+      const { data, error } = await supabase
+        .from(viewName)
+        .select('*')
+        .eq('profile_id', profile.id)
+        .single()
+
+      if (error) {
+        console.warn(`Error loading ${timePeriod} stats from view:`, error)
+        // If no data in view, show zeros (same as leaderboard behavior)
         setFilteredStats({
-          distance_walked: statsResult.distanceWalked || 0,
-          pokemon_caught: statsResult.pokemonCaught || 0,
-          pokestops_visited: statsResult.pokestopsVisited || 0,
-          total_xp: statsResult.totalXP || 0
+          distance_walked: 0,
+          pokemon_caught: 0,
+          pokestops_visited: 0,
+          total_xp: 0
+        })
+        return
+      }
+
+      if (data) {
+        console.log(`Successfully loaded ${timePeriod} stats:`, data)
+        // Use delta values (same as leaderboard Live section)
+        setFilteredStats({
+          distance_walked: data.distance_delta ?? 0,
+          pokemon_caught: data.catches_delta ?? 0,
+          pokestops_visited: data.pokestops_delta ?? 0,
+          total_xp: data.xp_delta ?? 0
         })
       } else {
-        // Fallback to zero if no stats available for weekly/monthly
-        console.log('No period stats available, showing zeros for', timePeriod)
+        // No data found, show zeros
+        console.log(`No ${timePeriod} data found for profile`)
         setFilteredStats({
           distance_walked: 0,
           pokemon_caught: 0,
@@ -173,10 +144,10 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
       // Always fallback to profile data for all-time or zeros for periods
       if (timePeriod === 'alltime') {
         setFilteredStats({
-          distance_walked: profile.distance_walked || 0,
-          pokemon_caught: profile.pokemon_caught || 0,
-          pokestops_visited: profile.pokestops_visited || 0,
-          total_xp: profile.total_xp || 0
+          distance_walked: profile.distance_walked ?? 0,
+          pokemon_caught: profile.pokemon_caught ?? 0,
+          pokestops_visited: profile.pokestops_visited ?? 0,
+          total_xp: profile.total_xp ?? 0
         })
       } else {
         setFilteredStats({
@@ -187,17 +158,17 @@ export function PlayerProfile({ viewMode, userType, showHeader = true, profile: 
         })
       }
     }
-  }, [user?.id, profile?.user_id, profile, timePeriod])
+  }, [profile?.id, profile, timePeriod])
 
   useEffect(() => {
-    console.log('useEffect triggered with:', { hasProfile: !!profile, hasUser: !!user?.id, timePeriod })
-    if (profile && user?.id) {
+    console.log('useEffect triggered with:', { hasProfile: !!profile, profileId: profile?.id, timePeriod })
+    if (profile?.id) {
       console.log('Calling calculateFilteredStats from useEffect')
       calculateFilteredStats()
     } else {
-      console.log('Skipping calculateFilteredStats: missing profile or user')
+      console.log('Skipping calculateFilteredStats: missing profile')
     }
-  }, [profile, timePeriod, user?.id, profile?.user_id])
+  }, [profile?.id, timePeriod, calculateFilteredStats])
 
   const handleTimePeriodChange = (period: 'weekly' | 'monthly' | 'alltime') => {
     console.log('Time period changing to:', period)

@@ -2191,31 +2191,31 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     switch (sortBy) {
       case 'xp':
         if (isDeltaPeriod) {
-          return formatNumber(Math.max(0, entry.xp_delta || entry.total_xp || 0))
+          return formatNumber(entry.xp_delta ?? entry.total_xp ?? 0)
         }
-        return formatNumber(Math.max(0, entry.total_xp || entry.xp_delta || 0))
+        return formatNumber(entry.total_xp ?? entry.xp_delta ?? 0)
 
       case 'catches':
         if (isDeltaPeriod) {
-          return formatNumber(Math.max(0, entry.catches_delta || entry.pokemon_caught || 0))
+          return formatNumber(entry.catches_delta ?? entry.pokemon_caught ?? 0)
         }
-        return formatNumber(Math.max(0, entry.pokemon_caught || entry.catches_delta || 0))
+        return formatNumber(entry.pokemon_caught ?? entry.catches_delta ?? 0)
 
       case 'distance':
         if (isDeltaPeriod) {
-          return formatDistance(Math.max(0, entry.distance_delta || entry.distance_walked || 0))
+          return formatDistance(entry.distance_delta ?? entry.distance_walked ?? 0)
         }
-        return formatDistance(Math.max(0, entry.distance_walked || entry.distance_delta || 0))
+        return formatDistance(entry.distance_walked ?? entry.distance_delta ?? 0)
 
       case 'pokestops':
         if (isDeltaPeriod) {
-          return formatNumber(Math.max(0, entry.pokestops_delta || entry.pokestops_visited || 0))
+          return formatNumber(entry.pokestops_delta ?? entry.pokestops_visited ?? 0)
         }
-        return formatNumber(Math.max(0, entry.pokestops_visited || entry.pokestops_delta || 0))
+        return formatNumber(entry.pokestops_visited ?? entry.pokestops_delta ?? 0)
 
       case 'dex':
         if (isDeltaPeriod) {
-          const dexValue = Math.max(0, (entry as any).dex_delta || entry.unique_pokedex_entries || 0)
+          const dexValue = (entry as any).dex_delta ?? entry.unique_pokedex_entries ?? 0
           // Debug logging for dex values
           if (sortBy === 'dex' && dexValue === 0) {
             console.log('🔍 Dex value is 0 for entry:', {
@@ -2227,7 +2227,7 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
           }
           return formatNumber(dexValue)
         }
-        const dexValue = Math.max(0, entry.unique_pokedex_entries || (entry as any).dex_delta || 0)
+        const dexValue = entry.unique_pokedex_entries || (entry as any).dex_delta || 0
         // Debug logging for dex values
         if (sortBy === 'dex' && dexValue === 0) {
           console.log('🔍 Dex value is 0 for entry:', {
@@ -2298,29 +2298,29 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       switch (sortBy) {
         case 'xp':
           if (isDeltaPeriod) {
-            return entry.xp_delta || entry.total_xp || 0
+            return entry.xp_delta ?? entry.total_xp ?? 0
           }
-          return entry.total_xp || entry.xp_delta || 0
+          return entry.total_xp ?? entry.xp_delta ?? 0
         case 'catches':
           if (isDeltaPeriod) {
-            return entry.catches_delta || entry.pokemon_caught || 0
+            return entry.catches_delta ?? entry.pokemon_caught ?? 0
           }
-          return entry.pokemon_caught || entry.catches_delta || 0
+          return entry.pokemon_caught ?? entry.catches_delta ?? 0
         case 'distance':
           if (isDeltaPeriod) {
-            return entry.distance_delta || entry.distance_walked || 0
+            return entry.distance_delta ?? entry.distance_walked ?? 0
           }
-          return entry.distance_walked || entry.distance_delta || 0
+          return entry.distance_walked ?? entry.distance_delta ?? 0
         case 'pokestops':
           if (isDeltaPeriod) {
-            return entry.pokestops_delta || entry.pokestops_visited || 0
+            return entry.pokestops_delta ?? entry.pokestops_visited ?? 0
           }
-          return entry.pokestops_visited || entry.pokestops_delta || 0
+          return entry.pokestops_visited ?? entry.pokestops_delta ?? 0
         case 'dex':
           if (isDeltaPeriod) {
-            return (entry as any).dex_delta || entry.unique_pokedex_entries || 0
+            return (entry as any).dex_delta ?? entry.unique_pokedex_entries ?? 0
           }
-          return entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+          return entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0
         default:
           return 0
       }
@@ -2339,15 +2339,15 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
     const getNumericValue = (entry: LeaderboardEntry) => {
       switch (sortBy) {
         case 'xp':
-          return entry.total_xp || entry.xp_delta || 0
+          return entry.total_xp ?? entry.xp_delta ?? 0
         case 'catches':
-          return entry.pokemon_caught || entry.catches_delta || 0
+          return entry.pokemon_caught ?? entry.catches_delta ?? 0
         case 'distance':
-          return entry.distance_walked || entry.distance_delta || 0
+          return entry.distance_walked ?? entry.distance_delta ?? 0
         case 'pokestops':
-          return entry.pokestops_visited || entry.pokestops_delta || 0
+          return entry.pokestops_visited ?? entry.pokestops_delta ?? 0
         case 'dex':
-          return entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+          return entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0
         default:
           return 0
       }
@@ -2404,11 +2404,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       const aggregate = countryAggregates.get(normalizedCountryName)
       // For weekly and monthly periods, prioritize delta values over total values
       const isDeltaPeriod = timePeriod === 'weekly' || timePeriod === 'monthly'
-      aggregate.totalXp += isDeltaPeriod ? (entry.xp_delta || entry.total_xp || 0) : (entry.total_xp || entry.xp_delta || 0)
-      aggregate.totalCatches += isDeltaPeriod ? (entry.catches_delta || entry.pokemon_caught || 0) : (entry.pokemon_caught || entry.catches_delta || 0)
-      aggregate.totalDistance += isDeltaPeriod ? (entry.distance_delta || entry.distance_walked || 0) : (entry.distance_walked || entry.distance_delta || 0)
-      aggregate.totalStops += isDeltaPeriod ? (entry.pokestops_delta || entry.pokestops_visited || 0) : (entry.pokestops_visited || entry.pokestops_delta || 0)
-      aggregate.totalDex += isDeltaPeriod ? ((entry as any).dex_delta || entry.unique_pokedex_entries || 0) : (entry.unique_pokedex_entries || (entry as any).dex_delta || 0)
+      aggregate.totalXp += isDeltaPeriod ? (entry.xp_delta ?? entry.total_xp ?? 0) : (entry.total_xp ?? entry.xp_delta ?? 0)
+      aggregate.totalCatches += isDeltaPeriod ? (entry.catches_delta ?? entry.pokemon_caught ?? 0) : (entry.pokemon_caught ?? entry.catches_delta ?? 0)
+      aggregate.totalDistance += isDeltaPeriod ? (entry.distance_delta ?? entry.distance_walked ?? 0) : (entry.distance_walked ?? entry.distance_delta ?? 0)
+      aggregate.totalStops += isDeltaPeriod ? (entry.pokestops_delta ?? entry.pokestops_visited ?? 0) : (entry.pokestops_visited ?? entry.pokestops_delta ?? 0)
+      aggregate.totalDex += isDeltaPeriod ? ((entry as any).dex_delta ?? entry.unique_pokedex_entries ?? 0) : (entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0)
       aggregate.trainerCount += 1
     })
 
@@ -2434,12 +2434,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: null,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return Math.max(0, aggregate.totalXp)
-          case 'catches': return Math.max(0, aggregate.totalCatches)
-          case 'distance': return Math.max(0, aggregate.totalDistance)
-          case 'pokestops': return Math.max(0, aggregate.totalStops)
-          case 'dex': return Math.max(0, aggregate.totalDex)
-          default: return Math.max(0, aggregate.totalXp)
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2471,11 +2471,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       const aggregate = teamAggregates.get(normalizedTeamName)
       // For weekly and monthly periods, prioritize delta values over total values
       const isDeltaPeriod = timePeriod === 'weekly' || timePeriod === 'monthly'
-      aggregate.totalXp += isDeltaPeriod ? (entry.xp_delta || entry.total_xp || 0) : (entry.total_xp || entry.xp_delta || 0)
-      aggregate.totalCatches += isDeltaPeriod ? (entry.catches_delta || entry.pokemon_caught || 0) : (entry.pokemon_caught || entry.catches_delta || 0)
-      aggregate.totalDistance += isDeltaPeriod ? (entry.distance_delta || entry.distance_walked || 0) : (entry.distance_walked || entry.distance_delta || 0)
-      aggregate.totalStops += isDeltaPeriod ? (entry.pokestops_delta || entry.pokestops_visited || 0) : (entry.pokestops_visited || entry.pokestops_delta || 0)
-      aggregate.totalDex += isDeltaPeriod ? ((entry as any).dex_delta || entry.unique_pokedex_entries || 0) : (entry.unique_pokedex_entries || (entry as any).dex_delta || 0)
+      aggregate.totalXp += isDeltaPeriod ? (entry.xp_delta ?? entry.total_xp ?? 0) : (entry.total_xp ?? entry.xp_delta ?? 0)
+      aggregate.totalCatches += isDeltaPeriod ? (entry.catches_delta ?? entry.pokemon_caught ?? 0) : (entry.pokemon_caught ?? entry.catches_delta ?? 0)
+      aggregate.totalDistance += isDeltaPeriod ? (entry.distance_delta ?? entry.distance_walked ?? 0) : (entry.distance_walked ?? entry.distance_delta ?? 0)
+      aggregate.totalStops += isDeltaPeriod ? (entry.pokestops_delta ?? entry.pokestops_visited ?? 0) : (entry.pokestops_visited ?? entry.pokestops_delta ?? 0)
+      aggregate.totalDex += isDeltaPeriod ? ((entry as any).dex_delta ?? entry.unique_pokedex_entries ?? 0) : (entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0)
       aggregate.trainerCount += 1
     })
 
@@ -2501,12 +2501,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: aggregate.team,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return Math.max(0, aggregate.totalXp)
-          case 'catches': return Math.max(0, aggregate.totalCatches)
-          case 'distance': return Math.max(0, aggregate.totalDistance)
-          case 'pokestops': return Math.max(0, aggregate.totalStops)
-          case 'dex': return Math.max(0, aggregate.totalDex)
-          default: return Math.max(0, aggregate.totalXp)
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2582,11 +2582,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       }
       
       const aggregate = countryAggregates.get(normalizedCountryName)
-      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
-      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
-      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
-      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
-      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+      aggregate.totalXp += entry.total_xp ?? entry.xp_delta ?? 0
+      aggregate.totalCatches += entry.pokemon_caught ?? entry.catches_delta ?? 0
+      aggregate.totalDistance += entry.distance_walked ?? entry.distance_delta ?? 0
+      aggregate.totalStops += entry.pokestops_visited ?? entry.pokestops_delta ?? 0
+      aggregate.totalDex += entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0
       aggregate.trainerCount += 1
     })
 
@@ -2614,12 +2614,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: null,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return Math.max(0, aggregate.totalXp)
-          case 'catches': return Math.max(0, aggregate.totalCatches)
-          case 'distance': return Math.max(0, aggregate.totalDistance)
-          case 'pokestops': return Math.max(0, aggregate.totalStops)
-          case 'dex': return Math.max(0, aggregate.totalDex)
-          default: return Math.max(0, aggregate.totalXp)
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
         }
       })(),
     medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
@@ -2650,11 +2650,11 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       }
       
       const aggregate = teamAggregates.get(normalizedTeamName)
-      aggregate.totalXp += entry.total_xp || entry.xp_delta || 0
-      aggregate.totalCatches += entry.pokemon_caught || entry.catches_delta || 0
-      aggregate.totalDistance += entry.distance_walked || entry.distance_delta || 0
-      aggregate.totalStops += entry.pokestops_visited || entry.pokestops_delta || 0
-      aggregate.totalDex += entry.unique_pokedex_entries || (entry as any).dex_delta || 0
+      aggregate.totalXp += entry.total_xp ?? entry.xp_delta ?? 0
+      aggregate.totalCatches += entry.pokemon_caught ?? entry.catches_delta ?? 0
+      aggregate.totalDistance += entry.distance_walked ?? entry.distance_delta ?? 0
+      aggregate.totalStops += entry.pokestops_visited ?? entry.pokestops_delta ?? 0
+      aggregate.totalDex += entry.unique_pokedex_entries ?? (entry as any).dex_delta ?? 0
       aggregate.trainerCount += 1
     })
 
@@ -2682,12 +2682,12 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
       teamColor: aggregate.team,
       statValue: (() => {
         switch (sortBy) {
-          case 'xp': return Math.max(0, aggregate.totalXp)
-          case 'catches': return Math.max(0, aggregate.totalCatches)
-          case 'distance': return Math.max(0, aggregate.totalDistance)
-          case 'pokestops': return Math.max(0, aggregate.totalStops)
-          case 'dex': return Math.max(0, aggregate.totalDex)
-          default: return Math.max(0, aggregate.totalXp)
+          case 'xp': return aggregate.totalXp
+          case 'catches': return aggregate.totalCatches
+          case 'distance': return aggregate.totalDistance
+          case 'pokestops': return aggregate.totalStops
+          case 'dex': return aggregate.totalDex
+          default: return aggregate.totalXp
         }
       })(),
       medal: index === 0 ? "gold" : index === 1 ? "silver" : index === 2 ? "bronze" : null,
