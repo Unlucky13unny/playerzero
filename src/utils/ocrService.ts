@@ -274,23 +274,26 @@ const extractStatsFromText = (text: string): ExtractedStats => {
     }
   }
 
-  // Pattern 5: Trainer Level - MUST have "LEVEL" keyword nearby
-  const levelPatterns = [
-    /(\d{1,2})\s+LEVEL/i,
-    /LEVEL\s+(\d{1,2})/i,
-  ];
-  
-  for (const pattern of levelPatterns) {
-    const match = cleanText.match(pattern);
-    if (match) {
-      const value = parseInt(match[1]);
-      if (!isNaN(value) && value >= 1 && value <= 50) {
-        stats.trainer_level = value;
-        console.log(`✅ Trainer Level: ${value} (from: "${match[0]}")`);
-        break;
-      }
-    }
-  }
+  // Pattern 5: Trainer Level - DISABLED
+  // We intentionally do NOT extract trainer_level from OCR
+  // Trainer level should only be updated manually by the user in their profile settings
+  // This prevents accidental level resets during stat updates
+  // const levelPatterns = [
+  //   /(\d{1,2})\s+LEVEL/i,
+  //   /LEVEL\s+(\d{1,2})/i,
+  // ];
+  // 
+  // for (const pattern of levelPatterns) {
+  //   const match = cleanText.match(pattern);
+  //   if (match) {
+  //     const value = parseInt(match[1]);
+  //     if (!isNaN(value) && value >= 1 && value <= 80) {
+  //       stats.trainer_level = value;
+  //       console.log(`✅ Trainer Level: ${value} (from: "${match[0]}")`);
+  //       break;
+  //     }
+  //   }
+  // }
 
   // Pattern 6: Pokédex Entries (only if explicitly shown in screenshot)
   const pokedexPatterns = [
@@ -354,17 +357,20 @@ const extractStatsFromText = (text: string): ExtractedStats => {
       }
     }
 
-    // CRITICAL RULE 3: Level MUST be a small number (1-80) near "LEVEL" keyword
-    if (!stats.trainer_level) {
-      const levelContext = cleanText.match(/(\d{1,2}).*?LEVEL|LEVEL.*?(\d{1,2})/i);
-      if (levelContext) {
-        const value = parseInt(levelContext[1] || levelContext[2]);
-        if (!isNaN(value) && value >= 1 && value <= 80) {
-          stats.trainer_level = value;
-          console.log(`⚠️ Trainer Level (fallback): ${value}`);
-        }
-      }
-    }
+    // CRITICAL RULE 3: Level extraction - DISABLED
+    // We intentionally do NOT extract trainer_level from OCR
+    // Trainer level should only be updated manually by the user in their profile settings
+    // This prevents accidental level resets during stat updates
+    // if (!stats.trainer_level) {
+    //   const levelContext = cleanText.match(/(\d{1,2}).*?LEVEL|LEVEL.*?(\d{1,2})/i);
+    //   if (levelContext) {
+    //     const value = parseInt(levelContext[1] || levelContext[2]);
+    //     if (!isNaN(value) && value >= 1 && value <= 80) {
+    //       stats.trainer_level = value;
+    //       console.log(`⚠️ Trainer Level (fallback): ${value}`);
+    //     }
+    //   }
+    // }
 
     // CRITICAL RULE 4: Pokémon Caught and PokéStops Visited
     // Both are medium numbers (10k-1M), need to determine which is which by POSITION in text
