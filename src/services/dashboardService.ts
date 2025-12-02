@@ -1755,6 +1755,8 @@ export const dashboardService = {
       }
 
       // Create the new stat entry data
+      // IMPORTANT: trainer_level should ALWAYS come from currentProfile, never from updates or old stat_entries
+      // This prevents level from being accidentally reset during stat updates
       const newStatEntry = {
         user_id: user.id,
         profile_id: currentProfile.id,
@@ -1763,7 +1765,7 @@ export const dashboardService = {
         pokestops_visited: updates.pokestops_visited ?? referenceStats.pokestops_visited,
         total_xp: updates.total_xp ?? referenceStats.total_xp,
         unique_pokedex_entries: updates.unique_pokedex_entries ?? referenceStats.unique_pokedex_entries,
-        trainer_level: updates.trainer_level ?? referenceStats.trainer_level,
+        trainer_level: currentProfile.trainer_level, // Always use current profile level, never fallback to old stat_entry
         entry_date: today
       };
 
