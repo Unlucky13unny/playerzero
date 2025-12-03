@@ -356,7 +356,6 @@ const extractStatsFromText = (text: string): ExtractedStats => {
         console.log(`⚠️ Total XP (fallback): ${xpCandidate.value.toLocaleString()}`);
       }
     }
-
     // CRITICAL RULE 3: Level extraction - DISABLED
     // We intentionally do NOT extract trainer_level from OCR
     // Trainer level should only be updated manually by the user in their profile settings
