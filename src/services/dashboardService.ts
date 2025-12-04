@@ -1698,11 +1698,13 @@ export const dashboardService = {
       }
 
       // Get the most recent stat entry to use for validation
+      // Use compound sorting: entry_date DESC first, then created_at DESC for same-date entries
       const { data: latestStatEntry } = await supabase
         .from('stat_entries')
         .select('*')
         .eq('user_id', user.id)
         .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(1)
         .single();
 
@@ -1887,11 +1889,13 @@ export const dashboardService = {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return [];
 
+      // Use compound sorting: entry_date DESC first, then created_at DESC for same-date entries
       const { data, error } = await supabase
         .from('stat_entries')
         .select('*')
         .eq('user_id', user.id)
         .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -1925,6 +1929,7 @@ export const dashboardService = {
         `)
         .eq('user_id', userId)
         .order('entry_date', { ascending: false })
+        .order('created_at', { ascending: false })
         .limit(limit);
 
       if (error) {
