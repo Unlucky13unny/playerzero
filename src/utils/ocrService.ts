@@ -207,11 +207,14 @@ const extractStatsFromText = (text: string): ExtractedStats => {
   }
 
   // Pattern 2: Pokémon Caught - MUST have "Pokémon Caught" or "Pokemon Caught" label
+  // Added more variations to handle OCR misreads
   const pokemonPatterns = [
     /Pok[eé]mon\s+Caught[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i,
     /Pokemon\s+Caught[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i,
     /Pok[eé]mon\s+Caught\s+([\d,]+)/i,
     /Pokemon\s+Caught\s+([\d,]+)/i,
+    /Caught[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i, // Just "Caught" followed by number
+    /mon\s+Caught[:\s]*([\d,]+)/i, // Partial match for OCR issues
   ];
   
   for (const pattern of pokemonPatterns) {
@@ -231,10 +234,14 @@ const extractStatsFromText = (text: string): ExtractedStats => {
   }
 
   // Pattern 3: PokéStops Visited - MUST have "PokéStops Visited" or "PokeStops Visited" label
+  // Added more variations to handle OCR misreads (including lowercase variations)
   const pokestopsPatterns = [
     /Pok[eé]Stops?\s+Visited[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i,
     /PokeStops\s+Visited[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i,
+    /Pokestops\s+Visited[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i, // lowercase 's'
     /Stops\s+Visited[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i,
+    /Visited[:\s]*([\d,]+)(?!\s*km)(?!\s*\/)/i, // Just "Visited" followed by number
+    /stops\s+Visited[:\s]*([\d,]+)/i, // lowercase starts
   ];
   
   for (const pattern of pokestopsPatterns) {
@@ -372,48 +379,74 @@ const extractStatsFromText = (text: string): ExtractedStats => {
     // }
 
     // CRITICAL RULE 4: Pokémon Caught and PokéStops Visited
-    // Both are medium numbers (10k-1M), need to determine which is which by POSITION in text
+    // Use VALUE-BASED heuristics instead of position (more reliable!)
+    // In Pokémon GO: Pokémon Caught is typically LARGER than PokéStops Visited
     if (!stats.pokemon_caught || !stats.pokestops_visited) {
+      // Lower threshold to 5000 to catch smaller PokéStops values
       const mediumNumbers = parsedNumbers.filter(n => 
         !n.isDecimal && 
-        n.value > 50000 &&  // Raised threshold to avoid confusion
+        n.value > 5000 &&  // Lowered from 50000 to catch smaller values
         n.value < 1000000 && 
-        n.value !== stats.total_xp
+        n.value !== stats.total_xp &&
+        n.value !== Math.floor(stats.distance_walked || 0) // Exclude distance
       );
 
       console.log('📊 Medium numbers found for Pokémon/PokéStops:', mediumNumbers.map(n => `${n.original} (${n.value.toLocaleString()}) at position ${n.position}`));
 
       if (mediumNumbers.length >= 2) {
-        // Sort by position in text (top to bottom)
-        mediumNumbers.sort((a, b) => a.position - b.position);
+        // Sort by VALUE descending (larger number = Pokémon Caught)
+        mediumNumbers.sort((a, b) => b.value - a.value);
         
-        // In Pokémon GO profile, Pokémon Caught appears BEFORE PokéStops Visited
+        // HEURISTIC: In Pokémon GO, most players have more Pokémon Caught than PokéStops Visited
+        // The LARGER number is almost always Pokémon Caught
+        // The SMALLER number is almost always PokéStops Visited
+        
         if (!stats.pokemon_caught) {
-          stats.pokemon_caught = mediumNumbers[0].value;
-          console.log(`⚠️ Pokémon Caught (fallback by position): ${mediumNumbers[0].value.toLocaleString()}`);
+          stats.pokemon_caught = mediumNumbers[0].value; // Largest = Pokemon
+          console.log(`⚠️ Pokémon Caught (fallback - largest value): ${mediumNumbers[0].value.toLocaleString()}`);
         }
-        if (!stats.pokestops_visited && mediumNumbers.length > 1) {
-          stats.pokestops_visited = mediumNumbers[1].value;
-          console.log(`⚠️ PokéStops Visited (fallback by position): ${mediumNumbers[1].value.toLocaleString()}`);
+        if (!stats.pokestops_visited) {
+          stats.pokestops_visited = mediumNumbers[1].value; // Second largest = PokéStops
+          console.log(`⚠️ PokéStops Visited (fallback - smaller value): ${mediumNumbers[1].value.toLocaleString()}`);
         }
       } else if (mediumNumbers.length === 1) {
-        // Only one medium number found - need to determine which one it is
+        // Only one medium number found - check context
         console.log('⚠️ Only one medium number found - checking context...');
         const num = mediumNumbers[0];
-        const contextBefore = cleanText.substring(Math.max(0, num.position - 50), num.position);
-        const contextAfter = cleanText.substring(num.position, num.position + 50);
+        const contextBefore = cleanText.substring(Math.max(0, num.position - 60), num.position).toLowerCase();
+        const contextAfter = cleanText.substring(num.position, num.position + 20).toLowerCase();
         
         console.log(`Context before: "${contextBefore}"`);
         console.log(`Context after: "${contextAfter}"`);
         
-        if (contextBefore.toLowerCase().includes('pokemon') || contextBefore.toLowerCase().includes('pokémon') || contextBefore.toLowerCase().includes('caught')) {
-          stats.pokemon_caught = num.value;
-          console.log(`⚠️ Pokémon Caught (by context): ${num.value.toLocaleString()}`);
-        } else if (contextBefore.toLowerCase().includes('pokestop') || contextBefore.toLowerCase().includes('stop') || contextBefore.toLowerCase().includes('visited')) {
-          stats.pokestops_visited = num.value;
-          console.log(`⚠️ PokéStops Visited (by context): ${num.value.toLocaleString()}`);
+        // Check context for clues
+        if (contextBefore.includes('pokemon') || contextBefore.includes('pokémon') || contextBefore.includes('caught')) {
+          if (!stats.pokemon_caught) {
+            stats.pokemon_caught = num.value;
+            console.log(`⚠️ Pokémon Caught (by context): ${num.value.toLocaleString()}`);
+          }
+        } else if (contextBefore.includes('pokestop') || contextBefore.includes('stop') || contextBefore.includes('visited')) {
+          if (!stats.pokestops_visited) {
+            stats.pokestops_visited = num.value;
+            console.log(`⚠️ PokéStops Visited (by context): ${num.value.toLocaleString()}`);
+          }
+        } else {
+          // No context - use value heuristic (if > 40000, likely Pokemon; if < 40000, likely PokéStops)
+          if (num.value > 40000 && !stats.pokemon_caught) {
+            stats.pokemon_caught = num.value;
+            console.log(`⚠️ Pokémon Caught (by value heuristic - large): ${num.value.toLocaleString()}`);
+          } else if (!stats.pokestops_visited) {
+            stats.pokestops_visited = num.value;
+            console.log(`⚠️ PokéStops Visited (by value heuristic - smaller): ${num.value.toLocaleString()}`);
+          }
         }
       }
+    }
+    
+    // VALIDATION: Sanity check - if pokemon_caught < pokestops_visited, they might be swapped
+    // This is rare but possible for some play styles, so just log a warning
+    if (stats.pokemon_caught && stats.pokestops_visited && stats.pokemon_caught < stats.pokestops_visited) {
+      console.log('⚠️ WARNING: Pokémon Caught < PokéStops Visited - unusual but possible');
     }
   }
 
