@@ -106,11 +106,12 @@ export const StatUpdater = () => {
       }
 
       // Get the most recent stat entry (same logic as backend validation)
-      // Use created_at instead of entry_date to handle multiple entries on same date correctly
+      // Use compound sorting: entry_date DESC first, then created_at DESC for same-date entries
       const { data: latestStatEntry } = await supabase
         .from('stat_entries')
         .select('*')
         .eq('user_id', user.id)
+        .order('entry_date', { ascending: false })
         .order('created_at', { ascending: false })
         .limit(1)
         .single();
