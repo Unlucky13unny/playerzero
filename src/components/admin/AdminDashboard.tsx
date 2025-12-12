@@ -4,6 +4,7 @@ import { UserManagement } from './UserManagement'
 import { StatEntries } from './StatEntries'
 import { ScreenshotModeration } from './ScreenshotModeration'
 import { ReportedScreenshots } from './ReportedScreenshots'
+import { AdminSettings } from './AdminSettings'
 
 export const AdminDashboard = () => {
   const { user } = useAuth()
@@ -13,7 +14,8 @@ export const AdminDashboard = () => {
     { id: 'users', label: 'Users', icon: '👥' },
     { id: 'content', label: 'Stat Entries', icon: '📝' },
     { id: 'screenshots', label: 'Screenshot Moderation', icon: '📸' },
-    { id: 'reports', label: 'Reports', icon: '🚩' }
+    { id: 'reports', label: 'Reports', icon: '🚩' },
+    { id: 'settings', label: 'Settings', icon: '⚙️' }
   ]
 
 
@@ -53,6 +55,10 @@ export const AdminDashboard = () => {
 
         {activeTab === 'reports' && (
           <ReportedScreenshots />
+        )}
+
+        {activeTab === 'settings' && (
+          <AdminSettings />
         )}
       </div>
     </div>

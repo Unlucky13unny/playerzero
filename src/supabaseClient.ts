@@ -9,4 +9,7 @@ const supabaseServiceRoleKey = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
 // Admin client for administrative operations (accessing auth users, etc.)
-export const supabaseAdmin = createClient(supabaseUrl, supabaseServiceRoleKey) 
+// Falls back to regular client if service role key is not available
+export const supabaseAdmin = supabaseServiceRoleKey 
+  ? createClient(supabaseUrl, supabaseServiceRoleKey)
+  : supabase 

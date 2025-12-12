@@ -8,6 +8,8 @@ import { profileService, type ProfileData } from '../../services/profileService'
 
 import { adminService } from '../../services/adminService'
 
+import { featureFlagService } from '../../services/featureFlagService'
+
 import { useValuePropModal } from '../../hooks/useValuePropModal'
 
 import { useTrialStatus } from '../../hooks/useTrialStatus'
@@ -4400,11 +4402,17 @@ export const ProfileSetup = () => {
 
         isOpen={showSuccessModal}
 
-        onClose={() => {
+        onClose={async () => {
 
           setShowSuccessModal(false)
 
-          navigate('/paywall')
+          // Check if free mode is enabled - if so, skip paywall and go to tutorial
+          const { isFreeMode } = await featureFlagService.isFreeMode()
+          if (isFreeMode) {
+            navigate('/tutorial')
+          } else {
+            navigate('/paywall')
+          }
 
         }}
 

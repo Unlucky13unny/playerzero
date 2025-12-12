@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useAuth } from '../contexts/AuthContext'
 import { profileService } from '../services/profileService'
+import { featureFlagService } from '../services/featureFlagService'
 
 export interface PrivateModeTimeRemaining {
   days: number
@@ -17,6 +18,7 @@ export interface PrivateModeStatus {
   daysRemaining: number
   timeRemaining: PrivateModeTimeRemaining
   isPaidUser: boolean
+  isFreeMode: boolean // NEW: Indicates if free mode is enabled globally
   canGenerateAllTimeCard: boolean
   canShareGrindCard: boolean
   canViewWeeklyMonthlyCards: boolean
@@ -42,8 +44,23 @@ export const useTrialStatus = (): PrivateModeStatus => {
       return false
     }
   }
+
+  // Initialize free mode from cache
+  const getInitialFreeMode = () => {
+    try {
+      const cached = localStorage.getItem('playerzero_feature_flags')
+      if (cached) {
+        const flags = JSON.parse(cached)
+        return flags.is_free_mode ?? false
+      }
+      return false
+    } catch {
+      return false
+    }
+  }
   
   const [isPaidUser, setIsPaidUser] = useState(getInitialPaidStatus)
+  const [isFreeMode, setIsFreeMode] = useState(getInitialFreeMode)
   const [loading, setLoading] = useState(true)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [lastUpdateTime, setLastUpdateTime] = useState(0)
@@ -67,6 +84,17 @@ export const useTrialStatus = (): PrivateModeStatus => {
     }
   }, [user?.id])
 
+  // Check free mode flag
+  const checkFreeMode = useCallback(async () => {
+    try {
+      const { isFreeMode: freeModeEnabled } = await featureFlagService.isFreeMode()
+      setIsFreeMode(freeModeEnabled)
+    } catch (error) {
+      console.error('Error checking free mode:', error)
+      // Keep cached value on error
+    }
+  }, [])
+
   // Update current time every second for live countdown, but only if user is in trial
   useEffect(() => {
     const timer = setInterval(() => {
@@ -80,6 +108,26 @@ export const useTrialStatus = (): PrivateModeStatus => {
 
     return () => clearInterval(timer)
   }, [lastUpdateTime])
+
+  // Check free mode on mount and periodically
+  useEffect(() => {
+    checkFreeMode()
+    
+    // Check free mode every minute to catch admin changes
+    const interval = setInterval(checkFreeMode, 60 * 1000)
+    return () => clearInterval(interval)
+  }, [checkFreeMode])
+
+  // Check free mode when tab becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkFreeMode()
+      }
+    }
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [checkFreeMode])
 
   useEffect(() => {
     if (user) {
@@ -107,6 +155,7 @@ export const useTrialStatus = (): PrivateModeStatus => {
         daysRemaining: 0,
         timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
         isPaidUser: false,
+        isFreeMode,
         canGenerateAllTimeCard: false,
         canShareGrindCard: false,
         canViewWeeklyMonthlyCards: false,
@@ -116,44 +165,6 @@ export const useTrialStatus = (): PrivateModeStatus => {
         canShowTrainerCode: false,
         canShowSocialLinks: false,
         loading: false
-      }
-    }
-    
-    // While loading, use cached isPaidUser value to prevent badge flashing
-    if (loading) {
-      // If cached as paid user, give them full access immediately
-      if (isPaidUser) {
-        return {
-          isInTrial: false,
-          daysRemaining: 0,
-          timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
-          isPaidUser: true,
-          canGenerateAllTimeCard: true,
-          canShareGrindCard: true,
-          canViewWeeklyMonthlyCards: true,
-          canAppearOnLeaderboard: true,
-          canViewLeaderboard: true,
-          canClickIntoProfiles: true,
-          canShowTrainerCode: true,
-          canShowSocialLinks: true,
-          loading: true
-        }
-      }
-      // If not cached as paid, show limited trial access while loading
-      return {
-        isInTrial: false,
-        daysRemaining: 0,
-        timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
-        isPaidUser: false,
-        canGenerateAllTimeCard: false,
-        canShareGrindCard: false,
-        canViewWeeklyMonthlyCards: false,
-        canAppearOnLeaderboard: false,
-        canViewLeaderboard: false,
-        canClickIntoProfiles: false,
-        canShowTrainerCode: false,
-        canShowSocialLinks: false,
-        loading: true
       }
     }
     
@@ -178,13 +189,17 @@ export const useTrialStatus = (): PrivateModeStatus => {
     
     const daysRemaining = timeRemaining.days
 
-    // Premium users (from profiles table) get COMPLETE access to ALL features
-    if (isPaidUser) {
+    // ================================================================
+    // PRIORITY 1: FREE MODE - Global bypass for all payment checks
+    // When is_free_mode is TRUE, ALL users get full access
+    // ================================================================
+    if (isFreeMode) {
       return {
         isInTrial,
         daysRemaining,
         timeRemaining,
-        isPaidUser: true,
+        isPaidUser: true, // Treat everyone as paid in free mode
+        isFreeMode: true,
         canGenerateAllTimeCard: true,
         canShareGrindCard: true,
         canViewWeeklyMonthlyCards: true,
@@ -197,12 +212,77 @@ export const useTrialStatus = (): PrivateModeStatus => {
       }
     }
 
-    // Free users in private mode: Limited access based on private mode rules
+    // While loading (not in free mode), use cached isPaidUser value to prevent badge flashing
+    if (loading) {
+      // If cached as paid user, give them full access immediately
+      if (isPaidUser) {
+        return {
+          isInTrial: false,
+          daysRemaining: 0,
+          timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
+          isPaidUser: true,
+          isFreeMode: false,
+          canGenerateAllTimeCard: true,
+          canShareGrindCard: true,
+          canViewWeeklyMonthlyCards: true,
+          canAppearOnLeaderboard: true,
+          canViewLeaderboard: true,
+          canClickIntoProfiles: true,
+          canShowTrainerCode: true,
+          canShowSocialLinks: true,
+          loading: true
+        }
+      }
+      // If not cached as paid, show limited trial access while loading
+      return {
+        isInTrial: false,
+        daysRemaining: 0,
+        timeRemaining: { days: 0, hours: 0, minutes: 0, seconds: 0, totalHours: 0, totalMinutes: 0, totalSeconds: 0 },
+        isPaidUser: false,
+        isFreeMode: false,
+        canGenerateAllTimeCard: false,
+        canShareGrindCard: false,
+        canViewWeeklyMonthlyCards: false,
+        canAppearOnLeaderboard: false,
+        canViewLeaderboard: false,
+        canClickIntoProfiles: false,
+        canShowTrainerCode: false,
+        canShowSocialLinks: false,
+        loading: true
+      }
+    }
+    
+    // ================================================================
+    // PRIORITY 2: Premium users get COMPLETE access to ALL features
+    // ================================================================
+    if (isPaidUser) {
+      return {
+        isInTrial,
+        daysRemaining,
+        timeRemaining,
+        isPaidUser: true,
+        isFreeMode: false,
+        canGenerateAllTimeCard: true,
+        canShareGrindCard: true,
+        canViewWeeklyMonthlyCards: true,
+        canAppearOnLeaderboard: true,
+        canViewLeaderboard: true,
+        canClickIntoProfiles: true,
+        canShowTrainerCode: true,
+        canShowSocialLinks: true,
+        loading: false
+      }
+    }
+
+    // ================================================================
+    // PRIORITY 3: Free users in trial - Limited access
+    // ================================================================
     return {
       isInTrial,
       daysRemaining,
       timeRemaining,
       isPaidUser: false,
+      isFreeMode: false,
       canGenerateAllTimeCard: isInTrial, // Can generate cards during private mode
       canShareGrindCard: isInTrial, // Can share cards during private mode
       canViewWeeklyMonthlyCards: false, // BLOCKED: Weekly/monthly cards require paid subscription
@@ -213,7 +293,7 @@ export const useTrialStatus = (): PrivateModeStatus => {
       canShowSocialLinks: false, // Social links remain private
       loading: false
     }
-  }, [user, loading, isPaidUser, currentTime])
+  }, [user, loading, isPaidUser, isFreeMode, currentTime])
 
   return useMemo(() => calculatePrivateModeStatus(), [calculatePrivateModeStatus])
 } 
