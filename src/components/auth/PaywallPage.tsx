@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { loadStripe } from '@stripe/stripe-js'
 import { supabase } from '../../supabaseClient'
 import { useMobile } from '../../hooks/useMobile'
+import { featureFlagService } from '../../services/featureFlagService'
 import logoSvg from "/images/logo.svg"
 
 // Initialize Stripe
@@ -13,10 +14,55 @@ export const PaywallPage = () => {
   const isMobile = useMobile()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [checkingFreeMode, setCheckingFreeMode] = useState(true)
+
+  // Check if free mode is enabled - if so, skip this page entirely
+  useEffect(() => {
+    const checkFreeMode = async () => {
+      try {
+        const { isFreeMode } = await featureFlagService.isFreeMode()
+        if (isFreeMode) {
+          // Free mode is enabled, skip paywall and go to tutorial
+          navigate('/tutorial', { replace: true })
+          return
+        }
+      } catch (error) {
+        console.error('Error checking free mode:', error)
+      } finally {
+        setCheckingFreeMode(false)
+      }
+    }
+    checkFreeMode()
+  }, [navigate])
 
   const handleContinueTrial = () => {
     // Navigate to tutorial/welcome page
     navigate('/tutorial')
+  }
+
+  // Show loading while checking free mode status
+  if (checkingFreeMode) {
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        width: '100%',
+        background: '#ffffff'
+      }}>
+        <p style={{
+          fontSize: '18px',
+          color: '#DC2627',
+          fontWeight: 600,
+          fontFamily: 'Poppins, sans-serif',
+          textAlign: 'center',
+          padding: '0 20px'
+        }}>
+          Loading...
+        </p>
+      </div>
+    )
   }
 
   const handleUpgrade = async () => {

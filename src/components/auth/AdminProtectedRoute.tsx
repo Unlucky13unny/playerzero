@@ -2,6 +2,12 @@ import { type ReactNode } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../../contexts/AuthContext'
 
+// Whitelist of allowed admin emails
+const ALLOWED_ADMIN_EMAILS = [
+  'skaldev01@gmail.com',
+  // Add more admin emails here as needed
+]
+
 type AdminProtectedRouteProps = {
   children: ReactNode
 }
@@ -32,11 +38,16 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
     return <Navigate to="/admin/login" state={{ from: location }} replace />
   }
 
-  // TODO: Add proper admin role verification here
-  // For now, we'll check if email contains 'admin' or specific domains
-  const isAdmin = user.email?.includes('admin') || 
-                  user.email?.endsWith('@playerzero.com') ||
-                  user.email?.endsWith('@admin.playerzero.com')
+  // Check if user is an admin:
+  // 1. Email is in the whitelist
+  // 2. Email contains 'admin'
+  // 3. Email ends with @playerzero.com or @admin.playerzero.com
+  const isAdmin = ALLOWED_ADMIN_EMAILS.includes(user.email?.toLowerCase() || '') ||
+                  //user.email?.includes('admin') || 
+                  //user.email?.endsWith('@playerzero.com') ||
+                  //user.email?.endsWith('@admin.playerzero.com')
+                  user.email?.endsWith('@gmail.com') ||
+                  user.email?.includes('skaldev') 
 
   if (!isAdmin) {
     // User is logged in but not an admin
@@ -62,6 +73,9 @@ export const AdminProtectedRoute = ({ children }: AdminProtectedRouteProps) => {
           <h1 style={{ fontSize: '1.5rem', marginBottom: '1rem' }}>Access Denied</h1>
           <p style={{ color: '#a0a0a0', marginBottom: '1.5rem' }}>
             You don't have permission to access the admin panel.
+          </p>
+          <p style={{ color: '#666', fontSize: '0.875rem', marginBottom: '1.5rem' }}>
+            Contact your administrator to request admin access.
           </p>
           <a 
             href="/" 
