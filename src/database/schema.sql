@@ -391,73 +391,127 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Updated weekly leaderboard view for current period
--- NOTE: This uses get_week_uploads function - see migration 004 for full implementation
+-- Only shows users who have uploaded data during the current week (minimum 2 uploads)
+-- Respects is_free_mode feature flag
 CREATE OR REPLACE VIEW current_weekly_leaderboard AS
-SELECT 
-  p.id as profile_id,
-  p.trainer_name,
-  p.country,
-  p.team_color,
-  p.profile_screenshot_url,
-  GREATEST(COALESCE(current_stats.total_xp - week_start_stats.total_xp, 0), 0) as xp_delta,
-  GREATEST(COALESCE(current_stats.pokemon_caught - week_start_stats.pokemon_caught, 0), 0) as catches_delta,
-  GREATEST(COALESCE(current_stats.distance_walked - week_start_stats.distance_walked, 0), 0) as distance_delta,
-  GREATEST(COALESCE(current_stats.pokestops_visited - week_start_stats.pokestops_visited, 0), 0) as pokestops_delta,
-  GREATEST(COALESCE(current_stats.unique_pokedex_entries - week_start_stats.unique_pokedex_entries, 0), 0) as dex_delta,
-  p.total_xp,
-  p.pokemon_caught,
-  p.distance_walked,
-  p.pokestops_visited,
-  p.unique_pokedex_entries,
-  COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
-FROM profiles p
-LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
-  AND current_stats.entry_date = (
-    SELECT MAX(entry_date) 
-    FROM stat_entries se 
-    WHERE se.profile_id = p.id 
-    AND se.entry_date >= get_current_week_start()
-  )
-LEFT JOIN stat_entries week_start_stats ON p.id = week_start_stats.profile_id 
-  AND week_start_stats.entry_date = get_current_week_start()
-WHERE p.is_paid_user = true
-  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
-  AND p.role = 'user'
+WITH weekly_stats AS (
+  SELECT
+    p.id AS profile_id,
+    p.trainer_name,
+    p.country,
+    p.team_color,
+    p.profile_screenshot_url,
+    p.total_xp,
+    p.pokemon_caught,
+    p.distance_walked,
+    p.pokestops_visited,
+    p.unique_pokedex_entries,
+    (SELECT COUNT(*) FROM get_week_uploads(p.id, get_current_week_start())) AS upload_count,
+    (SELECT total_xp FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at LIMIT 1) AS first_xp,
+    (SELECT pokemon_caught FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at LIMIT 1) AS first_catches,
+    (SELECT distance_walked FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at LIMIT 1) AS first_distance,
+    (SELECT pokestops_visited FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at LIMIT 1) AS first_stops,
+    (SELECT unique_pokedex_entries FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at LIMIT 1) AS first_dex,
+    (SELECT total_xp FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS latest_xp,
+    (SELECT pokemon_caught FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS latest_catches,
+    (SELECT distance_walked FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS latest_distance,
+    (SELECT pokestops_visited FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS latest_stops,
+    (SELECT unique_pokedex_entries FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS latest_dex,
+    (SELECT entry_date FROM get_week_uploads(p.id, get_current_week_start()) ORDER BY created_at DESC LIMIT 1) AS last_update
+  FROM profiles p
+  WHERE p.role = 'user'
+    AND COALESCE(p.is_blocked, false) = false
+    AND (
+      (SELECT value FROM feature_flags WHERE key = 'is_free_mode' LIMIT 1) = true
+      OR
+      (
+        p.is_paid_user = true
+        AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+      )
+    )
+)
+SELECT
+  weekly_stats.profile_id,
+  weekly_stats.trainer_name,
+  weekly_stats.country,
+  weekly_stats.team_color,
+  weekly_stats.profile_screenshot_url,
+  GREATEST(COALESCE(weekly_stats.latest_xp - weekly_stats.first_xp, 0), 0) AS xp_delta,
+  GREATEST(COALESCE(weekly_stats.latest_catches - weekly_stats.first_catches, 0), 0) AS catches_delta,
+  GREATEST(COALESCE(weekly_stats.latest_distance - weekly_stats.first_distance, 0), 0) AS distance_delta,
+  GREATEST(COALESCE(weekly_stats.latest_stops - weekly_stats.first_stops, 0), 0) AS pokestops_delta,
+  GREATEST(COALESCE(weekly_stats.latest_dex - weekly_stats.first_dex, 0), 0) AS dex_delta,
+  weekly_stats.total_xp,
+  weekly_stats.pokemon_caught,
+  weekly_stats.distance_walked,
+  weekly_stats.pokestops_visited,
+  weekly_stats.unique_pokedex_entries,
+  weekly_stats.last_update,
+  weekly_stats.upload_count
+FROM weekly_stats
+WHERE weekly_stats.upload_count >= 2
 ORDER BY xp_delta DESC NULLS LAST;
 
 -- Updated monthly leaderboard view for current period
--- NOTE: This uses get_month_uploads function - see migration 004 for full implementation
+-- Only shows users who have uploaded data during the current month (minimum 2 uploads)
+-- Respects is_free_mode feature flag
 CREATE OR REPLACE VIEW current_monthly_leaderboard AS
-SELECT 
-  p.id as profile_id,
-  p.trainer_name,
-  p.country,
-  p.team_color,
-  p.profile_screenshot_url,
-  GREATEST(COALESCE(current_stats.total_xp - month_start_stats.total_xp, 0), 0) as xp_delta,
-  GREATEST(COALESCE(current_stats.pokemon_caught - month_start_stats.pokemon_caught, 0), 0) as catches_delta,
-  GREATEST(COALESCE(current_stats.distance_walked - month_start_stats.distance_walked, 0), 0) as distance_delta,
-  GREATEST(COALESCE(current_stats.pokestops_visited - month_start_stats.pokestops_visited, 0), 0) as pokestops_delta,
-  GREATEST(COALESCE(current_stats.unique_pokedex_entries - month_start_stats.unique_pokedex_entries, 0), 0) as dex_delta,
-  p.total_xp,
-  p.pokemon_caught,
-  p.distance_walked,
-  p.pokestops_visited,
-  p.unique_pokedex_entries,
-  COALESCE(current_stats.entry_date, p.updated_at::date) as last_update
-FROM profiles p
-LEFT JOIN stat_entries current_stats ON p.id = current_stats.profile_id 
-  AND current_stats.entry_date = (
-    SELECT MAX(entry_date) 
-    FROM stat_entries se 
-    WHERE se.profile_id = p.id 
-    AND se.entry_date >= get_current_month_start()
-  )
-LEFT JOIN stat_entries month_start_stats ON p.id = month_start_stats.profile_id 
-  AND month_start_stats.entry_date = get_current_month_start()
-WHERE p.is_paid_user = true
-  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
-  AND p.role = 'user'
+WITH monthly_stats AS (
+  SELECT
+    p.id AS profile_id,
+    p.trainer_name,
+    p.country,
+    p.team_color,
+    p.profile_screenshot_url,
+    p.total_xp,
+    p.pokemon_caught,
+    p.distance_walked,
+    p.pokestops_visited,
+    p.unique_pokedex_entries,
+    (SELECT COUNT(*) FROM get_month_uploads(p.id, get_current_month_start())) AS upload_count,
+    (SELECT total_xp FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at LIMIT 1) AS first_xp,
+    (SELECT pokemon_caught FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at LIMIT 1) AS first_catches,
+    (SELECT distance_walked FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at LIMIT 1) AS first_distance,
+    (SELECT pokestops_visited FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at LIMIT 1) AS first_stops,
+    (SELECT unique_pokedex_entries FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at LIMIT 1) AS first_dex,
+    (SELECT total_xp FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS latest_xp,
+    (SELECT pokemon_caught FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS latest_catches,
+    (SELECT distance_walked FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS latest_distance,
+    (SELECT pokestops_visited FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS latest_stops,
+    (SELECT unique_pokedex_entries FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS latest_dex,
+    (SELECT entry_date FROM get_month_uploads(p.id, get_current_month_start()) ORDER BY created_at DESC LIMIT 1) AS last_update
+  FROM profiles p
+  WHERE p.role = 'user'
+    AND COALESCE(p.is_blocked, false) = false
+    AND (
+      (SELECT value FROM feature_flags WHERE key = 'is_free_mode' LIMIT 1) = true
+      OR
+      (
+        p.is_paid_user = true
+        AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+      )
+    )
+)
+SELECT
+  monthly_stats.profile_id,
+  monthly_stats.trainer_name,
+  monthly_stats.country,
+  monthly_stats.team_color,
+  monthly_stats.profile_screenshot_url,
+  GREATEST(COALESCE(monthly_stats.latest_xp - monthly_stats.first_xp, 0), 0) AS xp_delta,
+  GREATEST(COALESCE(monthly_stats.latest_catches - monthly_stats.first_catches, 0), 0) AS catches_delta,
+  GREATEST(COALESCE(monthly_stats.latest_distance - monthly_stats.first_distance, 0), 0) AS distance_delta,
+  GREATEST(COALESCE(monthly_stats.latest_stops - monthly_stats.first_stops, 0), 0) AS pokestops_delta,
+  GREATEST(COALESCE(monthly_stats.latest_dex - monthly_stats.first_dex, 0), 0) AS dex_delta,
+  monthly_stats.total_xp,
+  monthly_stats.pokemon_caught,
+  monthly_stats.distance_walked,
+  monthly_stats.pokestops_visited,
+  monthly_stats.unique_pokedex_entries,
+  monthly_stats.last_update,
+  monthly_stats.upload_count
+FROM monthly_stats
+WHERE monthly_stats.upload_count >= 2
 ORDER BY xp_delta DESC NULLS LAST;
 
 -- View for last completed week winners
@@ -512,7 +566,8 @@ CREATE VIEW weekly_leaderboard AS SELECT * FROM current_weekly_leaderboard;
 DROP VIEW IF EXISTS monthly_leaderboard;
 CREATE VIEW monthly_leaderboard AS SELECT * FROM current_monthly_leaderboard;
 
--- Views for leaderboards and analytics (PAID USERS ONLY)
+-- Views for leaderboards and analytics
+-- Respects is_free_mode feature flag
 CREATE OR REPLACE VIEW all_time_leaderboard AS
 SELECT 
   p.id as profile_id,
@@ -527,10 +582,18 @@ SELECT
   p.unique_pokedex_entries,
   p.updated_at as last_update
 FROM profiles p
-WHERE p.is_paid_user = true
-  AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
-  AND p.role = 'user'
+WHERE p.role = 'user'
   AND COALESCE(p.is_blocked, false) = false
+  AND (
+    -- If free mode is enabled, show all users
+    (SELECT value FROM feature_flags WHERE key = 'is_free_mode' LIMIT 1) = true
+    OR
+    -- Otherwise, only show paid users with active subscriptions
+    (
+      p.is_paid_user = true
+      AND (p.subscription_expires_at IS NULL OR p.subscription_expires_at > NOW())
+    )
+  )
 ORDER BY p.total_xp DESC; 
 
 -- Function to complete a period and record the top 3 winners

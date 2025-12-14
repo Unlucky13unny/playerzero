@@ -1,4 +1,5 @@
 import { supabase } from '../supabaseClient'
+import { featureFlagService } from './featureFlagService'
 
 export interface StatEntry {
   id: string
@@ -1682,11 +1683,14 @@ export const dashboardService = {
         return { success: false, message: 'Profile not found' };
       }
 
-      // Determine if user is paid (has active subscription)
-      const isPaidUser = currentProfile.is_paid_user && 
-        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date());
+      // Check if free mode is enabled
+      const { isFreeMode } = await featureFlagService.isFreeMode();
+
+      // Determine if user is paid (has active subscription) or free mode is enabled
+      const isPaidUser = isFreeMode || (currentProfile.is_paid_user && 
+        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date()));
       
-      // Set daily limits: 4 for paid users, 1 for trial users
+      // Set daily limits: 4 for paid users or free mode, 1 for trial users
       const dailyLimit = isPaidUser ? 4 : 1;
       const userType = isPaidUser ? 'paid' : 'trial';
 
@@ -2049,11 +2053,14 @@ export const dashboardService = {
         return { data: null, error: profileError || new Error('Profile not found') };
       }
 
-      // Determine if user is paid (has active subscription)
-      const isPaidUser = currentProfile.is_paid_user && 
-        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date());
+      // Check if free mode is enabled
+      const { isFreeMode } = await featureFlagService.isFreeMode();
+
+      // Determine if user is paid (has active subscription) or free mode is enabled
+      const isPaidUser = isFreeMode || (currentProfile.is_paid_user && 
+        (!currentProfile.subscription_expires_at || new Date(currentProfile.subscription_expires_at) > new Date()));
       
-      // Set daily limits: 4 for paid users, 1 for trial users
+      // Set daily limits: 4 for paid users or free mode, 1 for trial users
       const dailyLimit = isPaidUser ? 4 : 1;
       const userType = isPaidUser ? 'paid' : 'trial';
       const canUpload = uploadsUsed < dailyLimit;
