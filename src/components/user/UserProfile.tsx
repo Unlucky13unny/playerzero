@@ -122,8 +122,15 @@ export const UserProfile = () => {
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
     if (editData) {
+      // Special handling for trainer_name to remove spaces
+      if (field === 'trainer_name') {
+        // Remove all spaces from trainer name
+        const noSpaces = value.replace(/\s/g, '');
+        
+        setEditData(prev => ({ ...prev!, [field]: noSpaces }))
+      }
       // Special handling for trainer_code to enforce 12-digit limit
-      if (field === 'trainer_code') {
+      else if (field === 'trainer_code') {
         // Remove any non-digit characters
         const digitsOnly = value.replace(/\D/g, '');
         
@@ -690,6 +697,18 @@ export const UserProfile = () => {
                   outline: "none",
                 }}
               />
+              <span
+                style={{
+                  fontFamily: "Poppins",
+                  fontStyle: "normal",
+                  fontWeight: 400,
+                  fontSize: isMobile ? "12px" : "11px",
+                  lineHeight: isMobile ? "18px" : "16px",
+                  color: "#666666",
+                }}
+              >
+                No spaces allowed
+              </span>
             </div>
 
             {/* Trainer Level */}
