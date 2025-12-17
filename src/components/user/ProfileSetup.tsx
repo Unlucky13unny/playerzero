@@ -372,9 +372,23 @@ export const ProfileSetup = () => {
 
   const handleInputChange = (field: keyof ProfileData, value: any) => {
 
+    // Special handling for trainer_name to remove spaces
+
+    if (field === 'trainer_name') {
+
+      // Remove all spaces from trainer name
+
+      const noSpaces = value.replace(/\s/g, '');
+
+      
+
+      setProfileData(prev => ({ ...prev, [field]: noSpaces }))
+
+    }
+
     // Special handling for trainer_code to enforce 12-digit limit
 
-    if (field === 'trainer_code') {
+    else if (field === 'trainer_code') {
 
       // Remove any non-digit characters
 
