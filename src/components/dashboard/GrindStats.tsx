@@ -91,7 +91,8 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
       if (backendStats && backendStats.totalXP !== undefined) {
         const startDate = profile?.start_date
         if (startDate) {
-          const start = new Date(startDate)
+          // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+          const start = new Date(startDate + 'T00:00:00')
           const current = new Date()
           const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
           const xpPerDay = backendStats.totalXP / daysPlayed
@@ -105,7 +106,8 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
       if (profile && profile.total_xp !== undefined) {
         const startDate = profile.start_date
         if (startDate) {
-          const start = new Date(startDate)
+          // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+          const start = new Date(startDate + 'T00:00:00')
           const current = new Date()
           const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
           const xpPerDay = profile.total_xp / daysPlayed
@@ -144,7 +146,8 @@ export const GrindStats = memo(function GrindStats({ isMobile = false, profile }
       const startDate = profile.start_date
 
       if (startDate) {
-        const start = new Date(startDate)
+        // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+        const start = new Date(startDate + 'T00:00:00')
         const current = new Date()
         const daysPlayed = Math.max(1, Math.floor((current.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
         const averagePerDay = totalValue / daysPlayed
