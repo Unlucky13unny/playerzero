@@ -244,7 +244,8 @@ export const GrindCard = ({ profile, onClose }: GrindCardProps) => {
 
   // Calculate daily rates for all stats
   const currentXP = profile?.total_xp || 0
-  const startDateObj = profile?.start_date ? new Date(profile.start_date) : new Date()
+  // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+  const startDateObj = profile?.start_date ? new Date(profile.start_date + 'T00:00:00') : new Date()
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDateObj.getTime()) / (1000 * 60 * 60 * 24)))
   
   // Calculate daily rates
