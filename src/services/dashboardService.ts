@@ -524,7 +524,8 @@ export const dashboardService = {
       }
 
       // Calculate days from start date to current day
-      const startDate = new Date(profile.start_date)
+      // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+      const startDate = new Date(profile.start_date + 'T00:00:00')
       const currentDate = new Date()
       const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
 
@@ -580,7 +581,8 @@ export const dashboardService = {
       }
 
       // Calculate days from start date to current day
-      const startDate = new Date(profile.start_date)
+      // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+      const startDate = new Date(profile.start_date + 'T00:00:00')
       const currentDate = new Date()
       const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
 
@@ -646,7 +648,8 @@ export const dashboardService = {
 
       // Check if user's start date is after our calculated start date
       // If so, use the user's start date instead
-      const userStartDate = new Date(profile.start_date)
+      // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+      const userStartDate = new Date(profile.start_date + 'T00:00:00')
       const adjustedStartDate = userStartDate > startDate ? userStartDate : startDate
       const adjustedStartDateStr = adjustedStartDate.toISOString().split('T')[0]
 
@@ -1131,7 +1134,8 @@ export const dashboardService = {
 
       // Check if user's start date is after our calculated start date
       // If so, use the user's start date instead
-      const userStartDate = new Date(profile.start_date)
+      // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+      const userStartDate = new Date(profile.start_date + 'T00:00:00')
       const adjustedStartDate = userStartDate > startDate ? userStartDate : startDate
       const adjustedStartDateStr = adjustedStartDate.toISOString().split('T')[0]
 
@@ -1239,7 +1243,8 @@ export const dashboardService = {
       }
 
       // Calculate days from start date to current day
-      const startDate = new Date(profile.start_date)
+      // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+      const startDate = new Date(profile.start_date + 'T00:00:00')
       const currentDate = new Date()
       const daysPlayed = Math.max(1, Math.floor((currentDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
 

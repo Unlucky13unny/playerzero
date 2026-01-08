@@ -176,7 +176,8 @@ export const VisualExport = ({ profile, isPaidUser }: VisualExportProps) => {
 
   // Calculate projected dates and achievements
   const currentXP = profile.total_xp || 0
-  const startDate = profile.start_date ? new Date(profile.start_date) : new Date()
+  // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+  const startDate = profile.start_date ? new Date(profile.start_date + 'T00:00:00') : new Date()
   const daysSinceStart = Math.max(1, Math.floor((new Date().getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
   const dailyXPRate = currentXP / daysSinceStart
   const formattedDailyXP = dailyXPRate >= 1000 
