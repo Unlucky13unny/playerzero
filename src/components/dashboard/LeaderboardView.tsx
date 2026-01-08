@@ -863,8 +863,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             const { data: completedWeekData, error: weekError } = await supabase.rpc('get_last_completed_week')
             if (!weekError && completedWeekData && completedWeekData.length > 0) {
               const { period_start, period_end } = completedWeekData[0]
-              const startDate = new Date(period_start)
-              const endDate = new Date(period_end)
+              // Parse dates in a timezone-safe way by adding 'T00:00:00' to force local timezone
+              const startDate = new Date(period_start + 'T00:00:00')
+              const endDate = new Date(period_end + 'T00:00:00')
               const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
               return {
                 periodName: 'Week',
@@ -876,8 +877,9 @@ export function LeaderboardView({ userType }: LeaderboardViewProps) {
             const { data: completedMonthData, error: monthError } = await supabase.rpc('get_last_completed_month')
             if (!monthError && completedMonthData && completedMonthData.length > 0) {
               const { period_start, period_end } = completedMonthData[0]
-              const startDate = new Date(period_start)
-              const endDate = new Date(period_end)
+              // Parse dates in a timezone-safe way by adding 'T00:00:00' to force local timezone
+              const startDate = new Date(period_start + 'T00:00:00')
+              const endDate = new Date(period_end + 'T00:00:00')
               const formatDate = (date: Date) => `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`
               return {
                 periodName: 'Month',

@@ -335,7 +335,8 @@ export const UserHome = () => {
   const calculateDailyAverage = (totalValue: number | null | undefined, startDate: string | null | undefined) => {
     if (!totalValue || !startDate) return 0;
     
-    const start = new Date(startDate);
+    // Parse date in a timezone-safe way by adding 'T00:00:00' to force local timezone
+    const start = new Date(startDate + 'T00:00:00');
     const now = new Date();
     const daysSinceStart = Math.max(1, Math.ceil((now.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)));
     
