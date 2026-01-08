@@ -63,8 +63,9 @@ export const GrindChart = ({ className = '', userId }: GrindChartProps) => {
 
   const getDaysPlayed = () => {
     if (!grindStats) return 0
-    const startDate = new Date(grindStats.startDate)
-    const endDate = new Date(grindStats.endDate)
+    // Parse dates in a timezone-safe way by adding 'T00:00:00' to force local timezone
+    const startDate = new Date(grindStats.startDate + 'T00:00:00')
+    const endDate = new Date(grindStats.endDate + 'T00:00:00')
     return Math.max(1, Math.floor((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)))
   }
 
@@ -159,7 +160,7 @@ export const GrindChart = ({ className = '', userId }: GrindChartProps) => {
         <div className="grind-period">
           <span className="period-label">{getPeriodLabel()} Period:</span>
           <span className="period-dates">
-            {new Date(grindStats.startDate).toLocaleDateString()} - {new Date(grindStats.endDate).toLocaleDateString()}
+            {new Date(grindStats.startDate + 'T00:00:00').toLocaleDateString()} - {new Date(grindStats.endDate + 'T00:00:00').toLocaleDateString()}
           </span>
           <span className="days-played">({daysPlayed} days)</span>
         </div>
