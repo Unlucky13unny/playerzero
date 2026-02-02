@@ -25,6 +25,12 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
     const targetUserId = profileUserId || user?.id
     if (!targetUserId) return
 
+    // In free mode, everyone can view screenshots
+    if (trialStatus.isFreeMode) {
+      setTargetUserIsPaid(true)
+      return
+    }
+
     // If viewing own profile, use current trialStatus
     if (!profileUserId || profileUserId === user?.id) {
       setTargetUserIsPaid(trialStatus.isPaidUser)
@@ -66,7 +72,12 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
   }
 
   const handleGalleryClick = () => {
-    // Only allow opening gallery if target user is a paid user
+    // In free mode, always allow viewing
+    if (trialStatus.isFreeMode) {
+      setShowVerificationModal(true)
+      return
+    }
+    // Otherwise, only allow opening gallery if target user is a paid user
     if (targetUserIsPaid) {
       setShowVerificationModal(true)
     }
@@ -124,14 +135,14 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
           order: 0,
           flexGrow: 0,
         }}>
-          {/* Left side: Status verified icon and text - Clickable only for paid users */}
+          {/* Left side: Status verified icon and text - Clickable in free mode or for paid users */}
           <button 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             onClick={handleGalleryClick}
-            title={targetUserIsPaid ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+            title={(trialStatus.isFreeMode || targetUserIsPaid) ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
             style={{ 
-              cursor: targetUserIsPaid ? 'pointer' : 'not-allowed',
-              opacity: targetUserIsPaid ? 1 : 0.6
+              cursor: (trialStatus.isFreeMode || targetUserIsPaid) ? 'pointer' : 'not-allowed',
+              opacity: (trialStatus.isFreeMode || targetUserIsPaid) ? 1 : 0.6
             }}
           >
             <div className="flex items-center justify-center flex-shrink-0">
@@ -169,14 +180,14 @@ export function VerificationSection({ profileUserId }: VerificationSectionProps)
             </div>
           </button>
           
-          {/* Right side: View screenshots button */}
+          {/* Right side: View screenshots button - For free mode or paid users */}
           <button 
             className="text-green-600 hover:text-green-700 transition-colors flex-shrink-0"
             onClick={handleGalleryClick}
-            title={targetUserIsPaid ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+            title={(trialStatus.isFreeMode || targetUserIsPaid) ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
             style={{ 
-              cursor: targetUserIsPaid ? 'pointer' : 'not-allowed',
-              opacity: targetUserIsPaid ? 1 : 0.6
+              cursor: (trialStatus.isFreeMode || targetUserIsPaid) ? 'pointer' : 'not-allowed',
+              opacity: (trialStatus.isFreeMode || targetUserIsPaid) ? 1 : 0.6
             }}
           >
             <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">

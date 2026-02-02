@@ -61,6 +61,10 @@ export const PublicProfile = () => {
   
   // Determine if trainer code should be shown based on viewer status
   const shouldShowTrainerCode = () => {
+    // In free mode, everyone can see trainer codes
+    if (trialStatus.isFreeMode) {
+      return profile?.trainer_code && !profile?.trainer_code_private
+    }
     // Trial users can never see trainer codes
     if (!trialStatus.isPaidUser) {
       return false
@@ -71,12 +75,26 @@ export const PublicProfile = () => {
   
   // Determine if social links should be shown based on viewer status
   const shouldShowSocialLinks = () => {
+    // In free mode, everyone can see social links
+    if (trialStatus.isFreeMode) {
+      return !profile?.social_links_private
+    }
     // Trial users can never see social links
     if (!trialStatus.isPaidUser) {
       return false
     }
     // Paid users see social links if the profile owner has made them public
     return profile?.is_paid_user && !profile?.social_links_private
+  }
+  
+  // Determine if screenshots can be viewed
+  const canViewScreenshots = () => {
+    // In free mode, everyone can view screenshots
+    if (trialStatus.isFreeMode) {
+      return true
+    }
+    // Otherwise, screenshots are always viewable (no restriction)
+    return true
   }
 
   useEffect(() => {
@@ -506,15 +524,14 @@ export const PublicProfile = () => {
                 <button 
                   className="verification-left hover:opacity-80 transition-opacity"
                   onClick={() => {
-                    // Only allow opening if the profile owner is a paid user
-                    if (profile?.is_paid_user) {
+                    if (canViewScreenshots()) {
                       setShowVerificationModal(true)
                     }
                   }}
-                  title={profile?.is_paid_user ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+                  title={canViewScreenshots() ? "View verification screenshots" : "Proofs Gallery"}
                   style={{ 
-                    cursor: profile?.is_paid_user ? 'pointer' : 'not-allowed',
-                    opacity: profile?.is_paid_user ? 1 : 0.6
+                    cursor: canViewScreenshots() ? 'pointer' : 'default',
+                    opacity: 1
                   }}
                 >
                   <span className="verification-icon">✅</span>

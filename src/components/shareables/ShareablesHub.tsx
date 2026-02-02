@@ -161,18 +161,19 @@ export function ShareablesHub() {
           order: 0,
           flexGrow: 0,
         }}>
-          {/* Left side: Status verified icon and text - Clickable only for paid users */}
+          {/* Left side: Status verified icon and text - Clickable for free mode or paid users */}
           <button 
             className="flex items-center gap-3 hover:opacity-80 transition-opacity"
             onClick={() => {
-              if (trialStatus.isPaidUser) {
+              // In free mode or paid users can view
+              if (trialStatus.isFreeMode || trialStatus.isPaidUser) {
                 setShowVerificationModal(true)
               }
             }}
-            title={trialStatus.isPaidUser ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+            title={(trialStatus.isFreeMode || trialStatus.isPaidUser) ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
             style={{ 
-              cursor: trialStatus.isPaidUser ? 'pointer' : 'not-allowed',
-              opacity: trialStatus.isPaidUser ? 1 : 0.6
+              cursor: (trialStatus.isFreeMode || trialStatus.isPaidUser) ? 'pointer' : 'not-allowed',
+              opacity: (trialStatus.isFreeMode || trialStatus.isPaidUser) ? 1 : 0.6
             }}
           >
             <div className="flex items-center justify-center flex-shrink-0">
@@ -210,18 +211,19 @@ export function ShareablesHub() {
             </div>
           </button>
           
-          {/* Right side: View screenshots button - Only for paid users */}
+          {/* Right side: View screenshots button - For free mode or paid users */}
           <button 
             className="text-green-600 hover:text-green-700 transition-colors flex-shrink-0"
             onClick={() => {
-              if (trialStatus.isPaidUser) {
+              // In free mode or paid users can view
+              if (trialStatus.isFreeMode || trialStatus.isPaidUser) {
                 setShowVerificationModal(true)
               }
             }}
-            title={trialStatus.isPaidUser ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
+            title={(trialStatus.isFreeMode || trialStatus.isPaidUser) ? "View verification screenshots" : "Proofs Gallery (Premium users only)"}
             style={{ 
-              cursor: trialStatus.isPaidUser ? 'pointer' : 'not-allowed',
-              opacity: trialStatus.isPaidUser ? 1 : 0.6
+              cursor: (trialStatus.isFreeMode || trialStatus.isPaidUser) ? 'pointer' : 'not-allowed',
+              opacity: (trialStatus.isFreeMode || trialStatus.isPaidUser) ? 1 : 0.6
             }}
           >
             <svg width="20" height="21" viewBox="0 0 20 21" fill="none" xmlns="http://www.w3.org/2000/svg">
