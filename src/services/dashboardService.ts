@@ -766,10 +766,11 @@ export const dashboardService = {
       weekEnd.setUTCDate(weekEnd.getUTCDate() + 6)
       weekEnd.setUTCHours(23, 59, 59, 999)
 
-      // Calculate 4-hour buffer window before week start (Saturday 20:00 UTC to Sunday 00:00 UTC)
+      // 8-hour grace window before week start (Saturday 16:00 UTC to Sunday 00:00 UTC)
+      // So "first day" (Sunday) counts for the new week in all timezones (e.g. Pakistan UTC+5, Germany UTC+1)
       const bufferStart = new Date(weekStart.getTime())
       bufferStart.setUTCDate(bufferStart.getUTCDate() - 1) // Go back 1 day to Saturday
-      bufferStart.setUTCHours(20, 0, 0, 0) // Set to 20:00 UTC
+      bufferStart.setUTCHours(16, 0, 0, 0) // 16:00 UTC = Sunday 00:00 in UTC+8; covers Pakistan (19:00), Germany (23:00), etc.
 
       const weekStartStr = weekStart.toISOString().split('T')[0]
       const weekEndStr = weekEnd.toISOString().split('T')[0]
@@ -800,7 +801,7 @@ export const dashboardService = {
 
       console.log('Week Data Found:', weekData?.length || 0, 'entries')
 
-      // Get potential baseline from buffer window (Saturday 20:00 - Sunday 00:00 UTC)
+      // Get potential baseline from grace window (Saturday 16:00 - Sunday 00:00 UTC)
       // IMPORTANT: created_at must be in buffer window AND entry_date must be before week start
       const { data: bufferData, error: bufferError } = await supabase
         .from('stat_entries')
@@ -1663,10 +1664,9 @@ export const dashboardService = {
         return { success: false, message: 'A verification screenshot is required to update stats' };
       }
 
-      // Check daily upload limits based on user type
-      // Use local date instead of UTC to match user's timezone
+      // Check daily upload limits and set entry_date in UTC so weekly/monthly stats are uniform globally
       const now = new Date();
-      const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
+      const today = now.toISOString().split('T')[0];
       
       // Get all today's entries to count uploads
       const { data: todayEntries } = await supabase
@@ -2034,10 +2034,10 @@ export const dashboardService = {
         return { data: null, error: new Error('User not authenticated') };
       }
 
-      // Use local date instead of UTC to match user's timezone
+      // Use UTC date so limits and stats are uniform for all users regardless of timezone
       const now = new Date();
-      const today = new Date(now.getTime() - (now.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
-      
+      const today = now.toISOString().split('T')[0];
+
       // Get all today's entries to count uploads
       const { data: todayEntries } = await supabase
         .from('stat_entries')
